@@ -7,8 +7,8 @@ function setupPWA() {
 
   // Create manifest with logo icon
   var manifest = {
-    name: 'Caputo Quality Control',
-    short_name: 'Caputo QC',
+    name: 'SAFETY Quality Control',
+    short_name: 'SAFETY',
     start_url: './',
     display: 'standalone',
     background_color: '#ffffff',

@@ -309,7 +309,7 @@ function exportRptWeightPDF() {
 
   // Footer
   '<div style="margin-top:16px;padding-top:10px;border-top:1px solid '+C.border+';display:flex;justify-content:space-between;font-size:8px;color:#aaa">' +
-    '<span>Caputo Quality Control System · Building 1945</span>' +
+    '<span>SAFETY Quality Control System · Client: Caputo Foods · Building 1945</span>' +
     '<span>SQF # 2.4.D.1.1 · '+dateStr+'</span>' +
   '</div>' +
 
@@ -449,7 +449,7 @@ function exportRptGmpPDF() {
   sections +
   tempRows +
   '<div style="margin-top:14px;border-top:1px solid #ddd;padding-top:8px;font-size:8px;color:#999;display:flex;justify-content:space-between">' +
-    '<span>Caputo Quality Control System</span><span>SQF # 2.5.D.A | Building 1945 | '+dateStr+'</span>' +
+    '<span>SAFETY Quality Control System · Client: Caputo Foods</span><span>SQF # 2.5.D.A | Building 1945 | '+dateStr+'</span>' +
   '</div>' +
   '</body></html>';
 

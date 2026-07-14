@@ -45,7 +45,7 @@ function exportWeightPDF(){
     '<div style="flex:1;border:2px solid #dc2626;border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:900;color:#dc2626">'+tFail+'</div><div style="font-size:8px;color:#888;text-transform:uppercase">Out of Target</div></div>'+
     '<div style="flex:1;border:2px solid '+compColor+';border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:900;color:'+compColor+'">'+comp+'%</div><div style="font-size:8px;color:#888;text-transform:uppercase">Compliance</div></div>'+
   '</div>'+
-  '<div style="font-size:8px;color:#999;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between"><span>Caputo Quality Control System</span><span>SQF # 2.4.D.1.1 | Building 1945 | '+dateStr+'</span></div>'+
+  '<div style="font-size:8px;color:#999;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between"><span>SAFETY Quality Control System · Client: Caputo Foods</span><span>SQF # 2.4.D.1.1 | Building 1945 | '+dateStr+'</span></div>'+
   '</body></html>';
   var blob=new Blob([h],{type:'text/html'});
   var url=URL.createObjectURL(blob);

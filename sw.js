@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caputo-qc-v1';
+const CACHE_NAME = 'safety-qc-v1';
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();

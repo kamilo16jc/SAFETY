@@ -53,7 +53,7 @@ function exportRptExcel() {
   var comp  = tBags ? Math.round((tPass/tBags)*100) : 0;
 
   var summaryData = [
-    ['CAPUTO QUALITY CONTROL - REPORT SUMMARY'],
+    ['SAFETY QUALITY CONTROL - REPORT SUMMARY'],['Client: Caputo Foods'],
     ['Generated:', new Date().toLocaleDateString('en-US')],
     ['Filter Date:', rptFilters.date || 'All'],
     ['Line:', rptFilters.line === 'all' ? 'All Lines' : 'Line '+rptFilters.line],
@@ -213,7 +213,7 @@ function exportDashExcel() {
   });
 
   var summaryData = [
-    ['CAPUTO QUALITY CONTROL - DASHBOARD SUMMARY'],
+    ['SAFETY QUALITY CONTROL - DASHBOARD SUMMARY'],['Client: Caputo Foods'],
     ['Generated:', new Date().toLocaleDateString('en-US')],
     ['Period:', periodLabel],
     [],
