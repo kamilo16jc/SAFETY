@@ -53,6 +53,14 @@
   </div>
   <button class="main-btn" style="margin-bottom:24px" onclick="addOperator()">Add User ✓</button>
 
+  <div class="sec-label" style="margin-top:10px">Power Automate — Official Forms</div>
+  <input type="url" class="field" id="pa-url" placeholder="https://... (HTTP flow URL)" autocapitalize="none" style="margin-bottom:8px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="sec-btn" style="margin:0" onclick="paSaveUrlFromAdmin()">Save URL</button>
+    <button class="sec-btn" style="margin:0" onclick="paTest()">Send Test</button>
+  </div>
+  <div class="form-meta" id="pa-status" style="margin:10px 0 24px;cursor:pointer" onclick="if(paQueue().length)paClearQueue()"></div>
+
   <div class="sec-label">Current Users</div>
   <div id="operators-list"></div>
 </div>
@@ -479,18 +487,20 @@
   <div class="sec-label">Bag Seal Records</div>
   <div id="rpt-seal-list" style="margin-bottom:16px"></div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
     <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptWeightPDF()">📄 Export PDF</button>
     <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportRptExcel()">📊 Export Excel</button>
   </div>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendWeightSealForm()">Fill Official Form → SharePoint</button>
 
   <!-- GMP RECORDS -->
   <div class="sec-label">GMP Records</div>
   <div id="rpt-gmp-list" style="margin-bottom:6px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
     <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptGmpPDF()">📄 Export PDF</button>
     <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportGmpExcel()">📊 Export Excel</button>
   </div>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendGmpForm()">Fill Official Form → SharePoint</button>
 </div>
 
 
@@ -681,6 +691,7 @@
 <script src="js/modules/hold-notify.js"></script>
 <script src="js/core/pwa.js"></script>
 <script src="js/export/excel.js"></script>
+<script src="js/integrations/power-automate.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
