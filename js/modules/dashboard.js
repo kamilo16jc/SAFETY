@@ -147,7 +147,7 @@ function initDash(){
   trendChart=new Chart(document.getElementById('chart-trend').getContext('2d'),{
     type:'line',
     data:{labels:tLabels,datasets:[{label:'Compliance %',data:tData,borderColor:'#c8102e',backgroundColor:'rgba(200,16,46,0.06)',tension:0.4,fill:true,pointBackgroundColor:'#c8102e',pointRadius:4,spanGaps:true}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'Raleway',size:9},maxTicksLimit:7}},y:{min:0,max:100,grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'Raleway',size:9},callback:function(v){return v+'%'}}}}}
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'-apple-system',size:9},maxTicksLimit:7}},y:{min:0,max:100,grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'-apple-system',size:9},callback:function(v){return v+'%'}}}}}
   });
 
   // ---- DONUT ----
@@ -155,7 +155,7 @@ function initDash(){
   donutChart=new Chart(document.getElementById('chart-donut').getContext('2d'),{
     type:'doughnut',
     data:{labels:['In Target','Out of Target'],datasets:[{data:[tPass||0,tFail||0],backgroundColor:['#16a34a','#dc2626'],borderWidth:0,borderRadius:4}]},
-    options:{responsive:true,cutout:'72%',plugins:{legend:{labels:{color:'#6b6b85',font:{family:'Raleway',size:11}}}}}
+    options:{responsive:true,cutout:'72%',plugins:{legend:{labels:{color:'#6b6b85',font:{family:'-apple-system',size:11}}}}}
   });
 
   // ---- GMP STATS ----

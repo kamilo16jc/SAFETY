@@ -84,9 +84,9 @@ function holdCard(h, showReleaseCert) {
   var dt = h.createdAt ? new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
   var certBtn = '';
   if(showReleaseCert && h.status==='released') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="release" style="background:#d8f3dc;border:1px solid #95d5b2;color:#2d6a4f;border-radius:8px;padding:5px 10px;font-family:Raleway,sans-serif;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">📜 Release Certificate</button>';
+    certBtn = '<button data-certid="'+h.id+'" data-certtype="release" style="background:#d8f3dc;border:1px solid #95d5b2;color:#2d6a4f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">📜 Release Certificate</button>';
   } else if(showReleaseCert && h.status==='destroyed') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="destroy" style="background:#ffe0e0;border:1px solid #ffb3b3;color:#c1121f;border-radius:8px;padding:5px 10px;font-family:Raleway,sans-serif;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Destruction Certificate</button>';
+    certBtn = '<button data-certid="'+h.id+'" data-certtype="destroy" style="background:#ffe0e0;border:1px solid #ffb3b3;color:#c1121f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Destruction Certificate</button>';
   }
   return '<div data-holdid="'+h.id+'" style="background:var(--surface);border:1px solid '+s.border+';border-left:4px solid '+s.text+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +

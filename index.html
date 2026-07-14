@@ -6,11 +6,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SAFETY">
-  <meta name="theme-color" content="#2b2d42">
+  <meta name="theme-color" content="#f2f2f7">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <title>SAFETY | Quality Control</title>
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -61,76 +60,70 @@
 <!-- HOME -->
 <div class="screen" id="screen-home">
   <div class="app-header">
-    <div>
-      <img id="header-logo" style="height:54px;object-fit:contain" alt="SAFETY">
-      <div class="logo-sub">Quality Control</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-    <div class="header-badge" id="home-date"></div>
-    <div id="sync-status" style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;display:none"></div>
-    <button onclick="toggleDarkMode()" id="dark-btn" style="background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:14px;cursor:pointer;color:var(--text)">🌙</button>
-    <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="logoutUser()">
-      <div id="user-badge" style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.05em"></div>
-      <div style="font-size:9px;color:var(--muted)">logout</div>
+    <button class="menu-btn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="sync-status" style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0.08em;display:none"></div>
+      <div class="header-badge" id="home-date"></div>
     </div>
   </div>
-  </div>
-  <div class="home-title">Weight<br><span>Monitor</span></div>
-    <div class="sec-label">Quick Access</div>
-  <div class="menu-grid">
-    <div class="menu-card accent" onclick="goTo('screen-weight')">
-      <div class="cicon">⚖️</div>
-      <div class="ctitle">Weight Log</div>
-      <div class="cdesc">Record package weights &amp; samples</div>
-    </div>
-    <div class="menu-card" onclick="goTo('screen-seal')">
-      <div class="cicon">🔍</div>
-      <div class="ctitle">Bag Seal</div>
-      <div class="cdesc">Visual, Dunk Tank &amp; Printing</div>
-    </div>
-    <div class="menu-card" onclick="goTo('screen-dashboard')">
-      <div class="cicon">📊</div>
-      <div class="ctitle">Dashboard</div>
-      <div class="cdesc">Stats, trends &amp; compliance</div>
-    </div>
 
-    <div class="menu-card" onclick="goTo('screen-gmp')">
-      <div class="cicon">🏭</div>
-      <div class="ctitle">GMP Audit</div>
-      <div class="cdesc">SQF # 2.5.D.A Daily GMP Facility Audit</div>
-    </div>
-    <div class="menu-card" onclick="goTo('screen-temp')">
-      <div class="cicon">🌡️</div>
-      <div class="ctitle">Temp & Humidity</div>
-      <div class="cdesc">Building 1945 · Start / Mid / End of shift</div>
-    </div>
-    <div class="menu-card" id="admin-card" style="display:none" onclick="goTo('screen-admin')">
-      <div class="cicon">⚙️</div>
-      <div class="ctitle">Admin</div>
-      <div class="cdesc">Manage operators &amp; settings</div>
-    </div>
-    <div class="menu-card" onclick="goTo('screen-lotsearch')">
-      <div class="cicon">🔍</div>
-      <div class="ctitle">LOT Search</div>
-      <div class="cdesc">Trace any product by LOT number</div>
-    </div>
-    <div class="menu-card" onclick="initActivity();goTo('screen-activity')">
-      <div class="cicon">👁️</div>
-      <div class="ctitle">Activity Log</div>
-      <div class="cdesc">See who did what and when</div>
-    </div>
-    <div class="menu-card accent" onclick="goTo('screen-reports')">
-      <div class="cicon">📋</div>
-      <div class="ctitle">Reports</div>
-      <div class="cdesc">Export weights &amp; GMP records to PDF</div>
-    </div>
-    <div class="menu-card wide" style="border-color:#b45309;background:rgba(180,83,9,0.06)" onclick="goTo('screen-hold')">
-      <div class="cicon">🔒</div>
-      <div class="ctitle">Products on Hold</div>
-      <div class="cdesc">Track, manage and release held products</div>
+  <div class="home-greet" id="home-greet">Welcome</div>
+  <div class="home-name" id="home-name">&nbsp;</div>
+
+  <div class="sec-label" style="margin-top:28px">Today</div>
+  <div class="tiles" id="home-tiles"></div>
+
+  <div class="sec-label">Quick Actions</div>
+  <div class="qa-col">
+    <button class="qa-btn" onclick="goTo('screen-weight')">
+      <div class="q-ico" style="background:rgba(0,122,255,0.1)">⚖️</div>
+      <div class="q-txt"><div class="q-title">Weight Log</div><div class="q-sub">Record package weights &amp; samples</div></div>
+      <div class="q-chev">›</div>
+    </button>
+    <button class="qa-btn" onclick="goTo('screen-seal')">
+      <div class="q-ico" style="background:rgba(52,199,89,0.1)">🔍</div>
+      <div class="q-txt"><div class="q-title">Bag Seal</div><div class="q-sub">Visual, Dunk Tank &amp; Printing</div></div>
+      <div class="q-chev">›</div>
+    </button>
+    <button class="qa-btn" onclick="goTo('screen-gmp')">
+      <div class="q-ico" style="background:rgba(255,149,0,0.1)">🏭</div>
+      <div class="q-txt"><div class="q-title">GMP Audit</div><div class="q-sub">SQF # 2.5.D.A Daily Facility Audit</div></div>
+      <div class="q-chev">›</div>
+    </button>
+  </div>
+
+  <div class="sec-label">Recent Activity</div>
+  <div id="home-recent"></div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="d-head">
+    <img id="header-logo" style="height:38px;object-fit:contain" alt="SAFETY">
+    <div class="d-user">
+      <div id="user-badge"></div>
+      <div class="d-role" id="drawer-role"></div>
     </div>
   </div>
-</div>
+  <nav class="d-nav">
+    <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico">🏠</span>Home</button>
+    <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico">⚖️</span>Weight Log</button>
+    <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico">🔍</span>Bag Seal</button>
+    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico">📊</span>Dashboard</button>
+    <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico">🏭</span>GMP Audit</button>
+    <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico">🌡️</span>Temp &amp; Humidity</button>
+    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico">🔒</span>Products on Hold</button>
+    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico">🔎</span>LOT Search</button>
+    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico">👁️</span>Activity Log</button>
+    <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico">📋</span>Reports</button>
+    <button class="d-item" id="admin-card" style="display:none" data-screen="screen-admin" onclick="navDrawer('screen-admin')"><span class="d-ico">⚙️</span>Admin</button>
+  </nav>
+  <div class="d-foot">
+    <button class="d-item" onclick="toggleDarkMode()"><span class="d-ico" id="dark-btn">🌙</span>Appearance</button>
+    <button class="d-item danger" onclick="closeDrawer();logoutUser()"><span class="d-ico">↪</span>Log Out</button>
+  </div>
+</aside>
 
 <!-- WEIGHT -->
 <div class="screen" id="screen-weight">
@@ -555,7 +548,7 @@
       <button class="rpt-filter-btn" data-group="hline" data-val="6" onclick="selectHoldLine(this)">L6</button>
     </div>
     <div class="sec-label">Reason for Hold</div>
-    <textarea class="field" id="hold-reason" placeholder="Describe the reason for placing on hold..." rows="3" style="resize:none;font-family:Raleway,sans-serif"></textarea>
+    <textarea class="field" id="hold-reason" placeholder="Describe the reason for placing on hold..." rows="3" style="resize:none;"></textarea>
     <div class="sec-label">Initiated By</div>
     <input type="text" class="field" id="hold-initby" placeholder="Name">
     <button class="main-btn" onclick="saveHoldCase()">🔒 Place on Hold</button>
@@ -579,7 +572,7 @@
   <div class="form-meta">Full traceability by LOT number</div>
   <div style="display:flex;gap:8px;margin-bottom:20px">
     <input type="text" class="field" id="lot-search-input" placeholder="Enter LOT number..." onkeydown="if(event.key==='Enter')runLotSearch()" style="flex:1;text-transform:uppercase">
-    <button onclick="runLotSearch()" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 18px;font-family:Raleway,sans-serif;font-weight:800;font-size:14px;cursor:pointer">SEARCH</button>
+    <button onclick="runLotSearch()" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-size:14px;cursor:pointer">SEARCH</button>
   </div>
   <div id="lot-search-results"></div>
 </div>
@@ -603,8 +596,8 @@
   <!-- Date selector row -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
     <div id="activity-date-label" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:var(--text)">📅 Today (last 24h)</div>
-    <button onclick="openActivityCalendar()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 14px;font-family:Raleway,sans-serif;font-weight:800;font-size:13px;cursor:pointer">📅 Pick Date</button>
-    <button onclick="resetActivityToToday()" id="activity-reset-btn" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:Raleway,sans-serif;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer">✕ Today</button>
+    <button onclick="openActivityCalendar()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;cursor:pointer">📅 Pick Date</button>
+    <button onclick="resetActivityToToday()" id="activity-reset-btn" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer">✕ Today</button>
   </div>
 
   <div id="activity-log-list"></div>
@@ -629,7 +622,7 @@
       <div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted)">Sa</div>
     </div>
     <div id="cal-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
-    <button onclick="closeActivityCalendar()" style="width:100%;margin-top:14px;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;font-family:Raleway,sans-serif;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer">Cancel</button>
+    <button onclick="closeActivityCalendar()" style="width:100%;margin-top:14px;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer">Cancel</button>
   </div>
 </div>
 
@@ -638,7 +631,7 @@
   <div style="background:var(--bg);border-radius:20px;max-width:500px;margin:0 auto;padding:24px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div id="modal-case-number" style="font-size:18px;font-weight:800"></div>
-      <button onclick="closeHoldModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-family:Raleway,sans-serif;font-size:13px;cursor:pointer">✕ Close</button>
+      <button onclick="closeHoldModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer">✕ Close</button>
     </div>
     <div id="modal-case-detail"></div>
 
@@ -652,7 +645,7 @@
         <button class="rpt-filter-btn" data-newstatus="destroyed" onclick="setNewStatus(this)">🗑️ Destroyed</button>
       </div>
       <div class="sec-label">Comment (required)</div>
-      <textarea class="field" id="modal-comment" placeholder="Add a comment about this status change..." rows="2" style="resize:none;font-family:Raleway,sans-serif;margin-bottom:12px"></textarea>
+      <textarea class="field" id="modal-comment" placeholder="Add a comment about this status change..." rows="2" style="resize:none;margin-bottom:12px"></textarea>
       <button class="main-btn" style="margin:0" onclick="updateHoldStatus()">Update Status ✓</button>
     </div>
 

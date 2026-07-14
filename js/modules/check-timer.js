@@ -40,8 +40,8 @@ function showCheckReminder() {
     '<div style="font-size:50px;margin-bottom:12px">⏰</div>' +
     '<div style="font-size:18px;font-weight:900;color:var(--accent);margin-bottom:8px">TIME FOR WEIGHT CHECK!</div>' +
     '<div style="font-size:13px;color:var(--muted);margin-bottom:20px">Please complete your weight log now</div>' +
-    '<button onclick="this.closest(\'div\').parentElement.remove();goTo(\'screen-weight\')" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 24px;font-family:Raleway,sans-serif;font-weight:800;font-size:14px;cursor:pointer;width:100%">GO TO WEIGHT LOG</button>' +
-    '<button onclick="this.closest(\'div\').parentElement.remove()" style="background:none;border:none;color:var(--muted);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer;margin-top:10px;width:100%">Dismiss</button>' +
+    '<button onclick="this.closest(\'div\').parentElement.remove();goTo(\'screen-weight\')" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;width:100%">GO TO WEIGHT LOG</button>' +
+    '<button onclick="this.closest(\'div\').parentElement.remove()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;margin-top:10px;width:100%">Dismiss</button>' +
   '</div>';
   document.body.appendChild(div);
 }

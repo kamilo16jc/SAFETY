@@ -89,8 +89,8 @@ function initAdmin() {
           '<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+idLine+'</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;flex-shrink:0">' +
-          '<button onclick="resetPassword('+op.id+')" style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.3);color:#2563eb;border-radius:8px;padding:6px 10px;font-family:Raleway,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Password</button>' +
-          '<button onclick="deleteOperator('+op.id+')" style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.3);color:var(--fail);border-radius:8px;padding:6px 10px;font-family:Raleway,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Delete</button>' +
+          '<button onclick="resetPassword('+op.id+')" style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.3);color:#2563eb;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer">Password</button>' +
+          '<button onclick="deleteOperator('+op.id+')" style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.3);color:var(--fail);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer">Delete</button>' +
         '</div>' +
       '</div>';
     }).join('') :
