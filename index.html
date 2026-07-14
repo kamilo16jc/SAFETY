@@ -76,17 +76,17 @@
   <div class="sec-label">Quick Actions</div>
   <div class="qa-col">
     <button class="qa-btn" onclick="goTo('screen-weight')">
-      <div class="q-ico" style="background:rgba(0,122,255,0.1)">⚖️</div>
+      <div class="q-ico" style="background:rgba(0,122,255,0.1);color:#007aff" data-icon="scale"></div>
       <div class="q-txt"><div class="q-title">Weight Log</div><div class="q-sub">Record package weights &amp; samples</div></div>
       <div class="q-chev">›</div>
     </button>
     <button class="qa-btn" onclick="goTo('screen-seal')">
-      <div class="q-ico" style="background:rgba(52,199,89,0.1)">🔍</div>
+      <div class="q-ico" style="background:rgba(52,199,89,0.1);color:#28a745" data-icon="droplet"></div>
       <div class="q-txt"><div class="q-title">Bag Seal</div><div class="q-sub">Visual, Dunk Tank &amp; Printing</div></div>
       <div class="q-chev">›</div>
     </button>
     <button class="qa-btn" onclick="goTo('screen-gmp')">
-      <div class="q-ico" style="background:rgba(255,149,0,0.1)">🏭</div>
+      <div class="q-ico" style="background:rgba(255,149,0,0.1);color:#e08600" data-icon="clipboard"></div>
       <div class="q-txt"><div class="q-title">GMP Audit</div><div class="q-sub">SQF # 2.5.D.A Daily Facility Audit</div></div>
       <div class="q-chev">›</div>
     </button>
@@ -107,21 +107,21 @@
     </div>
   </div>
   <nav class="d-nav">
-    <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico">🏠</span>Home</button>
-    <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico">⚖️</span>Weight Log</button>
-    <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico">🔍</span>Bag Seal</button>
-    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico">📊</span>Dashboard</button>
-    <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico">🏭</span>GMP Audit</button>
-    <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico">🌡️</span>Temp &amp; Humidity</button>
-    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico">🔒</span>Products on Hold</button>
-    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico">🔎</span>LOT Search</button>
-    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico">👁️</span>Activity Log</button>
-    <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico">📋</span>Reports</button>
-    <button class="d-item" id="admin-card" style="display:none" data-screen="screen-admin" onclick="navDrawer('screen-admin')"><span class="d-ico">⚙️</span>Admin</button>
+    <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
+    <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
+    <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
+    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
+    <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
+    <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
+    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Products on Hold</button>
+    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>LOT Search</button>
+    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
+    <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
+    <button class="d-item" id="admin-card" style="display:none" data-screen="screen-admin" onclick="navDrawer('screen-admin')"><span class="d-ico" data-icon="sliders"></span>Admin</button>
   </nav>
   <div class="d-foot">
-    <button class="d-item" onclick="toggleDarkMode()"><span class="d-ico" id="dark-btn">🌙</span>Appearance</button>
-    <button class="d-item danger" onclick="closeDrawer();logoutUser()"><span class="d-ico">↪</span>Log Out</button>
+    <button class="d-item" onclick="toggleDarkMode()"><span class="d-ico" id="dark-btn" data-icon="moon"></span>Appearance</button>
+    <button class="d-item danger" onclick="closeDrawer();logoutUser()"><span class="d-ico" data-icon="logout"></span>Log Out</button>
   </div>
 </aside>
 
@@ -664,6 +664,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module" src="js/core/firebase.js"></script>
 <script src="js/core/data.js"></script>
+<script src="js/core/icons.js"></script>
 <script src="js/core/nav.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>

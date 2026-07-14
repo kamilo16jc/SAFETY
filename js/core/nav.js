@@ -72,22 +72,22 @@ function initHome(){
   var holds = (db.holds||[]).filter(function(x){return x.status!=='released' && x.status!=='destroyed'}).length;
 
   var compColor = comp===null ? 'var(--dim)' : comp>=90 ? 'var(--pass)' : comp>=80 ? 'var(--warn)' : 'var(--fail)';
-  var tile = function(onclick, icoBg, ico, val, lbl, valColor){
+  var tile = function(onclick, icoBg, icoColor, ico, val, lbl, valColor){
     return '<div class="tile" onclick="'+onclick+'">'+
-      '<div class="t-ico" style="background:'+icoBg+'">'+ico+'</div>'+
+      '<div class="t-ico" style="background:'+icoBg+';color:'+icoColor+'">'+(ICONS[ico]||'')+'</div>'+
       '<div class="t-val" style="color:'+(valColor||'var(--text)')+'">'+val+'</div>'+
       '<div class="t-lbl">'+lbl+'</div>'+
     '</div>';
   };
   document.getElementById('home-tiles').innerHTML =
-    tile("goTo('screen-dashboard')", 'rgba(0,122,255,0.1)', '⚖️', w.length, 'Weight checks') +
-    tile("goTo('screen-dashboard')", comp===null?'rgba(142,142,147,0.12)':comp>=90?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)', '✓',
-         comp===null ? '—' : comp+'<small>%</small>', 'Compliance', compColor) +
-    tile("goTo('screen-seal')", 'rgba(52,199,89,0.1)', '🔍', seals, 'Bag seals') +
+    tile("goTo('screen-dashboard')", 'rgba(0,122,255,0.1)', '#007aff', 'scale', w.length, 'Weight checks') +
+    tile("goTo('screen-dashboard')", comp===null?'rgba(142,142,147,0.12)':comp>=90?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)',
+         compColor, 'check', comp===null ? '—' : comp+'<small>%</small>', 'Compliance', compColor) +
+    tile("goTo('screen-seal')", 'rgba(52,199,89,0.1)', '#28a745', 'droplet', seals, 'Bag seals') +
     (holds > 0
-      ? tile("goTo('screen-hold')", 'rgba(255,149,0,0.14)', '🔒', holds, 'Active holds', 'var(--warn)')
-      : tile("goTo('screen-gmp')", gmpDone?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)', '🏭',
-             gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
+      ? tile("goTo('screen-hold')", 'rgba(255,149,0,0.14)', 'var(--warn)', 'lock', holds, 'Active holds', 'var(--warn)')
+      : tile("goTo('screen-gmp')", gmpDone?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)',
+             gmpDone?'var(--pass)':'var(--warn)', 'clipboard', gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
 
   // Recent activity (last 3, most recent first)
   var typeColor = {weight:'var(--accent)', seal:'var(--pass)', gmp:'var(--warn)', hold:'#ff9500', temp:'#5ac8fa', login:'var(--dim)'};

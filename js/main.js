@@ -6,5 +6,6 @@ var loginLogo = document.getElementById('login-logo');
 if(loginLogo) loginLogo.src = LOGO;
 var headerLogo = document.getElementById('header-logo');
 if(headerLogo) headerLogo.src = LOGO;
+renderIcons(document);
 // Start with login
 initLogin();

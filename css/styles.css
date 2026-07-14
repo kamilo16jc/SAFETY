@@ -101,6 +101,14 @@ input[type=number]{-moz-appearance:textfield}
 .d-foot{border-top:1px solid var(--border);padding-top:10px;margin-top:14px;display:flex;flex-direction:column;gap:2px}
 .d-item.danger{color:var(--fail)}
 
+/* ICONS */
+.d-ico svg{width:17px;height:17px;display:block}
+.q-ico svg{width:19px;height:19px;display:block}
+.tile .t-ico svg{width:17px;height:17px;display:block}
+.d-ico{color:var(--muted)}
+.d-item.current .d-ico{color:var(--accent)}
+.d-item.danger .d-ico{color:var(--fail)}
+
 /* BUTTONS GRID */
 .lines-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:24px}
 .shift-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
