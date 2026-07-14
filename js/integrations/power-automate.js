@@ -53,14 +53,38 @@ window.addEventListener('online', function(){ if(paQueue().length) paFlush(); })
 
 // ---- Form builders: package the filtered data each official form needs ----
 
-// SQF 2.4.D.1.1 — Weight Monitoring & LeakPointer log (Excel)
+// SQF 2.4.D.1.1 — Weight Monitoring & LeakPointer log (Word)
 function sendWeightSealForm(){
   if(!rptWeightResults.length && !rptSealResults.length){ toast('No records for the selected filters'); return; }
   var db = getDB();
   var temps = (db.temps||[]).filter(function(t){ return !rptFilters.date || (t.date||'').startsWith(rptFilters.date); });
+
+  // Campos pre-calculados para que el mapeo del Word template sea directo
+  var weights = rptWeightResults.map(function(r){
+    var sum = (r.vals||[]).reduce(function(a,b){ return a + (parseFloat(b)||0); }, 0);
+    return Object.assign({}, r, {
+      sum:  Math.round(sum*100)/100,
+      avgR: Math.round((r.avg||0)*100)/100
+    });
+  });
+  var mark = function(v){ return v==='pass' ? 'PASS' : v==='fail' ? 'FAIL' : ''; };
+  var seals = rptSealResults.map(function(r){
+    var c = r.checks||{};
+    return Object.assign({}, r, {
+      visual: mark(c['Visual']), dunk: mark(c['Dunk Tank']), printing: mark(c['Printing'])
+    });
+  });
+  var notes = rptWeightResults.concat(rptSealResults)
+    .map(function(r){ return (r.comments||'').trim(); })
+    .filter(function(x){ return x; })
+    .join(' · ');
+
   paSendForm('weight_seal', {
     date: rptFilters.date, line: rptFilters.line, shift: rptFilters.shift,
-    weights: rptWeightResults, seals: rptSealResults, temps: temps
+    shiftLabel: rptFilters.shift==='1' ? '1st' : rptFilters.shift==='2' ? '2nd' : '',
+    lineLabel: rptFilters.line==='all' ? '' : rptFilters.line,
+    notes: notes,
+    weights: weights, seals: seals, temps: temps
   });
 }
 
