@@ -79,12 +79,23 @@ function sendWeightSealForm(){
     .filter(function(x){ return x; })
     .join(' · ');
 
-  paSendForm('weight_seal', {
+  var payload = {
     date: rptFilters.date, line: rptFilters.line, shift: rptFilters.shift,
     shiftLabel: rptFilters.shift==='1' ? '1st' : rptFilters.shift==='2' ? '2nd' : '',
     lineLabel: rptFilters.line==='all' ? '' : rptFilters.line,
     notes: notes,
     weights: weights, seals: seals, temps: temps
+  };
+
+  // Rellena el Word en el navegador (sin premium) y envía el archivo listo.
+  toast('Building form...');
+  fillWeightDoc(payload).then(function(doc){
+    paSendForm('weight_seal', {
+      date: payload.date, filename: doc.filename, fileBase64: doc.base64
+    });
+  }).catch(function(e){
+    console.error('fillWeightDoc:', e);
+    toast('Could not build the form: ' + e.message);
   });
 }
 
