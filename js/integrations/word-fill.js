@@ -45,8 +45,15 @@ function buildWeightTokens(d){
   return map;
 }
 
-// Devuelve una promesa con { base64, filename }
-function fillWeightDoc(d){
+function _weightFilename(d){
+  var datePart = (d.date || new Date().toISOString().slice(0,10));
+  var linePart = d.lineLabel ? ('_L' + d.lineLabel) : '';
+  var shiftPart = d.shiftLabel ? ('_' + d.shiftLabel) : '';
+  return 'Weight_' + datePart + linePart + shiftPart + '.docx';
+}
+
+// Rellena la plantilla y devuelve el zip listo. outType: 'base64' | 'blob'
+function _fillWeight(d, outType){
   if(typeof JSZip === 'undefined'){
     return Promise.reject(new Error('JSZip no cargó'));
   }
@@ -62,13 +69,28 @@ function fillWeightDoc(d){
         // Marcadores no usados (columnas sin registro) -> vacío
         xml = xml.replace(/\{\{[A-Za-z0-9_]+\}\}/g, '');
         zip.file('word/document.xml', xml);
-        return zip.generateAsync({ type: 'base64', compression: 'DEFLATE' });
+        return zip.generateAsync({ type: outType, compression: 'DEFLATE' });
       });
-    })
-    .then(function(base64){
-      var datePart = (d.date || new Date().toISOString().slice(0,10));
-      var linePart = d.lineLabel ? ('_L' + d.lineLabel) : '';
-      var shiftPart = d.shiftLabel ? ('_' + d.shiftLabel) : '';
-      return { base64: base64, filename: 'Weight_' + datePart + linePart + shiftPart + '.docx' };
     });
+}
+
+// Devuelve una promesa con { base64, filename } (por si se quiere enviar a un flow)
+function fillWeightDoc(d){
+  return _fillWeight(d, 'base64').then(function(base64){
+    return { base64: base64, filename: _weightFilename(d) };
+  });
+}
+
+// Rellena la forma y la descarga en el PC. Devuelve promesa con el filename.
+function downloadWeightDoc(d){
+  return _fillWeight(d, 'blob').then(function(blob){
+    var filename = _weightFilename(d);
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    return filename;
+  });
 }

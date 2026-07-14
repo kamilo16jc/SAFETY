@@ -87,14 +87,13 @@ function sendWeightSealForm(){
     weights: weights, seals: seals, temps: temps
   };
 
-  // Rellena el Word en el navegador (sin premium) y envía el archivo listo.
+  // Rellena el Word en el navegador y lo descarga en el PC (sin flow, sin premium).
   toast('Building form...');
-  fillWeightDoc(payload).then(function(doc){
-    paSendForm('weight_seal', {
-      date: payload.date, filename: doc.filename, fileBase64: doc.base64
-    });
+  downloadWeightDoc(payload).then(function(filename){
+    toast('Downloaded: ' + filename);
+    logActivity('form', 'Official form generated', filename, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){
-    console.error('fillWeightDoc:', e);
+    console.error('downloadWeightDoc:', e);
     toast('Could not build the form: ' + e.message);
   });
 }

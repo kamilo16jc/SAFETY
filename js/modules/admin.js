@@ -75,10 +75,6 @@ function initAdmin() {
     goTo('screen-home');
     return;
   }
-  var paUrl = document.getElementById('pa-url');
-  if(paUrl) paUrl.value = paGetUrl();
-  paRefreshStatus();
-
   var ops = getOperators();
   var roleColor = function(r){ return r==='admin'?'var(--accent)':r==='supervisor'?'#1a5276':'var(--muted)'; };
   document.getElementById('operators-list').innerHTML = ops.length ?
