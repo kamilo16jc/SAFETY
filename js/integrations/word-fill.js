@@ -81,17 +81,42 @@ function fillWeightDoc(d){
   });
 }
 
-// Rellena la forma y la descarga en el PC. Devuelve promesa con el filename.
+var DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+// Descarga clásica (escritorio / Android): <a download> + blob URL.
+function _downloadAnchor(blob, filename){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+// Entrega el archivo de la forma que soporte el dispositivo.
+// iOS/PWA no permite <a download>; ahí se usa el Web Share API (hoja de
+// compartir → "Guardar en Archivos", Word, correo…).
+function _deliverFile(blob, filename){
+  var file;
+  try { file = new File([blob], filename, { type: DOCX_MIME }); } catch(e){ file = null; }
+  if(file && navigator.canShare && navigator.canShare({ files: [file] })){
+    return navigator.share({ files: [file], title: filename })
+      .then(function(){ return 'shared'; })
+      .catch(function(err){
+        if(err && err.name === 'AbortError') return 'cancelled'; // el usuario cerró la hoja
+        _downloadAnchor(blob, filename); // otro fallo → intentar descarga clásica
+        return 'downloaded';
+      });
+  }
+  _downloadAnchor(blob, filename);
+  return Promise.resolve('downloaded');
+}
+
+// Rellena la forma y la entrega (descarga o compartir). Devuelve promesa con el filename.
 function downloadWeightDoc(d){
   return _fillWeight(d, 'blob').then(function(blob){
     var filename = _weightFilename(d);
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-    return filename;
+    return _deliverFile(blob, filename).then(function(){ return filename; });
   });
 }
 
@@ -132,7 +157,7 @@ function sendWeightSealForm(){
 
   toast('Building form...');
   downloadWeightDoc(payload).then(function(filename){
-    toast('Downloaded: ' + filename);
+    toast('Form ready ✓');
     logActivity('form', 'Official form generated', filename, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){
     console.error('downloadWeightDoc:', e);
