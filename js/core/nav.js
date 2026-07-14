@@ -107,17 +107,18 @@ function initHome(){
 }
 
 function selectLine(n){
-  st.line=n;
-  document.querySelectorAll('.lines-grid').forEach(function(grid){
-    grid.querySelectorAll('.sel-btn').forEach(function(b,i){b.classList.toggle('selected',i===n-1);});
-  });
+  st.line=n||null;
+  document.querySelectorAll('select.line-select').forEach(function(sel){ sel.value = n?String(n):''; });
+  var wl=document.getElementById('wm-line'); if(wl) wl.textContent=st.line||'—';
+  var sl=document.getElementById('sm-line'); if(sl) sl.textContent=st.line||'—';
   checkReady();
 }
 function selectShift(n){
-  st.shift=n;
-  document.querySelectorAll('.shift-grid').forEach(function(grid){
-    grid.querySelectorAll('.shift-btn').forEach(function(b,i){b.classList.toggle('selected',i===n-1);});
-  });
+  st.shift=n||null;
+  document.querySelectorAll('select.shift-select').forEach(function(sel){ sel.value = n?String(n):''; });
+  var lbl=st.shift?(st.shift===1?'1st':'2nd'):'—';
+  var ws=document.getElementById('wm-shift'); if(ws) ws.textContent=lbl;
+  var ss=document.getElementById('sm-shift'); if(ss) ss.textContent=lbl;
   checkReady();
 }
 function checkReady(){

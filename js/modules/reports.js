@@ -14,11 +14,8 @@ function initReports() {
   rptFilters.product = '';
   document.getElementById('rpt-product').value = '';
 
-  // Set all filter buttons to default
-  document.querySelectorAll('.rpt-filter-btn').forEach(function(b) {
-    b.classList.remove('active');
-    if(b.getAttribute('data-val') === 'all') b.classList.add('active');
-  });
+  document.getElementById('rpt-line').value = 'all';
+  document.getElementById('rpt-shift').value = 'all';
 
   applyRptFilters();
 }

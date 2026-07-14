@@ -152,6 +152,11 @@ input[type=number]{-moz-appearance:textfield}
 .field::placeholder{color:var(--dim)}
 textarea.field{resize:none;line-height:1.5}
 
+/* SELECTS */
+select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:42px;margin-bottom:14px}
+.select-wrap{position:relative}
+.select-wrap::after{content:'';position:absolute;right:17px;top:50%;width:8px;height:8px;border-right:1.8px solid var(--muted);border-bottom:1.8px solid var(--muted);transform:translateY(-72%) rotate(45deg);pointer-events:none}
+
 /* PACKAGES */
 .pkg-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;scrollbar-width:none}
 .pkg-scroll::-webkit-scrollbar{display:none}

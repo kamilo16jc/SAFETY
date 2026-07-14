@@ -8,13 +8,18 @@ function initWeight(){
   if(currentUser) document.getElementById('w-initials').value = getInitials();
 }
 function renderPkgChips(){
-  document.getElementById('pkg-scroll').innerHTML=PKGS.map(function(p,i){
-    return '<div class="pkg-chip'+(st.pkg===i?' selected':'')+'" onclick="selectPkg('+i+')">'+p.label+'</div>';
+  document.getElementById('pkg-select').innerHTML='<option value="">Select package size</option>'+PKGS.map(function(p,i){
+    return '<option value="'+i+'"'+(st.pkg===i?' selected':'')+'>'+p.label+'</option>';
   }).join('');
 }
 function selectPkg(i){
+  if(i===null||isNaN(i)){
+    st.pkg=null;
+    document.getElementById('target-val').textContent='Select package size';
+    return;
+  }
   st.pkg=i;
-  renderPkgChips();
+  document.getElementById('pkg-select').value=String(i);
   var p=PKGS[i];
   document.getElementById('target-val').textContent=p.min+' – '+p.max+' lbs';
   st.samples=['','','','',''];

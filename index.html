@@ -131,21 +131,23 @@
   <div class="form-title">Weight Log</div>
   <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
   <div class="sec-label">Production Line</div>
-  <div class="lines-grid">
-    <button class="sel-btn" onclick="selectLine(1)"><span class="top">L1</span><span class="sub">LINE 1</span></button>
-    <button class="sel-btn" onclick="selectLine(2)"><span class="top">L2</span><span class="sub">LINE 2</span></button>
-    <button class="sel-btn" onclick="selectLine(3)"><span class="top">L3</span><span class="sub">LINE 3</span></button>
-    <button class="sel-btn" onclick="selectLine(4)"><span class="top">L4</span><span class="sub">LINE 4</span></button>
-    <button class="sel-btn" onclick="selectLine(5)"><span class="top">L5</span><span class="sub">LINE 5</span></button>
-    <button class="sel-btn" onclick="selectLine(6)"><span class="top">L6</span><span class="sub">LINE 6</span></button>
-  </div>
+  <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
+    <option value="">Select line</option>
+    <option value="1">Line 1</option>
+    <option value="2">Line 2</option>
+    <option value="3">Line 3</option>
+    <option value="4">Line 4</option>
+    <option value="5">Line 5</option>
+    <option value="6">Line 6</option>
+  </select></div>
   <div class="sec-label">Shift</div>
-  <div class="shift-grid">
-    <button class="shift-btn" onclick="selectShift(1)"><div class="snum">1st</div><div class="slbl">SHIFT</div></button>
-    <button class="shift-btn" onclick="selectShift(2)"><div class="snum">2nd</div><div class="slbl">SHIFT</div></button>
-  </div>
+  <div class="select-wrap"><select class="field shift-select" onchange="selectShift(parseInt(this.value)||0)">
+    <option value="">Select shift</option>
+    <option value="1">1st Shift</option>
+    <option value="2">2nd Shift</option>
+  </select></div>
   <div class="sec-label">Package Size</div>
-  <div class="pkg-scroll" id="pkg-scroll"></div>
+  <div class="select-wrap"><select class="field" id="pkg-select" onchange="selectPkg(this.value?parseInt(this.value):null)"></select></div>
   <div class="target-box">
     <div>
       <div class="target-lbl">Target Range</div>
@@ -190,19 +192,21 @@
   <div class="form-title">Bag Seal</div>
   <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
   <div class="sec-label">Production Line</div>
-  <div class="lines-grid">
-    <button class="sel-btn" onclick="selectLine(1)"><span class="top">L1</span><span class="sub">LINE 1</span></button>
-    <button class="sel-btn" onclick="selectLine(2)"><span class="top">L2</span><span class="sub">LINE 2</span></button>
-    <button class="sel-btn" onclick="selectLine(3)"><span class="top">L3</span><span class="sub">LINE 3</span></button>
-    <button class="sel-btn" onclick="selectLine(4)"><span class="top">L4</span><span class="sub">LINE 4</span></button>
-    <button class="sel-btn" onclick="selectLine(5)"><span class="top">L5</span><span class="sub">LINE 5</span></button>
-    <button class="sel-btn" onclick="selectLine(6)"><span class="top">L6</span><span class="sub">LINE 6</span></button>
-  </div>
+  <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
+    <option value="">Select line</option>
+    <option value="1">Line 1</option>
+    <option value="2">Line 2</option>
+    <option value="3">Line 3</option>
+    <option value="4">Line 4</option>
+    <option value="5">Line 5</option>
+    <option value="6">Line 6</option>
+  </select></div>
   <div class="sec-label">Shift</div>
-  <div class="shift-grid">
-    <button class="shift-btn" onclick="selectShift(1)"><div class="snum">1st</div><div class="slbl">SHIFT</div></button>
-    <button class="shift-btn" onclick="selectShift(2)"><div class="snum">2nd</div><div class="slbl">SHIFT</div></button>
-  </div>
+  <div class="select-wrap"><select class="field shift-select" onchange="selectShift(parseInt(this.value)||0)">
+    <option value="">Select shift</option>
+    <option value="1">1st Shift</option>
+    <option value="2">2nd Shift</option>
+  </select></div>
   <div class="sec-label">Time of Check</div>
   <div class="time-row">
     <input type="time" class="time-input" id="seal-time">
@@ -440,35 +444,29 @@
 
       <div>
         <div class="sec-label">Line (optional)</div>
-        <div style="display:flex;gap:8px">
-          <button class="rpt-filter-btn" data-group="line" data-val="all" onclick="setRptFilter(this)">All</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="1" onclick="setRptFilter(this)">L1</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="2" onclick="setRptFilter(this)">L2</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="3" onclick="setRptFilter(this)">L3</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="4" onclick="setRptFilter(this)">L4</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="5" onclick="setRptFilter(this)">L5</button>
-          <button class="rpt-filter-btn" data-group="line" data-val="6" onclick="setRptFilter(this)">L6</button>
-        </div>
+        <div class="select-wrap"><select class="field" id="rpt-line" style="margin-bottom:0" onchange="rptFilters.line=this.value">
+          <option value="all">All lines</option>
+          <option value="1">Line 1</option>
+          <option value="2">Line 2</option>
+          <option value="3">Line 3</option>
+          <option value="4">Line 4</option>
+          <option value="5">Line 5</option>
+          <option value="6">Line 6</option>
+        </select></div>
       </div>
 
       <div>
         <div class="sec-label">Shift (optional)</div>
-        <div style="display:flex;gap:8px">
-          <button class="rpt-filter-btn" data-group="shift" data-val="all" onclick="setRptFilter(this)">All</button>
-          <button class="rpt-filter-btn" data-group="shift" data-val="1" onclick="setRptFilter(this)">1st</button>
-          <button class="rpt-filter-btn" data-group="shift" data-val="2" onclick="setRptFilter(this)">2nd</button>
-        </div>
+        <div class="select-wrap"><select class="field" id="rpt-shift" style="margin-bottom:0" onchange="rptFilters.shift=this.value">
+          <option value="all">All shifts</option>
+          <option value="1">1st Shift</option>
+          <option value="2">2nd Shift</option>
+        </select></div>
       </div>
 
       <div>
         <div class="sec-label">Product Number (optional)</div>
         <input type="text" class="time-input" id="rpt-product" placeholder="Filter by product number" style="width:100%">
-      </div>
-      <div>
-        <div class="sec-label">Operator (optional)</div>
-        <div id="rpt-operator-list" style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="rpt-filter-btn active" data-group="operator" data-val="all" onclick="setRptFilter(this)">All</button>
-        </div>
       </div>
       <button class="main-btn" style="margin:0" onclick="applyRptFilters()">Apply Filters 🔍</button>
     </div>
