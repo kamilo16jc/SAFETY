@@ -24,19 +24,12 @@
     <div style="font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center">Sign in to continue</div>
 
     <div style="width:100%;max-width:360px">
-      <div class="sec-label">Select Operator</div>
-      <div id="operator-list" style="margin-bottom:20px"></div>
-
-      <div id="pin-section" style="display:none">
-        <div class="sec-label" id="pin-label">Enter PIN for <span id="pin-operator-name" style="color:var(--accent)"></span></div>
-        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="pin-dots"></div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px" id="pin-pad"></div>
-        <button class="sec-btn" style="margin:0" onclick="cancelPin()">← Back</button>
-      </div>
-
-      <div id="no-operators" style="display:none;text-align:center;padding:20px;color:var(--muted);font-size:13px">
-        No operators registered yet.<br>Contact your administrator.
-      </div>
+      <div class="sec-label">Username or Email</div>
+      <input type="text" class="field" id="login-user" placeholder="Username or email" autocomplete="username" autocapitalize="none" style="margin-bottom:12px">
+      <div class="sec-label">Password</div>
+      <input type="password" class="field" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      <div id="login-error" style="display:none;color:var(--fail);font-size:12px;font-weight:700;margin-top:10px;text-align:center"></div>
+      <button class="main-btn" style="margin-top:20px" onclick="doLogin()">Sign In →</button>
     </div>
   </div>
 </div>
@@ -45,21 +38,23 @@
 <div class="screen" id="screen-admin">
   <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
   <div class="form-title">Admin Panel</div>
-  <div class="form-meta">Manage operators</div>
+  <div class="form-meta">Manage users</div>
 
-  <div class="sec-label">Add New Operator</div>
+  <div class="sec-label">Add New User</div>
   <input type="text" class="field" id="admin-name" placeholder="Full name" style="margin-bottom:8px">
-  <div class="sec-label">PIN (4 digits)</div>
-  <input type="password" class="field" id="admin-pin" placeholder="••••" maxlength="4" inputmode="numeric" style="margin-bottom:8px;letter-spacing:8px;font-size:20px">
+  <input type="text" class="field" id="admin-username" placeholder="Username" autocapitalize="none" style="margin-bottom:8px">
+  <input type="email" class="field" id="admin-email" placeholder="Email (optional)" autocapitalize="none" style="margin-bottom:8px">
+  <div class="sec-label">Password</div>
+  <input type="password" class="field" id="admin-pass" placeholder="Minimum 4 characters" style="margin-bottom:8px">
   <div class="sec-label">Role</div>
   <div style="display:flex;gap:8px;margin-bottom:16px">
     <button class="rpt-filter-btn active" id="role-operator" data-role="operator" onclick="setRole(this)">Operator</button>
     <button class="rpt-filter-btn" id="role-supervisor" data-role="supervisor" onclick="setRole(this)">Supervisor</button>
     <button class="rpt-filter-btn" id="role-admin" data-role="admin" onclick="setRole(this)">Admin</button>
   </div>
-  <button class="main-btn" style="margin-bottom:24px" onclick="addOperator()">Add Operator ✓</button>
+  <button class="main-btn" style="margin-bottom:24px" onclick="addOperator()">Add User ✓</button>
 
-  <div class="sec-label">Current Operators</div>
+  <div class="sec-label">Current Users</div>
   <div id="operators-list"></div>
 </div>
 
