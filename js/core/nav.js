@@ -10,6 +10,7 @@ function goTo(id){
   if(id==='screen-dashboard') initDash();
   if(id==='screen-temp') initTempScreen();
   if(id==='screen-gmp') initGmp();
+  if(id==='screen-metal') initMetal();
   if(id==='screen-admin') initAdmin();
   if(id==='screen-reports') initReports();
   if(id==='screen-hold') initHold();

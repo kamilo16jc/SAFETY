@@ -12,6 +12,7 @@ var ICONS = {
   thermo:    _IC('<path d="M10 6a2 2 0 0 1 4 0v7.4a4.2 4.2 0 1 1-4 0Z"/><circle cx="12" cy="16.8" r="1.3" fill="currentColor" stroke="none"/>'),
   lock:      _IC('<rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>'),
   search:    _IC('<circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/>'),
+  magnet:    _IC('<path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8.5h4"/><path d="M14 8.5h4"/>'),
   pulse:     _IC('<path d="M3.5 12.5h3.6l2.4-6 4 11 2.4-6h4.6"/>'),
   doc:       _IC('<path d="M7.5 3.5h6.3L18.5 8v11a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1.5-1.5Z"/><path d="M13.5 3.8V8h4.4"/><path d="M9.5 12.5h5"/><path d="M9.5 16h5"/>'),
   sliders:   _IC('<path d="M4 7.5h16"/><path d="M4 12h16"/><path d="M4 16.5h16"/><circle cx="9" cy="7.5" r="1.9" fill="var(--bg)"/><circle cx="15" cy="12" r="1.9" fill="var(--bg)"/><circle cx="7" cy="16.5" r="1.9" fill="var(--bg)"/>'),

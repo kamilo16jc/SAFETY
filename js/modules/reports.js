@@ -3,6 +3,7 @@ var rptFilters = {date: '', line: 'all', shift: 'all'};
 var rptWeightResults = [];
 var rptSealResults = [];
 var rptGmpResults = [];
+var rptMetalResults = [];
 
 function initReports() {
   // Set today as default date
@@ -60,9 +61,33 @@ function applyRptFilters() {
     return matchDate && matchShift;
   });
 
+  // Filter metal detector checks
+  rptMetalResults = (db.metal || []).filter(function(r) {
+    return !rptFilters.date || r.date === rptFilters.date;
+  });
+
   renderRptWeights();
   renderRptSeals();
   renderRptGmps();
+  renderRptMetal();
+}
+
+function renderRptMetal() {
+  var el = document.getElementById('rpt-metal-list');
+  if(!el) return;
+  if(!rptMetalResults.length) {
+    el.innerHTML = '<div class="empty">No metal detector checks for this filter</div>';
+    return;
+  }
+  el.innerHTML = rptMetalResults.map(function(r) {
+    var fails = MD_QUESTIONS.filter(function(q,i){ return (r.answers||{})[i]==='no'; }).length;
+    var cls = fails ? 'lo' : 'hi';
+    return '<div class="rpt-record-card">' +
+      '<span class="rc-comp '+cls+'">'+(fails? fails+' NO':'PASS')+'</span>' +
+      '<div class="rc-title">Line/MD '+(r.line||'—')+'</div>' +
+      '<div class="rc-meta">'+(r.startTime||'')+(r.endTime?(' – '+r.endTime):'')+' · '+(r.completedBy||'—')+'</div>' +
+    '</div>';
+  }).join('');
 }
 
 function renderRptWeights() {

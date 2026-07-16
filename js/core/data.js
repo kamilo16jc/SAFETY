@@ -12,6 +12,15 @@ var PKGS = [
   {label:'8 oz',    min:0.466, max:0.527}
 ];
 var SEAL_CHECKS = ['Visual','Dunk Tank','Printing'];
+var MD_QUESTIONS = [
+  'Has a routine check been performed within the last two & half hours, since break, or since changeover?',
+  'Operator used a unit that was successfully passed through the metal detector?',
+  'Operator passed each probe through one time?',
+  'Operator placed each probe as close to the center of unit as possible?',
+  'Operator replaced unit upstream of metal detector before resetting conveyor?',
+  'Was the learn process performed correctly or not needed as the machine was functional?',
+  'Did the operator perform a routine check after the learn process?'
+];
 var GMP_ITEMS = [
   'Gloves','Smocks','Handwashing','Unsecured Jewelry/Loose Objects','Fingernails',
   'Hairnets/Beardnets','Personal Hygiene and Cologne/Perfume','Color Code Adherence',
@@ -39,6 +48,7 @@ var LOGO='data:image/svg+xml;utf8,'+encodeURIComponent(LOGO_SVG);
 var st = {line:null, shift:null, pkg:null, samples:['','','','',''], sealChecks:{}};
 var gmpAnswers = {};
 var gmpShift = null;
+var metalAnswers = {};
 var donutChart = null, trendChart = null;
 
 // ===== DB =====

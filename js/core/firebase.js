@@ -37,6 +37,12 @@
         localDb.temps = tSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
       } catch(e) { localDb.temps = localDb.temps||[]; }
 
+      // Metal detector checks
+      try {
+        var mSnap = await getDocs(query(collection(db,'metal'), orderBy('date','asc')));
+        localDb.metal = mSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      } catch(e) { localDb.metal = localDb.metal||[]; }
+
       // Holds
       try {
         var hSnap = await getDocs(collection(db,'holds'));

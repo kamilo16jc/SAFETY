@@ -113,6 +113,7 @@
     <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
     <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
+    <button class="d-item" data-screen="screen-metal" onclick="navDrawer('screen-metal')"><span class="d-ico" data-icon="magnet"></span>Metal Detector</button>
     <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Products on Hold</button>
     <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>LOT Search</button>
     <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
@@ -426,6 +427,53 @@
 </div>
 
 
+<!-- METAL DETECTOR -->
+<div class="screen" id="screen-metal">
+  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <div class="form-title">Metal Detector Check</div>
+  <div class="form-meta">Routine metal detector verification</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div>
+      <div class="sec-label">Date</div>
+      <input type="date" class="time-input" id="md-date" style="width:100%">
+    </div>
+    <div>
+      <div class="sec-label">Line &amp; Metal Detector</div>
+      <input type="text" class="field" id="md-line" placeholder="e.g. 1" style="margin-bottom:0">
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+    <div>
+      <div class="sec-label">Observation Start</div>
+      <div class="time-row" style="margin-bottom:0">
+        <input type="time" class="time-input" id="md-start">
+        <button class="now-btn" onclick="setMdNow('md-start')">Now</button>
+      </div>
+    </div>
+    <div>
+      <div class="sec-label">Observation End</div>
+      <div class="time-row" style="margin-bottom:0">
+        <input type="time" class="time-input" id="md-end">
+        <button class="now-btn" onclick="setMdNow('md-end')">Now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Answer yes or no to the following</div>
+  <div id="md-questions" style="margin-bottom:18px"></div>
+
+  <div class="sec-label">Corrective Actions / Additional Observations</div>
+  <textarea class="field" id="md-corrective" placeholder="Corrective actions, training performed, observations..." rows="3"></textarea>
+
+  <div class="sec-label">Completed By</div>
+  <input type="text" class="field" id="md-completed" placeholder="Print name">
+  <div class="sec-label">Verified By (optional)</div>
+  <input type="text" class="field" id="md-verified" placeholder="Print name">
+  <button class="main-btn" onclick="saveMetal()">Save Check ✓</button>
+</div>
+
+
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
   <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
@@ -493,6 +541,11 @@
     <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportGmpExcel()">📊 Export Excel</button>
   </div>
   <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendGmpForm()">⬇ Download Official Form (Excel)</button>
+
+  <!-- METAL DETECTOR RECORDS -->
+  <div class="sec-label">Metal Detector Checks</div>
+  <div id="rpt-metal-list" style="margin-bottom:10px"></div>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendMetalForm()">⬇ Download Official Form (Word)</button>
 </div>
 
 
@@ -686,6 +739,8 @@
 <script src="js/vendor/jszip.min.js"></script>
 <script src="js/integrations/word-fill.js"></script>
 <script src="js/integrations/excel-fill.js"></script>
+<script src="js/integrations/metal-fill.js"></script>
+<script src="js/modules/metal.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
