@@ -1,4 +1,4 @@
-const CACHE_NAME = 'safety-qc-v4';
+const CACHE_NAME = 'safety-qc-v5';
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();

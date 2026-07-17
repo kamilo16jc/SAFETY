@@ -2,6 +2,7 @@
 function initWeight(){
   document.getElementById('wm-line').textContent=st.line||'—';
   document.getElementById('wm-shift').textContent=st.shift?(st.shift===1?'1st':'2nd'):'—';
+  var wd=document.getElementById('w-date'); if(wd) wd.value=localDateStr();
   setNow();
   renderPkgChips();
   buildSamples();
@@ -90,7 +91,7 @@ function saveWeight(){
   var pass=vals.filter(function(v){return v>=p.min&&v<=p.max}).length;
   var db=getDB();
   db.weights.push({
-    id:Date.now(), date:localISOStr(),
+    id:Date.now(), date:isoFromDateTime(document.getElementById('w-date').value, document.getElementById('check-time').value),
     line:st.line, shift:st.shift,
     pkg:st.pkg, pkgLabel:p.label,
     vals:vals, avg:vals.reduce(function(a,b){return a+b},0)/vals.length,

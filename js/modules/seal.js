@@ -2,6 +2,7 @@
 function initSeal(){
   document.getElementById('sm-line').textContent=st.line||'—';
   document.getElementById('sm-shift').textContent=st.shift?(st.shift===1?'1st':'2nd'):'—';
+  var sd=document.getElementById('s-date'); if(sd) sd.value=localDateStr();
   setSealNow();
   renderSealList();
   if(currentUser) document.getElementById('s-initials').value = getInitials();
@@ -32,7 +33,7 @@ function saveSeal(){
   if(!st.line||!st.shift){toast('Select line & shift first');return}
   var db=getDB();
   db.seals.push({
-    id:Date.now(), date:localISOStr(),
+    id:Date.now(), date:isoFromDateTime(document.getElementById('s-date').value, document.getElementById('seal-time').value),
     line:st.line, shift:st.shift,
     checks:Object.assign({},st.sealChecks),
     time:document.getElementById('seal-time').value,

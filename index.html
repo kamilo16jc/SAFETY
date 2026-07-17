@@ -131,6 +131,8 @@
   <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
   <div class="form-title">Weight Log</div>
   <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
+  <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
+  <input type="date" class="time-input" id="w-date" style="width:100%;margin-bottom:18px">
   <div class="sec-label">Production Line</div>
   <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
     <option value="">Select line</option>
@@ -192,6 +194,8 @@
   <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
   <div class="form-title">Bag Seal</div>
   <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
+  <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
+  <input type="date" class="time-input" id="s-date" style="width:100%;margin-bottom:18px">
   <div class="sec-label">Production Line</div>
   <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
     <option value="">Select line</option>
