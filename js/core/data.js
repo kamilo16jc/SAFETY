@@ -12,6 +12,9 @@ var PKGS = [
   {label:'8 oz',    min:0.466, max:0.527}
 ];
 var SEAL_CHECKS = ['Visual','Dunk Tank','Printing'];
+// Minutos dentro de los cuales dos registros de la misma línea se consideran
+// sospechosos (el operador olvidó cambiar la línea al pasar a otra máquina).
+var DUP_WINDOW_MIN = 20;
 var MD_QUESTIONS = [
   'Has a routine check been performed within the last two & half hours, since break, or since changeover?',
   'Operator used a unit that was successfully passed through the metal detector?',

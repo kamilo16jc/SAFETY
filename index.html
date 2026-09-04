@@ -143,6 +143,7 @@
     <option value="5">Line 5</option>
     <option value="6">Line 6</option>
   </select></div>
+  <div class="dup-hint" id="w-dup-hint" style="display:none"></div>
   <div class="sec-label">Shift</div>
   <div class="select-wrap"><select class="field shift-select" onchange="selectShift(parseInt(this.value)||0)">
     <option value="">Select shift</option>
@@ -680,6 +681,18 @@
     </div>
     <div id="cal-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
     <button onclick="closeActivityCalendar()" style="width:100%;margin-top:14px;background:none;border:1px solid var(--border);border-radius:10px;padding:10px;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer">Cancel</button>
+  </div>
+</div>
+
+<!-- DUPLICATE LINE WARNING -->
+<div id="dup-modal" class="dup-modal">
+  <div class="dup-box">
+    <div class="dup-ico">⚠️</div>
+    <div class="dup-title" id="dup-modal-title"></div>
+    <div class="dup-detail" id="dup-modal-detail"></div>
+    <div class="dup-ask">Is this the right line for this check?</div>
+    <button class="main-btn" style="margin:0" onclick="dupChangeLine()">Change line</button>
+    <button class="dup-secondary" onclick="dupSaveAnyway()">Save anyway</button>
   </div>
 </div>
 

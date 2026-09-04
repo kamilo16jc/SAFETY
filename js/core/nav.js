@@ -112,6 +112,7 @@ function selectLine(n){
   document.querySelectorAll('select.line-select').forEach(function(sel){ sel.value = n?String(n):''; });
   var wl=document.getElementById('wm-line'); if(wl) wl.textContent=st.line||'—';
   var sl=document.getElementById('sm-line'); if(sl) sl.textContent=st.line||'—';
+  if(window.updateDupHint) updateDupHint();
   checkReady();
 }
 function selectShift(n){
