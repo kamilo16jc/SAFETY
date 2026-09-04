@@ -622,7 +622,7 @@ function exportHoldExcel() {
   ws2['!cols'] = [{wch:10},{wch:20},{wch:14},{wch:12},{wch:40},{wch:15}];
   XLSX.utils.book_append_sheet(wb, ws2, 'Status History');
 
-  XLSX.writeFile(wb, 'Caputo_HoldLog_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  XLSX.writeFile(wb, 'Caputo_HoldLog_'+localDateStr()+'.xlsx');
   toast('Excel exported! ✓');
 }
 

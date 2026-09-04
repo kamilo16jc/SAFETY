@@ -76,7 +76,7 @@ function exportRptExcel() {
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
   // Download
-  var dateLabel = rptFilters.date || new Date().toISOString().split('T')[0];
+  var dateLabel = rptFilters.date || localDateStr();
   XLSX.writeFile(wb, 'Caputo_Weight_Seal_'+dateLabel+'.xlsx');
   toast('Excel exported! ✓');
 }
@@ -117,7 +117,7 @@ function exportGmpExcel() {
   wsT['!cols'] = tHeaders.map(function(){return {wch:14}});
   XLSX.utils.book_append_sheet(wb, wsT, 'Temperature & Humidity');
 
-  var dateLabel = rptFilters.date || new Date().toISOString().split('T')[0];
+  var dateLabel = rptFilters.date || localDateStr();
   XLSX.writeFile(wb, 'Caputo_GMP_'+dateLabel+'.xlsx');
   toast('GMP Excel exported! ✓');
 }
@@ -259,7 +259,7 @@ function exportDashExcel() {
   wsSummary['!cols'] = [{wch:35},{wch:20},{wch:20},{wch:15}];
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Dashboard Summary');
 
-  var dateLabel = new Date().toISOString().split('T')[0];
+  var dateLabel = localDateStr();
   XLSX.writeFile(wb, 'Caputo_Dashboard_'+periodLabel.replace(' ','_')+'_'+dateLabel+'.xlsx');
   toast('Dashboard Excel exported! ✓');
 }

@@ -95,6 +95,17 @@
     }
   };
 
+  // ---- OVERWRITE an existing doc in place (corrección sin duplicar) ----
+  window.saveToFirebaseAt = async function(colName, fbId, record) {
+    try {
+      var payload = Object.assign({}, record);
+      delete payload._fbId;
+      await setDoc(doc(db, colName, fbId), payload);
+    } catch(e) {
+      console.error('Firebase overwrite error:', e);
+    }
+  };
+
   // ---- SAVE ALL HOLDS to Firestore (overwrite entire collection) ----
   window.saveHoldsToFirebase = async function(holds) {
     try {

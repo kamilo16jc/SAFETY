@@ -443,58 +443,129 @@ function saveGmp(){
 // ===== TEMP & HUMIDITY =====
 var thShift = null;
 var thCheckpoint = null; // 'begin' | 'mid' | 'end'
+var thEditing = false;   // true sólo si el usuario pidió corregir un checkpoint ya guardado
+
+var TH_FIELDS = ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed'];
+var TH_CP_LABEL = {begin:'Beginning', mid:'Middle', end:'End'};
+var TH_CP_BTN   = {begin:'th-cp1', mid:'th-cp2', end:'th-cp3'};
+var TH_CP_ICON  = {begin:'🌅', mid:'☀️', end:'🌙'};
 
 function initTempScreen(){
-  var today = new Date().toISOString().split('T')[0];
-  document.getElementById('th-date').value = today;
-  thShift = null; thCheckpoint = null;
+  // Fecha LOCAL: con toISOString() la app saltaba al día siguiente por la tarde
+  document.getElementById('th-date').value = localDateStr();
+  var d = document.getElementById('th-date');
+  d.onchange = function(){ thCheckpoint=null; thEditing=false; clearThFields(); renderThUI(); };
+  thShift = null; thCheckpoint = null; thEditing = false;
   document.getElementById('th-s1').className='gmp-tog';
   document.getElementById('th-s2').className='gmp-tog';
-  document.getElementById('th-cp1').className='gmp-tog';
-  document.getElementById('th-cp2').className='gmp-tog';
-  document.getElementById('th-cp3').className='gmp-tog';
-  ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed']
-    .forEach(function(id){ document.getElementById(id).value=''; });
-  renderThSummary();
+  clearThFields();
+  renderThUI();
+}
+
+function clearThFields(){
+  TH_FIELDS.forEach(function(id){ document.getElementById(id).value=''; });
+}
+
+function thFieldsDisabled(on){
+  TH_FIELDS.forEach(function(id){ document.getElementById(id).disabled = !!on; });
+}
+
+// Registro ya guardado para la fecha/turno/checkpoint indicados
+function thRecordFor(cp){
+  var date = document.getElementById('th-date').value;
+  if(!date || !thShift || !cp) return null;
+  return (getDB().temps||[]).find(function(t){
+    return t.date===date && t.shift===thShift && t.checkpoint===cp;
+  }) || null;
+}
+
+function thRecordSummary(r){
+  return (r.time||'—')+' · '+(r.temp?r.temp+'°F':'—°F')+
+         (r.chop?' · Chop '+r.chop+'%':'')+(r.plat?' · Plat '+r.plat+'%':'')+
+         (r.line6?' · L6 '+r.line6+'%':'')+(r.completedBy?' · '+r.completedBy:'');
 }
 
 function setThShift(n){
   thShift = n;
+  thCheckpoint = null; thEditing = false;
   document.getElementById('th-s1').className='gmp-tog'+(n===1?' yes-on':'');
   document.getElementById('th-s2').className='gmp-tog'+(n===2?' yes-on':'');
-  renderThSummary();
+  clearThFields();
+  renderThUI();
 }
 
 function setThCheckpoint(cp){
   thCheckpoint = cp;
-  document.getElementById('th-cp1').className='gmp-tog'+(cp==='begin'?' yes-on':'');
-  document.getElementById('th-cp2').className='gmp-tog'+(cp==='mid'  ?' yes-on':'');
-  document.getElementById('th-cp3').className='gmp-tog'+(cp==='end'  ?' yes-on':'');
-  // Pre-fill time with current time
-  var now = new Date();
-  var hh = String(now.getHours()).padStart(2,'0');
-  var mm = String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('th-time').value = hh+':'+mm;
-  // Load existing data if already saved for this checkpoint
-  var date = document.getElementById('th-date').value;
-  if(date && thShift) {
-    var db = getDB();
-    var existing = (db.temps||[]).find(function(t){
-      return t.date===date && t.shift===thShift && t.checkpoint===cp;
-    });
-    if(existing) {
-      document.getElementById('th-time').value   = existing.time   || '';
-      document.getElementById('th-temp').value   = existing.temp   || '';
-      document.getElementById('th-chop').value   = existing.chop   || '';
-      document.getElementById('th-plat').value   = existing.plat   || '';
-      document.getElementById('th-line6').value  = existing.line6  || '';
-      document.getElementById('th-comments').value   = existing.comments||'';
-      document.getElementById('th-completed').value  = existing.completedBy||'';
+  thEditing = false;
+  var existing = thRecordFor(cp);
+  if(existing){
+    // Ya registrado: se muestra en solo lectura, no se puede sobreescribir sin pedirlo
+    document.getElementById('th-time').value      = existing.time   || '';
+    document.getElementById('th-temp').value      = existing.temp   || '';
+    document.getElementById('th-chop').value      = existing.chop   || '';
+    document.getElementById('th-plat').value      = existing.plat   || '';
+    document.getElementById('th-line6').value     = existing.line6  || '';
+    document.getElementById('th-comments').value  = existing.comments||'';
+    document.getElementById('th-completed').value = existing.completedBy||'';
+  } else {
+    clearThFields();
+    var now = new Date();
+    document.getElementById('th-time').value =
+      String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  }
+  renderThUI();
+}
+
+// Pinta selección, checkpoints ya guardados, banner de estado y el botón de guardar
+function renderThUI(){
+  ['begin','mid','end'].forEach(function(cp){
+    var btn = document.getElementById(TH_CP_BTN[cp]);
+    if(!btn) return;
+    var saved = !!thRecordFor(cp);
+    btn.className = 'gmp-tog'+(thCheckpoint===cp?' yes-on':'')+(saved?' done':'');
+    btn.innerHTML = TH_CP_ICON[cp]+' '+TH_CP_LABEL[cp]+(saved?' ✓':'');
+  });
+
+  var locked = !!(thCheckpoint && thRecordFor(thCheckpoint) && !thEditing);
+  thFieldsDisabled(locked);
+
+  var note = document.getElementById('th-lock-note');
+  if(note){
+    if(locked){
+      note.className = 'dup-hint';
+      note.innerHTML = '<div class="dup-hint-title">'+TH_CP_LABEL[thCheckpoint]+' is already recorded — locked</div>'+
+        '<div class="dup-hint-detail">'+thRecordSummary(thRecordFor(thCheckpoint))+'</div>';
+      note.style.display='block';
+    } else if(thEditing && thCheckpoint){
+      note.className = 'th-edit-note';
+      note.innerHTML = '<div class="dup-hint-title">Editing '+TH_CP_LABEL[thCheckpoint]+' — this replaces the saved values</div>'+
+        '<div class="dup-hint-detail">Save to update the record</div>';
+      note.style.display='block';
     } else {
-      ['th-temp','th-chop','th-plat','th-line6','th-comments','th-completed']
-        .forEach(function(id){ document.getElementById(id).value=''; });
+      note.style.display='none'; note.innerHTML='';
     }
   }
+
+  var btn = document.getElementById('th-save-btn');
+  if(btn){
+    btn.textContent = thEditing ? 'Update Checkpoint ✓' : 'Save Checkpoint ✓';
+    btn.disabled = locked;
+  }
+  renderThSummary();
+}
+
+// Desbloquea un checkpoint ya guardado para corregirlo (desde el modal)
+function thEditExisting(){
+  closeDupModal();
+  thEditing = true;
+  renderThUI();
+  toast('Editing '+TH_CP_LABEL[thCheckpoint]+' — save to update');
+}
+
+function thPickAnother(){
+  closeDupModal();
+  var btn = document.getElementById(TH_CP_BTN[thCheckpoint]);
+  if(btn && btn.scrollIntoView) btn.scrollIntoView({block:'center'});
 }
 
 function renderThSummary(){
@@ -529,6 +600,23 @@ function saveTempHumidity(){
   var date = document.getElementById('th-date').value;
   if(!date){ toast('Select a date'); return; }
 
+  // No sobreescribir un checkpoint ya guardado salvo que se pida explícitamente
+  var existing = thRecordFor(thCheckpoint);
+  if(existing && !thEditing){
+    showGuardModal({
+      title: TH_CP_LABEL[thCheckpoint]+' is already recorded for '+(thShift===1?'1st':'2nd')+' shift',
+      detail: thRecordSummary(existing),
+      ask: 'Pick the checkpoint you are actually taking, or edit the saved one.',
+      primaryLabel:'Pick another checkpoint', onPrimary:thPickAnother,
+      secondaryLabel:'Edit this record',      onSecondary:thEditExisting
+    });
+    return;
+  }
+
+  commitTempHumidity(date, existing);
+}
+
+function commitTempHumidity(date, existing){
   var db = getDB();
   if(!db.temps) db.temps = [];
 
@@ -537,7 +625,7 @@ function saveTempHumidity(){
     return !(t.date===date && t.shift===thShift && t.checkpoint===thCheckpoint);
   });
 
-  var cpLabel = {begin:'Beginning', mid:'Middle', end:'End'};
+  var cpLabel = TH_CP_LABEL;
   var rec = {
     id: Date.now(),
     date: date,
@@ -552,18 +640,30 @@ function saveTempHumidity(){
     completedBy: document.getElementById('th-completed').value
   };
   db.temps.push(rec);
-  saveDB(db);
-  if(window.saveToFirebase) window.saveToFirebase('temps', rec);
-  logActivity('temp','Temp & Humidity recorded',
-    cpLabel[thCheckpoint]+' · Shift '+(thShift===1?'1st':'2nd')+' · '+date,
+  // Al corregir, se reescribe el MISMO documento en Firestore; si no, el viejo
+  // volvería en la próxima sincronización y desharía la corrección.
+  if(existing && existing._fbId && window.saveToFirebaseAt){
+    rec._fbId = existing._fbId;
+    saveDB(db);
+    window.saveToFirebaseAt('temps', existing._fbId, rec);
+  } else {
+    saveDB(db);
+    if(window.saveToFirebase) window.saveToFirebase('temps', rec);
+  }
+  var wasEdit = !!existing;
+  logActivity('temp', wasEdit ? 'Temp & Humidity updated' : 'Temp & Humidity recorded',
+    cpLabel[thCheckpoint]+' · Shift '+(thShift===1?'1st':'2nd')+' · '+date+
+    (wasEdit?' · corrected an existing checkpoint':''),
     rec.completedBy||(currentUser?currentUser.name:'—'));
 
-  toast(cpLabel[thCheckpoint]+' checkpoint saved! ✓');
-  renderThSummary();
+  toast(cpLabel[thCheckpoint]+(wasEdit?' checkpoint updated! ✓':' checkpoint saved! ✓'));
 
-  // Clear fields but keep date/shift/checkpoint for quick re-entry
-  ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed']
-    .forEach(function(id){ document.getElementById(id).value=''; });
+  // El checkpoint queda sin seleccionar a propósito: así el siguiente registro
+  // obliga a elegir cuál se está tomando y no cae sobre el anterior.
+  thCheckpoint = null;
+  thEditing = false;
+  clearThFields();
+  renderThUI();
 }
 
 

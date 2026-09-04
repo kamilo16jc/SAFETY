@@ -38,19 +38,38 @@ function renderDupHint(elId, title, detail){
   el.style.display = 'block';
 }
 
-// opts: {title, detail, commit, screen}
-function showDupModal(opts){
-  dupPending = {commit:opts.commit, screen:opts.screen};
+// Modal genérico de aviso.
+// opts: {title, detail, primaryLabel, onPrimary, secondaryLabel, onSecondary}
+function showGuardModal(opts){
   var m = document.getElementById('dup-modal');
   if(!m){
-    if(confirm(opts.title+'\n'+opts.detail+'\n\nSave this record anyway?')) dupSaveAnyway();
-    else dupPending = null;
+    if(confirm(opts.title+'\n'+opts.detail+'\n\n'+(opts.secondaryLabel||'Continue')+'?')){
+      if(opts.onSecondary) opts.onSecondary();
+    } else if(opts.onPrimary) opts.onPrimary();
     return;
   }
   document.getElementById('dup-modal-title').textContent  = opts.title;
   document.getElementById('dup-modal-detail').textContent = opts.detail;
+  document.getElementById('dup-modal-ask').textContent =
+    opts.ask || 'Is this the right line for this check?';
+  var pri = document.getElementById('dup-modal-primary');
+  var sec = document.getElementById('dup-modal-secondary');
+  pri.textContent = opts.primaryLabel   || 'Change line';
+  sec.textContent = opts.secondaryLabel || 'Save anyway';
+  pri.onclick = opts.onPrimary   || dupChangeLine;
+  sec.onclick = opts.onSecondary || dupSaveAnyway;
   m.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+// Aviso de línea duplicada — opts: {title, detail, commit, screen}
+function showDupModal(opts){
+  dupPending = {commit:opts.commit, screen:opts.screen};
+  showGuardModal({
+    title:opts.title, detail:opts.detail,
+    primaryLabel:'Change line',  onPrimary:dupChangeLine,
+    secondaryLabel:'Save anyway', onSecondary:dupSaveAnyway
+  });
 }
 
 function closeDupModal(){

@@ -179,6 +179,12 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding-righ
 .dup-detail{font-size:12px;color:var(--muted);background:var(--surface);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-variant-numeric:tabular-nums}
 .dup-ask{font-size:13px;color:var(--text);margin-bottom:16px}
 .dup-secondary{width:100%;margin-top:10px;background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;padding:10px;cursor:pointer}
+/* Temp & Humidity: checkpoint ya guardado / modo edición */
+.gmp-tog.done{border-color:var(--pass);color:var(--pass)}
+.gmp-tog.done.yes-on{background:var(--pass);color:white}
+.th-edit-note{background:var(--accent-tint);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.th-edit-note .dup-hint-title{color:var(--accent)}
+.time-input:disabled,.field:disabled{opacity:0.6;cursor:not-allowed}
 
 /* TIME ROW */
 .time-row{display:flex;gap:8px;margin-bottom:14px;align-items:flex-end}

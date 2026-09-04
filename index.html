@@ -391,6 +391,7 @@
     <button class="gmp-tog" id="th-cp2" onclick="setThCheckpoint('mid')"   style="padding:12px 8px">☀️ Middle</button>
     <button class="gmp-tog" id="th-cp3" onclick="setThCheckpoint('end')"   style="padding:12px 8px">🌙 End</button>
   </div>
+  <div id="th-lock-note" style="display:none"></div>
 
   <div class="gmp-section">
     <div class="gmp-section-hdr" style="background:#1a5276">1945 TEMPERATURE &amp; % RELATIVE HUMIDITY MONITORING</div>
@@ -429,7 +430,7 @@
   <textarea class="field" id="th-comments" placeholder="Add comments or corrective actions..." rows="2"></textarea>
   <div class="sec-label">Completed By</div>
   <input type="text" class="field" id="th-completed" placeholder="Print name">
-  <button class="main-btn" onclick="saveTempHumidity()">Save Checkpoint ✓</button>
+  <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint ✓</button>
 </div>
 
 
@@ -691,9 +692,9 @@
     <div class="dup-ico">⚠️</div>
     <div class="dup-title" id="dup-modal-title"></div>
     <div class="dup-detail" id="dup-modal-detail"></div>
-    <div class="dup-ask">Is this the right line for this check?</div>
-    <button class="main-btn" style="margin:0" onclick="dupChangeLine()">Change line</button>
-    <button class="dup-secondary" onclick="dupSaveAnyway()">Save anyway</button>
+    <div class="dup-ask" id="dup-modal-ask">Is this the right line for this check?</div>
+    <button class="main-btn" style="margin:0" id="dup-modal-primary" onclick="dupChangeLine()">Change line</button>
+    <button class="dup-secondary" id="dup-modal-secondary" onclick="dupSaveAnyway()">Save anyway</button>
   </div>
 </div>
 
