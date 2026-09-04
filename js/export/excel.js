@@ -1,3 +1,6 @@
+// Rango objetivo legible para los export ('not set' si el producto no lo tiene)
+function targetLabel(r){ var t=recTarget(r); return t ? t.min+' - '+t.max : 'not set'; }
+
 // ===== EXCEL EXPORTS =====
 
 function exportRptExcel() {
@@ -6,16 +9,16 @@ function exportRptExcel() {
   var wb = XLSX.utils.book_new();
 
   // ---- SHEET 1: Weight Records ----
-  var wHeaders = ['Date','Time','Line','Shift','Package','Product #','LOT',
+  var wHeaders = ['Date','Time','Line','Shift','Package','Target Range','Product #','Description','Bags/Case','LOT',
                   'Sample 1','Sample 2','Sample 3','Sample 4','Sample 5',
                   'Average','Total Samples','In Target','Compliance %','Initials','Comments'];
   var wRows = rptWeightResults.map(function(r){
     var dt = r.date ? new Date(r.date).toLocaleDateString('en-US') : '';
     return [
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
-      r.pkgLabel, r.product||'', r.lot||'',
+      r.pkgLabel, targetLabel(r), r.product||'', r.productName||'', r.bagsPerCase||'', r.lot||'',
       r.vals[0]||'', r.vals[1]||'', r.vals[2]||'', r.vals[3]||'', r.vals[4]||'',
-      parseFloat(r.avg).toFixed(3), r.total, r.pass, compLabel(r.compliance),
+      parseFloat(r.avg).toFixed(3), r.total, (r.pass==null?'—':r.pass), compLabel(r.compliance),
       r.initials||'', r.comments||''
     ];
   });
@@ -23,19 +26,19 @@ function exportRptExcel() {
 
   // Style header row width
   wsW['!cols'] = [
-    {wch:12},{wch:8},{wch:8},{wch:10},{wch:10},{wch:12},{wch:12},
+    {wch:12},{wch:8},{wch:8},{wch:10},{wch:10},{wch:14},{wch:12},{wch:22},{wch:10},{wch:12},
     {wch:10},{wch:10},{wch:10},{wch:10},{wch:10},
     {wch:10},{wch:12},{wch:10},{wch:12},{wch:10},{wch:20}
   ];
   XLSX.utils.book_append_sheet(wb, wsW, 'Weight Records');
 
   // ---- SHEET 2: Bag Seal Records ----
-  var sHeaders = ['Date','Time','Line','Shift','Product #','LOT','Visual','Dunk Tank','Printing','Initials','Comments'];
+  var sHeaders = ['Date','Time','Line','Shift','Product #','Description','Bags/Case','LOT','Visual','Dunk Tank','Printing','Initials','Comments'];
   var sRows = rptSealResults.map(function(r){
     var dt = r.date ? new Date(r.date).toLocaleDateString('en-US') : '';
     return [
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
-      r.product||'', r.lot||'',
+      r.product||'', r.productName||'', r.bagsPerCase||'', r.lot||'',
       (r.checks['Visual']||'—').toUpperCase(),
       (r.checks['Dunk Tank']||'—').toUpperCase(),
       (r.checks['Printing']||'—').toUpperCase(),
@@ -43,14 +46,17 @@ function exportRptExcel() {
     ];
   });
   var wsS = XLSX.utils.aoa_to_sheet([sHeaders].concat(sRows));
-  wsS['!cols'] = [{wch:12},{wch:8},{wch:8},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:20}];
+  wsS['!cols'] = [{wch:12},{wch:8},{wch:8},{wch:10},{wch:12},{wch:22},{wch:10},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:20}];
   XLSX.utils.book_append_sheet(wb, wsS, 'Bag Seal Records');
 
   // ---- SHEET 3: Summary ----
-  var tBags = rptWeightResults.reduce(function(a,r){return a+r.total},0);
-  var tPass = rptWeightResults.reduce(function(a,r){return a+r.pass},0);
+  // Los registros sin target no se pueden medir: no cuentan como out of target
+  var scored = rptWeightResults.filter(function(r){ return r.compliance!=null; });
+  var tBags = scored.reduce(function(a,r){return a+r.total},0);
+  var tPass = scored.reduce(function(a,r){return a+r.pass},0);
   var tFail = tBags - tPass;
   var comp  = tBags ? Math.round((tPass/tBags)*100) : 0;
+  var noTargetBags = rptWeightResults.reduce(function(a,r){return a+r.total},0) - tBags;
 
   var summaryData = [
     ['SAFETY QUALITY CONTROL - REPORT SUMMARY'],['Client: Caputo Foods'],
@@ -64,6 +70,7 @@ function exportRptExcel() {
     ['Bags In Target:', tPass],
     ['Bags Out of Target:', tFail],
     ['Overall Compliance:', comp+'%'],
+    ['Bags with no target set:', noTargetBags],
     [],
     ['BAG SEAL MONITORING'],
     ['Total Seal Checks:', rptSealResults.length],
@@ -105,12 +112,16 @@ function exportGmpExcel() {
     'End Time','End Temp (°F)','End Chop Hum','End Platform Hum','End Line6 Hum','End Initials'];
   var tRows = rptGmpResults.map(function(r){
     var dt = r.date ? new Date(r.date+'T12:00:00').toLocaleDateString('en-US') : '';
-    var t = r.temp || {begin:{},mid:{},end:{}};
+    // Los checkpoints viven en db.temps desde que Temp & Humidity es su propio
+    // módulo; r.temp sólo existe en registros viejos.
+    var saved = tempsFor(r.date, r.shift);
+    var t = r.temp || {begin:saved.begin||{}, mid:saved.mid||{}, end:saved.end||{}};
+    var f = function(cp, field){ var x=t[cp]||{}; return x[field] || (field==='init' ? (x.completedBy||'') : ''); };
     return [
       dt, r.location||'', (r.shift?(r.shift===1?'1st':'2nd')+' Shift':''),
-      t.begin.time||'', t.begin.temp||'', t.begin.chop||'', t.begin.plat||'', t.begin.line6||'', t.begin.init||'',
-      t.mid.time||'',   t.mid.temp||'',   t.mid.chop||'',   t.mid.plat||'',   t.mid.line6||'',   t.mid.init||'',
-      t.end.time||'',   t.end.temp||'',   t.end.chop||'',   t.end.plat||'',   t.end.line6||'',   t.end.init||''
+      f('begin','time'), f('begin','temp'), f('begin','chop'), f('begin','plat'), f('begin','line6'), f('begin','init'),
+      f('mid','time'),   f('mid','temp'),   f('mid','chop'),   f('mid','plat'),   f('mid','line6'),   f('mid','init'),
+      f('end','time'),   f('end','temp'),   f('end','chop'),   f('end','plat'),   f('end','line6'),   f('end','init')
     ];
   });
   var wsT = XLSX.utils.aoa_to_sheet([tHeaders].concat(tRows));
@@ -132,30 +143,30 @@ function exportDashExcel() {
   var wb = XLSX.utils.book_new();
 
   // ---- SHEET 1: All Weight Records ----
-  var wHeaders = ['Date','Time','Line','Shift','Package','Product #','LOT',
+  var wHeaders = ['Date','Time','Line','Shift','Package','Target Range','Product #','Description','Bags/Case','LOT',
                   'Sample 1','Sample 2','Sample 3','Sample 4','Sample 5',
                   'Average','Total','In Target','Compliance %','Initials','Comments'];
   var wRows = w.map(function(r){
     var dt = r.date ? new Date(r.date).toLocaleDateString('en-US') : '';
     return [
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
-      r.pkgLabel, r.product||'', r.lot||'',
+      r.pkgLabel, targetLabel(r), r.product||'', r.productName||'', r.bagsPerCase||'', r.lot||'',
       r.vals[0]||'', r.vals[1]||'', r.vals[2]||'', r.vals[3]||'', r.vals[4]||'',
-      parseFloat(r.avg).toFixed(3), r.total, r.pass, compLabel(r.compliance),
+      parseFloat(r.avg).toFixed(3), r.total, (r.pass==null?'—':r.pass), compLabel(r.compliance),
       r.initials||'', r.comments||''
     ];
   });
   var wsW = XLSX.utils.aoa_to_sheet([wHeaders].concat(wRows));
-  wsW['!cols'] = wHeaders.map(function(h,i){ return {wch: i<7?12:i<13?10:14}; });
+  wsW['!cols'] = wHeaders.map(function(h,i){ return {wch: i===7?22:i<10?12:i<16?10:14}; });
   XLSX.utils.book_append_sheet(wb, wsW, 'Weight Records');
 
   // ---- SHEET 2: All Bag Seal Records ----
-  var sHeaders = ['Date','Time','Line','Shift','Product #','LOT','Visual','Dunk Tank','Printing','Initials','Comments'];
+  var sHeaders = ['Date','Time','Line','Shift','Product #','Description','Bags/Case','LOT','Visual','Dunk Tank','Printing','Initials','Comments'];
   var sRows = seals.map(function(r){
     var dt = r.date ? new Date(r.date).toLocaleDateString('en-US') : '';
     return [
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
-      r.product||'', r.lot||'',
+      r.product||'', r.productName||'', r.bagsPerCase||'', r.lot||'',
       (r.checks['Visual']||'—').toUpperCase(),
       (r.checks['Dunk Tank']||'—').toUpperCase(),
       (r.checks['Printing']||'—').toUpperCase(),

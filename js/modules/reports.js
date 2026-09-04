@@ -155,7 +155,13 @@ function renderRptGmps() {
 }
 
 function exportRptWeightPDF() {
-  if(!rptWeightResults.length && !rptSealResults.length){ toast('No records to export'); return; }
+  var hasTemps = (getDB().temps||[]).some(function(t){
+    return t.date===rptFilters.date &&
+      (rptFilters.shift==='all' || String(t.shift)===String(rptFilters.shift));
+  });
+  if(!rptWeightResults.length && !rptSealResults.length && !rptMetalResults.length && !hasTemps){
+    toast('No records to export'); return;
+  }
 
   var dateVal    = rptFilters.date;
   var dateStr    = dateVal ? new Date(dateVal+'T12:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : localDateStr();
@@ -163,11 +169,15 @@ function exportRptWeightPDF() {
   var shiftLabel = rptFilters.shift === 'all' ? 'All Shifts' : (rptFilters.shift==='1'?'1st':'2nd')+' Shift';
   var productLabel = rptFilters.product || (rptWeightResults[0] && rptWeightResults[0].product) || '—';
 
-  // Summary stats
-  var tBags = rptWeightResults.reduce(function(a,r){return a+r.total},0);
-  var tPass = rptWeightResults.reduce(function(a,r){return a+r.pass},0);
+  // Summary stats — los registros sin target no se pueden medir, así que no
+  // cuentan como "out of target"; se reportan aparte.
+  var scored = rptWeightResults.filter(function(r){ return r.compliance!=null; });
+  var noTargetRecs = rptWeightResults.length - scored.length;
+  var tBags = scored.reduce(function(a,r){return a+r.total},0);
+  var tPass = scored.reduce(function(a,r){return a+r.pass},0);
   var tFail = tBags - tPass;
   var comp  = tBags ? Math.round((tPass/tBags)*100) : 0;
+  var noTargetBags = rptWeightResults.reduce(function(a,r){return a+r.total},0) - tBags;
   var compColor = comp >= 80 ? '#2d6a4f' : '#c1121f';
   var compBg    = comp >= 80 ? '#d8f3dc' : '#ffe0e0';
 
@@ -194,7 +204,9 @@ function exportRptWeightPDF() {
       '<div style="background:'+C.greenPastel+';border:1px solid #95d5b2;border-radius:10px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+C.passGreen+'">'+tPass+'</div><div style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">In Target</div></div>' +
       '<div style="background:'+C.failBg+';border:1px solid #ffb3b3;border-radius:10px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+C.failRed+'">'+tFail+'</div><div style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">Out of Target</div></div>' +
       '<div style="background:'+compBg+';border:1px solid '+(comp>=80?'#95d5b2':'#ffb3b3')+';border-radius:10px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+compColor+'">'+comp+'%</div><div style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:2px">Compliance</div></div>' +
-    '</div>';
+    '</div>' +
+    (noTargetRecs ? '<div style="font-size:9px;color:#777;font-style:italic;margin:-10px 0 16px">Plus '+noTargetBags+' bag(s) in '+noTargetRecs+
+      ' record(s) with no target range defined — weights are logged but not scored above.</div>' : '');
 
   // ---- WEIGHT RECORDS (vertical cards) ----
   var weightCards = rptWeightResults.map(function(r) {
@@ -202,27 +214,32 @@ function exportRptWeightPDF() {
     var sampleRows = r.vals.map(function(v,i){
       if(v===undefined||v===null||v==='') return '';
       var num = parseFloat(v);
+      // Sin target no hay dentro ni fuera: se registra el peso en neutro
       var inRange = p && !isNaN(num) && num>=p.min && num<=p.max;
-      var col = inRange ? C.passGreen : C.failRed;
-      var bg  = inRange ? C.passBg   : C.failBg;
+      var col = !p ? '#555'        : inRange ? C.passGreen : C.failRed;
+      var bg  = !p ? C.grayPastel  : inRange ? C.passBg    : C.failBg;
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:'+bg+';border-radius:6px;margin-bottom:4px">' +
         '<span style="font-size:10px;color:#555;font-weight:600">Sample '+(i+1)+'</span>' +
         '<span style="font-size:12px;font-weight:800;color:'+col+'">'+num.toFixed(3)+' lbs</span>' +
-        '<span style="font-size:10px;font-weight:700;color:'+col+'">'+(inRange?'✓ IN':'✗ OUT')+'</span>' +
+        '<span style="font-size:10px;font-weight:700;color:'+col+'">'+(!p?'— no target':inRange?'✓ IN':'✗ OUT')+'</span>' +
       '</div>';
     }).filter(Boolean).join('');
 
-    var rc    = (r.compliance==null || r.compliance>=80) ? C.passGreen : C.failRed;
-    var rcBg  = (r.compliance==null || r.compliance>=80) ? C.passBg   : C.failBg;
+    var rc    = r.compliance==null ? '#888'        : r.compliance>=80 ? C.passGreen : C.failRed;
+    var rcBg  = r.compliance==null ? C.grayPastel  : r.compliance>=80 ? C.passBg    : C.failBg;
 
     return '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
         '<div>' +
-          '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">'+r.pkgLabel+' · Line '+r.line+'</div>' +
-          '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · #'+r.product:'')+'</div>' +
+          '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">'+r.pkgLabel+' · Line '+r.line+
+            (r.product?' · Product #'+r.product:'')+'</div>' +
+          (r.productName||r.bagsPerCase ? '<div style="font-size:10px;color:#555;margin-top:1px">'+
+            (r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
+            (r.bagsPerCase?r.bagsPerCase+' bags/case':'')+'</div>' : '') +
+          '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+'</div>' +
           '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' lbs':'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+r.initials:'')+'</div>' +
         '</div>' +
-        '<div style="background:'+rcBg+';border:1px solid '+((r.compliance==null||r.compliance>=80)?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
+        '<div style="background:'+rcBg+';border:1px solid '+(r.compliance==null?C.border:r.compliance>=80?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
           '<div style="font-size:18px;font-weight:900;color:'+rc+'">'+compLabel(r.compliance)+'</div>' +
           '<div style="font-size:8px;color:#888">compliance</div>' +
         '</div>' +
@@ -241,8 +258,12 @@ function exportRptWeightPDF() {
     ];
     return '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">' +
       '<div style="margin-bottom:10px">' +
-        '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Bag Seal · Line '+r.line+'</div>' +
-        '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · #'+r.product:'')+(r.initials?' · '+r.initials:'')+'</div>' +
+        '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Bag Seal · Line '+r.line+
+          (r.product?' · Product #'+r.product:'')+'</div>' +
+        (r.productName||r.bagsPerCase ? '<div style="font-size:10px;color:#555;margin-top:1px">'+
+          (r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
+          (r.bagsPerCase?r.bagsPerCase+' bags/case':'')+'</div>' : '') +
+        '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.initials?' · '+r.initials:'')+'</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
         checks.map(function(c){
@@ -261,6 +282,80 @@ function exportRptWeightPDF() {
       (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">📝 '+r.comments+'</div>' : '') +
     '</div>';
   }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No bag seal records for this filter</div>';
+
+  // ---- METAL DETECTOR ----
+  var metalCards = rptMetalResults.length ? rptMetalResults.map(function(r){
+    var rows = MD_QUESTIONS.map(function(q,i){
+      var v = (r.answers||{})[i];
+      var yes = v==='yes', no = v==='no';
+      var col = yes ? C.passGreen : no ? C.failRed : '#888';
+      return '<tr style="background:'+(no?C.failBg:'white')+'">'+
+        '<td style="border:1px solid '+C.border+';padding:4px 8px;font-size:8px">'+(i+1)+'. '+q+'</td>'+
+        '<td style="border:1px solid '+C.border+';padding:4px;text-align:center;font-size:9px;font-weight:800;width:60px;color:'+col+'">'+
+          (yes?'☒ Yes':'☐ Yes')+'</td>'+
+        '<td style="border:1px solid '+C.border+';padding:4px;text-align:center;font-size:9px;font-weight:800;width:60px;color:'+col+'">'+
+          (no?'☒ No':'☐ No')+'</td></tr>';
+    }).join('');
+    var fails = MD_QUESTIONS.filter(function(q,i){ return (r.answers||{})[i]==='no'; }).length;
+    return '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
+        '<div>'+
+          '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Line &amp; MD '+(r.line||'—')+'</div>'+
+          '<div style="font-size:10px;color:#888;margin-top:2px">'+(r.startTime||'—')+(r.endTime?' – '+r.endTime:'')+
+            ' · Completed by '+(r.completedBy||'—')+(r.verifiedBy?' · Verified by '+r.verifiedBy:'')+'</div>'+
+        '</div>'+
+        '<div style="background:'+(fails?C.failBg:C.passBg)+';border:1px solid '+(fails?'#ffb3b3':'#95d5b2')+';border-radius:8px;padding:6px 12px;text-align:center">'+
+          '<div style="font-size:14px;font-weight:900;color:'+(fails?C.failRed:C.passGreen)+'">'+(fails?fails+' NO':'PASS')+'</div>'+
+          '<div style="font-size:8px;color:#888">'+MD_QUESTIONS.length+' checks</div>'+
+        '</div>'+
+      '</div>'+
+      '<table style="width:100%;border-collapse:collapse">'+rows+'</table>'+
+      (r.corrective ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">📝 '+r.corrective+'</div>' : '')+
+    '</div>';
+  }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No metal detector checks for this filter</div>';
+
+  // ---- TEMP & HUMIDITY (los checkpoints guardados de esa fecha/turno) ----
+  var thShiftFilter = rptFilters.shift==='all' ? null : rptFilters.shift;
+  var th = tempsFor(rptFilters.date, thShiftFilter);
+  var thAny = th.begin || th.mid || th.end;
+  var thCell = function(cp, field){
+    var r = th[cp];
+    return '<td style="border:1px solid '+C.border+';padding:4px 7px;text-align:center;font-size:9px">'+((r&&r[field])||'—')+'</td>';
+  };
+  var thRow = function(label, field){
+    return '<tr><td style="border:1px solid '+C.border+';padding:4px 7px;font-weight:700;font-size:9px">'+label+'</td>'+
+      thCell('begin',field)+thCell('mid',field)+thCell('end',field)+'</tr>';
+  };
+  var thHead = 'style="border:1px solid '+C.border+';padding:5px;background:#1a5276;color:white;font-size:9px"';
+  var tempCard = thAny ?
+    '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">'+
+      '<table style="width:100%;border-collapse:collapse"><thead><tr>'+
+        '<th '+thHead+' style="border:1px solid '+C.border+';padding:5px;background:#1a5276;color:white;font-size:9px;text-align:left;width:34%"></th>'+
+        '<th '+thHead+'>🌅 BEGINNING</th><th '+thHead+'>☀️ MIDDLE</th><th '+thHead+'>🌙 END</th>'+
+      '</tr></thead><tbody>'+
+        thRow('TIME','time')+
+        thRow('TEMPERATURE (°F)','temp')+
+        thRow('CHOPPING AREA HUM. (%)','chop')+
+        thRow('UNDER PLATFORM HUM. (%)','plat')+
+        thRow('LINE 6 &amp; GRILLING HUM. (%)','line6')+
+        thRow('COMPLETED BY','completedBy')+
+      '</tbody></table>'+
+      (['begin','mid','end'].some(function(cp){return !th[cp];})
+        ? '<div style="font-size:8px;color:#888;font-style:italic;margin-top:6px">Not recorded yet: '+
+          ['begin','mid','end'].filter(function(cp){return !th[cp];})
+            .map(function(c){ return {begin:'Beginning',mid:'Middle',end:'End'}[c]; }).join(', ')+'</div>'
+        : '')+
+    '</div>'
+    : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No temperature &amp; humidity records for this date</div>';
+
+  var sectionTitle = function(color, icon, title, count){
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:6px">' +
+      '<div style="width:4px;height:20px;background:'+color+';border-radius:2px"></div>' +
+      '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">'+icon+' '+title+'</div>' +
+      '<div style="flex:1;height:1px;background:'+C.border+'"></div>' +
+      (count!=null ? '<div style="font-size:9px;color:#888">'+count+' records</div>' : '') +
+    '</div>';
+  };
 
   // ---- FULL HTML ----
   var h = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
@@ -322,6 +417,14 @@ function exportRptWeightPDF() {
     '<div style="font-size:9px;color:#888">'+rptSealResults.length+' records</div>' +
   '</div>' +
   sealCards +
+
+  // Metal detector section
+  sectionTitle('#8e8e93', '🧲', 'Metal Detector Check', rptMetalResults.length) +
+  metalCards +
+
+  // Temp & humidity section
+  sectionTitle('#1a5276', '🌡️', 'Temperature &amp; Humidity — Building 1945', null) +
+  tempCard +
 
   // Corrective actions
   '<div style="margin-top:10px">' +

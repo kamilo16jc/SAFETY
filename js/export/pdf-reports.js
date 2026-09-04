@@ -7,11 +7,15 @@ function exportWeightPDF(){
   var records=db.weights.slice().reverse();
   var lineVal=st.line?'Line '+st.line:'___';
   var shiftVal=st.shift?(st.shift===1?'1st':'2nd'):'___';
-  var tBags=db.weights.reduce(function(a,r){return a+r.total},0);
-  var tPass=db.weights.reduce(function(a,r){return a+r.pass},0);
+  // Los registros sin target no cuentan para el compliance (no hay contra qué medirlos)
+  var scored=db.weights.filter(function(r){ return r.compliance!=null; });
+  var noTarget=db.weights.length-scored.length;
+  var tBags=scored.reduce(function(a,r){return a+r.total},0);
+  var tPass=scored.reduce(function(a,r){return a+r.pass},0);
   var tFail=tBags-tPass;
   var comp=tBags?Math.round((tPass/tBags)*100):0;
   var compColor=comp>=80?'#16a34a':'#dc2626';
+  var allBags=db.weights.reduce(function(a,r){return a+r.total},0);
   var th='style="border:1px solid #999;padding:4px 6px;background:#333;color:white;font-size:9px;text-align:center"';
   var thr='style="border:1px solid #999;padding:4px 6px;background:#c8102e;color:white;font-size:9px;text-align:center"';
   function sRow(label,idx){
@@ -29,9 +33,13 @@ function exportWeightPDF(){
   '<div style="font-size:9px;color:#555;margin-bottom:8px;font-style:italic">FREQUENCY: Beginning and Every hour (+/-5 minutes)</div>'+
   '<div style="font-weight:900;font-size:11px;background:#c8102e;color:white;padding:4px 8px;margin-bottom:4px">WEIGHT LOG</div>'+
   '<table style="width:100%;border-collapse:collapse;margin-bottom:10px"><thead>'+
+  '<tr><th '+thr+'>PRODUCT #</th>'+records.map(function(r){return '<th '+th+'>'+(r.product||'—')+'</th>'}).join('')+'</tr>'+
   '<tr><th '+thr+'>PACKAGE WEIGHT</th>'+records.map(function(r){return '<th '+th+'>'+r.pkgLabel+'</th>'}).join('')+'</tr>'+
   '<tr><th '+thr+'>TIME</th>'+records.map(function(r){return '<th '+th+'>'+(r.time||'—')+'</th>'}).join('')+'</tr>'+
   '</thead><tbody>'+
+  '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px;white-space:nowrap">DESCRIPTION</td>'+records.map(function(r){return '<td style="border:1px solid #ccc;text-align:center;font-size:8px">'+(r.productName||'—')+'</td>'}).join('')+'</tr>'+
+  '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px;white-space:nowrap">TARGET (LBS)</td>'+records.map(function(r){var t=recTarget(r);return '<td style="border:1px solid #ccc;text-align:center;font-size:8px">'+(t?t.min+' – '+t.max:'not set')+'</td>'}).join('')+'</tr>'+
+  '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px;white-space:nowrap">BAGS / CASE</td>'+records.map(function(r){return '<td style="border:1px solid #ccc;text-align:center;font-size:8px">'+(r.bagsPerCase||'—')+'</td>'}).join('')+'</tr>'+
   sRow('Sample 1',0)+sRow('Sample 2',1)+sRow('Sample 3',2)+sRow('Sample 4',3)+sRow('Sample 5',4)+
   '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px">TOTAL</td>'+records.map(function(r){return '<td style="border:1px solid #ccc;text-align:center;font-weight:600;background:#fafff8">'+r.total+'</td>'}).join('')+'</tr>'+
   '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px">AVERAGE</td>'+records.map(function(r){return '<td style="border:1px solid #ccc;text-align:center;font-weight:600;background:#fafff8">'+parseFloat(r.avg).toFixed(3)+'</td>'}).join('')+'</tr>'+
@@ -45,6 +53,7 @@ function exportWeightPDF(){
     '<div style="flex:1;border:2px solid #dc2626;border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:900;color:#dc2626">'+tFail+'</div><div style="font-size:8px;color:#888;text-transform:uppercase">Out of Target</div></div>'+
     '<div style="flex:1;border:2px solid '+compColor+';border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:900;color:'+compColor+'">'+comp+'%</div><div style="font-size:8px;color:#888;text-transform:uppercase">Compliance</div></div>'+
   '</div>'+
+  (noTarget ? '<div style="font-size:8px;color:#777;font-style:italic;margin-bottom:10px">Note: '+noTarget+' record(s) with '+(allBags-tBags)+' bag(s) have no target range defined and are excluded from the compliance figures above.</div>' : '')+
   '<div style="font-size:8px;color:#999;border-top:1px solid #ddd;padding-top:8px;display:flex;justify-content:space-between"><span>SAFETY Quality Control System · Client: Caputo Foods</span><span>SQF # 2.4.D.1.1 | Building 1945 | '+dateStr+'</span></div>'+
   '</body></html>';
   var blob=new Blob([h],{type:'text/html'});
@@ -52,6 +61,38 @@ function exportWeightPDF(){
   var a=document.createElement('a');
   a.href=url; a.target='_blank'; a.click();
   setTimeout(function(){URL.revokeObjectURL(url);},3000);
+}
+
+// Tabla 1945 TEMPERATURE & % RELATIVE HUMIDITY para los PDF.
+// Lee de db.temps (el módulo Temp & Humidity); antes leía campos del
+// formulario de GMP que ya no existen, así que salía siempre vacía.
+function tempTableHTML(date, shift){
+  var t = tempsFor(date, shift);
+  var cell = function(cp, field){
+    var r = t[cp];
+    return '<td style="border:1px solid #ccc;text-align:center;font-size:9px">'+((r && r[field]) || '')+'</td>';
+  };
+  var row = function(label, field){
+    return '<tr><td style="border:1px solid #ccc;padding:4px 8px;font-weight:700;font-size:9px">'+label+'</td>'+
+      cell('begin',field)+cell('mid',field)+cell('end',field)+'</tr>';
+  };
+  var th = 'style="border:1px solid #999;padding:4px;background:#333;color:white;font-size:9px"';
+  var missing = ['begin','mid','end'].filter(function(cp){ return !t[cp]; });
+  return '<div style="font-weight:900;font-size:10px;background:#1a5276;color:white;padding:4px 8px;letter-spacing:1px">'+
+      '1945 TEMPERATURE &amp; % RELATIVE HUMIDITY MONITORING (FREQUENCY: BEGINNING-MIDDLE-END OF THE SHIFT)</div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><thead><tr>'+
+      '<th '+th+' style="border:1px solid #999;padding:4px;background:#333;color:white;font-size:9px;text-align:left;width:35%"></th>'+
+      '<th '+th+'>BEGINNING</th><th '+th+'>MIDDLE</th><th '+th+'>END</th>'+
+    '</tr></thead><tbody>'+
+      row('TIME','time')+
+      row('TEMPERATURE','temp')+
+      row('CHOPPING AREA HUMIDITY','chop')+
+      row('UNDER PLATFORM HUMIDITY','plat')+
+      row('LINE 6 &amp; GRILLING C. HUMIDITY','line6')+
+      row('COMPLETED BY','completedBy')+
+    '</tbody></table>'+
+    (missing.length ? '<div style="font-size:8px;color:#777;font-style:italic;margin-bottom:8px">Not recorded yet: '+
+      missing.map(function(c){ return {begin:'Beginning',mid:'Middle',end:'End'}[c]; }).join(', ')+'</div>' : '');
 }
 
 // ===== PDF GMP =====
@@ -85,17 +126,7 @@ function exportGmpPDF(){
     '<th style="text-align:left;background:#222;color:white"><i>Check/Inspect</i></th>'+
     '<th style="background:#222;color:white;width:120px" colspan="2"><i>Acceptable</i></th>'+
   '</tr></thead><tbody>'+checkRows+'</tbody></table>'+
-  '<div style="background:#222;color:white;font-weight:700;font-size:10px;text-align:center;padding:5px;letter-spacing:1px">1945 TEMPERATURE &amp; % RELATIVE HUMIDITY MONITORING (FREQUENCY: BEGINNING-MIDDLE-END OF THE SHIFT)</div>'+
-  '<table style="margin-bottom:12px"><thead><tr>'+
-    '<th style="text-align:left;width:35%"></th><th>BEGINNING</th><th>MIDDLE</th><th>END</th>'+
-  '</tr></thead><tbody>'+
-    '<tr><td style="font-weight:700">TIME</td><td style="text-align:center">'+gv('t-begin-time')+'</td><td style="text-align:center">'+gv('t-mid-time')+'</td><td style="text-align:center">'+gv('t-end-time')+'</td></tr>'+
-    '<tr><td style="font-weight:700">TEMPERATURE</td><td style="text-align:center">'+gv('t-begin-temp')+'</td><td style="text-align:center">'+gv('t-mid-temp')+'</td><td style="text-align:center">'+gv('t-end-temp')+'</td></tr>'+
-    '<tr><td style="font-weight:700">CHOPPING AREA HUMIDITY</td><td style="text-align:center">'+gv('t-begin-chop')+'</td><td style="text-align:center">'+gv('t-mid-chop')+'</td><td style="text-align:center">'+gv('t-end-chop')+'</td></tr>'+
-    '<tr><td style="font-weight:700">UNDER PLATFORM HUMIDITY</td><td style="text-align:center">'+gv('t-begin-plat')+'</td><td style="text-align:center">'+gv('t-mid-plat')+'</td><td style="text-align:center">'+gv('t-end-plat')+'</td></tr>'+
-    '<tr><td style="font-weight:700">LINE 6 &amp; GRILLING C. HUMIDITY</td><td style="text-align:center">'+gv('t-begin-line6')+'</td><td style="text-align:center">'+gv('t-mid-line6')+'</td><td style="text-align:center">'+gv('t-end-line6')+'</td></tr>'+
-    '<tr><td style="font-weight:700">INITIALS</td><td style="text-align:center">'+gv('t-begin-init')+'</td><td style="text-align:center">'+gv('t-mid-init')+'</td><td style="text-align:center">'+gv('t-end-init')+'</td></tr>'+
-  '</tbody></table>'+
+  tempTableHTML(dateVal, gmpShift)+
   '<div style="border:1px solid #222;padding:5px;text-align:center;font-weight:700;background:#f5f5f5;margin-bottom:4px">Additional Comments/ Notes on Corrections and Corrective Actions</div>'+
   '<div style="border:1px solid #ccc;min-height:50px;padding:8px;margin-bottom:16px">'+gv('gmp-comments')+'</div>'+
   '<div style="margin-top:10px"><div style="border-bottom:1px solid #aaa;padding-bottom:4px;font-size:10px">'+gv('gmp-completed')+'</div>'+

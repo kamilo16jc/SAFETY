@@ -479,6 +479,17 @@ function thRecordFor(cp){
   }) || null;
 }
 
+// Checkpoints guardados de una fecha (y turno, si se indica). Lo usan los PDF.
+function tempsFor(date, shift){
+  var out = {begin:null, mid:null, end:null};
+  (getDB().temps||[]).forEach(function(t){
+    if(t.date!==date) return;
+    if(shift && String(t.shift)!==String(shift)) return;
+    if(!out[t.checkpoint]) out[t.checkpoint] = t;
+  });
+  return out;
+}
+
 function thRecordSummary(r){
   return (r.time||'—')+' · '+(r.temp?r.temp+'°F':'—°F')+
          (r.chop?' · Chop '+r.chop+'%':'')+(r.plat?' · Plat '+r.plat+'%':'')+
