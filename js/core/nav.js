@@ -113,6 +113,7 @@ function selectLine(n){
   var wl=document.getElementById('wm-line'); if(wl) wl.textContent=st.line||'—';
   var sl=document.getElementById('sm-line'); if(sl) sl.textContent=st.line||'—';
   if(window.updateDupHint) updateDupHint();
+  if(window.updateSealDupHint) updateSealDupHint();
   checkReady();
 }
 function selectShift(n){
