@@ -16,9 +16,9 @@ function exportWeightPDF(){
   var thr='style="border:1px solid #999;padding:4px 6px;background:#c8102e;color:white;font-size:9px;text-align:center"';
   function sRow(label,idx){
     return '<tr><td style="border:1px solid #ccc;font-weight:700;background:#f5f5f5;padding:4px 8px;white-space:nowrap">'+label+'</td>'+
-      records.map(function(r){var v=r.vals[idx];if(v===undefined||v===null||v==='')return '<td style="border:1px solid #ccc"></td>';var num=parseFloat(v);var p=PKGS[r.pkg];var col=(p&&!isNaN(num)&&num>=p.min&&num<=p.max)?'#16a34a':'#dc2626';return '<td style="border:1px solid #ccc;text-align:center;font-weight:600;color:'+col+'">'+num.toFixed(3)+'</td>'}).join('')+'</tr>';
+      records.map(function(r){var v=r.vals[idx];if(v===undefined||v===null||v==='')return '<td style="border:1px solid #ccc"></td>';var num=parseFloat(v);var p=recTarget(r);var col=!p?'#111':((!isNaN(num)&&num>=p.min&&num<=p.max)?'#16a34a':'#dc2626');return '<td style="border:1px solid #ccc;text-align:center;font-weight:600;color:'+col+'">'+num.toFixed(3)+'</td>'}).join('')+'</tr>';
   }
-  var compCells=records.map(function(r){var col=r.compliance>=80?'#16a34a':'#dc2626';return '<td style="border:1px solid #ccc;text-align:center;font-weight:700;color:'+col+';padding:4px">'+r.compliance+'%</td>'}).join('');
+  var compCells=records.map(function(r){var col=(r.compliance==null||r.compliance>=80)?'#16a34a':'#dc2626';return '<td style="border:1px solid #ccc;text-align:center;font-weight:700;color:'+col+';padding:4px">'+compLabel(r.compliance)+'</td>'}).join('');
   var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:10px;color:#111;padding:16px}table{font-size:9px}</style></head><body>'+
   '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c8102e;padding-bottom:10px;margin-bottom:12px">'+
     '<div><img src="'+LOGO+'" style="height:48px;object-fit:contain"><br><span style="font-size:8px;color:#777">1931/1935/1945 N 15th Ave, Melrose Park, IL 60160</span></div>'+

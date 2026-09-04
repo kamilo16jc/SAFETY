@@ -97,11 +97,11 @@ function renderRptWeights() {
     return;
   }
   el.innerHTML = rptWeightResults.map(function(r) {
-    var cls = r.compliance >= 80 ? 'hi' : r.compliance >= 60 ? 'mi' : 'lo';
+    var cls = r.compliance == null ? 'mi' : r.compliance >= 80 ? 'hi' : r.compliance >= 60 ? 'mi' : 'lo';
     var dt  = new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     var samples = r.vals.map(function(v){return parseFloat(v).toFixed(3)}).join(' · ');
     return '<div class="rpt-record-card">' +
-      '<span class="rc-comp '+cls+'">'+r.compliance+'%</span>' +
+      '<span class="rc-comp '+cls+'">'+compLabel(r.compliance)+'</span>' +
       '<div class="rc-title">Line '+r.line+' · '+r.pkgLabel+'</div>' +
       '<div class="rc-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · Prod: '+r.product:'')+(r.initials?' · '+r.initials:'')+'</div>' +
       '<div class="rc-samples">'+samples+'</div>' +
@@ -198,7 +198,7 @@ function exportRptWeightPDF() {
 
   // ---- WEIGHT RECORDS (vertical cards) ----
   var weightCards = rptWeightResults.map(function(r) {
-    var p = PKGS[r.pkg];
+    var p = recTarget(r);
     var sampleRows = r.vals.map(function(v,i){
       if(v===undefined||v===null||v==='') return '';
       var num = parseFloat(v);
@@ -212,18 +212,18 @@ function exportRptWeightPDF() {
       '</div>';
     }).filter(Boolean).join('');
 
-    var rc    = r.compliance>=80 ? C.passGreen : C.failRed;
-    var rcBg  = r.compliance>=80 ? C.passBg   : C.failBg;
+    var rc    = (r.compliance==null || r.compliance>=80) ? C.passGreen : C.failRed;
+    var rcBg  = (r.compliance==null || r.compliance>=80) ? C.passBg   : C.failBg;
 
     return '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
         '<div>' +
           '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">'+r.pkgLabel+' · Line '+r.line+'</div>' +
           '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · #'+r.product:'')+'</div>' +
-          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+p.min+' – '+p.max+' lbs · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+r.initials:'')+'</div>' +
+          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' lbs':'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+r.initials:'')+'</div>' +
         '</div>' +
-        '<div style="background:'+rcBg+';border:1px solid '+(r.compliance>=80?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
-          '<div style="font-size:18px;font-weight:900;color:'+rc+'">'+r.compliance+'%</div>' +
+        '<div style="background:'+rcBg+';border:1px solid '+((r.compliance==null||r.compliance>=80)?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
+          '<div style="font-size:18px;font-weight:900;color:'+rc+'">'+compLabel(r.compliance)+'</div>' +
           '<div style="font-size:8px;color:#888">compliance</div>' +
         '</div>' +
       '</div>' +

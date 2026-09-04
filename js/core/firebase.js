@@ -43,6 +43,12 @@
         localDb.metal = mSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
       } catch(e) { localDb.metal = localDb.metal||[]; }
 
+      // Product catalog
+      try {
+        var pSnap = await getDocs(collection(db,'products'));
+        if(!pSnap.empty) localDb.products = pSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      } catch(e) { localDb.products = localDb.products||[]; }
+
       // Holds
       try {
         var hSnap = await getDocs(collection(db,'holds'));

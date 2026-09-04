@@ -42,7 +42,7 @@ function initDash(){
 
   // ---- SECONDARY STATS ----
   var allVals = [];
-  w.forEach(function(r){ r.vals.forEach(function(v){ var n=parseFloat(v); if(!isNaN(n)) allVals.push({val:n,min:PKGS[r.pkg].min,max:PKGS[r.pkg].max}); }); });
+  w.forEach(function(r){ var t=recTarget(r); if(!t) return; r.vals.forEach(function(v){ var n=parseFloat(v); if(!isNaN(n)) allVals.push({val:n,min:t.min,max:t.max}); }); });
   var avgWeight   = allVals.length ? (allVals.reduce(function(a,b){return a+b.val},0)/allVals.length).toFixed(3) : '—';
   var minWeight   = allVals.length ? Math.min.apply(null,allVals.map(function(v){return v.val})).toFixed(3) : '—';
   var maxWeight   = allVals.length ? Math.max.apply(null,allVals.map(function(v){return v.val})).toFixed(3) : '—';
@@ -229,9 +229,9 @@ function initDash(){
   var list=document.getElementById('records-list');
   if(!w.length){list.innerHTML='<div class="empty">No records yet</div>';return;}
   list.innerHTML=w.slice().reverse().slice(0,10).map(function(r){
-    var cls=r.compliance>=80?'hi':r.compliance>=60?'mi':'lo';
+    var cls=r.compliance==null?'mi':r.compliance>=80?'hi':r.compliance>=60?'mi':'lo';
     var dt=new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    return '<div class="rec-item"><div><div class="rec-line">Line '+r.line+' · '+r.pkgLabel+'</div><div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT:'+r.lot:'')+'</div></div><div class="rec-comp '+cls+'">'+r.compliance+'%</div></div>';
+    return '<div class="rec-item"><div><div class="rec-line">Line '+r.line+' · '+r.pkgLabel+'</div><div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT:'+r.lot:'')+'</div></div><div class="rec-comp '+cls+'">'+compLabel(r.compliance)+'</div></div>';
   }).join('');
 }
 
@@ -307,7 +307,7 @@ function exportDashPDF() {
   }).join('');
 
   var allVals=[];
-  w.forEach(function(r){ r.vals.forEach(function(v){ var n=parseFloat(v); if(!isNaN(n)) allVals.push({val:n,min:PKGS[r.pkg].min,max:PKGS[r.pkg].max}); }); });
+  w.forEach(function(r){ var t=recTarget(r); if(!t) return; r.vals.forEach(function(v){ var n=parseFloat(v); if(!isNaN(n)) allVals.push({val:n,min:t.min,max:t.max}); }); });
   var avgW = allVals.length?(allVals.reduce(function(a,b){return a+b.val},0)/allVals.length).toFixed(3):'—';
   var minW = allVals.length?Math.min.apply(null,allVals.map(function(v){return v.val})).toFixed(3):'—';
   var maxW = allVals.length?Math.max.apply(null,allVals.map(function(v){return v.val})).toFixed(3):'—';

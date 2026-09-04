@@ -150,8 +150,18 @@
     <option value="1">1st Shift</option>
     <option value="2">2nd Shift</option>
   </select></div>
+  <div class="sec-label">Product Number</div>
+  <div class="prod-row">
+    <input type="text" class="field" id="w-product" list="w-product-list" placeholder="Type or scan the product number"
+           autocomplete="off" autocapitalize="characters" style="margin-bottom:0" oninput="onProductInput('weight')">
+    <datalist id="w-product-list"></datalist>
+    <button class="scan-btn" onclick="openScanner('weight')" title="Scan barcode">
+      <span data-icon="scan"></span>
+    </button>
+  </div>
+  <div class="product-card" id="w-product-card" style="display:none"></div>
   <div class="sec-label">Package Size</div>
-  <div class="select-wrap"><select class="field" id="pkg-select" onchange="selectPkg(this.value?parseInt(this.value):null)"></select></div>
+  <div class="select-wrap"><select class="field" id="pkg-select" onchange="selectPkg(this.value)"></select></div>
   <div class="target-box">
     <div>
       <div class="target-lbl">Target Range</div>
@@ -181,8 +191,6 @@
   </div>
   <div class="sec-label">LOT Number</div>
   <input type="text" class="field" id="w-lot" placeholder="Enter LOT number">
-  <div class="sec-label">Product Number</div>
-  <input type="text" class="field" id="w-product" placeholder="Enter product number">
   <div class="sec-label">Comments</div>
   <textarea class="field" id="w-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
   <div class="sec-label">Operator Initials</div>
@@ -214,6 +222,16 @@
     <option value="1">1st Shift</option>
     <option value="2">2nd Shift</option>
   </select></div>
+  <div class="sec-label">Product Number</div>
+  <div class="prod-row">
+    <input type="text" class="field" id="s-product" list="s-product-list" placeholder="Type or scan the product number"
+           autocomplete="off" autocapitalize="characters" style="margin-bottom:0" oninput="onProductInput('seal')">
+    <datalist id="s-product-list"></datalist>
+    <button class="scan-btn" onclick="openScanner('seal')" title="Scan barcode">
+      <span data-icon="scan"></span>
+    </button>
+  </div>
+  <div class="product-card" id="s-product-card" style="display:none"></div>
   <div class="sec-label">Time of Check</div>
   <div class="time-row">
     <input type="time" class="time-input" id="seal-time">
@@ -223,8 +241,6 @@
   <div id="seal-list"></div>
   <div class="sec-label">LOT Number</div>
   <input type="text" class="field" id="s-lot" placeholder="Enter LOT number">
-  <div class="sec-label">Product Number</div>
-  <input type="text" class="field" id="s-product" placeholder="Enter product number">
   <div class="sec-label">Comments</div>
   <textarea class="field" id="s-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
   <div class="sec-label">Operator Initials</div>
@@ -686,6 +702,46 @@
   </div>
 </div>
 
+<!-- NEW PRODUCT -->
+<div id="product-modal" class="dup-modal">
+  <div class="dup-box" style="text-align:left;max-width:400px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em">New product</div>
+      <button onclick="closeProductModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer">✕</button>
+    </div>
+    <div class="sec-label">Product Number</div>
+    <input type="text" class="field" id="prod-number" placeholder="e.g. 880" autocapitalize="characters">
+    <div class="sec-label">Description</div>
+    <input type="text" class="field" id="prod-name" placeholder="e.g. Shredded Mozzarella">
+    <div class="sec-label">Package Size</div>
+    <div class="select-wrap"><select class="field" id="prod-pkg" onchange="toggleProductCustom()"></select></div>
+    <div id="prod-custom-wrap" style="display:none">
+      <div class="sec-label">Size label</div>
+      <input type="text" class="field" id="prod-custom-label" placeholder="e.g. 3.5 lbs">
+      <div class="sec-label">Target range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional, can be set later</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input type="text" class="field" id="prod-min" placeholder="Min lbs" inputmode="decimal">
+        <input type="text" class="field" id="prod-max" placeholder="Max lbs" inputmode="decimal">
+      </div>
+    </div>
+    <div class="sec-label">Bags per case</div>
+    <input type="text" class="field" id="prod-bags" placeholder="e.g. 4" inputmode="numeric">
+    <div class="sec-label">Barcode <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional</span></div>
+    <input type="text" class="field" id="prod-barcode" placeholder="Scanned code">
+    <button class="main-btn" style="margin:8px 0 0" onclick="saveProduct()">Save Product ✓</button>
+  </div>
+</div>
+
+<!-- BARCODE SCANNER -->
+<div id="scan-overlay" class="scan-overlay">
+  <div class="scan-frame">
+    <video id="scan-video" playsinline muted></video>
+    <div class="scan-reticle"></div>
+  </div>
+  <div class="scan-msg" id="scan-msg"></div>
+  <button class="dup-secondary" style="color:white" onclick="closeScanner()">Cancel</button>
+</div>
+
 <!-- DUPLICATE LINE WARNING -->
 <div id="dup-modal" class="dup-modal">
   <div class="dup-box">
@@ -739,6 +795,8 @@
 <script src="js/core/icons.js"></script>
 <script src="js/core/nav.js"></script>
 <script src="js/core/dup-guard.js"></script>
+<script src="js/modules/products.js"></script>
+<script src="js/modules/scanner.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>

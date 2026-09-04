@@ -19,7 +19,9 @@ var ICONS = {
   check:     _IC('<circle cx="12" cy="12" r="8.3"/><path d="m8.5 12.3 2.4 2.4 4.6-5.2"/>'),
   moon:      _IC('<path d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.3 6.3 0 0 0 9.7 9.7Z"/>'),
   sun:       _IC('<circle cx="12" cy="12" r="3.4"/><path d="M12 3.5V5.4"/><path d="M12 18.6v1.9"/><path d="M3.5 12h1.9"/><path d="M18.6 12h1.9"/><path d="m5.99 5.99 1.35 1.35"/><path d="m16.66 16.66 1.35 1.35"/><path d="m18.01 5.99-1.35 1.35"/><path d="m7.34 16.66-1.35 1.35"/>'),
-  logout:    _IC('<path d="M9.5 21H6a1.5 1.5 0 0 1-1.5-1.5v-15A1.5 1.5 0 0 1 6 3h3.5"/><path d="M14.5 7.5 19 12l-4.5 4.5"/><path d="M19 12H9.5"/>')
+  logout:    _IC('<path d="M9.5 21H6a1.5 1.5 0 0 1-1.5-1.5v-15A1.5 1.5 0 0 1 6 3h3.5"/><path d="M14.5 7.5 19 12l-4.5 4.5"/><path d="M19 12H9.5"/>'),
+  scan:      _IC('<path d="M4 8.5V6a2 2 0 0 1 2-2h2.5"/><path d="M15.5 4H18a2 2 0 0 1 2 2v2.5"/><path d="M20 15.5V18a2 2 0 0 1-2 2h-2.5"/><path d="M8.5 20H6a2 2 0 0 1-2-2v-2.5"/><path d="M4 12h16"/>'),
+  box:       _IC('<path d="m12 3.5 7.5 4v9l-7.5 4-7.5-4v-9Z"/><path d="M4.5 7.5 12 11.5l7.5-4"/><path d="M12 11.5v9"/>')
 };
 // Fill every element carrying data-icon="name"
 function renderIcons(root){

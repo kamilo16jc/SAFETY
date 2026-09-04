@@ -67,7 +67,8 @@ function initHome(){
   var isToday = function(r){ return r.date && r.date.slice(0,10)===today; };
 
   var w = (db.weights||[]).filter(isToday);
-  var comp = w.length ? Math.round(w.reduce(function(a,r){return a+(r.compliance||0)},0)/w.length) : null;
+  var wc = w.filter(function(r){ return r.compliance!=null; });
+  var comp = wc.length ? Math.round(wc.reduce(function(a,r){return a+r.compliance},0)/wc.length) : null;
   var seals = (db.seals||[]).filter(isToday).length;
   var gmpDone = (db.gmps||[]).some(isToday);
   var holds = (db.holds||[]).filter(function(x){return x.status!=='released' && x.status!=='destroyed'}).length;

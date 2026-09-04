@@ -15,7 +15,7 @@ function exportRptExcel() {
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
       r.pkgLabel, r.product||'', r.lot||'',
       r.vals[0]||'', r.vals[1]||'', r.vals[2]||'', r.vals[3]||'', r.vals[4]||'',
-      parseFloat(r.avg).toFixed(3), r.total, r.pass, r.compliance+'%',
+      parseFloat(r.avg).toFixed(3), r.total, r.pass, compLabel(r.compliance),
       r.initials||'', r.comments||''
     ];
   });
@@ -141,7 +141,7 @@ function exportDashExcel() {
       dt, r.time||'', 'Line '+r.line, (r.shift===1?'1st':'2nd')+' Shift',
       r.pkgLabel, r.product||'', r.lot||'',
       r.vals[0]||'', r.vals[1]||'', r.vals[2]||'', r.vals[3]||'', r.vals[4]||'',
-      parseFloat(r.avg).toFixed(3), r.total, r.pass, r.compliance+'%',
+      parseFloat(r.avg).toFixed(3), r.total, r.pass, compLabel(r.compliance),
       r.initials||'', r.comments||''
     ];
   });

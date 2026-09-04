@@ -8,6 +8,8 @@ function initSeal(){
   setSealNow();
   renderSealList();
   if(currentUser) document.getElementById('s-initials').value = getInitials();
+  renderProductOptions('s-product-list');
+  onProductInput('seal');
   updateSealDupHint();
 }
 function setSealNow(){
@@ -81,6 +83,8 @@ function commitSeal(){
     time:document.getElementById('seal-time').value,
     lot:document.getElementById('s-lot').value,
     product:document.getElementById('s-product').value,
+    productName: currentProduct ? currentProduct.name : '',
+    bagsPerCase: currentProduct ? currentProduct.bagsPerCase : null,
     comments:document.getElementById('s-comments').value,
     initials:document.getElementById('s-initials').value
   });
@@ -94,7 +98,6 @@ function commitSeal(){
   st.sealChecks={};
   renderSealList();
   document.getElementById('s-lot').value='';
-  document.getElementById('s-product').value='';
   document.getElementById('s-comments').value='';
   document.getElementById('s-initials').value='';
   toast('Seal record saved!');

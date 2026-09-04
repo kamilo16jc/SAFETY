@@ -48,7 +48,8 @@ var LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96">'+
 var LOGO='data:image/svg+xml;utf8,'+encodeURIComponent(LOGO_SVG);
 
 // ===== STATE =====
-var st = {line:null, shift:null, pkg:null, samples:['','','','',''], sealChecks:{}};
+// customPkg: peso que viene de un producto del catálogo y no está en PKGS
+var st = {line:null, shift:null, pkg:null, customPkg:null, samples:['','','','',''], sealChecks:{}};
 var gmpAnswers = {};
 var gmpShift = null;
 var metalAnswers = {};
@@ -65,4 +66,14 @@ function getDB(){
   return db;
 }
 function saveDB(db){localStorage.setItem('safety_db',JSON.stringify(db))}
+
+// Rango objetivo de un registro de peso. Puede no existir: los productos
+// creados sin target sólo registran el peso, sin marcar pass/fail.
+function recTarget(r){
+  if(r && r.target && r.target.min!=null && r.target.max!=null) return r.target;
+  if(r && r.pkg!=null && PKGS[r.pkg]) return PKGS[r.pkg];
+  return null;
+}
+// Etiqueta de compliance tolerante a registros sin target
+function compLabel(c){ return (c==null || isNaN(c)) ? '—' : c+'%'; }
 
