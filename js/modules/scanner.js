@@ -1,12 +1,13 @@
 // ===== BARCODE SCANNER (cámara del teléfono) =====
-// Usa el lector de códigos nativo del navegador (BarcodeDetector). Donde no
-// existe, el campo de producto sigue funcionando escribiendo o con una
-// pistola lectora (que escribe como teclado).
-var scanStream = null, scanTimer = null, scanScreen = null, scanDetector = null;
+// Dos motores: el lector nativo del navegador (BarcodeDetector, Android) y
+// ZXing (js/vendor/zxing.min.js) para Safari/iPhone, que no lo trae.
+// Si la cámara falla, el overlay deja escribir el código a mano.
+var scanStream = null, scanTimer = null, scanScreen = null;
+var scanDetector = null, zxingReader = null;
 
-function scanSupported(){
-  return typeof window.BarcodeDetector !== 'undefined';
-}
+function scanNative(){ return typeof window.BarcodeDetector !== 'undefined'; }
+function scanZXing(){  return typeof window.ZXing !== 'undefined' && !!window.ZXing.BrowserMultiFormatReader; }
+function scanSupported(){ return scanNative() || scanZXing(); }
 
 function openScanner(screen){
   scanScreen = screen;
@@ -20,11 +21,29 @@ function openScanner(screen){
     });
     return;
   }
-  var overlay = document.getElementById('scan-overlay');
-  overlay.style.display = 'flex';
+  document.getElementById('scan-overlay').style.display = 'flex';
+  document.getElementById('scan-manual').value = '';
   document.body.style.overflow = 'hidden';
   setScanMsg('Point the camera at the barcode');
 
+  if(scanNative()) startNativeScan();
+  else startZXingScan();
+}
+
+function setScanMsg(msg){
+  var el = document.getElementById('scan-msg');
+  if(el) el.textContent = msg;
+}
+
+function scanCameraError(e){
+  var name = (e && e.name) || '';
+  if(name==='NotAllowedError')      setScanMsg('Camera permission denied. Allow camera access for this site, or type the code below.');
+  else if(name==='NotFoundError')   setScanMsg('No camera found on this device. Type the code below.');
+  else                              setScanMsg('Could not open the camera. Type the code below.');
+}
+
+// ---- Motor 1: BarcodeDetector nativo ----
+function startNativeScan(){
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
     .then(function(stream){
       scanStream = stream;
@@ -34,14 +53,7 @@ function openScanner(screen){
       scanDetector = new window.BarcodeDetector();
       scanTimer = setInterval(scanTick, 400);
     })
-    .catch(function(e){
-      setScanMsg('Could not open the camera: '+(e && e.name ? e.name : 'error'));
-    });
-}
-
-function setScanMsg(msg){
-  var el = document.getElementById('scan-msg');
-  if(el) el.textContent = msg;
+    .catch(scanCameraError);
 }
 
 function scanTick(){
@@ -52,14 +64,38 @@ function scanTick(){
   }).catch(function(){});
 }
 
+// ---- Motor 2: ZXing (iPhone / navegadores sin BarcodeDetector) ----
+function startZXingScan(){
+  try {
+    zxingReader = new window.ZXing.BrowserMultiFormatReader();
+    zxingReader.decodeFromConstraints(
+      {video:{facingMode:{ideal:'environment'}}},
+      'scan-video',
+      function(result, err){
+        if(result) onScanResult(result.getText ? result.getText() : String(result));
+      }
+    ).catch(scanCameraError);
+  } catch(e) {
+    scanCameraError(e);
+  }
+}
+
 function closeScanner(){
   if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
   if(scanStream){ scanStream.getTracks().forEach(function(t){ t.stop(); }); scanStream = null; }
+  if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader = null; }
   var v = document.getElementById('scan-video');
   if(v) v.srcObject = null;
   var overlay = document.getElementById('scan-overlay');
   if(overlay) overlay.style.display = 'none';
   document.body.style.overflow = '';
+}
+
+// Salida manual del overlay: si la cámara no coopera, se escribe el código
+function submitManualScan(){
+  var v = document.getElementById('scan-manual').value.trim();
+  if(!v){ toast('Enter the code'); return; }
+  onScanResult(v);
 }
 
 function onScanResult(code){

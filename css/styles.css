@@ -209,6 +209,8 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding-righ
 .scan-frame video{width:100%;height:100%;object-fit:cover}
 .scan-reticle{position:absolute;top:50%;left:8%;right:8%;height:2px;background:var(--accent);box-shadow:0 0 12px var(--accent)}
 .scan-msg{color:white;font-size:13px;text-align:center;margin-top:16px;max-width:420px}
+.scan-manual-row{display:flex;gap:8px;align-items:stretch;margin-top:14px;width:100%;max-width:420px}
+.scan-manual-row .field{flex:1}
 
 /* TIME ROW */
 .time-row{display:flex;gap:8px;margin-bottom:14px;align-items:flex-end}

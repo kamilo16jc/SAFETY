@@ -739,6 +739,10 @@
     <div class="scan-reticle"></div>
   </div>
   <div class="scan-msg" id="scan-msg"></div>
+  <div class="scan-manual-row">
+    <input type="text" class="field" id="scan-manual" placeholder="…or type the code" autocapitalize="characters" autocomplete="off" style="margin-bottom:0">
+    <button class="now-btn" onclick="submitManualScan()">Use</button>
+  </div>
   <button class="dup-secondary" style="color:white" onclick="closeScanner()">Cancel</button>
 </div>
 
@@ -815,6 +819,7 @@
 <script src="js/core/pwa.js"></script>
 <script src="js/export/excel.js"></script>
 <script src="js/vendor/jszip.min.js"></script>
+<script src="js/vendor/zxing.min.js"></script>
 <script src="js/integrations/word-fill.js"></script>
 <script src="js/integrations/excel-fill.js"></script>
 <script src="js/integrations/metal-fill.js"></script>
