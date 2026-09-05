@@ -379,7 +379,10 @@ canvas{width:100%!important}
    esto: el teléfono del operador queda exactamente igual.
    ============================================================ */
 @media (min-width:1024px){
-  :root{ --rail:#151a21; --rail-2:#1d232c; --rail-txt:#a8b1bd; --rail-hi:#f2f4f7; --rail-dim:#5b6472; }
+  /* Rail semitransparente: el color sale de mezclarse con el fondo de la
+     página, así que pesa mucho menos que el negro sólido */
+  :root{ --rail:rgba(21,26,33,0.78); --rail-2:rgba(255,255,255,0.09);
+         --rail-txt:#ccd4de; --rail-hi:#ffffff; --rail-dim:#9aa4b1; }
   body{font-family:'IBM Plex Sans',var(--font);font-size:13px}
   input,select,textarea,button{font-family:inherit}
 
@@ -387,21 +390,22 @@ canvas{width:100%!important}
   .menu-btn{display:none}
   .drawer-overlay{display:none!important}
   .drawer{position:fixed;transform:none!important;transition:none;width:232px;max-width:232px;
-    background:var(--rail);border-right:1px solid rgba(255,255,255,0.06);padding:16px 12px 12px;z-index:100}
-  .drawer .d-head{padding:0 6px 14px;border-bottom-color:rgba(255,255,255,0.08);margin-bottom:8px}
+    background:var(--rail);border-right:1px solid rgba(255,255,255,0.10);padding:16px 12px 12px;z-index:100;
+    -webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+  .drawer .d-head{padding:0 6px 14px;border-bottom-color:rgba(255,255,255,0.14);margin-bottom:8px}
   .drawer #header-logo{height:30px}
   .drawer .d-user{margin-top:12px}
-  .drawer .d-user #user-badge{color:var(--rail-hi);font-size:13px;font-weight:600}
+  .drawer .d-user #user-badge{color:var(--rail-hi);font-size:13px;font-weight:700}
   .drawer .d-role{color:var(--rail-dim);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700}
   .drawer .d-nav{gap:1px}
   .drawer .nav-label{color:var(--rail-dim);font-size:9.5px;font-weight:700;letter-spacing:0.13em;text-transform:uppercase;padding:12px 8px 5px}
-  .drawer .d-item{color:var(--rail-txt);font-size:12.5px;font-weight:400;padding:7px 8px;border-radius:6px;gap:9px}
+  .drawer .d-item{color:var(--rail-txt);font-size:12.5px;font-weight:700;letter-spacing:-0.005em;padding:7px 8px;border-radius:6px;gap:9px}
   .drawer .d-item:hover{background:var(--rail-2);color:var(--rail-hi)}
-  .drawer .d-item.current{background:var(--rail-2);color:var(--rail-hi);font-weight:500;box-shadow:inset 2px 0 0 var(--accent)}
-  .drawer .d-ico{width:16px;height:16px;border-radius:0;background:none;box-shadow:none;color:inherit;opacity:0.8}
+  .drawer .d-item.current{background:var(--rail-2);color:var(--rail-hi);box-shadow:inset 2px 0 0 var(--accent)}
+  .drawer .d-ico{width:16px;height:16px;border-radius:0;background:none;box-shadow:none;color:inherit;opacity:0.9}
   .drawer .d-item.current .d-ico{color:var(--accent);opacity:1}
-  .drawer .d-foot{border-top-color:rgba(255,255,255,0.08)}
-  .drawer .d-item.danger{color:#e5766d}
+  .drawer .d-foot{border-top-color:rgba(255,255,255,0.14)}
+  .drawer .d-item.danger{color:#ff8f85}
 
   /* --- barra superior --- */
   .topbar{display:flex;position:fixed;top:0;left:232px;right:0;height:52px;z-index:90;
@@ -425,8 +429,17 @@ canvas{width:100%!important}
   .form-title{font-size:21px}
   .form-meta{font-size:12.5px}
 
+  /* Home aprovecha el ancho: 4 tiles en fila y accesos en rejilla */
+  #screen-home > *{max-width:1120px}
+  #screen-home .app-header{display:none}   /* la fecha ya está en la barra superior */
+  #screen-home .tiles{grid-template-columns:repeat(4,1fr)}
+  #screen-home .qa-col{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  #screen-home #home-recent{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  #screen-home .recent-row{margin-bottom:0}
+  .home-greet{margin-top:0}
+
   /* Los formularios de captura no se estiran a lo ancho del monitor */
-  #screen-home > *,#screen-weight > *,#screen-seal > *,#screen-metal > *,
+  #screen-weight > *,#screen-seal > *,#screen-metal > *,
   #screen-temp > *,#screen-gmp > *,#screen-hold > *,#screen-admin > *,
   #screen-lotsearch > *,#screen-activity > *,#screen-reports > *{max-width:720px}
   #screen-products > *{max-width:none}
