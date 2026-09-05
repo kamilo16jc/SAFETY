@@ -67,9 +67,9 @@ function onProductInput(screen){
 }
 
 function productIds(screen){
-  return screen==='seal'
-    ? {input:'s-product', card:'s-product-card', list:'s-product-list'}
-    : {input:'w-product', card:'w-product-card', list:'w-product-list'};
+  if(screen==='seal')    return {input:'s-product',  card:'s-product-card', list:'s-product-list'};
+  if(screen==='catalog') return {input:'cat-search', card:null,             list:null};
+  return {input:'w-product', card:'w-product-card', list:'w-product-list'};
 }
 
 // Llena lo que se sabe del producto. El peso queda seleccionado pero editable:
@@ -218,10 +218,18 @@ function saveProduct(){
   closeProductModal();
   renderProductOptions('w-product-list');
   renderProductOptions('s-product-list');
-  // Deja el producto recién creado seleccionado en la pantalla donde se pidió
-  var ids = productIds(productScreen);
-  document.getElementById(ids.input).value = prod.number;
-  onProductInput(productScreen);
+  // Deja el producto recién creado listo en la pantalla donde se pidió
+  if(productScreen==='catalog'){
+    catSelected = prod.number;
+    catFilter = '';
+    var s = document.getElementById('cat-search'); if(s) s.value='';
+    renderCatalog();
+    renderCatalogDetail();
+  } else {
+    var ids = productIds(productScreen);
+    document.getElementById(ids.input).value = prod.number;
+    onProductInput(productScreen);
+  }
   toast('Product saved ✓');
 }
 

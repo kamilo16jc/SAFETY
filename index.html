@@ -10,6 +10,10 @@
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <title>SAFETY | Quality Control</title>
+<!-- Tipografía de escritorio: sólo se usa a partir de 1024px, así que el
+     teléfono no descarga las fuentes. Si no carga, cae a la del sistema. -->
+<link rel="stylesheet" media="(min-width:1024px)"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -96,6 +100,14 @@
   <div id="home-recent"></div>
 </div>
 
+<!-- TOPBAR (escritorio) -->
+<header class="topbar" id="topbar">
+  <div class="tb-crumb" id="tb-crumb"></div>
+  <div class="tb-spacer"></div>
+  <span class="tb-chip"><span class="tb-dot"></span>Synced</span>
+  <span class="tb-stamp" id="tb-stamp"></span>
+</header>
+
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer">
@@ -108,16 +120,20 @@
   </div>
   <nav class="d-nav">
     <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
+    <div class="nav-label">Capture</div>
     <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
     <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
-    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
     <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
     <button class="d-item" data-screen="screen-metal" onclick="navDrawer('screen-metal')"><span class="d-ico" data-icon="magnet"></span>Metal Detector</button>
-    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Products on Hold</button>
-    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>LOT Search</button>
-    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
+    <div class="nav-label">Review</div>
+    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
+    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>LOT Search</button>
+    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Products on Hold</button>
+    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
+    <div class="nav-label">Setup</div>
+    <button class="d-item" data-screen="screen-products" onclick="navDrawer('screen-products')"><span class="d-ico" data-icon="box"></span>Products</button>
     <button class="d-item" id="admin-card" style="display:none" data-screen="screen-admin" onclick="navDrawer('screen-admin')"><span class="d-ico" data-icon="sliders"></span>Admin</button>
   </nav>
   <div class="d-foot">
@@ -449,6 +465,48 @@
   <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint ✓</button>
 </div>
 
+
+<!-- PRODUCTS -->
+<div class="screen" id="screen-products">
+  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <div class="page-head">
+    <div>
+      <div class="form-title">Products</div>
+      <div class="form-meta"><b id="cat-count">0</b> products in the catalog · shared across every device</div>
+    </div>
+    <div class="ph-tools">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="cat-search" placeholder="Search by number or description" autocomplete="off" oninput="onCatalogSearch(this.value)">
+      </div>
+      <button class="btn-ghost" onclick="openScanner('catalog')"><span data-icon="scan"></span>Scan</button>
+      <button class="btn-solid" onclick="openProductModal('catalog')">+ New product</button>
+    </div>
+  </div>
+  <div class="workspace">
+    <div class="panel">
+      <div class="table-scroll">
+        <table class="cat-table" id="cat-table">
+          <thead>
+            <tr>
+              <th onclick="sortCatalog(this,'number')">Number<span class="arrow">▲</span></th>
+              <th onclick="sortCatalog(this,'name')">Description<span class="arrow">▲</span></th>
+              <th onclick="sortCatalog(this,'size')">Size<span class="arrow">▲</span></th>
+              <th onclick="sortCatalog(this,'target')">Target range<span class="arrow">▲</span></th>
+              <th class="num" onclick="sortCatalog(this,'bags')">Bags/case<span class="arrow">▲</span></th>
+              <th onclick="sortCatalog(this,'linked')">Barcode<span class="arrow">▲</span></th>
+              <th class="col-by" onclick="sortCatalog(this,'createdBy')">Created by<span class="arrow">▲</span></th>
+              <th onclick="sortCatalog(this,'createdAt')">Added<span class="arrow">▲</span></th>
+            </tr>
+          </thead>
+          <tbody id="cat-rows"></tbody>
+        </table>
+      </div>
+      <div class="table-foot" id="cat-foot"></div>
+    </div>
+    <aside class="panel cat-detail" id="cat-detail"></aside>
+  </div>
+</div>
 
 <!-- METAL DETECTOR -->
 <div class="screen" id="screen-metal">
@@ -800,6 +858,7 @@
 <script src="js/core/nav.js"></script>
 <script src="js/core/dup-guard.js"></script>
 <script src="js/modules/products.js"></script>
+<script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>

@@ -102,6 +102,7 @@ function onScanResult(code){
   closeScanner();
   playAlert('pass');
   var screen = scanScreen || 'weight';
+  if(screen==='catalog'){ catalogScanResult(code); return; }
   var p = findProduct(code);
   var ids = productIds(screen);
   if(p){

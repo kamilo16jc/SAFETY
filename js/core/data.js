@@ -46,6 +46,8 @@ var LOGO_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96">'+
   '<text x="100" y="63" font-family="Arial,Helvetica,sans-serif" font-size="44" font-weight="800" fill="#5b6478" letter-spacing="3">SAFETY</text>'+
   '</svg>';
 var LOGO='data:image/svg+xml;utf8,'+encodeURIComponent(LOGO_SVG);
+// Variante clara para la barra lateral oscura del escritorio
+var LOGO_LIGHT='data:image/svg+xml;utf8,'+encodeURIComponent(LOGO_SVG.replace('#5b6478','#f2f4f7'));
 
 // ===== STATE =====
 // customPkg: peso que viene de un producto del catálogo y no está en PKGS

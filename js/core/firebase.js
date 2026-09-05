@@ -1,5 +1,5 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD2QOrY7TyeYCcHE14hXoQ3nCsC4nozL-8",
@@ -109,6 +109,15 @@
       await setDoc(doc(db, colName, fbId), payload);
     } catch(e) {
       console.error('Firebase overwrite error:', e);
+    }
+  };
+
+  // ---- DELETE a single doc ----
+  window.deleteFromFirebase = async function(colName, fbId) {
+    try {
+      await deleteDoc(doc(db, colName, fbId));
+    } catch(e) {
+      console.error('Firebase delete error:', e);
     }
   };
 

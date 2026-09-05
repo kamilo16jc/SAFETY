@@ -15,10 +15,39 @@ function goTo(id){
   if(id==='screen-reports') initReports();
   if(id==='screen-hold') initHold();
   if(id==='screen-activity') initActivity();
+  if(id==='screen-products') initCatalog();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
   });
+  updateTopbar(id);
+}
+
+// ===== TOPBAR (sólo visible en escritorio) =====
+var CRUMBS = {
+  'screen-home':     ['', 'Home'],
+  'screen-weight':   ['Capture', 'Weight Log'],
+  'screen-seal':     ['Capture', 'Bag Seal'],
+  'screen-gmp':      ['Capture', 'GMP Audit'],
+  'screen-temp':     ['Capture', 'Temp & Humidity'],
+  'screen-metal':    ['Capture', 'Metal Detector'],
+  'screen-dashboard':['Review', 'Dashboard'],
+  'screen-reports':  ['Review', 'Reports'],
+  'screen-lotsearch':['Review', 'LOT Search'],
+  'screen-hold':     ['Review', 'Products on Hold'],
+  'screen-activity': ['Review', 'Activity Log'],
+  'screen-products': ['Setup', 'Products'],
+  'screen-admin':    ['Setup', 'Admin']
+};
+function updateTopbar(id){
+  var bar = document.getElementById('topbar');
+  if(!bar) return;
+  bar.style.visibility = (id==='screen-login') ? 'hidden' : '';
+  var c = CRUMBS[id] || ['', ''];
+  var el = document.getElementById('tb-crumb');
+  if(el) el.innerHTML = (c[0] ? c[0]+' / ' : '')+'<b>'+c[1]+'</b>';
+  var st = document.getElementById('tb-stamp');
+  if(st) st.textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · Building 1945';
 }
 
 function toast(msg){
