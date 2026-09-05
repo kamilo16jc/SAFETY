@@ -712,7 +712,10 @@
       <div class="form-title">Search</div>
       <div class="form-meta">Full traceability by LOT, product number, barcode or description</div>
     </div>
-    <div class="ph-tools">
+  </div>
+
+  <div class="panel filter-panel">
+    <div class="filter-row">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
         <input type="search" id="search-input" placeholder="LOT, product number, barcode or description"
@@ -722,7 +725,52 @@
       <button class="btn-solid" onclick="runSearch()">Search</button>
       <button class="btn-ghost" onclick="clearSearch()">Clear</button>
     </div>
+    <div class="filter-grid">
+      <div class="f-field">
+        <label for="sf-field">Search in</label>
+        <div class="select-wrap"><select class="field" id="sf-field">
+          <option value="all">Any field</option>
+          <option value="lot">LOT number</option>
+          <option value="product">Product number</option>
+          <option value="name">Description</option>
+        </select></div>
+      </div>
+      <div class="f-field">
+        <label for="sf-from">Date from</label>
+        <input type="date" class="field" id="sf-from">
+      </div>
+      <div class="f-field">
+        <label for="sf-to">Date to</label>
+        <input type="date" class="field" id="sf-to">
+      </div>
+      <div class="f-field">
+        <label for="sf-line">Line</label>
+        <div class="select-wrap"><select class="field" id="sf-line">
+          <option value="all">All lines</option>
+          <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
+          <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+        </select></div>
+      </div>
+      <div class="f-field">
+        <label for="sf-shift">Shift</label>
+        <div class="select-wrap"><select class="field" id="sf-shift">
+          <option value="all">All shifts</option>
+          <option value="1">1st shift</option>
+          <option value="2">2nd shift</option>
+        </select></div>
+      </div>
+      <div class="f-field">
+        <label for="sf-type">Records</label>
+        <div class="select-wrap"><select class="field" id="sf-type">
+          <option value="all">All records</option>
+          <option value="weight">Weight only</option>
+          <option value="seal">Bag seal only</option>
+          <option value="hold">Holds only</option>
+        </select></div>
+      </div>
+    </div>
   </div>
+
   <div class="workspace" id="search-results"></div>
 </div>
 

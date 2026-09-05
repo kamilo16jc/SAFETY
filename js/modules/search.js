@@ -1,32 +1,73 @@
 // ===== SEARCH =====
-// Búsqueda única por LOT, número de producto, código de barras o descripción.
-// Devuelve la ficha del producto y todo su historial: pesos, bag seal y holds.
+// Búsqueda por LOT, número de producto, código de barras o descripción, con
+// filtros de fecha, línea, turno y tipo de registro. Devuelve la ficha del
+// producto y su historial completo: pesos, bag seal y holds.
 var searchQuery = '', searchDone = false;
+var sf = {field:'all', from:'', to:'', line:'all', shift:'all', type:'all'};
+
+function readFilters(){
+  var g = function(id){ var e=document.getElementById(id); return e ? e.value : ''; };
+  searchQuery = (g('search-input')||'').trim();
+  sf.field = g('sf-field')||'all';
+  sf.from  = g('sf-from');
+  sf.to    = g('sf-to');
+  sf.line  = g('sf-line')||'all';
+  sf.shift = g('sf-shift')||'all';
+  sf.type  = g('sf-type')||'all';
+}
+
+function anyFilter(){
+  return !!(searchQuery || sf.from || sf.to || sf.line!=='all' || sf.shift!=='all');
+}
 
 function initSearch(){
   var i = document.getElementById('search-input');
   if(i) i.value = searchQuery;
+  ['sf-field','sf-from','sf-to','sf-line','sf-shift','sf-type'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e && !e.onchange) e.onchange = runSearch;
+  });
   renderSearch();
 }
 
 function runSearch(){
-  var i = document.getElementById('search-input');
-  searchQuery = (i ? i.value : '').trim();
-  searchDone = true;
-  if(!searchQuery){ toast('Enter a LOT, product number or description'); searchDone=false; }
+  readFilters();
+  if(!anyFilter()){
+    searchDone = false;
+    toast('Enter a LOT or product, or pick a date, line or shift');
+  } else {
+    searchDone = true;
+  }
   renderSearch();
 }
 
 function clearSearch(){
   searchQuery = ''; searchDone = false;
+  sf = {field:'all', from:'', to:'', line:'all', shift:'all', type:'all'};
   var i = document.getElementById('search-input');
   if(i){ i.value=''; i.focus(); }
+  ['sf-from','sf-to'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  ['sf-field','sf-line','sf-shift','sf-type'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value='all'; });
   renderSearch();
 }
 
 function searchOnKey(e){ if(e.key==='Enter') runSearch(); }
 
-// Producto que coincide por número, código de barras o descripción
+// ¿La fecha del registro cae dentro del rango elegido?
+function inDateRange(iso){
+  var d = String(iso||'').slice(0,10);
+  if(!d) return !sf.from && !sf.to;
+  if(sf.from && d < sf.from) return false;
+  if(sf.to   && d > sf.to)   return false;
+  return true;
+}
+
+function matchLineShift(r){
+  if(sf.line!=='all'  && String(r.line||'')  !== sf.line)  return false;
+  if(sf.shift!=='all' && String(r.shift||'') !== sf.shift) return false;
+  return true;
+}
+
 function searchProduct(q){
   var direct = findProduct(q);
   if(direct) return direct;
@@ -39,28 +80,58 @@ function searchProduct(q){
 function searchResults(){
   var q = searchQuery.trim();
   var l = q.toLowerCase();
-  var prod = searchProduct(q);
-  var nums = prod ? [String(prod.number).toLowerCase()] : [];
+  var prod = q ? searchProduct(q) : null;
+  var pnum = prod ? String(prod.number).toLowerCase() : '';
 
-  var hit = function(r){
+  // El texto se busca en el campo elegido (o en todos)
+  var textHit = function(r){
+    if(!l) return true;
     var lot  = String(r.lot||'').toLowerCase();
-    var pnum = String(r.product||'').toLowerCase();
-    var pname= String(r.productName||'').toLowerCase();
-    return lot.indexOf(l)>-1 || pnum.indexOf(l)>-1 || pname.indexOf(l)>-1 ||
-           (nums.length && nums.indexOf(pnum)>-1);
+    var num  = String(r.product||'').toLowerCase();
+    var name = String(r.productName||'').toLowerCase();
+    if(sf.field==='lot')     return lot.indexOf(l)>-1;
+    if(sf.field==='product') return num.indexOf(l)>-1 || (pnum && num===pnum);
+    if(sf.field==='name')    return name.indexOf(l)>-1 || (pnum && num===pnum);
+    return lot.indexOf(l)>-1 || num.indexOf(l)>-1 || name.indexOf(l)>-1 || (pnum && num===pnum);
   };
+  var keep = function(r){ return textHit(r) && inDateRange(r.date) && matchLineShift(r); };
   var byDate = function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); };
 
   var db = getDB();
+  var wantW = sf.type==='all' || sf.type==='weight';
+  var wantS = sf.type==='all' || sf.type==='seal';
+  var wantH = sf.type==='all' || sf.type==='hold';
+
   return {
     product: prod,
-    weights: (db.weights||[]).filter(hit).sort(byDate),
-    seals:   (db.seals||[]).filter(hit).sort(byDate),
-    holds:   (db.holds||[]).filter(function(h){
-               return String(h.lot||'').toLowerCase().indexOf(l)>-1 ||
-                      String(h.product||'').toLowerCase().indexOf(l)>-1;
-             }).sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); })
+    weights: wantW ? (db.weights||[]).filter(keep).sort(byDate) : [],
+    seals:   wantS ? (db.seals||[]).filter(keep).sort(byDate)   : [],
+    holds:   wantH ? (db.holds||[]).filter(function(h){
+               var hitTxt = !l || String(h.lot||'').toLowerCase().indexOf(l)>-1 ||
+                            String(h.product||'').toLowerCase().indexOf(l)>-1;
+               var hitLine = sf.line==='all' || String(h.line||'')===sf.line;
+               return hitTxt && hitLine && inDateRange(h.createdAt);
+             }).sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); }) : []
   };
+}
+
+// Resumen de lo que se está filtrando
+function activeFilterChips(){
+  var chips = [];
+  if(searchQuery){
+    var where = {lot:'LOT', product:'Product', name:'Description'}[sf.field] || 'Any field';
+    chips.push(where+': '+searchQuery);
+  }
+  if(sf.from && sf.to)      chips.push(fmtDate(sf.from)+' — '+fmtDate(sf.to));
+  else if(sf.from)          chips.push('From '+fmtDate(sf.from));
+  else if(sf.to)            chips.push('Up to '+fmtDate(sf.to));
+  if(sf.line!=='all')       chips.push('Line '+sf.line);
+  if(sf.shift!=='all')      chips.push((sf.shift==='1'?'1st':'2nd')+' shift');
+  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only'}[sf.type]);
+  if(!chips.length) return '';
+  return '<div class="filter-chips">'+chips.map(function(c){
+    return '<span class="fchip">'+c+'</span>';
+  }).join('')+'<button class="fchip-clear" onclick="clearSearch()">Clear all</button></div>';
 }
 
 function fmtDate(iso){
@@ -75,7 +146,7 @@ function renderSearch(){
 
   if(!searchDone){
     el.innerHTML = '<div class="panel"><div class="cd-empty">'+
-      'Search by LOT number, product number, barcode or description to pull up the product and its full history.'+
+      'Search by LOT, product number, barcode or description — or filter by date, line, shift or record type — to pull up the product and its full history.'+
       '</div></div>';
     return;
   }
@@ -83,7 +154,7 @@ function renderSearch(){
   var r = searchResults();
   var total = r.weights.length + r.seals.length + r.holds.length;
   if(!total && !r.product){
-    el.innerHTML = '<div class="panel"><div class="cd-empty">No records found for “'+searchQuery+'”.</div></div>';
+    el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
   }
 
@@ -95,11 +166,13 @@ function renderSearch(){
               .filter(Boolean).sort();
   var openHolds = r.holds.filter(function(h){ return h.status!=='released' && h.status!=='destroyed'; }).length;
 
+  // Con un filtro de tipo activo sólo se muestra ese historial
   el.innerHTML =
-    productPanel(r.product, searchQuery) +
+    activeFilterChips() +
+    (searchQuery ? productPanel(r.product, searchQuery) : '') +
     summaryStrip(r, avg, dates, openHolds) +
-    weightPanel(r.weights) +
-    sealPanel(r.seals) +
+    ((sf.type==='all'||sf.type==='weight') ? weightPanel(r.weights) : '') +
+    ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
     holdPanel(r.holds);
   renderIcons(el);
 }
@@ -146,20 +219,28 @@ function summaryStrip(r, avg, dates, openHolds){
   '</div>';
 }
 
-function tablePanel(title, count, headers, rows){
+// Tope de filas por tabla: con filtros amplios hay cientos de registros y
+// pintarlos todos deja la pantalla lenta.
+var SEARCH_LIMIT = 100;
+
+function tablePanel(title, count, headers, rows, shown){
+  var extra = (shown!=null && count>shown)
+    ? '<div class="table-note">Showing the '+shown+' most recent of <b>'+count+'</b>. Narrow the dates or the line to see the rest.</div>'
+    : '';
   return '<div class="panel res-panel">'+
     '<div class="res-head"><span class="res-title">'+title+'</span>'+
       '<span class="res-count">'+count+' record'+(count===1?'':'s')+'</span></div>'+
     (count
       ? '<div class="table-scroll"><table class="cat-table"><thead><tr>'+
           headers.map(function(h){ return '<th'+(h.num?' class="num"':'')+'>'+h.t+'</th>'; }).join('')+
-        '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+        '</tr></thead><tbody>'+rows+'</tbody></table></div>'+extra
       : '<div class="cd-empty" style="padding:18px">No records</div>')+
   '</div>';
 }
 
 function weightPanel(list){
-  var rows = list.map(function(w){
+  var page = list.slice(0, SEARCH_LIMIT);
+  var rows = page.map(function(w){
     var t = recTarget(w);
     var samples = (w.vals||[]).map(function(v){
       var n = parseFloat(v);
@@ -185,16 +266,17 @@ function weightPanel(list){
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
     {t:'Samples (lbs)'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'}
-  ], rows);
+  ], rows, page.length);
 }
 
 function sealPanel(list){
+  var page = list.slice(0, SEARCH_LIMIT);
   var mark = function(v){
     if(v==='pass') return '<span class="pill ok">PASS</span>';
     if(v==='fail') return '<span class="pill bad">FAIL</span>';
     return '<span class="pill">—</span>';
   };
-  var rows = list.map(function(s){
+  var rows = page.map(function(s){
     var c = s.checks||{};
     return '<tr>'+
       '<td class="mono">'+fmtDate(s.date)+'</td>'+
@@ -212,7 +294,7 @@ function sealPanel(list){
   return tablePanel('Bag seal history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},
     {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'}
-  ], rows);
+  ], rows, page.length);
 }
 
 function holdPanel(list){
