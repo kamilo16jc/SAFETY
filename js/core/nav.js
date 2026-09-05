@@ -47,7 +47,7 @@ function updateTopbar(id){
   if(!bar) return;
   var c = CRUMBS[id] || ['', ''];
   var el = document.getElementById('tb-crumb');
-  if(el) el.innerHTML = (c[0] ? c[0]+' / ' : '')+'<b>'+c[1]+'</b>';
+  if(el) el.innerHTML = '<span class="tb-eyebrow">'+(c[0]||'SAFETY')+'</span><b>'+c[1]+'</b>';
   var st = document.getElementById('tb-stamp');
   if(st) st.textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · Building 1945';
 }
@@ -59,11 +59,17 @@ function toast(msg){
 }
 
 // ===== DRAWER =====
+// Ficha del usuario en el pie de la barra lateral
+function setDrawerUser(){
+  if(!currentUser) return;
+  var b=document.getElementById('user-badge');   if(b) b.textContent = currentUser.name;
+  var r=document.getElementById('drawer-role');  if(r) r.textContent = currentUser.role;
+  var a=document.getElementById('user-initials');
+  if(a) a.textContent = currentUser.name.split(' ').map(function(n){return n[0]}).join('').slice(0,2).toUpperCase();
+}
+
 function openDrawer(){
-  if(currentUser){
-    document.getElementById('user-badge').textContent = currentUser.name;
-    document.getElementById('drawer-role').textContent = currentUser.role;
-  }
+  setDrawerUser();
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -105,22 +111,31 @@ function initHome(){
   var holds = (db.holds||[]).filter(function(x){return x.status!=='released' && x.status!=='destroyed'}).length;
 
   var compColor = comp===null ? 'var(--dim)' : comp>=90 ? 'var(--pass)' : comp>=80 ? 'var(--warn)' : 'var(--fail)';
-  var tile = function(onclick, icoBg, icoColor, ico, val, lbl, valColor){
+  var tile = function(onclick, note, ico, val, lbl, valColor){
     return '<div class="tile" onclick="'+onclick+'">'+
-      '<div class="t-ico" style="background:'+icoBg+';color:'+icoColor+'">'+(ICONS[ico]||'')+'</div>'+
-      '<div class="t-val" style="color:'+(valColor||'var(--text)')+'">'+val+'</div>'+
-      '<div class="t-lbl">'+lbl+'</div>'+
+      '<div class="t-top"><span class="t-lbl">'+lbl+'</span>'+
+        '<span class="t-ico">'+(ICONS[ico]||'')+'</span></div>'+
+      '<div class="t-val"'+(valColor?' style="color:'+valColor+'"':'')+'>'+val+'</div>'+
+      '<div class="t-note">'+note+'</div>'+
     '</div>';
   };
+  var lines={}; w.forEach(function(r){ if(r.line) lines[r.line]=1; });
+  var lineCount=Object.keys(lines).length;
+  var sealFails=(db.seals||[]).filter(isToday).filter(function(s){
+    return Object.keys(s.checks||{}).some(function(k){ return s.checks[k]==='fail'; });
+  }).length;
+
   document.getElementById('home-tiles').innerHTML =
-    tile("goTo('screen-dashboard')", 'rgba(0,122,255,0.1)', '#007aff', 'scale', w.length, 'Weight checks') +
-    tile("goTo('screen-dashboard')", comp===null?'rgba(142,142,147,0.12)':comp>=90?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)',
-         compColor, 'check', comp===null ? '—' : comp+'<small>%</small>', 'Compliance', compColor) +
-    tile("goTo('screen-seal')", 'rgba(52,199,89,0.1)', '#28a745', 'droplet', seals, 'Bag seals') +
+    tile("goTo('screen-dashboard')", lineCount?lineCount+' line(s) active':'none logged yet',
+         'scale', w.length, 'Weight checks') +
+    tile("goTo('screen-dashboard')", 'target 90% or higher',
+         'check', comp===null ? '—' : comp+'<small>%</small>', 'Compliance', compColor) +
+    tile("goTo('screen-seal')", sealFails?sealFails+' with a failed check':'all checks passed',
+         'droplet', seals, 'Bag seals') +
     (holds > 0
-      ? tile("goTo('screen-hold')", 'rgba(255,149,0,0.14)', 'var(--warn)', 'lock', holds, 'Active holds', 'var(--warn)')
-      : tile("goTo('screen-gmp')", gmpDone?'rgba(52,199,89,0.1)':'rgba(255,149,0,0.12)',
-             gmpDone?'var(--pass)':'var(--warn)', 'clipboard', gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
+      ? tile("goTo('screen-hold')", 'open cases', 'lock', holds, 'Products on hold', 'var(--warn)')
+      : tile("goTo('screen-gmp')", 'SQF 2.5.D.A daily',
+             'clipboard', gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
 
   // Recent activity (last 3, most recent first)
   var typeColor = {weight:'var(--accent)', seal:'var(--pass)', gmp:'var(--warn)', hold:'#ff9500', temp:'#5ac8fa', login:'var(--dim)'};

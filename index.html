@@ -10,10 +10,11 @@
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <title>SAFETY | Quality Control</title>
-<!-- Tipografía de escritorio: sólo se usa a partir de 1024px, así que el
-     teléfono no descarga las fuentes. Si no carga, cae a la del sistema. -->
-<link rel="stylesheet" media="(min-width:1024px)"
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<!-- Tipografía del sistema visual: Manrope para la interfaz e IBM Plex Mono
+     para las cifras. Si no cargan, cae a la fuente del sistema. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
@@ -112,11 +113,8 @@
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer">
   <div class="d-head">
-    <img id="header-logo" style="height:38px;object-fit:contain" alt="SAFETY">
-    <div class="d-user">
-      <div id="user-badge"></div>
-      <div class="d-role" id="drawer-role"></div>
-    </div>
+    <img id="header-logo" style="height:32px;object-fit:contain" alt="SAFETY">
+    <div class="d-brand-sub">QUALITY &amp; FOOD SAFETY</div>
   </div>
   <nav class="d-nav">
     <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
@@ -139,6 +137,13 @@
   <div class="d-foot">
     <button class="d-item" onclick="toggleDarkMode()"><span class="d-ico" id="dark-btn" data-icon="moon"></span>Appearance</button>
     <button class="d-item danger" onclick="closeDrawer();logoutUser()"><span class="d-ico" data-icon="logout"></span>Log Out</button>
+    <div class="d-user">
+      <div class="d-avatar" id="user-initials"></div>
+      <div class="d-user-txt">
+        <div id="user-badge"></div>
+        <div class="d-role" id="drawer-role"></div>
+      </div>
+    </div>
   </div>
 </aside>
 
