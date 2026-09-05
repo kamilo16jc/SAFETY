@@ -31,31 +31,38 @@ var SHIFT_STATUS = {
   resolved:   {label:'Resolved',   cls:'ok'}
 };
 
+var dailyShiftSel = 1; // el reporte diario es por turno
+
 function initShift(){
   shiftEditingId = null;
   var dd = document.getElementById('sr-daily-date');
   if(dd && !dd.value) dd.value = localDateStr();
+  renderDailyShift();
   resetShiftForm();
   renderShiftList();
   updateDailyCount();
 }
 
-// Muestra cuántos sucesos hay en la fecha del reporte diario, por turno
+function renderDailyShift(){
+  var el = document.getElementById('sr-daily-shift');
+  if(!el) return;
+  el.innerHTML = [[1,'1st shift'],[2,'2nd shift']].map(function(s){
+    return '<button type="button" class="pkg-chip'+(dailyShiftSel===s[0]?' selected':'')+'" onclick="setDailyShift('+s[0]+')">'+s[1]+'</button>';
+  }).join('');
+}
+function setDailyShift(n){ dailyShiftSel = n; renderDailyShift(); updateDailyCount(); }
+
+// Muestra cuántos sucesos hay en la fecha y turno elegidos para el reporte
 function updateDailyCount(){
   var el = document.getElementById('sr-daily-count');
   if(!el) return;
   var dd = document.getElementById('sr-daily-date');
   var date = dd && dd.value ? dd.value : localDateStr();
-  var day = getShifts().filter(function(s){ return String(s.date).slice(0,10)===date; });
-  if(!day.length){
-    el.textContent = 'No events recorded for '+fmtShiftDate(date)+' yet.';
-    return;
-  }
-  var s1 = day.filter(function(s){ return s.shift===1; }).length;
-  var s2 = day.filter(function(s){ return s.shift===2; }).length;
-  var other = day.length - s1 - s2;
-  el.textContent = day.length+' event'+(day.length===1?'':'s')+' on '+fmtShiftDate(date)+
-    ' — 1st shift: '+s1+' · 2nd shift: '+s2+(other?' · unspecified: '+other:'');
+  var lbl = dailyShiftSel===1 ? '1st shift' : '2nd shift';
+  var day = getShifts().filter(function(s){ return String(s.date).slice(0,10)===date && s.shift===dailyShiftSel; });
+  el.textContent = day.length
+    ? day.length+' event'+(day.length===1?'':'s')+' · '+lbl+' · '+fmtShiftDate(date)
+    : 'No '+lbl+' events for '+fmtShiftDate(date)+' yet.';
 }
 
 function renderAreaOptions(){

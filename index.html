@@ -677,11 +677,12 @@
   <div class="panel daily-bar">
     <div class="daily-main">
       <div class="daily-title">Daily shift report</div>
-      <div class="daily-hint" id="sr-daily-count">All the day's events in one document, split by 1st and 2nd shift.</div>
+      <div class="daily-hint" id="sr-daily-count">One report per shift with all its events for the day.</div>
     </div>
     <div class="daily-row">
       <input type="date" class="field" id="sr-daily-date" onchange="updateDailyCount()">
-      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Daily PDF</button>
+      <div id="sr-daily-shift" class="chip-row"></div>
+      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Shift PDF</button>
     </div>
   </div>
 
