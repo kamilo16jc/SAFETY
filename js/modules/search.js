@@ -35,10 +35,24 @@ function runSearch(){
   if(!anyFilter()){
     searchDone = false;
     toast('Enter a LOT or product, or pick a date, line or shift');
-  } else {
-    searchDone = true;
+    renderSearch();
+    return;
+  }
+  searchDone = true;
+  // Si el filtro pide una fecha anterior a la ventana en vivo (90 días), trae
+  // ese historial de Firestore una sola vez antes de pintar los resultados.
+  if(sf.from && window.loadHistory){
+    window.loadHistory(sf.from, renderSearch);
+    return;
   }
   renderSearch();
+}
+
+// Trae TODO el historial (para buscar un LOT viejo sin filtro de fecha)
+function loadAllHistory(){
+  if(!window.loadHistory) return;
+  toast('Loading full history…');
+  window.loadHistory('1970-01-01', function(){ renderSearch(); });
 }
 
 function clearSearch(){
@@ -198,8 +212,20 @@ function renderSearch(){
     ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
     holdPanel(r.holds) +
     capaPanel(r.capa) +
-    shiftPanel(r.shifts);
+    shiftPanel(r.shifts) +
+    historyHint();
   renderIcons(el);
+}
+
+// Solo los últimos 90 días están cargados en memoria. Si el operador busca un
+// LOT antiguo sin filtro de fecha, ofrece traer todo el historial de Firestore.
+function historyHint(){
+  if(!window.loadHistory || (window.isHistoryFull && window.isHistoryFull())) return '';
+  if(sf.from) return '';  // ya se cargó el rango pedido en runSearch
+  return '<div class="panel history-hint">'+
+    '<span>Showing the last 90 days. Older records aren\'t loaded yet.</span>'+
+    '<button class="btn-ghost" onclick="loadAllHistory()">Load full history</button>'+
+    '</div>';
 }
 
 function shiftPanel(list){

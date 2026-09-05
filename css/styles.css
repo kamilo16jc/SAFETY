@@ -331,6 +331,7 @@ canvas{width:100%!important}
 .search-wrap svg{position:absolute;left:10px;width:15px;height:15px;color:var(--dim);pointer-events:none}
 .search-wrap input{width:100%;padding:9px 10px 9px 32px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:14px;outline:none}
 .search-wrap input:focus{border-color:var(--accent)}
+.history-hint{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn-ghost:active{transform:scale(0.97)}
 .btn-ghost svg{width:15px;height:15px}

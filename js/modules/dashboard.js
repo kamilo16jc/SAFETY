@@ -126,6 +126,16 @@ function initDash(){
     return;
   }
   readDashFilters();
+  // Si el rango pedido es más viejo que la ventana en vivo (90 días), trae ese
+  // historial de Firestore una sola vez y luego pinta. Para rangos recientes
+  // loadHistory no hace ninguna lectura (ya está en memoria).
+  var need = dashF.from ? dashF.from : (dashDays===0 ? '1970-01-01' : '');
+  if(need && window.loadHistory){ window.loadHistory(need, renderDash); return; }
+  renderDash();
+}
+
+function renderDash(){
+  readDashFilters();
   var db = getDB();
 
   // El selector de producto se llena con el catálogo
