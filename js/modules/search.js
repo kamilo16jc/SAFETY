@@ -411,7 +411,7 @@ function weightPanel(list){
       return '<span class="samp '+cls+'">'+n.toFixed(3)+'</span>';
     }).join('');
     var cls = w.compliance==null ? '' : w.compliance>=80 ? 'ok' : 'bad';
-    return '<tr>'+
+    return '<tr class="view-row" onclick="viewWeightRecord('+w.id+')">'+
       '<td class="mono">'+fmtDate(w.date)+'</td>'+
       '<td class="mono">'+(w.time||'—')+'</td>'+
       '<td>Line '+w.line+'</td>'+
@@ -423,11 +423,12 @@ function weightPanel(list){
       '<td class="mono num">'+(w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+'</td>'+
       '<td class="num"><span class="pill '+cls+'">'+compLabel(w.compliance)+'</span></td>'+
       '<td class="soft">'+esc((w.initials||'—'))+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View / edit" data-icon="search"></span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
-    {t:'Samples (lbs)'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'}
+    {t:'Samples (lbs)'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
   ], rows, page.length);
 }
 
@@ -440,7 +441,7 @@ function sealPanel(list){
   };
   var rows = page.map(function(s){
     var c = s.checks||{};
-    return '<tr>'+
+    return '<tr class="view-row" onclick="viewSealRecord('+s.id+')">'+
       '<td class="mono">'+fmtDate(s.date)+'</td>'+
       '<td class="mono">'+(s.time||'—')+'</td>'+
       '<td>Line '+s.line+'</td>'+
@@ -451,12 +452,242 @@ function sealPanel(list){
       '<td>'+mark(c['Dunk Tank'])+'</td>'+
       '<td>'+mark(c['Printing'])+'</td>'+
       '<td class="soft">'+esc((s.initials||'—'))+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View / edit" data-icon="search"></span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Bag seal history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},
-    {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'}
+    {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'},{t:''}
   ], rows, page.length);
+}
+
+// ===== VISOR/EDITOR DE PESO Y SELLO (admin/supervisor editan; el resto solo ve) =====
+function canEditRecords(){ return currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor'); }
+
+function shiftOpts(sel){
+  return '<option value="1"'+(sel===1?' selected':'')+'>1st shift</option>'+
+         '<option value="2"'+(sel===2?' selected':'')+'>2nd shift</option>';
+}
+function lineOpts(sel){
+  var o='';
+  for(var i=1;i<=6;i++) o+='<option value="'+i+'"'+(String(sel)===String(i)?' selected':'')+'>Line '+i+'</option>';
+  return o;
+}
+
+function viewWeightRecord(id){
+  var w = (getDB().weights||[]).filter(function(x){ return x.id===id; })[0];
+  if(!w){ toast('Record not found'); return; }
+  var edit = canEditRecords();
+  var t = recTarget(w);
+  var cls = w.compliance==null ? '' : w.compliance>=80 ? 'ok' : 'bad';
+
+  var body;
+  if(edit){
+    var pkgSel = PKGS.map(function(p,i){ return '<option value="'+i+'"'+(w.pkg===i?' selected':'')+'>'+p.label+'</option>'; }).join('');
+    if(w.pkg==null && w.pkgLabel) pkgSel += '<option value="keep" selected>'+esc(w.pkgLabel)+' (keep)</option>';
+    var samps = '';
+    for(var i=0;i<5;i++){
+      var v = (w.vals&&w.vals[i]!=null) ? w.vals[i] : '';
+      samps += '<input type="text" class="field mono" data-sample="'+i+'" inputmode="decimal" placeholder="Sample '+(i+1)+'" value="'+v+'" style="margin:0">';
+    }
+    body =
+      '<div class="rec-grid">'+
+        recEdit('Date','<input type="date" class="field" id="ew-date" value="'+(String(w.date).slice(0,10))+'">')+
+        recEdit('Time','<input type="time" class="field" id="ew-time" value="'+(w.time||'')+'">')+
+        recEdit('Line','<select class="field" id="ew-line">'+lineOpts(w.line)+'</select>')+
+        recEdit('Shift','<select class="field" id="ew-shift">'+shiftOpts(w.shift)+'</select>')+
+        recEdit('Package size','<select class="field" id="ew-pkg">'+pkgSel+'</select>')+
+        recEdit('Initials','<input type="text" class="field" id="ew-initials" value="'+esc(w.initials||'')+'">')+
+        recEdit('Product #','<input type="text" class="field" id="ew-product" value="'+esc(w.product||'')+'">')+
+        recEdit('LOT','<input type="text" class="field" id="ew-lot" value="'+esc(w.lot||'')+'">')+
+      '</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Samples (lbs)</div>'+
+        '<div class="samp-edit">'+samps+'</div>'+
+        '<div class="rec-hint">Compliance is recalculated from these against the target range.</div></div>'+
+      '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
+        '<textarea class="field" id="ew-comments" rows="2">'+esc(w.comments||'')+'</textarea></div>';
+  } else {
+    var sampTxt = (w.vals||[]).map(function(v){ return parseFloat(v).toFixed(3); }).join(' · ');
+    body =
+      '<div class="rec-grid">'+
+        recRow('Date', fmtDate(w.date))+ recRow('Time', w.time||'—')+
+        recRow('Line', 'Line '+w.line)+ recRow('Shift', w.shift===1?'1st':'2nd')+
+        recRow('Package', esc(w.pkgLabel||'—'))+ recRow('Target', t?t.min.toFixed(2)+' – '+t.max.toFixed(2)+' lbs':'not set')+
+        recRow('Product', esc(w.product||'—'))+ recRow('LOT', '<span class="mono">'+esc(w.lot||'—')+'</span>')+
+        recRow('Average', w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+
+        recRow('Compliance', '<span class="pill '+cls+'">'+compLabel(w.compliance)+'</span>')+
+        recRow('By', esc(w.initials||'—'))+
+      '</div>'+
+      recBlock('Samples (lbs)', sampTxt)+
+      recBlock('Comments', w.comments);
+  }
+
+  var actions = edit
+    ? '<button class="btn-solid" onclick="saveWeightEdit('+w.id+')">Save changes</button>'+
+      '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
+    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Weight record'+(w.lot?' · LOT '+esc(w.lot):''), body, actions);
+}
+
+function recEdit(label, control){
+  return '<div class="rec-field"><div class="rec-lbl">'+label+'</div>'+
+         '<div class="rec-edit">'+control+'</div></div>';
+}
+
+function saveWeightEdit(id){
+  var db = getDB();
+  var w = (db.weights||[]).filter(function(x){ return x.id===id; })[0];
+  if(!w) return;
+  var g = function(k){ var e=document.getElementById(k); return e?e.value.trim():''; };
+
+  var vals = [];
+  document.querySelectorAll('#rec-modal-body [data-sample]').forEach(function(inp){
+    var n = parseFloat(inp.value.replace(',','.'));
+    if(!isNaN(n)) vals.push(n);
+  });
+  if(!vals.length){ toast('Enter at least one sample'); return; }
+
+  var pkgVal = document.getElementById('ew-pkg').value;
+  if(pkgVal!=='keep'){ w.pkg = parseInt(pkgVal); w.pkgLabel = PKGS[w.pkg].label; w.target = {min:PKGS[w.pkg].min,max:PKGS[w.pkg].max}; }
+  var t = recTarget(w);
+  var hasT = t && t.min!=null;
+  var pass = hasT ? vals.filter(function(v){ return v>=t.min && v<=t.max; }).length : null;
+
+  w.date       = isoFromDateTime(g('ew-date'), g('ew-time'));
+  w.time       = g('ew-time');
+  w.line       = parseInt(g('ew-line'))||w.line;
+  w.shift      = parseInt(g('ew-shift'))||w.shift;
+  w.product    = g('ew-product');
+  w.productName= (findProduct(g('ew-product'))||{}).name || '';
+  w.lot        = g('ew-lot');
+  w.initials   = g('ew-initials');
+  w.comments   = g('ew-comments');
+  w.vals       = vals;
+  w.total      = vals.length;
+  w.avg        = vals.reduce(function(a,b){return a+b;},0)/vals.length;
+  w.pass       = pass;
+  w.compliance = hasT ? Math.round((pass/vals.length)*100) : null;
+
+  persistRecordEdit('weights', w, db);
+  logActivity('weight','Weight record edited',
+    'Line '+w.line+' · '+(w.shift===1?'1st':'2nd')+' · LOT '+(w.lot||'—')+' · '+compLabel(w.compliance),
+    currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record updated');
+}
+
+function deleteWeightRecord(id){
+  if(!canEditRecords()){ toast('Only admins and supervisors can delete'); return; }
+  var w = (getDB().weights||[]).filter(function(x){ return x.id===id; })[0];
+  if(!w) return;
+  if(!confirm('Delete this weight record? Line '+w.line+' · '+(w.lot?'LOT '+w.lot:'no LOT')+'. This cannot be undone.')) return;
+  removeRecord('weights', id, w._fbId);
+  logActivity('weight','Weight record deleted', 'Line '+w.line+(w.lot?' · LOT '+w.lot:''), currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record deleted');
+}
+
+function viewSealRecord(id){
+  var s = (getDB().seals||[]).filter(function(x){ return x.id===id; })[0];
+  if(!s){ toast('Record not found'); return; }
+  var edit = canEditRecords();
+  var c = s.checks||{};
+  var mark = function(v){ return v==='pass'?'<span class="pill ok">PASS</span>':v==='fail'?'<span class="pill bad">FAIL</span>':'<span class="pill">—</span>'; };
+
+  var body;
+  if(edit){
+    var chk = function(name, id){
+      var v = c[name]||'';
+      return '<div class="rec-field"><div class="rec-lbl">'+name+'</div>'+
+        '<div class="rec-edit"><select class="field" id="'+id+'">'+
+          '<option value=""'+(v===''?' selected':'')+'>—</option>'+
+          '<option value="pass"'+(v==='pass'?' selected':'')+'>Pass</option>'+
+          '<option value="fail"'+(v==='fail'?' selected':'')+'>Fail</option>'+
+        '</select></div></div>';
+    };
+    body =
+      '<div class="rec-grid">'+
+        recEdit('Date','<input type="date" class="field" id="es-date" value="'+(String(s.date).slice(0,10))+'">')+
+        recEdit('Time','<input type="time" class="field" id="es-time" value="'+(s.time||'')+'">')+
+        recEdit('Line','<select class="field" id="es-line">'+lineOpts(s.line)+'</select>')+
+        recEdit('Shift','<select class="field" id="es-shift">'+shiftOpts(s.shift)+'</select>')+
+        recEdit('Product #','<input type="text" class="field" id="es-product" value="'+esc(s.product||'')+'">')+
+        recEdit('LOT','<input type="text" class="field" id="es-lot" value="'+esc(s.lot||'')+'">')+
+        chk('Visual','es-visual')+ chk('Dunk Tank','es-dunk')+ chk('Printing','es-print')+
+        recEdit('Initials','<input type="text" class="field" id="es-initials" value="'+esc(s.initials||'')+'">')+
+      '</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
+        '<textarea class="field" id="es-comments" rows="2">'+esc(s.comments||'')+'</textarea></div>';
+  } else {
+    body =
+      '<div class="rec-grid">'+
+        recRow('Date', fmtDate(s.date))+ recRow('Time', s.time||'—')+
+        recRow('Line', 'Line '+s.line)+ recRow('Shift', s.shift===1?'1st':'2nd')+
+        recRow('Product', esc(s.product||'—'))+ recRow('LOT', '<span class="mono">'+esc(s.lot||'—')+'</span>')+
+        recRow('Visual', mark(c['Visual']))+ recRow('Dunk Tank', mark(c['Dunk Tank']))+
+        recRow('Printing', mark(c['Printing']))+ recRow('By', esc(s.initials||'—'))+
+      '</div>'+
+      recBlock('Comments', s.comments);
+  }
+  var actions = edit
+    ? '<button class="btn-solid" onclick="saveSealEdit('+s.id+')">Save changes</button>'+
+      '<button class="btn-danger" onclick="deleteSealRecord('+s.id+')">Delete</button>'+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
+    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Bag seal record'+(s.lot?' · LOT '+esc(s.lot):''), body, actions);
+}
+
+function saveSealEdit(id){
+  var db = getDB();
+  var s = (db.seals||[]).filter(function(x){ return x.id===id; })[0];
+  if(!s) return;
+  var g = function(k){ var e=document.getElementById(k); return e?e.value.trim():''; };
+  s.date     = isoFromDateTime(g('es-date'), g('es-time'));
+  s.time     = g('es-time');
+  s.line     = parseInt(g('es-line'))||s.line;
+  s.shift    = parseInt(g('es-shift'))||s.shift;
+  s.product  = g('es-product');
+  s.productName = (findProduct(g('es-product'))||{}).name || '';
+  s.lot      = g('es-lot');
+  s.initials = g('es-initials');
+  s.comments = g('es-comments');
+  s.checks   = {'Visual':g('es-visual'),'Dunk Tank':g('es-dunk'),'Printing':g('es-print')};
+  persistRecordEdit('seals', s, db);
+  logActivity('seal','Bag seal record edited',
+    'Line '+s.line+' · '+(s.shift===1?'1st':'2nd')+' · LOT '+(s.lot||'—'),
+    currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record updated');
+}
+
+function deleteSealRecord(id){
+  if(!canEditRecords()){ toast('Only admins and supervisors can delete'); return; }
+  var s = (getDB().seals||[]).filter(function(x){ return x.id===id; })[0];
+  if(!s) return;
+  if(!confirm('Delete this bag seal record? Line '+s.line+' · '+(s.lot?'LOT '+s.lot:'no LOT')+'. This cannot be undone.')) return;
+  removeRecord('seals', id, s._fbId);
+  logActivity('seal','Bag seal record deleted', 'Line '+s.line+(s.lot?' · LOT '+s.lot:''), currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record deleted');
+}
+
+// Guarda un registro editado en localStorage y Firestore (mismo documento)
+function persistRecordEdit(col, rec, db){
+  saveDB(db);   // rec es una referencia dentro de db[col]
+  if(rec._fbId && window.saveToFirebaseAt) window.saveToFirebaseAt(col, rec._fbId, rec);
+  else if(window.saveToFirebase) window.saveToFirebase(col, rec);
+}
+// Borra un registro de localStorage y Firestore
+function removeRecord(col, id, fbId){
+  var db = getDB();
+  db[col] = (db[col]||[]).filter(function(x){ return x.id!==id; });
+  saveDB(db);
+  if(fbId && window.deleteFromFirebase) window.deleteFromFirebase(col, fbId);
 }
 
 function holdPanel(list){

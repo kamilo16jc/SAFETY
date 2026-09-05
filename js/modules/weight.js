@@ -6,6 +6,7 @@ function initWeight(){
   if(wd){ wd.value=localDateStr(); wd.onchange=updateDupHint; }
   var ct=document.getElementById('check-time'); if(ct) ct.onchange=updateDupHint;
   setNow();
+  if(!st.shift) selectShift(expectedShift());   // turno por defecto según la hora
   renderPkgChips();
   buildSamples();
   if(currentUser) document.getElementById('w-initials').value = getInitials();

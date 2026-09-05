@@ -175,6 +175,12 @@ function selectShift(n){
   var ss=document.getElementById('sm-shift'); if(ss) ss.textContent=lbl;
   checkReady();
 }
+// Selección manual del turno: aplica y avisa si no cuadra con la hora
+function onShiftPick(val){
+  var n = parseInt(val)||0;
+  selectShift(n);
+  if(n && !shiftMatchesTime(n)) warnShiftMismatch(n);
+}
 function checkReady(){
   var btn=document.getElementById('start-btn');
   if(btn) btn.disabled=!(st.line&&st.shift);

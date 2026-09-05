@@ -804,3 +804,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .daily-row{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .daily-row .field{margin-bottom:0;max-width:170px}
 .daily-row .btn-solid{white-space:nowrap}
+
+/* --- edición de registros en el visor --- */
+.rec-edit .field{margin:0;padding:6px 8px;font-size:12.5px}
+.rec-edit select.field{padding:6px 8px}
+.samp-edit{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.samp-edit .field{margin:0;padding:6px 8px;text-align:center}
+@media (max-width:520px){ .samp-edit{grid-template-columns:repeat(3,1fr)} }

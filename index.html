@@ -168,7 +168,7 @@
   </select></div>
   <div class="dup-hint" id="w-dup-hint" style="display:none"></div>
   <div class="sec-label">Shift</div>
-  <div class="select-wrap"><select class="field shift-select" onchange="selectShift(parseInt(this.value)||0)">
+  <div class="select-wrap"><select class="field shift-select" onchange="onShiftPick(this.value)">
     <option value="">Select shift</option>
     <option value="1">1st Shift</option>
     <option value="2">2nd Shift</option>
@@ -240,7 +240,7 @@
   </select></div>
   <div class="dup-hint" id="s-dup-hint" style="display:none"></div>
   <div class="sec-label">Shift</div>
-  <div class="select-wrap"><select class="field shift-select" onchange="selectShift(parseInt(this.value)||0)">
+  <div class="select-wrap"><select class="field shift-select" onchange="onShiftPick(this.value)">
     <option value="">Select shift</option>
     <option value="1">1st Shift</option>
     <option value="2">2nd Shift</option>

@@ -40,6 +40,7 @@ function initShift(){
   shiftEditingId = null;
   var dd = document.getElementById('sr-daily-date');
   if(dd && !dd.value) dd.value = localDateStr();
+  dailyShiftSel = expectedShift();
   renderDailyShift();
   resetShiftForm();
   renderShiftList();
@@ -106,7 +107,7 @@ function resetShiftForm(){
   g('sr-action').value    = '';
   g('sr-reported').value  = currentUser ? currentUser.name : '';
   g('sr-supervisor').value= '';
-  shiftSel = null;
+  shiftSel = expectedShift();   // turno por defecto según la hora
   shiftCategory = null; shiftStatus = 'open'; shiftFollow = false;
   renderAreaOptions();
   g('sr-area').value = '';
@@ -125,7 +126,10 @@ function renderShiftShift(){
     return '<button type="button" class="pkg-chip'+(shiftSel===s[0]?' selected':'')+'" onclick="setShiftShift('+s[0]+')">'+s[1]+' shift</button>';
   }).join('');
 }
-function setShiftShift(n){ shiftSel = n; renderShiftShift(); }
+function setShiftShift(n){
+  shiftSel = n; renderShiftShift();
+  if(n && !shiftMatchesTime(n)) warnShiftMismatch(n);
+}
 
 function renderShiftCategory(){
   document.getElementById('sr-category').innerHTML = SHIFT_CATEGORIES.map(function(c){

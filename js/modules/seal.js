@@ -6,6 +6,7 @@ function initSeal(){
   if(sd){ sd.value=localDateStr(); sd.onchange=updateSealDupHint; }
   var stime=document.getElementById('seal-time'); if(stime) stime.onchange=updateSealDupHint;
   setSealNow();
+  if(!st.shift) selectShift(expectedShift());   // turno por defecto según la hora
   renderSealList();
   if(currentUser) document.getElementById('s-initials').value = getInitials();
   renderProductOptions('s-product-list');

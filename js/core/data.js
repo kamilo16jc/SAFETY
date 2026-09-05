@@ -24,6 +24,20 @@ var MD_QUESTIONS = [
   'Was the learn process performed correctly or not needed as the machine was functional?',
   'Did the operator perform a routine check after the learn process?'
 ];
+// Turno según la hora. 2do turno: 3:30 PM – 2:00 AM. 1er turno: 2:00 AM – 3:30 PM.
+var SECOND_SHIFT_START = 15*60 + 30;  // 15:30
+var SECOND_SHIFT_END   = 2*60;        // 02:00 (madrugada)
+function expectedShift(d){
+  d = d || new Date();
+  var m = d.getHours()*60 + d.getMinutes();
+  return (m >= SECOND_SHIFT_START || m < SECOND_SHIFT_END) ? 2 : 1;
+}
+function shiftMatchesTime(n, d){ return n === expectedShift(d); }
+function warnShiftMismatch(n){
+  if(typeof toast !== 'function') return;
+  toast((n===1?'1st':'2nd')+' shift doesn’t match the time — 2nd shift runs 3:30 PM to 2:00 AM');
+}
+
 // Shift reports: categorías de la nota y áreas por defecto (editables)
 var SHIFT_CATEGORIES = ['Quality','Maintenance','Sanitation','Safety','Operations','Personnel','Other'];
 var SHIFT_AREAS_DEFAULT = [
