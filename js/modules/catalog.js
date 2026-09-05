@@ -54,14 +54,14 @@ function renderCatalog(){
     body.innerHTML = list.map(function(p){
       var t = catTargetText(p);
       var linked = (p.barcodes||[]).length;
-      return '<tr data-num="'+p.number+'" tabindex="0" aria-selected="'+(p.number===catSelected)+'" onclick="selectCatalogRow(this.getAttribute(\'data-num\'))">'+
-        '<td class="code">'+p.number+'</td>'+
-        '<td class="desc">'+(p.name||'—')+'</td>'+
-        '<td class="mono">'+(p.pkgLabel||'—')+'</td>'+
+      return '<tr data-num="'+esc(p.number)+'" tabindex="0" aria-selected="'+(p.number===catSelected)+'" onclick="selectCatalogRow(this.getAttribute(\'data-num\'))">'+
+        '<td class="code">'+esc(p.number)+'</td>'+
+        '<td class="desc">'+esc(p.name||'—')+'</td>'+
+        '<td class="mono">'+esc(p.pkgLabel||'—')+'</td>'+
         '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">lbs</span>' : '<span class="tag warn">not set</span>')+'</td>'+
         '<td class="mono num">'+(p.bagsPerCase||'—')+'</td>'+
         '<td>'+(linked ? '<span class="tag ok">Linked</span>' : '<span class="tag">Not linked</span>')+'</td>'+
-        '<td class="soft col-by">'+(p.createdBy||'—')+'</td>'+
+        '<td class="soft col-by">'+esc(p.createdBy||'—')+'</td>'+
         '<td class="mono soft">'+((p.createdAt||'').slice(5,10) || '—')+'</td>'+
       '</tr>';
     }).join('');
@@ -117,17 +117,17 @@ function renderCatalogDetail(){
   }).join('');
   // Un peso que no está en la lista se conserva como opción propia
   if(p.pkg==null && p.pkgLabel){
-    sizeOpts += '<option value="custom" selected>'+p.pkgLabel+'</option>';
+    sizeOpts += '<option value="custom" selected>'+esc(p.pkgLabel)+'</option>';
   }
 
   el.innerHTML =
     '<div class="cd-head">'+
-      '<h2>'+(p.name||'Product '+p.number)+'</h2>'+
-      '<div class="cd-num">Product '+p.number+'</div>'+
+      '<h2>'+esc(p.name||'Product '+p.number)+'</h2>'+
+      '<div class="cd-num">Product '+esc(p.number)+'</div>'+
     '</div>'+
     '<div class="cd-body">'+
       '<div class="field-group"><div class="sec-label">Description</div>'+
-        '<input type="text" class="field" id="cd-name" value="'+(p.name||'').replace(/"/g,'&quot;')+'"></div>'+
+        '<input type="text" class="field" id="cd-name" value="'+esc(p.name||'')+'"></div>'+
       '<div class="field-group"><div class="sec-label">Package Size</div>'+
         '<div class="select-wrap"><select class="field" id="cd-size">'+sizeOpts+'</select></div></div>'+
       '<div class="field-group"><div class="sec-label">Target Range (lbs)</div>'+
@@ -144,7 +144,7 @@ function renderCatalogDetail(){
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
       '<div class="cd-meta">'+
-        '<div>Created by <span>'+(p.createdBy||'—')+'</span></div>'+
+        '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
         '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
         '<div>Used in <span>'+countProductUse(p.number)+' records</span></div>'+
       '</div>'+

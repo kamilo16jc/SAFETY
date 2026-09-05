@@ -14,13 +14,72 @@ function saveOperators(ops) {
   if(window.saveOperatorsToFirebase) window.saveOperatorsToFirebase(ops);
 }
 
-// SHA-256 hash: salted with the username so equal passwords produce different hashes
-function hashPassword(username, password) {
+// ---- Hash de contraseñas ----
+// Antes: un solo SHA-256. Es demasiado rápido: si los hashes se filtran, se
+// prueban miles de millones por segundo. Ahora se usa PBKDF2-SHA256 con 150k
+// iteraciones y sal aleatoria por usuario, que hace la fuerza bruta lenta.
+// Formato guardado: "pbkdf2$<iter>$<salHex>$<hashHex>". Los hashes viejos
+// (SHA-256 hex de 64 chars) se siguen aceptando y se re-hashean al entrar.
+var PBKDF2_ITER = 150000;
+
+function _hex(buf){
+  return Array.prototype.map.call(new Uint8Array(buf), function(b){
+    return ('0'+b.toString(16)).slice(-2);
+  }).join('');
+}
+function _bytesFromHex(hex){
+  var a = new Uint8Array(hex.length/2);
+  for(var i=0;i<a.length;i++) a[i] = parseInt(hex.substr(i*2,2),16);
+  return a;
+}
+
+// Hash moderno con sal aleatoria; devuelve la cadena completa a guardar
+function hashPasswordSecure(password, saltHex){
+  var salt = saltHex ? _bytesFromHex(saltHex)
+                     : crypto.getRandomValues(new Uint8Array(16));
+  var sHex = saltHex || _hex(salt.buffer);
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(String(password)),
+      {name:'PBKDF2'}, false, ['deriveBits'])
+    .then(function(key){
+      return crypto.subtle.deriveBits(
+        {name:'PBKDF2', salt:salt, iterations:PBKDF2_ITER, hash:'SHA-256'}, key, 256);
+    })
+    .then(function(bits){ return 'pbkdf2$'+PBKDF2_ITER+'$'+sHex+'$'+_hex(bits); });
+}
+
+// Esquema viejo (SHA-256 con sal = usuario), sólo para verificar hashes antiguos
+function hashPasswordLegacy(username, password){
   var data = new TextEncoder().encode(String(username).toLowerCase()+':'+password+':safetyQC');
-  return crypto.subtle.digest('SHA-256', data).then(function(buf){
-    return Array.prototype.map.call(new Uint8Array(buf), function(b){
-      return ('0'+b.toString(16)).slice(-2);
-    }).join('');
+  return crypto.subtle.digest('SHA-256', data).then(_hex);
+}
+
+// Usado por Admin y por el alta de usuarios: siempre genera el esquema nuevo
+function hashPassword(username, password){ return hashPasswordSecure(password); }
+
+// PBKDF2 con sal e iteraciones dadas (para verificar un hash guardado)
+function hashPBKDF2With(password, saltHex, iter){
+  var salt = _bytesFromHex(saltHex);
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(String(password)),
+      {name:'PBKDF2'}, false, ['deriveBits'])
+    .then(function(key){
+      return crypto.subtle.deriveBits(
+        {name:'PBKDF2', salt:salt, iterations:iter, hash:'SHA-256'}, key, 256);
+    })
+    .then(function(bits){ return 'pbkdf2$'+iter+'$'+saltHex+'$'+_hex(bits); });
+}
+
+// Verifica una contraseña contra el hash guardado.
+// Devuelve 'ok' (hash nuevo), 'upgrade' (hash viejo válido, re-hashear) o false.
+function verifyPassword(op, password){
+  var stored = op.passHash || '';
+  if(stored.indexOf('pbkdf2$')===0){
+    var p = stored.split('$'); // ['pbkdf2', iter, salt, hash]
+    return hashPBKDF2With(password, p[2], parseInt(p[1])).then(function(cand){
+      return cand===stored ? 'ok' : false;
+    });
+  }
+  return hashPasswordLegacy(op.username||op.name, password).then(function(h){
+    return h===stored ? 'upgrade' : false;
   });
 }
 
@@ -73,7 +132,19 @@ function doLogin() {
   };
 
   if(op.passHash) {
-    hashPassword(op.username||op.name, pass).then(function(h){ finish(h===op.passHash); });
+    verifyPassword(op, pass).then(function(res){
+      if(res==='upgrade'){
+        // Hash viejo válido: se re-guarda con PBKDF2 (best-effort, no bloquea)
+        hashPasswordSecure(pass).then(function(nh){
+          try {
+            var ops2 = getOperators();
+            var t = ops2.find(function(o){ return o.id===op.id; });
+            if(t){ t.passHash = nh; saveOperators(ops2); }
+          } catch(e){}
+        });
+      }
+      finish(res==='ok' || res==='upgrade');
+    });
   } else if(op.pin) {
     // Legacy operator (created in the PIN era): PIN works as password
     // until an admin sets a real one in the Admin panel.

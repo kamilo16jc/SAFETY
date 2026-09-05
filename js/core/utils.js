@@ -1,3 +1,17 @@
+// ===== SEGURIDAD: escape de HTML =====
+// Todo texto que venga de un usuario (nombres de producto, comentarios, LOT,
+// razones de hold, etc.) debe pasar por esc() antes de ir a innerHTML. Sin
+// esto, un operador podía guardar <img onerror=...> en un campo y ejecutar
+// código en la sesión de quien abriera esa pantalla (XSS almacenado).
+function esc(v){
+  if(v==null) return '';
+  return String(v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// Igual que esc pero conservando un guion largo cuando el valor está vacío
+function escDash(v){ return (v==null || v==='') ? '—' : esc(v); }
+
 // ===== DATE HELPERS =====
 function localDateStr() {
   var now = new Date();

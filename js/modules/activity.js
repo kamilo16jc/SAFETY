@@ -170,9 +170,9 @@ function renderActivityLog() {
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start">'+
       '<div class="log-ico">'+(ICONS[icons[l.type]||'doc']||'')+'</div>'+
       '<div style="flex:1">'+
-        '<div style="font-size:11px;font-weight:700;color:var(--text)">'+l.action+'</div>'+
-        '<div style="font-size:10px;color:var(--muted)">'+l.details+'</div>'+
-        '<div style="font-size:10px;color:var(--muted);margin-top:2px">By: '+l.user+' · '+dt+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text)">'+esc(l.action)+'</div>'+
+        '<div style="font-size:10px;color:var(--muted)">'+esc(l.details)+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">By: '+esc(l.user)+' · '+dt+'</div>'+
       '</div>'+
     '</div>';
   }).join('');

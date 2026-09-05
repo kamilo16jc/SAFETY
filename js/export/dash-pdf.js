@@ -106,7 +106,7 @@ function exportDashPDF(){
   var scopeBits = [];
   if(dashF.product!=='all'){
     var pp = findProduct(dashF.product);
-    scopeBits.push('Product '+dashF.product+(pp&&pp.name?' ('+pp.name+')':''));
+    scopeBits.push('Product '+esc(dashF.product)+(pp&&pp.name?' ('+esc(pp.name)+')':''));
   }
   if(dashF.line!=='all')  scopeBits.push('Line '+dashF.line);
   if(dashF.shift!=='all') scopeBits.push((dashF.shift==='1'?'1st':'2nd')+' shift');
@@ -135,7 +135,7 @@ function exportDashPDF(){
     .sort(function(a,b){ return b.overSum-a.overSum; })
     .map(function(g){
       var p = findProduct(g.key);
-      return [ g.key, p&&p.name?p.name:'—', g.over, dpNum(g.overSum,1),
+      return [ esc(g.key), p&&p.name?esc(p.name):'—', g.over, dpNum(g.overSum,1),
                dpNum(g.over?g.overSum/g.over:0,3), dpNum(g.bags?g.overSum/g.bags:0,3) ];
     });
   var lossBody =
@@ -164,7 +164,7 @@ function exportDashPDF(){
   var prodSorted = byProd.slice().sort(function(a,b){ return b.bags-a.bags; });
   var prodRows = prodSorted.map(function(g){
     var p = findProduct(g.key);
-    return [ g.key, p&&p.name?p.name:'—', g.n, g.bags, g.pass, g.fail,
+    return [ esc(g.key), p&&p.name?esc(p.name):'—', g.n, g.bags, g.pass, g.fail,
              '<span style="color:'+compColor(g.comp)+';font-weight:700">'+g.comp+'%</span>',
              (g.avgDev==null?'—':(g.avgDev>0?'+':'')+dpNum(g.avgDev,3)),
              dpNum(g.overSum,1) ];
@@ -186,7 +186,7 @@ function exportDashPDF(){
       var p = findProduct(g.key);
       return '<div style="margin-bottom:8px">'+
         '<div style="display:flex;justify-content:space-between;gap:10px;font-size:9px;margin-bottom:3px">'+
-          '<span style="font-weight:700">'+g.key+(p&&p.name?' · '+p.name:'')+'</span>'+
+          '<span style="font-weight:700">'+esc(g.key)+(p&&p.name?' · '+esc(p.name):'')+'</span>'+
           '<span style="font-variant-numeric:tabular-nums;font-weight:700;color:'+colorFn(g)+'">'+subFn(g)+'</span>'+
         '</div>'+ dpBar(Math.abs(valueFn(g))/max*100, colorFn(g))+'</div>';
     }).join('');
@@ -205,7 +205,7 @@ function exportDashPDF(){
   // 6. Línea, turno y formato
   var cut = function(list, keyFn, labelFn){
     return dashBreakdown(list, keyFn).sort(function(a,b){ return a.comp-b.comp; }).map(function(g){
-      return [ labelFn(g.key), g.n, g.bags, g.pass, g.fail,
+      return [ esc(labelFn(g.key)), g.n, g.bags, g.pass, g.fail,
                '<span style="color:'+compColor(g.comp)+';font-weight:700">'+g.comp+'%</span>',
                (g.avgDev==null?'—':(g.avgDev>0?'+':'')+dpNum(g.avgDev,3)), dpNum(g.overSum,1) ];
     });
@@ -315,9 +315,9 @@ function exportDashPDF(){
   var holdRows = holds.slice().sort(function(a,b){ return String(b.createdAt).localeCompare(String(a.createdAt)); })
     .map(function(h){
       var open = h.status!=='released' && h.status!=='destroyed';
-      return [ h.caseNumber, h.product||'—', h.lot||'—', h.quantity||'—',
+      return [ esc(h.caseNumber), esc(h.product||'—'), esc(h.lot||'—'), esc(h.quantity||'—'),
                '<span style="color:'+(open?DP.bad:DP.ok)+';font-weight:700">'+String(h.status||'').toUpperCase()+'</span>',
-               dpDate(h.createdAt), h.initiatedBy||'—' ];
+               dpDate(h.createdAt), esc(h.initiatedBy||'—') ];
     });
   var holdBody = holds.length
     ? dpTable([{t:'Case'},{t:'Product'},{t:'LOT'},{t:'Qty',num:true},{t:'Status'},{t:'Opened'},{t:'By'}], holdRows)

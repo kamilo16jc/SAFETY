@@ -79,12 +79,12 @@ function initAdmin() {
   var roleColor = function(r){ return r==='admin'?'var(--accent)':r==='supervisor'?'#1a5276':'var(--muted)'; };
   document.getElementById('operators-list').innerHTML = ops.length ?
     ops.map(function(op){
-      var idLine = op.username ? '@'+op.username : 'legacy PIN user';
-      if(op.email) idLine += ' · '+op.email;
+      var idLine = op.username ? '@'+esc(op.username) : 'legacy PIN user';
+      if(op.email) idLine += ' · '+esc(op.email);
       if(!op.passHash && op.pin) idLine += ' · signs in with PIN';
       return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px">' +
         '<div style="min-width:0">' +
-          '<div style="font-size:14px;font-weight:700">'+op.name+'</div>' +
+          '<div style="font-size:14px;font-weight:700">'+esc(op.name)+'</div>' +
           '<div style="font-size:10px;color:'+roleColor(op.role)+';font-weight:700;text-transform:uppercase;letter-spacing:0.1em">'+op.role+'</div>' +
           '<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+idLine+'</div>' +
         '</div>' +

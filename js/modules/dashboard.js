@@ -205,7 +205,7 @@ function initDash(){
   document.getElementById('dash-by-product').innerHTML =
     barList(group(scored, function(r){ return r.product||''; }, function(k){
       var p = findProduct(k);
-      return k + (p&&p.name ? ' · '+p.name : '');
+      return esc(k) + (p&&p.name ? ' · '+esc(p.name) : '');
     }).slice(0,8), 'No product numbers on these records');
 
   document.getElementById('dash-by-pkg').innerHTML =
@@ -310,8 +310,8 @@ function initDash(){
         var cls = r.compliance==null?'mi':r.compliance>=90?'hi':r.compliance>=80?'mi':'lo';
         var dt  = new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
         return '<div class="rec-item"><div><div class="rec-line">Line '+r.line+' · '+r.pkgLabel+
-          (r.product?' · #'+r.product:'')+'</div>'+
-          '<div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' shift · '+r.time+(r.lot?' · LOT '+r.lot:'')+'</div></div>'+
+          (r.product?' · #'+esc(r.product):'')+'</div>'+
+          '<div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' shift · '+r.time+(r.lot?' · LOT '+esc(r.lot):'')+'</div></div>'+
           '<div class="rec-comp '+cls+'">'+compLabel(r.compliance)+'</div></div>';
       }).join('')
     : '<div class="cd-empty" style="padding:18px">No weight records for these filters</div>';

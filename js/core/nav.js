@@ -145,8 +145,8 @@ function initHome(){
       return '<div class="recent-row">'+
         '<div class="r-dot" style="background:'+(typeColor[e.type]||'var(--dim)')+'"></div>'+
         '<div class="r-txt">'+
-          '<div class="r-action">'+e.action+'</div>'+
-          '<div class="r-meta">'+(e.user||'')+'</div>'+
+          '<div class="r-action">'+esc(e.action)+'</div>'+
+          '<div class="r-meta">'+esc(e.user||'')+'</div>'+
         '</div>'+
         '<div class="r-time">'+(e.date ? e.date.slice(11,16) : '')+'</div>'+
       '</div>';

@@ -120,7 +120,7 @@ function activeFilterChips(){
   var chips = [];
   if(searchQuery){
     var where = {lot:'LOT', product:'Product', name:'Description'}[sf.field] || 'Any field';
-    chips.push(where+': '+searchQuery);
+    chips.push(where+': '+esc(searchQuery));
   }
   if(sf.from && sf.to)      chips.push(fmtDate(sf.from)+' — '+fmtDate(sf.to));
   else if(sf.from)          chips.push('From '+fmtDate(sf.from));
@@ -130,7 +130,7 @@ function activeFilterChips(){
   if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only'}[sf.type]);
   if(!chips.length) return '';
   return '<div class="filter-chips">'+chips.map(function(c){
-    return '<span class="fchip">'+c+'</span>';
+    return '<span class="fchip">'+esc(c)+'</span>';
   }).join('')+'<button class="fchip-clear" onclick="clearSearch()">Clear all</button></div>';
 }
 
@@ -179,7 +179,7 @@ function renderSearch(){
 
 function productPanel(p, q){
   if(!p){
-    return '<div class="panel res-panel"><div class="res-head"><span class="res-title">No catalog product matches “'+q+'”</span></div>'+
+    return '<div class="panel res-panel"><div class="res-head"><span class="res-title">No catalog product matches “'+esc(q)+'”</span></div>'+
       '<div class="cd-empty" style="padding:18px">The records below matched the LOT or the product number written on them.</div></div>';
   }
   var target = (p.target && p.target.min!=null) ? p.target.min.toFixed(2)+' – '+p.target.max.toFixed(2)+' lbs' : 'not set';
@@ -190,15 +190,15 @@ function productPanel(p, q){
   return '<div class="panel res-panel">'+
     '<div class="res-head">'+
       '<span class="res-ico" data-icon="box"></span>'+
-      '<span class="res-title">'+(p.name || 'Product '+p.number)+'</span>'+
-      '<span class="res-sub">Product '+p.number+'</span>'+
+      '<span class="res-title">'+esc((p.name || 'Product '+p.number))+'</span>'+
+      '<span class="res-sub">Product '+esc(p.number)+'</span>'+
     '</div>'+
     '<div class="res-grid">'+
-      f('Product number', p.number, true)+
-      f('Description', p.name||'—')+
-      f('Package size', p.pkgLabel||'—', true)+
+      f('Product number', esc(p.number), true)+
+      f('Description', esc(p.name||'—'))+
+      f('Package size', esc(p.pkgLabel||'—'), true)+
       f('Target range', target)+
-      f('Bags per case', p.bagsPerCase||'—')+
+      f('Bags per case', esc(p.bagsPerCase||'—'))+
       f('Barcode', (p.barcodes||[]).length ? '<span class="tag ok">Linked</span>' : '<span class="tag">Not linked</span>')+
       f('Created by', p.createdBy||'—')+
       f('Added', fmtDate(p.createdAt))+
@@ -254,13 +254,13 @@ function weightPanel(list){
       '<td class="mono">'+(w.time||'—')+'</td>'+
       '<td>Line '+w.line+'</td>'+
       '<td>'+(w.shift===1?'1st':'2nd')+'</td>'+
-      '<td class="mono code">'+(w.lot||'—')+'</td>'+
-      '<td class="mono">'+(w.product||'—')+'</td>'+
-      '<td class="mono">'+(w.pkgLabel||'—')+'</td>'+
+      '<td class="mono code">'+esc((w.lot||'—'))+'</td>'+
+      '<td class="mono">'+esc((w.product||'—'))+'</td>'+
+      '<td class="mono">'+esc((w.pkgLabel||'—'))+'</td>'+
       '<td class="samples">'+(samples||'—')+'</td>'+
       '<td class="mono num">'+(w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+'</td>'+
       '<td class="num"><span class="pill '+cls+'">'+compLabel(w.compliance)+'</span></td>'+
-      '<td class="soft">'+(w.initials||'—')+'</td>'+
+      '<td class="soft">'+esc((w.initials||'—'))+'</td>'+
     '</tr>';
   }).join('');
   return tablePanel('Weight history', list.length, [
@@ -283,12 +283,12 @@ function sealPanel(list){
       '<td class="mono">'+(s.time||'—')+'</td>'+
       '<td>Line '+s.line+'</td>'+
       '<td>'+(s.shift===1?'1st':'2nd')+'</td>'+
-      '<td class="mono code">'+(s.lot||'—')+'</td>'+
-      '<td class="mono">'+(s.product||'—')+'</td>'+
+      '<td class="mono code">'+esc((s.lot||'—'))+'</td>'+
+      '<td class="mono">'+esc((s.product||'—'))+'</td>'+
       '<td>'+mark(c['Visual'])+'</td>'+
       '<td>'+mark(c['Dunk Tank'])+'</td>'+
       '<td>'+mark(c['Printing'])+'</td>'+
-      '<td class="soft">'+(s.initials||'—')+'</td>'+
+      '<td class="soft">'+esc((s.initials||'—'))+'</td>'+
     '</tr>';
   }).join('');
   return tablePanel('Bag seal history', list.length, [
@@ -302,13 +302,13 @@ function holdPanel(list){
   var rows = list.map(function(h){
     var open = h.status!=='released' && h.status!=='destroyed';
     return '<tr onclick="goTo(\'screen-hold\')">'+
-      '<td class="mono code">'+h.caseNumber+'</td>'+
+      '<td class="mono code">'+esc(h.caseNumber)+'</td>'+
       '<td><span class="pill '+(open?'bad':'ok')+'">'+String(h.status||'').toUpperCase()+'</span></td>'+
-      '<td class="desc">'+(h.product||'—')+'</td>'+
-      '<td class="mono">'+(h.lot||'—')+'</td>'+
-      '<td class="mono num">'+(h.quantity||'—')+'</td>'+
+      '<td class="desc">'+esc((h.product||'—'))+'</td>'+
+      '<td class="mono">'+esc((h.lot||'—'))+'</td>'+
+      '<td class="mono num">'+esc(h.quantity||'—')+'</td>'+
       '<td class="mono">'+fmtDate(h.createdAt)+'</td>'+
-      '<td class="soft">'+(h.initiatedBy||'—')+'</td>'+
+      '<td class="soft">'+esc((h.initiatedBy||'—'))+'</td>'+
     '</tr>';
   }).join('');
   return tablePanel('Hold cases', list.length, [

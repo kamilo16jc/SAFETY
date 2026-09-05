@@ -85,7 +85,7 @@ function renderRptMetal() {
     return '<div class="rpt-record-card">' +
       '<span class="rc-comp '+cls+'">'+(fails? fails+' NO':'PASS')+'</span>' +
       '<div class="rc-title">Line/MD '+(r.line||'—')+'</div>' +
-      '<div class="rc-meta">'+(r.startTime||'')+(r.endTime?(' – '+r.endTime):'')+' · '+(r.completedBy||'—')+'</div>' +
+      '<div class="rc-meta">'+(r.startTime||'')+(r.endTime?(' – '+r.endTime):'')+' · '+esc(r.completedBy||'—')+'</div>' +
     '</div>';
   }).join('');
 }
@@ -103,9 +103,9 @@ function renderRptWeights() {
     return '<div class="rpt-record-card">' +
       '<span class="rc-comp '+cls+'">'+compLabel(r.compliance)+'</span>' +
       '<div class="rc-title">Line '+r.line+' · '+r.pkgLabel+'</div>' +
-      '<div class="rc-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · Prod: '+r.product:'')+(r.initials?' · '+r.initials:'')+'</div>' +
+      '<div class="rc-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · Prod: '+r.product:'')+(r.initials?' · '+esc(r.initials):'')+'</div>' +
       '<div class="rc-samples">'+samples+'</div>' +
-      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+esc(r.comments)+'</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -146,10 +146,10 @@ function renderRptGmps() {
     var failed = Object.values(r.answers).filter(function(v){return v==='no'}).length;
     var dt = r.date ? new Date(r.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     return '<div class="rpt-record-card">' +
-      '<div class="rc-title">GMP Audit · '+(r.location||'—')+'</div>' +
+      '<div class="rc-title">GMP Audit · '+esc(r.location||'—')+'</div>' +
       '<div class="rc-meta">'+dt+' · '+(r.shift?(r.shift===1?'1st':'2nd')+' Shift':'—')+(r.completedBy?' · '+r.completedBy:'')+'</div>' +
       '<div class="rc-samples" style="color:var(--pass)">'+passed+' passed &nbsp;&nbsp;<span style="color:var(--fail)">'+failed+' failed</span> &nbsp;&nbsp;<span style="color:var(--muted)">'+total+' checked</span></div>' +
-      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+esc(r.comments)+'</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -232,12 +232,12 @@ function exportRptWeightPDF() {
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">' +
         '<div>' +
           '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">'+r.pkgLabel+' · Line '+r.line+
-            (r.product?' · Product #'+r.product:'')+'</div>' +
+            (r.product?' · Product #'+esc(r.product):'')+'</div>' +
           (r.productName||r.bagsPerCase ? '<div style="font-size:10px;color:#555;margin-top:1px">'+
-            (r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
+            esc(r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
             (r.bagsPerCase?r.bagsPerCase+' bags/case':'')+'</div>' : '') +
           '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+'</div>' +
-          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' lbs':'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+r.initials:'')+'</div>' +
+          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' lbs':'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+esc(r.initials):'')+'</div>' +
         '</div>' +
         '<div style="background:'+rcBg+';border:1px solid '+(r.compliance==null?C.border:r.compliance>=80?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
           '<div style="font-size:18px;font-weight:900;color:'+rc+'">'+compLabel(r.compliance)+'</div>' +
@@ -245,7 +245,7 @@ function exportRptWeightPDF() {
         '</div>' +
       '</div>' +
       sampleRows +
-      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+esc(r.comments)+'</div>' : '') +
     '</div>';
   }).join('');
 
@@ -259,11 +259,11 @@ function exportRptWeightPDF() {
     return '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">' +
       '<div style="margin-bottom:10px">' +
         '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Bag Seal · Line '+r.line+
-          (r.product?' · Product #'+r.product:'')+'</div>' +
+          (r.product?' · Product #'+esc(r.product):'')+'</div>' +
         (r.productName||r.bagsPerCase ? '<div style="font-size:10px;color:#555;margin-top:1px">'+
-          (r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
+          esc(r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
           (r.bagsPerCase?r.bagsPerCase+' bags/case':'')+'</div>' : '') +
-        '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.initials?' · '+r.initials:'')+'</div>' +
+        '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+(r.initials?' · '+esc(r.initials):'')+'</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
         checks.map(function(c){
@@ -279,7 +279,7 @@ function exportRptWeightPDF() {
           '</div>';
         }).join('') +
       '</div>' +
-      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+esc(r.comments)+'</div>' : '') +
     '</div>';
   }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No bag seal records for this filter</div>';
 
@@ -302,7 +302,7 @@ function exportRptWeightPDF() {
         '<div>'+
           '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Line &amp; MD '+(r.line||'—')+'</div>'+
           '<div style="font-size:10px;color:#888;margin-top:2px">'+(r.startTime||'—')+(r.endTime?' – '+r.endTime:'')+
-            ' · Completed by '+(r.completedBy||'—')+(r.verifiedBy?' · Verified by '+r.verifiedBy:'')+'</div>'+
+            ' · Completed by '+(r.completedBy||'—')+(r.verifiedBy?' · Verified by '+esc(r.verifiedBy):'')+'</div>'+
         '</div>'+
         '<div style="background:'+(fails?C.failBg:C.passBg)+';border:1px solid '+(fails?'#ffb3b3':'#95d5b2')+';border-radius:8px;padding:6px 12px;text-align:center">'+
           '<div style="font-size:14px;font-weight:900;color:'+(fails?C.failRed:C.passGreen)+'">'+(fails?fails+' NO':'PASS')+'</div>'+
@@ -310,7 +310,7 @@ function exportRptWeightPDF() {
         '</div>'+
       '</div>'+
       '<table style="width:100%;border-collapse:collapse">'+rows+'</table>'+
-      (r.corrective ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.corrective+'</div>' : '')+
+      (r.corrective ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+esc(r.corrective)+'</div>' : '')+
     '</div>';
   }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No metal detector checks for this filter</div>';
 
@@ -488,7 +488,7 @@ function exportRptGmpPDF() {
 
     return '<div style="page-break-inside:avoid;margin-bottom:20px;border:1px solid #ddd;border-radius:6px;padding:12px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
-        '<div><strong>GMP Audit</strong> · '+(r.location||'—')+'</div>' +
+        '<div><strong>GMP Audit</strong> · '+esc(r.location||'—')+'</div>' +
         '<div style="font-size:9px;color:#555">'+dt+' · '+(r.shift?(r.shift===1?'1st':'2nd')+' Shift':'—')+'</div>' +
       '</div>' +
       '<table style="width:100%;border-collapse:collapse;margin-bottom:8px"><thead><tr>' +
@@ -496,10 +496,10 @@ function exportRptGmpPDF() {
         '<th style="background:#222;color:white;padding:4px;font-size:9px;width:120px" colspan="2"><i>Acceptable</i></th>' +
       '</tr></thead><tbody>'+checkRows+'</tbody></table>' +
       tempSection +
-      (r.comments ? '<div style="border:1px solid #ccc;padding:6px;font-size:9px"><b>Comments:</b> '+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="border:1px solid #ccc;padding:6px;font-size:9px"><b>Comments:</b> '+esc(r.comments)+'</div>' : '') +
       '<div style="display:flex;gap:30px;margin-top:8px;font-size:9px">' +
-        '<span><b>Completed By:</b> '+(r.completedBy||'_______________')+'</span>' +
-        '<span><b>Verified By:</b> '+(r.verifiedBy||'_______________')+'</span>' +
+        '<span><b>Completed By:</b> '+esc(r.completedBy||'_______________')+'</span>' +
+        '<span><b>Verified By:</b> '+esc(r.verifiedBy||'_______________')+'</span>' +
       '</div>' +
     '</div>';
   }).join('');

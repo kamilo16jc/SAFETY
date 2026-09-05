@@ -90,12 +90,12 @@ function holdCard(h, showReleaseCert) {
   }
   return '<div data-holdid="'+h.id+'" style="background:var(--surface);border:1px solid '+s.border+';border-left:4px solid '+s.text+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
-      '<div style="font-size:13px;font-weight:800">'+h.caseNumber+'</div>' +
+      '<div style="font-size:13px;font-weight:800">'+esc(h.caseNumber)+'</div>' +
       statusBadge(h.status) +
     '</div>' +
-    '<div style="font-size:14px;font-weight:700;margin-bottom:3px">'+h.product+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">LOT: '+(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+'</div>' +
-    '<div style="font-size:10px;color:var(--muted);margin-top:3px">'+dt+' · '+h.initiatedBy+'</div>' +
+    '<div style="font-size:14px;font-weight:700;margin-bottom:3px">'+esc(h.product)+'</div>' +
+    '<div style="font-size:11px;color:var(--muted)">LOT: '+esc(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+'</div>' +
+    '<div style="font-size:10px;color:var(--muted);margin-top:3px">'+dt+' · '+esc(h.initiatedBy)+'</div>' +
     certBtn +
   '</div>';
 }
@@ -221,16 +221,16 @@ function renderModalDetail() {
   document.getElementById('modal-case-detail').innerHTML =
     '<div style="background:'+s.bg+';border:1px solid '+s.border+';border-radius:12px;padding:14px;margin-bottom:12px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-        '<div style="font-size:16px;font-weight:800">'+h.product+'</div>'+
+        '<div style="font-size:16px;font-weight:800">'+esc(h.product)+'</div>'+
         statusBadge(h.status)+
       '</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">' +
-        '<div><span style="color:var(--muted);font-weight:700">LOT: </span>'+(h.lot||'—')+'</div>' +
-        '<div><span style="color:var(--muted);font-weight:700">QTY: </span>'+h.quantity+'</div>' +
+        '<div><span style="color:var(--muted);font-weight:700">LOT: </span>'+esc(h.lot||'—')+'</div>' +
+        '<div><span style="color:var(--muted);font-weight:700">QTY: </span>'+esc(h.quantity)+'</div>' +
         '<div><span style="color:var(--muted);font-weight:700">LINE: </span>'+(h.line?'Line '+h.line:'—')+'</div>' +
         '<div><span style="color:var(--muted);font-weight:700">DATE: </span>'+dt+'</div>' +
-        '<div style="grid-column:span 2"><span style="color:var(--muted);font-weight:700">BY: </span>'+h.initiatedBy+'</div>' +
-        '<div style="grid-column:span 2"><span style="color:var(--muted);font-weight:700">REASON: </span>'+h.reason+'</div>' +
+        '<div style="grid-column:span 2"><span style="color:var(--muted);font-weight:700">BY: </span>'+esc(h.initiatedBy)+'</div>' +
+        '<div style="grid-column:span 2"><span style="color:var(--muted);font-weight:700">REASON: </span>'+esc(h.reason)+'</div>' +
       '</div>' +
     '</div>';
 }
@@ -244,8 +244,8 @@ function renderModalHistory() {
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'+
         statusBadge(e.status)+'<span style="font-size:9px;color:var(--muted)">'+dt+'</span>'+
       '</div>'+
-      '<div style="font-size:11px;margin-top:4px">'+e.comment+'</div>'+
-      '<div style="font-size:10px;color:var(--muted);margin-top:2px">By: '+e.by+'</div>'+
+      '<div style="font-size:11px;margin-top:4px">'+esc(e.comment)+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">By: '+esc(e.by)+'</div>'+
     '</div>';
   }).join('');
 }
@@ -323,8 +323,8 @@ function exportReleaseCert(id) {
     return '<tr style="background:'+s.bg+'">'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+e.status.toUpperCase()+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+dt+'</td>'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.comment+'</td>'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.by+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+esc(e.comment)+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+esc(e.by)+'</td>'+
     '</tr>';
   }).join('');
 
@@ -347,7 +347,7 @@ function exportReleaseCert(id) {
       '</div>'+
     '</div>'+
     '<div style="text-align:right">'+
-      '<div style="font-size:10px;color:#888">Certificate #: '+h.caseNumber+'-REL</div>'+
+      '<div style="font-size:10px;color:#888">Certificate #: '+esc(h.caseNumber)+'-REL</div>'+
       '<div style="font-size:10px;color:#888">Date: '+certDate+'</div>'+
     '</div>'+
   '</div>'+
@@ -366,19 +366,19 @@ function exportReleaseCert(id) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:10px">'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Product</div>'+
-        '<div style="font-size:14px;font-weight:800;color:#2b2d42">'+h.product+'</div>'+
+        '<div style="font-size:14px;font-weight:800;color:#2b2d42">'+esc(h.product)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Case Number</div>'+
-        '<div style="font-size:14px;font-weight:800;color:#c8102e">'+h.caseNumber+'</div>'+
+        '<div style="font-size:14px;font-weight:800;color:#c8102e">'+esc(h.caseNumber)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">LOT Number</div>'+
-        '<div style="font-size:13px;font-weight:700">'+( h.lot||'—')+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.lot||'—')+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Quantity</div>'+
-        '<div style="font-size:13px;font-weight:700">'+h.quantity+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.quantity)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Line</div>'+
@@ -386,12 +386,12 @@ function exportReleaseCert(id) {
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Hold Initiated By</div>'+
-        '<div style="font-size:13px;font-weight:700">'+h.initiatedBy+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.initiatedBy)+'</div>'+
       '</div>'+
     '</div>'+
     '<div style="background:white;border:1px solid #ffe0e0;border-radius:8px;padding:10px;margin-top:10px">'+
       '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Original Reason for Hold</div>'+
-      '<div style="font-size:11px;color:#c1121f;font-weight:600">'+h.reason+'</div>'+
+      '<div style="font-size:11px;color:#c1121f;font-weight:600">'+esc(h.reason)+'</div>'+
     '</div>'+
   '</div>'+
 
@@ -404,7 +404,7 @@ function exportReleaseCert(id) {
       '<div><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Released By</div><div style="font-weight:700">'+releaseBy+'</div></div>'+
       '<div><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Certificate Date</div><div style="font-weight:700">'+certDate+'</div></div>'+
     '</div>'+
-    '<div style="margin-top:10px"><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Release Comments</div><div style="font-size:11px;font-weight:600">'+releaseComment+'</div></div>'+
+    '<div style="margin-top:10px"><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Release Comments</div><div style="font-size:11px;font-weight:600">'+esc(releaseComment)+'</div></div>'+
   '</div>'+
 
   // Full history
@@ -435,7 +435,7 @@ function exportReleaseCert(id) {
   // Footer
   '<div style="border-top:2px solid #2d6a4f;padding-top:10px;display:flex;justify-content:space-between;font-size:8px;color:#888">'+
     '<span>SAFETY Quality Control System · Client: Caputo Foods · Building 1945 · SQF Certified</span>'+
-    '<span>'+h.caseNumber+'-REL · Generated: '+certDate+'</span>'+
+    '<span>'+esc(h.caseNumber)+'-REL · Generated: '+certDate+'</span>'+
   '</div>'+
 
   '</body></html>';
@@ -471,8 +471,8 @@ function exportDestroyCert(id) {
     return '<tr style="background:'+s.bg+'">'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+e.status.toUpperCase()+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+dt+'</td>'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.comment+'</td>'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.by+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+esc(e.comment)+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+esc(e.by)+'</td>'+
     '</tr>';
   }).join('');
 
@@ -495,7 +495,7 @@ function exportDestroyCert(id) {
       '</div>'+
     '</div>'+
     '<div style="text-align:right">'+
-      '<div style="font-size:10px;color:#888">Certificate #: '+h.caseNumber+'-REL</div>'+
+      '<div style="font-size:10px;color:#888">Certificate #: '+esc(h.caseNumber)+'-REL</div>'+
       '<div style="font-size:10px;color:#888">Date: '+certDate+'</div>'+
     '</div>'+
   '</div>'+
@@ -514,19 +514,19 @@ function exportDestroyCert(id) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:10px">'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Product</div>'+
-        '<div style="font-size:14px;font-weight:800;color:#2b2d42">'+h.product+'</div>'+
+        '<div style="font-size:14px;font-weight:800;color:#2b2d42">'+esc(h.product)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Case Number</div>'+
-        '<div style="font-size:14px;font-weight:800;color:#c8102e">'+h.caseNumber+'</div>'+
+        '<div style="font-size:14px;font-weight:800;color:#c8102e">'+esc(h.caseNumber)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">LOT Number</div>'+
-        '<div style="font-size:13px;font-weight:700">'+( h.lot||'—')+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.lot||'—')+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Quantity</div>'+
-        '<div style="font-size:13px;font-weight:700">'+h.quantity+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.quantity)+'</div>'+
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Line</div>'+
@@ -534,12 +534,12 @@ function exportDestroyCert(id) {
       '</div>'+
       '<div style="background:white;border:1px solid #e0e0e0;border-radius:8px;padding:10px">'+
         '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Hold Initiated By</div>'+
-        '<div style="font-size:13px;font-weight:700">'+h.initiatedBy+'</div>'+
+        '<div style="font-size:13px;font-weight:700">'+esc(h.initiatedBy)+'</div>'+
       '</div>'+
     '</div>'+
     '<div style="background:white;border:1px solid #ffe0e0;border-radius:8px;padding:10px;margin-top:10px">'+
       '<div style="font-size:8px;color:#888;text-transform:uppercase;font-weight:700;margin-bottom:3px">Original Reason for Hold</div>'+
-      '<div style="font-size:11px;color:#c1121f;font-weight:600">'+h.reason+'</div>'+
+      '<div style="font-size:11px;color:#c1121f;font-weight:600">'+esc(h.reason)+'</div>'+
     '</div>'+
   '</div>'+
 
@@ -552,7 +552,7 @@ function exportDestroyCert(id) {
       '<div><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Destroyed By</div><div style="font-weight:700">'+releaseBy+'</div></div>'+
       '<div><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Certificate Date</div><div style="font-weight:700">'+certDate+'</div></div>'+
     '</div>'+
-    '<div style="margin-top:10px"><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Destruction Reasons</div><div style="font-size:11px;font-weight:600">'+releaseComment+'</div></div>'+
+    '<div style="margin-top:10px"><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Destruction Reasons</div><div style="font-size:11px;font-weight:600">'+esc(releaseComment)+'</div></div>'+
   '</div>'+
 
   // Full history
@@ -583,7 +583,7 @@ function exportDestroyCert(id) {
   // Footer
   '<div style="border-top:2px solid #c1121f;padding-top:10px;display:flex;justify-content:space-between;font-size:8px;color:#888">'+
     '<span>SAFETY Quality Control System · Client: Caputo Foods · Building 1945 · SQF Certified</span>'+
-    '<span>'+h.caseNumber+'-REL · Generated: '+certDate+'</span>'+
+    '<span>'+esc(h.caseNumber)+'-REL · Generated: '+certDate+'</span>'+
   '</div>'+
 
   '</body></html>';
@@ -641,11 +641,11 @@ function exportHoldPDF() {
     var lastEntry = (h.history||[]).slice(-1)[0]||{};
     return '<div style="border:1px solid '+s.border+';border-left:5px solid '+s.text+';border-radius:8px;padding:12px;margin-bottom:10px;page-break-inside:avoid">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
-        '<div style="font-size:13px;font-weight:900;color:#2b2d42">'+h.caseNumber+' — '+h.product+'</div>'+
+        '<div style="font-size:13px;font-weight:900;color:#2b2d42">'+esc(h.caseNumber)+' — '+esc(h.product)+'</div>'+
         '<div style="background:'+s.bg+';color:'+s.text+';border:1px solid '+s.border+';border-radius:16px;padding:3px 10px;font-size:9px;font-weight:700">'+h.status.toUpperCase()+'</div>'+
       '</div>'+
-      '<div style="font-size:9px;color:#666">LOT: '+(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+' · '+dt+' · By: '+h.initiatedBy+'</div>'+
-      '<div style="font-size:9px;color:#444;margin-top:4px;font-style:italic">'+h.reason+'</div>'+
+      '<div style="font-size:9px;color:#666">LOT: '+esc(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+' · '+dt+' · By: '+esc(h.initiatedBy)+'</div>'+
+      '<div style="font-size:9px;color:#444;margin-top:4px;font-style:italic">'+esc(h.reason)+'</div>'+
       (lastEntry.status&&lastEntry.status!=='hold'?'<div style="font-size:9px;color:'+s.text+';margin-top:4px;font-weight:600">Latest: '+lastEntry.comment+' ('+lastEntry.by+')</div>':'')+
     '</div>';
   }).join('');
