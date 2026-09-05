@@ -1,238 +1,321 @@
 // ===== DASHBOARD =====
+// Analítica sobre pesos, bag seal, GMP, temperaturas, metal detector y holds,
+// con filtros de periodo, producto, línea y turno.
+var dashDays = 30;
+var dashReady = false;
+var dashF = {from:'', to:'', product:'all', line:'all', shift:'all'};
 
-var dashDays = 7;
-
-function setDashFilter(days, btn) {
+function dashQuickRange(days, btn){
   dashDays = days;
-  document.querySelectorAll('[id^="dash-f-"]').forEach(function(b){ b.classList.remove('selected'); });
-  btn.classList.add('selected');
+  document.querySelectorAll('[data-dashrange]').forEach(function(b){ b.classList.remove('selected'); });
+  if(btn) btn.classList.add('selected');
+  var to = localDateStr(), from = '';
+  if(days){
+    var d = new Date(); d.setDate(d.getDate()-days+1);
+    from = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  var f=document.getElementById('dash-from'), t=document.getElementById('dash-to');
+  if(f) f.value = from;
+  if(t) t.value = days ? to : '';
   initDash();
 }
 
-function filterByDays(records) {
-  if(!dashDays) return records;
-  var cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - dashDays);
-  var cutStr = cutoff.getFullYear()+'-'+String(cutoff.getMonth()+1).padStart(2,'0')+'-'+String(cutoff.getDate()).padStart(2,'0');
-  return records.filter(function(r){ return r.date >= cutStr; });
+function readDashFilters(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  dashF.from = g('dash-from'); dashF.to = g('dash-to');
+  dashF.product = g('dash-product')||'all';
+  dashF.line = g('dash-line')||'all';
+  dashF.shift = g('dash-shift')||'all';
 }
 
-function mkBar(pct, color, bg) {
-  return '<div style="flex:1;background:'+(bg||'#ebebef')+';border-radius:50px;height:8px;overflow:hidden">' +
-    '<div style="width:'+Math.min(pct,100)+'%;height:100%;background:'+(color||'var(--accent)')+';border-radius:50px;transition:width 0.4s"></div>' +
-  '</div>';
+function dashInRange(iso){
+  var d = String(iso||'').slice(0,10);
+  if(!d) return false;
+  if(dashF.from && d < dashF.from) return false;
+  if(dashF.to   && d > dashF.to)   return false;
+  return true;
+}
+
+// Filtro común para pesos y sellos
+function dashKeep(r){
+  if(!dashInRange(r.date)) return false;
+  if(dashF.line!=='all'  && String(r.line||'')  !== dashF.line)  return false;
+  if(dashF.shift!=='all' && String(r.shift||'') !== dashF.shift) return false;
+  if(dashF.product!=='all' && String(r.product||'') !== dashF.product) return false;
+  return true;
+}
+
+function filterByDays(records){          // lo usan los export
+  return (records||[]).filter(function(r){ return dashInRange(r.date); });
+}
+
+function mkBar(pct, color){
+  return '<div class="dbar"><div class="dbar-fill" style="width:'+Math.min(pct,100)+'%;background:'+(color||'var(--accent)')+'"></div></div>';
+}
+
+function pctOf(n,d){ return d ? Math.round((n/d)*100) : 0; }
+function compClass(p){ return p>=90?'ok':p>=80?'warn':'bad'; }
+
+// Lista de barras: [{label, value, sub, pct, cls, color}]
+function barList(items, empty){
+  if(!items.length) return '<div class="cd-empty" style="padding:18px">'+(empty||'No data')+'</div>';
+  return items.map(function(i){
+    return '<div class="drow">'+
+      '<div class="drow-top"><span class="drow-lbl">'+i.label+'</span>'+
+        '<span class="drow-val '+(i.cls||'')+'">'+i.value+'</span></div>'+
+      mkBar(i.pct, i.color)+
+      (i.sub ? '<div class="drow-sub">'+i.sub+'</div>' : '')+
+    '</div>';
+  }).join('');
 }
 
 function initDash(){
-  var db  = getDB();
-  var w   = filterByDays(db.weights);
-  var gmps = filterByDays(db.gmps);
-
-  // ---- MAIN WEIGHT STATS ----
-  var tBags = w.reduce(function(a,r){return a+r.total},0);
-  var tPass = w.reduce(function(a,r){return a+r.pass},0);
-  var tFail = tBags - tPass;
-  var comp  = tBags ? Math.round((tPass/tBags)*100) : 0;
-
-  document.getElementById('dash-stats').innerHTML =
-    '<div class="big-stat green"><div class="blbl">IN TARGET</div><div class="bval">'+tPass+'</div><div class="bsub">bags passed</div></div>' +
-    '<div class="big-stat red"><div class="blbl">OUT OF TARGET</div><div class="bval">'+tFail+'</div><div class="bsub">bags failed</div></div>' +
-    '<div class="big-stat yellow"><div class="blbl">COMPLIANCE</div><div class="bval">'+comp+'%</div><div class="bsub">overall rate</div></div>' +
-    '<div class="big-stat"><div class="blbl">RECORDS</div><div class="bval">'+w.length+'</div><div class="bsub">total entries</div></div>';
-
-  // ---- SECONDARY STATS ----
-  var allVals = [];
-  w.forEach(function(r){ var t=recTarget(r); if(!t) return; r.vals.forEach(function(v){ var n=parseFloat(v); if(!isNaN(n)) allVals.push({val:n,min:t.min,max:t.max}); }); });
-  var avgWeight   = allVals.length ? (allVals.reduce(function(a,b){return a+b.val},0)/allVals.length).toFixed(3) : '—';
-  var minWeight   = allVals.length ? Math.min.apply(null,allVals.map(function(v){return v.val})).toFixed(3) : '—';
-  var maxWeight   = allVals.length ? Math.max.apply(null,allVals.map(function(v){return v.val})).toFixed(3) : '—';
-  var avgDeviation = allVals.length ? (allVals.reduce(function(a,b){
-    var mid = (b.min+b.max)/2; return a+Math.abs(b.val-mid);
-  },0)/allVals.length).toFixed(4) : '—';
-
-  // Hour with most failures
-  var hourFails = {};
-  w.forEach(function(r){
-    if(!r.time) return;
-    var h = r.time.split(':')[0]+'h';
-    if(!hourFails[h]) hourFails[h] = 0;
-    hourFails[h] += (r.total - r.pass);
-  });
-  var worstHour = Object.keys(hourFails).sort(function(a,b){return hourFails[b]-hourFails[a]})[0] || '—';
-
-  document.getElementById('dash-secondary').innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-      '<div class="stat-card"><div class="slabel">AVG WEIGHT</div><div class="svalue" style="font-size:18px">'+avgWeight+'<span style="font-size:11px;color:var(--muted)"> lbs</span></div></div>' +
-      '<div class="stat-card"><div class="slabel">AVG DEVIATION</div><div class="svalue" style="font-size:18px">'+avgDeviation+'<span style="font-size:11px;color:var(--muted)"> lbs</span></div></div>' +
-      '<div class="stat-card"><div class="slabel">MIN WEIGHT</div><div class="svalue" style="font-size:18px;color:var(--fail)">'+minWeight+'<span style="font-size:11px;color:var(--muted)"> lbs</span></div></div>' +
-      '<div class="stat-card"><div class="slabel">MAX WEIGHT</div><div class="svalue" style="font-size:18px;color:var(--pass)">'+maxWeight+'<span style="font-size:11px;color:var(--muted)"> lbs</span></div></div>' +
-      '<div class="stat-card"><div class="slabel">WORST HOUR</div><div class="svalue" style="font-size:18px">'+worstHour+'</div></div>' +
-      '<div class="stat-card"><div class="slabel">TOTAL SAMPLES</div><div class="svalue" style="font-size:18px">'+allVals.length+'</div></div>' +
-    '</div>';
-
-  // ---- BY LINE ----
-  var lineData = {};
-  w.forEach(function(r){
-    var k = 'Line '+r.line;
-    if(!lineData[k]) lineData[k]={pass:0,total:0};
-    lineData[k].pass+=r.pass; lineData[k].total+=r.total;
-  });
-  var lineHTML = Object.keys(lineData).sort().map(function(k){
-    var d = lineData[k];
-    var pct = d.total ? Math.round((d.pass/d.total)*100) : 0;
-    var col = pct>=80?'var(--pass)':pct>=60?'var(--warn)':'var(--fail)';
-    return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
-        '<span style="font-size:12px;font-weight:700">'+k+'</span>'+
-        '<span style="font-size:12px;font-weight:700;color:'+col+'">'+pct+'% <span style="font-size:10px;color:var(--muted)">('+d.pass+'/'+d.total+')</span></span>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:8px">'+mkBar(pct,col)+'</div>'+
-    '</div>';
-  }).join('');
-  document.getElementById('dash-by-line').innerHTML = lineHTML || '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">No data</div>';
-
-  // ---- BY PACKAGE ----
-  var pkgFails = {};
-  w.forEach(function(r){
-    var k = r.pkgLabel;
-    if(!pkgFails[k]) pkgFails[k]={fail:0,total:0};
-    pkgFails[k].fail += (r.total-r.pass);
-    pkgFails[k].total += r.total;
-  });
-  var pkgHTML = Object.keys(pkgFails).sort(function(a,b){return pkgFails[b].fail-pkgFails[a].fail}).map(function(k){
-    var d = pkgFails[k];
-    var failPct = d.total ? Math.round((d.fail/d.total)*100) : 0;
-    var col = failPct>20?'var(--fail)':failPct>10?'var(--warn)':'var(--pass)';
-    return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
-        '<span style="font-size:12px;font-weight:700">'+k+'</span>'+
-        '<span style="font-size:12px;font-weight:700;color:'+col+'">'+d.fail+' fails <span style="font-size:10px;color:var(--muted)">('+failPct+'%)</span></span>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:8px">'+mkBar(failPct,col,'#ebebef')+'</div>'+
-    '</div>';
-  }).join('');
-  document.getElementById('dash-by-pkg').innerHTML = pkgHTML || '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">No data</div>';
-
-  // ---- BY SHIFT ----
-  var shiftData = {1:{pass:0,total:0,label:'1st Shift'},2:{pass:0,total:0,label:'2nd Shift'}};
-  w.forEach(function(r){ if(shiftData[r.shift]){ shiftData[r.shift].pass+=r.pass; shiftData[r.shift].total+=r.total; } });
-  var shiftHTML = [1,2].map(function(s){
-    var d = shiftData[s];
-    var pct = d.total ? Math.round((d.pass/d.total)*100) : 0;
-    var col = pct>=80?'var(--pass)':pct>=60?'var(--warn)':'var(--fail)';
-    return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
-        '<span style="font-size:12px;font-weight:700">'+d.label+'</span>'+
-        '<span style="font-size:12px;font-weight:700;color:'+col+'">'+pct+'% <span style="font-size:10px;color:var(--muted)">('+d.pass+'/'+d.total+')</span></span>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:8px">'+mkBar(pct,col)+'</div>'+
-    '</div>';
-  }).join('');
-  document.getElementById('dash-by-shift').innerHTML = shiftHTML;
-
-  // ---- TREND CHART ----
-  var numDays = dashDays || 30;
-  var now = new Date();
-  var days = {};
-  for(var i=numDays-1;i>=0;i--){
-    var d=new Date(now); d.setDate(d.getDate()-i);
-    var dk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    days[dk]={pass:0,total:0};
+  // Primera apertura: aplica el rango por defecto que ya viene marcado
+  if(!dashReady){
+    dashReady = true;
+    dashQuickRange(dashDays, document.querySelector('[data-dashrange].selected'));
+    return;
   }
-  w.forEach(function(r){var k=r.date.split('T')[0];if(days[k]){days[k].pass+=r.pass;days[k].total+=r.total;}});
-  var tLabels=Object.keys(days).map(function(k){var d=new Date(k+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})});
-  var tData=Object.values(days).map(function(d){return d.total?Math.round((d.pass/d.total)*100):null});
+  readDashFilters();
+  var db = getDB();
 
-  if(trendChart) trendChart.destroy();
-  trendChart=new Chart(document.getElementById('chart-trend').getContext('2d'),{
-    type:'line',
-    data:{labels:tLabels,datasets:[{label:'Compliance %',data:tData,borderColor:'#c8102e',backgroundColor:'rgba(200,16,46,0.06)',tension:0.4,fill:true,pointBackgroundColor:'#c8102e',pointRadius:4,spanGaps:true}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'-apple-system',size:9},maxTicksLimit:7}},y:{min:0,max:100,grid:{color:'#ebebef'},ticks:{color:'#6b6b85',font:{family:'-apple-system',size:9},callback:function(v){return v+'%'}}}}}
-  });
+  // El selector de producto se llena con el catálogo
+  var sel = document.getElementById('dash-product');
+  if(sel && sel.options.length<=1){
+    sel.innerHTML = '<option value="all">All products</option>'+
+      getProducts().map(function(p){
+        return '<option value="'+p.number+'">'+p.number+(p.name?' — '+p.name:'')+'</option>';
+      }).join('');
+    sel.value = dashF.product;
+  }
 
-  // ---- DONUT ----
-  if(donutChart) donutChart.destroy();
-  donutChart=new Chart(document.getElementById('chart-donut').getContext('2d'),{
-    type:'doughnut',
-    data:{labels:['In Target','Out of Target'],datasets:[{data:[tPass||0,tFail||0],backgroundColor:['#16a34a','#dc2626'],borderWidth:0,borderRadius:4}]},
-    options:{responsive:true,cutout:'72%',plugins:{legend:{labels:{color:'#6b6b85',font:{family:'-apple-system',size:11}}}}}
-  });
+  var w     = (db.weights||[]).filter(dashKeep);
+  var seals = (db.seals||[]).filter(dashKeep);
+  var gmps  = (db.gmps||[]).filter(function(r){ return dashInRange(r.date) &&
+                (dashF.shift==='all' || String(r.shift||'')===dashF.shift); });
+  var temps = (db.temps||[]).filter(function(r){ return dashInRange(r.date) &&
+                (dashF.shift==='all' || String(r.shift||'')===dashF.shift); });
+  var metal = (db.metal||[]).filter(function(r){ return dashInRange(r.date); });
+  var holds = (db.holds||[]).filter(function(h){ return dashInRange(h.createdAt); });
 
-  // ---- GMP STATS ----
-  var totalAudits = gmps.length;
-  var totalItems  = totalAudits * 21;
-  var totalPassed = 0, totalFailed = 0;
-  var itemFails   = {};
-  var operators   = {};
+  // ---------- KPIs ----------
+  var scored = w.filter(function(r){ return r.compliance!=null; });
+  var tBags  = scored.reduce(function(a,r){ return a+r.total; },0);
+  var tPass  = scored.reduce(function(a,r){ return a+r.pass; },0);
+  var tFail  = tBags - tPass;
+  var comp   = pctOf(tPass, tBags);
 
-  gmps.forEach(function(r){
-    Object.keys(r.answers).forEach(function(i){
-      var v = r.answers[i];
-      if(v==='yes') totalPassed++;
-      if(v==='no'){
-        totalFailed++;
-        var label = GMP_ITEMS[parseInt(i)] || ('Item '+i);
-        itemFails[label] = (itemFails[label]||0)+1;
-      }
+  // Desviación respecto al centro del rango, y sobrellenado por encima del máximo
+  var devs=[], over=0, under=0, overSum=0;
+  scored.forEach(function(r){
+    var t = recTarget(r); if(!t) return;
+    var mid = (t.min+t.max)/2;
+    (r.vals||[]).forEach(function(v){
+      var n=parseFloat(v); if(isNaN(n)) return;
+      devs.push(n-mid);
+      if(n>t.max){ over++; overSum += (n-t.max); }
+      else if(n<t.min){ under++; }
     });
-    if(r.completedBy){ operators[r.completedBy]=(operators[r.completedBy]||0)+1; }
   });
+  var avgDev = devs.length ? (devs.reduce(function(a,b){return a+b},0)/devs.length) : null;
+  var openHolds = holds.filter(function(h){ return h.status!=='released' && h.status!=='destroyed'; }).length;
 
-  var gmpComp = totalItems ? Math.round(((totalItems-totalFailed)/totalItems)*100) : 0;
-  var topOperator = Object.keys(operators).sort(function(a,b){return operators[b]-operators[a]})[0] || '—';
+  var kpi = function(label, value, note, cls){
+    return '<div class="tile"><div class="t-top"><span class="t-lbl">'+label+'</span></div>'+
+      '<div class="t-val'+(cls?' '+cls:'')+'">'+value+'</div>'+
+      '<div class="t-note">'+note+'</div></div>';
+  };
+  document.getElementById('dash-kpis').innerHTML =
+    kpi('Compliance', tBags?comp+'<small>%</small>':'—', tPass+' of '+tBags+' bags in target', compClass(comp)) +
+    kpi('Weight checks', w.length, scored.length+' scored · '+(w.length-scored.length)+' without target') +
+    kpi('Out of target', tFail, under+' under · '+over+' over', tFail?'bad':'') +
+    kpi('Avg deviation', avgDev==null?'—':(avgDev>0?'+':'')+avgDev.toFixed(3), 'lbs from target centre') +
+    kpi('Overfill', overSum?overSum.toFixed(1):'0', 'lbs above the max limit') +
+    kpi('Open holds', openHolds, holds.length+' case(s) in the period', openHolds?'bad':'');
 
-  // Temp averages
-  var temps={begin:[],mid:[],end:[]};
+  // ---------- Tendencia diaria ----------
+  var byDay = {};
+  scored.forEach(function(r){
+    var d = String(r.date).slice(0,10);
+    if(!byDay[d]) byDay[d] = {pass:0,total:0};
+    byDay[d].pass += r.pass; byDay[d].total += r.total;
+  });
+  var days = Object.keys(byDay).sort();
+  drawTrend(days, days.map(function(d){ return pctOf(byDay[d].pass, byDay[d].total); }));
+
+  // ---------- Cortes por línea, producto, formato y turno ----------
+  var group = function(list, keyFn, labelFn){
+    var m = {};
+    list.forEach(function(r){
+      var k = keyFn(r); if(k===''||k==null) return;
+      k = String(k);
+      if(!m[k]) m[k] = {pass:0,total:0,n:0};
+      m[k].pass += r.pass; m[k].total += r.total; m[k].n++;
+    });
+    return Object.keys(m).map(function(k){
+      var p = pctOf(m[k].pass, m[k].total);
+      return {key:k, label:labelFn?labelFn(k):k, value:p+'%', pct:p, n:m[k].n,
+              sub:m[k].total+' bags · '+m[k].n+' checks',
+              cls:compClass(p), color:p>=90?'var(--pass)':p>=80?'var(--warn)':'var(--fail)'};
+    }).sort(function(a,b){ return a.pct-b.pct; });
+  };
+
+  document.getElementById('dash-by-line').innerHTML =
+    barList(group(scored, function(r){ return r.line; }, function(k){ return 'Line '+k; }), 'No weight records');
+
+  document.getElementById('dash-by-product').innerHTML =
+    barList(group(scored, function(r){ return r.product||''; }, function(k){
+      var p = findProduct(k);
+      return k + (p&&p.name ? ' · '+p.name : '');
+    }).slice(0,8), 'No product numbers on these records');
+
+  document.getElementById('dash-by-pkg').innerHTML =
+    barList(group(scored, function(r){ return r.pkgLabel||''; }), 'No package sizes');
+
+  document.getElementById('dash-by-shift').innerHTML =
+    barList(group(scored, function(r){ return r.shift; }, function(k){ return (k==='1'?'1st':'2nd')+' shift'; }), 'No shifts');
+
+  // ---------- Bag seal ----------
+  var sealRows = SEAL_CHECKS.map(function(chk){
+    var done = seals.filter(function(s){ return (s.checks||{})[chk]; });
+    var ok   = done.filter(function(s){ return s.checks[chk]==='pass'; }).length;
+    var p    = pctOf(ok, done.length);
+    return {label:chk, value:done.length?p+'%':'—', pct:p, sub:ok+' passed of '+done.length,
+            cls:compClass(p), color:p>=90?'var(--pass)':p>=80?'var(--warn)':'var(--fail)'};
+  });
+  document.getElementById('dash-seal').innerHTML =
+    '<div class="dash-mini">'+seals.length+' bag seal check'+(seals.length===1?'':'s')+' in the period</div>'+
+    barList(sealRows, 'No bag seal records');
+
+  // ---------- Temperatura y humedad (desde db.temps) ----------
+  var pick = function(cp, field){
+    return temps.filter(function(t){ return t.checkpoint===cp; })
+                .map(function(t){ return parseFloat(t[field]); })
+                .filter(function(n){ return !isNaN(n); });
+  };
+  var avg = function(a){ return a.length ? (a.reduce(function(x,y){return x+y},0)/a.length) : null; };
+  var fmt = function(v, unit){ return v==null ? '—' : v.toFixed(1)+(unit||''); };
+
+  var tCell = function(cp, label){
+    var vals = pick(cp,'temp');
+    return '<div class="tcell"><div class="tcell-lbl">'+label+'</div>'+
+      '<div class="tcell-val">'+fmt(avg(vals),'°')+'</div>'+
+      '<div class="tcell-sub">'+vals.length+' reading(s)</div></div>';
+  };
+  var hum = function(field, label){
+    var a = temps.map(function(t){ return parseFloat(t[field]); }).filter(function(n){ return !isNaN(n); });
+    var v = avg(a);
+    return {label:label, value:fmt(v,'%'), pct:v||0, sub:a.length+' reading(s)', color:'var(--accent)'};
+  };
+  // Cobertura: de los 3 checkpoints por fecha y turno, cuántos se tomaron
+  var slots = {};
+  temps.forEach(function(t){ slots[t.date+'|'+t.shift] = 1; });
+  var shiftCount = Object.keys(slots).length;
+  var expected = shiftCount*3;
+  var coverage = pctOf(temps.length, expected);
+
+  document.getElementById('dash-temp').innerHTML =
+    '<div class="tgrid">'+tCell('begin','BEGINNING')+tCell('mid','MIDDLE')+tCell('end','END')+'</div>'+
+    barList([hum('chop','Chopping area humidity'), hum('plat','Under platform humidity'), hum('line6','Line 6 & grilling humidity')],
+            'No humidity readings')+
+    (shiftCount ? '<div class="dash-mini">Checkpoint coverage: <b>'+coverage+'%</b> — '+temps.length+
+      ' of '+expected+' expected across '+shiftCount+' shift(s)</div>' : '');
+
+  // ---------- Metal detector ----------
+  var mdFails = {}, mdClean = 0;
+  metal.forEach(function(r){
+    var bad = 0;
+    MD_QUESTIONS.forEach(function(q,i){
+      if((r.answers||{})[i]==='no'){ bad++; mdFails[i] = (mdFails[i]||0)+1; }
+    });
+    if(!bad) mdClean++;
+  });
+  var mdTop = Object.keys(mdFails).sort(function(a,b){ return mdFails[b]-mdFails[a]; }).slice(0,3);
+  document.getElementById('dash-metal').innerHTML = metal.length
+    ? '<div class="tgrid two">'+
+        '<div class="tcell"><div class="tcell-lbl">CHECKS</div><div class="tcell-val">'+metal.length+'</div><div class="tcell-sub">in the period</div></div>'+
+        '<div class="tcell"><div class="tcell-lbl">ALL YES</div><div class="tcell-val '+(mdClean===metal.length?'ok':'warn')+'">'+pctOf(mdClean,metal.length)+'%</div><div class="tcell-sub">'+mdClean+' of '+metal.length+'</div></div>'+
+      '</div>'+
+      (mdTop.length ? barList(mdTop.map(function(i){
+        var c = mdFails[i];
+        return {label:(Number(i)+1)+'. '+MD_QUESTIONS[i], value:c+'x', pct:pctOf(c,metal.length),
+                sub:'marked NO', color:'var(--fail)', cls:'bad'};
+      })) : '<div class="dash-mini">No question was ever marked NO.</div>')
+    : '<div class="cd-empty" style="padding:18px">No metal detector checks</div>';
+
+  // ---------- GMP ----------
+  var gmpYes=0, gmpNo=0, itemFails={};
   gmps.forEach(function(r){
-    if(!r.temp) return;
-    var b=parseFloat(r.temp.begin&&r.temp.begin.temp); if(!isNaN(b)) temps.begin.push(b);
-    var m=parseFloat(r.temp.mid&&r.temp.mid.temp);     if(!isNaN(m)) temps.mid.push(m);
-    var e=parseFloat(r.temp.end&&r.temp.end.temp);     if(!isNaN(e)) temps.end.push(e);
+    GMP_ITEMS.forEach(function(item,i){
+      var v = (r.answers||{})[i];
+      if(v==='yes') gmpYes++;
+      else if(v==='no'){ gmpNo++; itemFails[item] = (itemFails[item]||0)+1; }
+    });
   });
-  var avgTemp = function(arr){ return arr.length?(arr.reduce(function(a,b){return a+b},0)/arr.length).toFixed(1):'—'; };
+  var gmpRate = pctOf(gmpYes, gmpYes+gmpNo);
+  var topFails = Object.keys(itemFails).sort(function(a,b){ return itemFails[b]-itemFails[a]; }).slice(0,5);
+  document.getElementById('dash-gmp').innerHTML =
+    '<div class="tgrid two">'+
+      '<div class="tcell"><div class="tcell-lbl">AUDITS</div><div class="tcell-val">'+gmps.length+'</div><div class="tcell-sub">in the period</div></div>'+
+      '<div class="tcell"><div class="tcell-lbl">ACCEPTABLE</div><div class="tcell-val '+compClass(gmpRate)+'">'+((gmpYes+gmpNo)?gmpRate+'%':'—')+'</div><div class="tcell-sub">'+gmpYes+' yes · '+gmpNo+' no</div></div>'+
+    '</div>'+
+    (topFails.length ? barList(topFails.map(function(item){
+      return {label:item, value:itemFails[item]+'x', pct:pctOf(itemFails[item], gmps.length||1),
+              sub:'marked NO', color:'var(--fail)', cls:'bad'};
+    })) : '<div class="dash-mini">No GMP item was marked NO in this period.</div>');
 
-  document.getElementById('dash-gmp-stats').innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
-      '<div class="big-stat" style="border-color:#1a5276"><div class="blbl">TOTAL AUDITS</div><div class="bval" style="color:#1a5276">'+totalAudits+'</div><div class="bsub">completed</div></div>' +
-      '<div class="big-stat green"><div class="blbl">GMP COMPLIANCE</div><div class="bval">'+gmpComp+'%</div><div class="bsub">items passed</div></div>' +
-      '<div class="big-stat green"><div class="blbl">ITEMS PASSED</div><div class="bval">'+totalPassed+'</div><div class="bsub">acceptable</div></div>' +
-      '<div class="big-stat red"><div class="blbl">ITEMS FAILED</div><div class="bval">'+totalFailed+'</div><div class="bsub">not acceptable</div></div>' +
-    '</div>' +
-    '<div class="stat-card" style="margin-bottom:10px"><div class="slabel">TOP OPERATOR</div><div class="svalue" style="font-size:16px">'+topOperator+'</div></div>';
+  // ---------- Registros recientes ----------
+  var list = document.getElementById('records-list');
+  list.innerHTML = w.length
+    ? w.slice().sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); }).slice(0,12).map(function(r){
+        var cls = r.compliance==null?'mi':r.compliance>=90?'hi':r.compliance>=80?'mi':'lo';
+        var dt  = new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        return '<div class="rec-item"><div><div class="rec-line">Line '+r.line+' · '+r.pkgLabel+
+          (r.product?' · #'+r.product:'')+'</div>'+
+          '<div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' shift · '+r.time+(r.lot?' · LOT '+r.lot:'')+'</div></div>'+
+          '<div class="rec-comp '+cls+'">'+compLabel(r.compliance)+'</div></div>';
+      }).join('')
+    : '<div class="cd-empty" style="padding:18px">No weight records for these filters</div>';
 
-  // ---- GMP TOP FAILURES ----
-  var sortedFails = Object.keys(itemFails).sort(function(a,b){return itemFails[b]-itemFails[a]}).slice(0,5);
-  var maxFail = sortedFails.length ? itemFails[sortedFails[0]] : 1;
-  document.getElementById('dash-gmp-failures').innerHTML = sortedFails.length ?
-    sortedFails.map(function(item){
-      var count = itemFails[item];
-      var pct   = Math.round((count/maxFail)*100);
-      return '<div style="margin-bottom:10px">'+
-        '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
-          '<span style="font-size:11px;font-weight:600;color:var(--text)">'+item+'</span>'+
-          '<span style="font-size:11px;font-weight:700;color:var(--fail)">'+count+'x</span>'+
-        '</div>'+
-        '<div style="display:flex;align-items:center;gap:8px">'+mkBar(pct,'var(--fail)','#ffe0e0')+'</div>'+
-      '</div>';
-    }).join('') :
-    '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">No GMP failures recorded</div>';
+  drawDonut(tPass, tFail);
+}
 
-  // ---- TEMP AVERAGES ----
-  document.getElementById('dash-temp-avg').innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;margin-bottom:4px">BEGINNING</div><div style="font-size:22px;font-weight:800">'+avgTemp(temps.begin)+'</div><div style="font-size:9px;color:var(--muted)">°F avg</div></div>' +
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;margin-bottom:4px">MIDDLE</div><div style="font-size:22px;font-weight:800">'+avgTemp(temps.mid)+'</div><div style="font-size:9px;color:var(--muted)">°F avg</div></div>' +
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.1em;margin-bottom:4px">END</div><div style="font-size:22px;font-weight:800">'+avgTemp(temps.end)+'</div><div style="font-size:9px;color:var(--muted)">°F avg</div></div>' +
-    '</div>';
+// ---------- Gráficas ----------
+function drawTrend(labels, values){
+  var cv = document.getElementById('chart-trend');
+  if(!cv || typeof Chart==='undefined') return;
+  if(trendChart) trendChart.destroy();
+  var css = getComputedStyle(document.body);
+  var accent = css.getPropertyValue('--accent').trim() || '#005339';
+  var grid   = css.getPropertyValue('--border').trim() || '#d7dcd7';
+  var muted  = css.getPropertyValue('--muted').trim() || '#5f6d65';
+  trendChart = new Chart(cv, {
+    type:'line',
+    data:{ labels:labels.map(function(d){ return d.slice(5); }),
+      datasets:[{ data:values, borderColor:accent, backgroundColor:'rgba(0,83,57,0.08)',
+        fill:true, tension:0.3, pointRadius:2, pointBackgroundColor:accent, borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ min:0, max:100, ticks:{color:muted, font:{size:10}, callback:function(v){return v+'%'} },
+                   grid:{color:grid} },
+               x:{ ticks:{color:muted, font:{size:10}, maxTicksLimit:10}, grid:{display:false} } } }
+  });
+}
 
-  // ---- RECENT RECORDS ----
-  var list=document.getElementById('records-list');
-  if(!w.length){list.innerHTML='<div class="empty">No records yet</div>';return;}
-  list.innerHTML=w.slice().reverse().slice(0,10).map(function(r){
-    var cls=r.compliance==null?'mi':r.compliance>=80?'hi':r.compliance>=60?'mi':'lo';
-    var dt=new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    return '<div class="rec-item"><div><div class="rec-line">Line '+r.line+' · '+r.pkgLabel+'</div><div class="rec-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT:'+r.lot:'')+'</div></div><div class="rec-comp '+cls+'">'+compLabel(r.compliance)+'</div></div>';
-  }).join('');
+function drawDonut(pass, fail){
+  var cv = document.getElementById('chart-donut');
+  if(!cv || typeof Chart==='undefined') return;
+  if(donutChart) donutChart.destroy();
+  var css = getComputedStyle(document.body);
+  donutChart = new Chart(cv, {
+    type:'doughnut',
+    data:{ labels:['In target','Out of target'], datasets:[{ data:[pass,fail],
+      backgroundColor:[css.getPropertyValue('--pass').trim()||'#1a8656', css.getPropertyValue('--fail').trim()||'#e7000b'],
+      borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11},
+        color:css.getPropertyValue('--muted').trim()||'#5f6d65' } } } }
+  });
 }
 
 function exportDashPDF() {

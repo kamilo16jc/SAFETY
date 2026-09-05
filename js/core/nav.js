@@ -35,7 +35,7 @@ var CRUMBS = {
   'screen-dashboard':['Review', 'Dashboard'],
   'screen-reports':  ['Review', 'Reports'],
   'screen-lotsearch':['Review', 'Search'],
-  'screen-hold':     ['Review', 'Products on Hold'],
+  'screen-hold':     ['Review', 'Hold Cases'],
   'screen-activity': ['Review', 'Activity Log'],
   'screen-products': ['Setup', 'Products'],
   'screen-admin':    ['Setup', 'Admin']
@@ -133,7 +133,7 @@ function initHome(){
     tile("goTo('screen-seal')", sealFails?sealFails+' with a failed check':'all checks passed',
          'droplet', seals, 'Bag seals') +
     (holds > 0
-      ? tile("goTo('screen-hold')", 'open cases', 'lock', holds, 'Products on hold', 'var(--warn)')
+      ? tile("goTo('screen-hold')", 'open cases', 'lock', holds, 'Hold cases', 'var(--warn)')
       : tile("goTo('screen-gmp')", 'SQF 2.5.D.A daily',
              'clipboard', gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
 
