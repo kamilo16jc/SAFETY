@@ -113,6 +113,21 @@ function renderProductCard(screen, code){
   }
 }
 
+// Deja el campo de producto libre para el siguiente registro. Se llama al
+// guardar: si el producto se quedaba puesto, el registro de la línea siguiente
+// heredaba el producto (y el peso) de la línea anterior.
+function clearProductSelection(screen){
+  var ids = productIds(screen);
+  var inp = document.getElementById(ids.input);
+  if(inp) inp.value = '';
+  currentProduct = null;
+  lastAppliedProductId = null;
+  renderProductCard(screen, '');
+  // En Weight el peso sale del producto, así que se libera con él: si no, el
+  // siguiente registro se mediría contra el target del producto anterior.
+  if(screen==='weight' && typeof selectPkg==='function') selectPkg('');
+}
+
 // ---- Crear producto ----
 function openProductModal(screen){
   productScreen = screen || productScreen || 'weight';

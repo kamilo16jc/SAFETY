@@ -99,6 +99,7 @@ function commitSeal(){
   renderSealList();
   document.getElementById('s-lot').value='';
   document.getElementById('s-comments').value='';
+  clearProductSelection('seal');
   document.getElementById('s-initials').value='';
   toast('Seal record saved!');
   updateSealDupHint();
