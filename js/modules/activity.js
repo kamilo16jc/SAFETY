@@ -162,7 +162,7 @@ function renderActivityLog() {
   }
 
   if(activityFilter !== 'all') logs = logs.filter(function(l){ return l.type === activityFilter; });
-  var icons = {weight:'scale', seal:'droplet', gmp:'clipboard', hold:'lock', admin:'sliders', login:'user', temp:'thermo', metal:'magnet'};
+  var icons = {weight:'scale', seal:'droplet', gmp:'clipboard', hold:'lock', admin:'sliders', login:'user', temp:'thermo', metal:'magnet', capa:'alert'};
   var el = document.getElementById('activity-log-list');
   if(!logs.length) { el.innerHTML = '<div class="empty">No activity recorded yet</div>'; return; }
   el.innerHTML = logs.slice(0,100).map(function(l) {

@@ -43,6 +43,12 @@
         localDb.metal = mSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
       } catch(e) { localDb.metal = localDb.metal||[]; }
 
+      // CAPA / incident reports
+      try {
+        var cSnap = await getDocs(collection(db,'capa'));
+        if(!cSnap.empty) localDb.capa = cSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      } catch(e) { localDb.capa = localDb.capa||[]; }
+
       // Product catalog
       try {
         var pSnap = await getDocs(collection(db,'products'));

@@ -101,6 +101,7 @@ function searchResults(){
   var wantW = sf.type==='all' || sf.type==='weight';
   var wantS = sf.type==='all' || sf.type==='seal';
   var wantH = sf.type==='all' || sf.type==='hold';
+  var wantC = sf.type==='all' || sf.type==='capa';
 
   return {
     product: prod,
@@ -111,7 +112,17 @@ function searchResults(){
                             String(h.product||'').toLowerCase().indexOf(l)>-1;
                var hitLine = sf.line==='all' || String(h.line||'')===sf.line;
                return hitTxt && hitLine && inDateRange(h.createdAt);
-             }).sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); }) : []
+             }).sort(function(a,b){ return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); }) : [],
+    capa:    wantC ? (db.capa||[]).filter(function(c){
+               var hitTxt = !l ||
+                 String(c.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
+                 String(c.lot||'').toLowerCase().indexOf(l)>-1 ||
+                 String(c.product||'').toLowerCase().indexOf(l)>-1 ||
+                 String(c.productName||'').toLowerCase().indexOf(l)>-1 ||
+                 String(c.problem||'').toLowerCase().indexOf(l)>-1 ||
+                 (pnum && String(c.product||'').toLowerCase()===pnum);
+               return hitTxt && inDateRange(c.capaDate);
+             }).sort(function(a,b){ return String(b.capaDate||'').localeCompare(String(a.capaDate||'')); }) : []
   };
 }
 
@@ -127,7 +138,7 @@ function activeFilterChips(){
   else if(sf.to)            chips.push('Up to '+fmtDate(sf.to));
   if(sf.line!=='all')       chips.push('Line '+sf.line);
   if(sf.shift!=='all')      chips.push((sf.shift==='1'?'1st':'2nd')+' shift');
-  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only'}[sf.type]);
+  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only'}[sf.type]);
   if(!chips.length) return '';
   return '<div class="filter-chips">'+chips.map(function(c){
     return '<span class="fchip">'+esc(c)+'</span>';
@@ -152,7 +163,7 @@ function renderSearch(){
   }
 
   var r = searchResults();
-  var total = r.weights.length + r.seals.length + r.holds.length;
+  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0);
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -173,8 +184,31 @@ function renderSearch(){
     summaryStrip(r, avg, dates, openHolds) +
     ((sf.type==='all'||sf.type==='weight') ? weightPanel(r.weights) : '') +
     ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
-    holdPanel(r.holds);
+    holdPanel(r.holds) +
+    capaPanel(r.capa);
   renderIcons(el);
+}
+
+function capaPanel(list){
+  if(!list || !list.length) return '';
+  var sev = {major:'bad', moderate:'warn', minimal:''};
+  var stt = {open:'bad', progress:'warn', closed:'ok'};
+  var rows = list.map(function(c){
+    return '<tr onclick="goTo(\'screen-capa\')">'+
+      '<td class="mono code">'+(c.reportNumber||'—')+'</td>'+
+      '<td>'+(c.severity?'<span class="pill '+(sev[c.severity]||'')+'">'+
+        c.severity.charAt(0).toUpperCase()+c.severity.slice(1)+'</span>':'—')+'</td>'+
+      '<td>'+(c.status?'<span class="pill '+(stt[c.status]||'')+'">'+
+        c.status.charAt(0).toUpperCase()+c.status.slice(1)+'</span>':'—')+'</td>'+
+      '<td class="mono">'+(c.product||'—')+'</td>'+
+      '<td class="mono code">'+(c.lot||'—')+'</td>'+
+      '<td>'+fmtDate(c.capaDate)+'</td>'+
+      '<td class="soft">'+(c.completedBy||'—')+'</td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Incident & CAPA reports', list.length, [
+    {t:'Report #'},{t:'Severity'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Date'},{t:'By'}
+  ], rows);
 }
 
 function productPanel(p, q){

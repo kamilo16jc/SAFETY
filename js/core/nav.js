@@ -17,6 +17,7 @@ function goTo(id){
   if(id==='screen-activity') initActivity();
   if(id==='screen-products') initCatalog();
   if(id==='screen-lotsearch') initSearch();
+  if(id==='screen-capa') initCapa();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -32,6 +33,7 @@ var CRUMBS = {
   'screen-gmp':      ['Capture', 'GMP Audit'],
   'screen-temp':     ['Capture', 'Temp & Humidity'],
   'screen-metal':    ['Capture', 'Metal Detector'],
+  'screen-capa':     ['Capture', 'Incident & CAPA'],
   'screen-dashboard':['Review', 'Dashboard'],
   'screen-reports':  ['Review', 'Reports'],
   'screen-lotsearch':['Review', 'Search'],

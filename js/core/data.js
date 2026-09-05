@@ -24,6 +24,16 @@ var MD_QUESTIONS = [
   'Was the learn process performed correctly or not needed as the machine was functional?',
   'Did the operator perform a routine check after the learn process?'
 ];
+// SQF #2.5.C.2 — niveles de severidad del CAPA, con el plazo de investigación
+var CAPA_SEVERITY = [
+  {key:'major', label:'Major', hours:24, deadline:'within 24 hours',
+   desc:'Potential to cause major production breakdowns/delays in fulfilling orders. Potential to cause illness and/or death in customers; potential food safety risk(s) may be posed.'},
+  {key:'moderate', label:'Moderate', hours:48, deadline:'within 2 days',
+   desc:'Potential to cause reoccurring maintenance issues in production and/or quality issues in finished products. Potential to cause illness/intolerances, negative spread of media news, or reduced customer satisfaction/sales.'},
+  {key:'minimal', label:'Minimal', hours:96, deadline:'within 4 days',
+   desc:'Potential to cause unfavorable conditions in production and/or any aspect of operations for staff, raw materials, packaging materials, and/or finished products. Potential to cause noncompliance with regulations. May be an isolated/sporadic incident or a food quality risk.'}
+];
+
 var GMP_ITEMS = [
   'Gloves','Smocks','Handwashing','Unsecured Jewelry/Loose Objects','Fingernails',
   'Hairnets/Beardnets','Personal Hygiene and Cologne/Perfume','Color Code Adherence',

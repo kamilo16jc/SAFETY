@@ -124,6 +124,7 @@
     <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
     <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
     <button class="d-item" data-screen="screen-metal" onclick="navDrawer('screen-metal')"><span class="d-ico" data-icon="magnet"></span>Metal Detector</button>
+    <button class="d-item" data-screen="screen-capa" onclick="navDrawer('screen-capa')"><span class="d-ico" data-icon="alert"></span>Incident &amp; CAPA</button>
     <div class="nav-label">Review</div>
     <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
@@ -589,6 +590,79 @@
 </div>
 
 
+<!-- INCIDENT & CAPA -->
+<div class="screen" id="screen-capa">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="page-head">
+    <div>
+      <div class="form-title">Incident &amp; CAPA</div>
+      <div class="form-meta">SQF #2.5.C.2 · Incident report and corrective/preventative action</div>
+    </div>
+  </div>
+
+  <div class="panel capa-form">
+    <div class="capa-form-head"><span id="capa-title">New incident &amp; CAPA report</span></div>
+    <div class="capa-form-body">
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Report number</div>
+          <input type="text" class="field" id="capa-report" placeholder="CAPA-2026-001"></div>
+        <div class="field-group"><div class="sec-label">Date of CAPA</div>
+          <input type="date" class="field" id="capa-date"></div>
+      </div>
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Customer complaint # <span class="opt">· if applicable</span></div>
+          <input type="text" class="field" id="capa-complaint" placeholder="Optional"></div>
+        <div class="field-group"><div class="sec-label">Status</div>
+          <div id="capa-status" class="chip-row"></div></div>
+      </div>
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Building / Item # <span class="opt">· product</span></div>
+          <input type="text" class="field" id="capa-product" list="capa-product-list" placeholder="Product number or name" autocomplete="off">
+          <datalist id="capa-product-list"></datalist></div>
+        <div class="field-group"><div class="sec-label">Lot number</div>
+          <input type="text" class="field" id="capa-lot" placeholder="Lot"></div>
+      </div>
+
+      <div class="sec-label" style="margin-top:6px">Corrective action severity</div>
+      <div id="capa-severity" class="capa-sev"></div>
+
+      <div class="sec-label" style="margin-top:6px">Problem / Deviation</div>
+      <textarea class="field" id="capa-problem" rows="3" placeholder="What was found, where, and when"></textarea>
+
+      <div class="sec-label">Investigation, affected product/area and outcome(s)</div>
+      <textarea class="field" id="capa-desc" rows="4" placeholder="Root cause analysis, affected quantity/area, and how it was resolved"></textarea>
+
+      <div class="pair">
+        <div class="field-group" style="flex:1"><div class="sec-label">Short-term corrective action taken</div>
+          <textarea class="field" id="capa-short" rows="3" placeholder="Immediate action"></textarea></div>
+      </div>
+      <div class="field-group"><div class="sec-label">Short-term action date</div>
+        <input type="date" class="field" id="capa-short-date" style="max-width:200px"></div>
+
+      <div class="field-group"><div class="sec-label">Long-term corrective / preventative action taken</div>
+        <textarea class="field" id="capa-long" rows="3" placeholder="Preventative action"></textarea></div>
+      <div class="field-group"><div class="sec-label">Long-term action date</div>
+        <input type="date" class="field" id="capa-long-date" style="max-width:200px"></div>
+
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Completed by (print name)</div>
+          <input type="text" class="field" id="capa-completed" placeholder="Name"></div>
+        <div class="field-group"><div class="sec-label">Verified by (signature)</div>
+          <input type="text" class="field" id="capa-verified" placeholder="Name"></div>
+      </div>
+
+      <div class="capa-form-actions">
+        <button class="main-btn" id="capa-save-btn" onclick="saveCapa()">Save report</button>
+        <button class="btn-ghost" id="capa-cancel-btn" style="display:none" onclick="cancelCapaEdit()">Cancel edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label" style="margin-top:6px">Saved reports</div>
+  <div id="capa-list"></div>
+</div>
+
+
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
   <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
@@ -795,6 +869,7 @@
           <option value="weight">Weight only</option>
           <option value="seal">Bag seal only</option>
           <option value="hold">Holds only</option>
+          <option value="capa">CAPA only</option>
         </select></div>
       </div>
     </div>
@@ -957,6 +1032,7 @@
 <script src="js/modules/dashboard.js"></script>
 <script src="js/export/pdf-reports.js"></script>
 <script src="js/export/dash-pdf.js"></script>
+<script src="js/export/capa-pdf.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/modules/admin.js"></script>
 <script src="js/modules/reports.js"></script>
@@ -976,6 +1052,7 @@
 <script src="js/integrations/excel-fill.js"></script>
 <script src="js/integrations/metal-fill.js"></script>
 <script src="js/modules/metal.js"></script>
+<script src="js/modules/capa.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
