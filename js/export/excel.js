@@ -85,7 +85,7 @@ function exportRptExcel() {
   // Download
   var dateLabel = rptFilters.date || localDateStr();
   XLSX.writeFile(wb, 'Caputo_Weight_Seal_'+dateLabel+'.xlsx');
-  toast('Excel exported! ✓');
+  toast('Excel exported');
 }
 
 function exportGmpExcel() {
@@ -130,7 +130,7 @@ function exportGmpExcel() {
 
   var dateLabel = rptFilters.date || localDateStr();
   XLSX.writeFile(wb, 'Caputo_GMP_'+dateLabel+'.xlsx');
-  toast('GMP Excel exported! ✓');
+  toast('GMP Excel exported');
 }
 
 function exportDashExcel() {
@@ -272,6 +272,6 @@ function exportDashExcel() {
 
   var dateLabel = localDateStr();
   XLSX.writeFile(wb, 'Caputo_Dashboard_'+periodLabel.replace(' ','_')+'_'+dateLabel+'.xlsx');
-  toast('Dashboard Excel exported! ✓');
+  toast('Dashboard Excel exported');
 }
 

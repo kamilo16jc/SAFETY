@@ -100,5 +100,5 @@ function dupSaveAnyway(){
 function dupOverrideNote(){
   if(!dupOverride) return '';
   dupOverride = false;
-  return ' · ⚠ saved over duplicate-line warning';
+  return ' · saved over duplicate-line warning';
 }

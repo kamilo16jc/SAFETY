@@ -32,14 +32,14 @@
       <div class="sec-label">Password</div>
       <input type="password" class="field" id="login-pass" placeholder="••••••••" autocomplete="current-password">
       <div id="login-error" style="display:none;color:var(--fail);font-size:12px;font-weight:700;margin-top:10px;text-align:center"></div>
-      <button class="main-btn" style="margin-top:20px" onclick="doLogin()">Sign In →</button>
+      <button class="main-btn" style="margin-top:20px" onclick="doLogin()">Sign In</button>
     </div>
   </div>
 </div>
 
 <!-- ADMIN -->
 <div class="screen" id="screen-admin">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Admin Panel</div>
   <div class="form-meta">Manage users</div>
 
@@ -55,7 +55,7 @@
     <button class="rpt-filter-btn" id="role-supervisor" data-role="supervisor" onclick="setRole(this)">Supervisor</button>
     <button class="rpt-filter-btn" id="role-admin" data-role="admin" onclick="setRole(this)">Admin</button>
   </div>
-  <button class="main-btn" style="margin-bottom:24px" onclick="addOperator()">Add User ✓</button>
+  <button class="main-btn" style="margin-bottom:24px" onclick="addOperator()">Add User</button>
 
   <div class="sec-label">Current Users</div>
   <div id="operators-list"></div>
@@ -129,7 +129,7 @@
     <div class="nav-label">Review</div>
     <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
-    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>LOT Search</button>
+    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>Search</button>
     <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Products on Hold</button>
     <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
     <div class="nav-label">Setup</div>
@@ -144,7 +144,7 @@
 
 <!-- WEIGHT -->
 <div class="screen" id="screen-weight">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Weight Log</div>
   <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
@@ -211,12 +211,12 @@
   <textarea class="field" id="w-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
   <div class="sec-label">Operator Initials</div>
   <input type="text" class="field" id="w-initials" placeholder="Initials">
-  <button class="main-btn" onclick="saveWeight()">Save Record ✓</button>
+  <button class="main-btn" onclick="saveWeight()">Save Record</button>
 </div>
 
 <!-- BAG SEAL -->
 <div class="screen" id="screen-seal">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Bag Seal</div>
   <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
@@ -261,12 +261,12 @@
   <textarea class="field" id="s-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
   <div class="sec-label">Operator Initials</div>
   <input type="text" class="field" id="s-initials" placeholder="Initials">
-  <button class="main-btn" onclick="saveSeal()">Save Record ✓</button>
+  <button class="main-btn" onclick="saveSeal()">Save Record</button>
 </div>
 
 <!-- DASHBOARD -->
 <div class="screen" id="screen-dashboard">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Dashboard</div>
   <div class="form-meta">Real-time statistics &amp; analytics</div>
 
@@ -281,7 +281,7 @@
   <!-- WEIGHT STATS HEADER -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
     <div style="width:4px;height:18px;background:var(--accent);border-radius:2px"></div>
-    <div style="font-size:14px;font-weight:800;color:var(--text)">⚖️ Weight Monitoring</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text)">Weight Monitoring</div>
   </div>
 
   <!-- MAIN STATS GRID -->
@@ -327,7 +327,7 @@
   <!-- GMP STATS HEADER -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
     <div style="width:4px;height:18px;background:#1a5276;border-radius:2px"></div>
-    <div style="font-size:14px;font-weight:800;color:var(--text)">🏭 GMP Audit</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text)">GMP Audit</div>
   </div>
 
   <div id="dash-gmp-stats" style="margin-bottom:12px"></div>
@@ -350,15 +350,15 @@
 
   <!-- EXPORT & CLEAR -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportDashPDF()">📄 Export PDF</button>
-    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportDashExcel()">📊 Export Excel</button>
+    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportDashPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
+    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportDashExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
   </div>
   <button class="danger-btn" onclick="clearData()">Clear All Data</button>
 </div>
 
 <!-- GMP -->
 <div class="screen" id="screen-gmp">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">GMP Audit</div>
   <div class="form-meta">SQF # 2.5.D.A · Daily GMP Facility Audit</div>
   <div class="sec-label">Location</div>
@@ -392,14 +392,14 @@
   <div class="sec-label">Verified By (Signature)</div>
   <input type="text" class="field" id="gmp-verified" style="margin-bottom:16px">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="sec-btn" style="margin:0" onclick="exportGmpPDF()">Export PDF 📄</button>
-    <button class="main-btn" style="margin:0" onclick="saveGmp()">Save Record ✓</button>
+    <button class="sec-btn" style="margin:0" onclick="exportGmpPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
+    <button class="main-btn" style="margin:0" onclick="saveGmp()">Save Record</button>
   </div>
 </div>
 
 <!-- TEMP & HUMIDITY -->
 <div class="screen" id="screen-temp">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Temp & Humidity</div>
   <div class="form-meta">Building 1945 · SQF # 2.5.D.A</div>
 
@@ -419,9 +419,9 @@
 
   <div class="sec-label">Checkpoint</div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-    <button class="gmp-tog" id="th-cp1" onclick="setThCheckpoint('begin')" style="padding:12px 8px">🌅 Beginning</button>
-    <button class="gmp-tog" id="th-cp2" onclick="setThCheckpoint('mid')"   style="padding:12px 8px">☀️ Middle</button>
-    <button class="gmp-tog" id="th-cp3" onclick="setThCheckpoint('end')"   style="padding:12px 8px">🌙 End</button>
+    <button class="gmp-tog" id="th-cp1" onclick="setThCheckpoint('begin')" style="padding:12px 8px">Beginning</button>
+    <button class="gmp-tog" id="th-cp2" onclick="setThCheckpoint('mid')"   style="padding:12px 8px">Middle</button>
+    <button class="gmp-tog" id="th-cp3" onclick="setThCheckpoint('end')"   style="padding:12px 8px">End</button>
   </div>
   <div id="th-lock-note" style="display:none"></div>
 
@@ -462,13 +462,13 @@
   <textarea class="field" id="th-comments" placeholder="Add comments or corrective actions..." rows="2"></textarea>
   <div class="sec-label">Completed By</div>
   <input type="text" class="field" id="th-completed" placeholder="Print name">
-  <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint ✓</button>
+  <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint</button>
 </div>
 
 
 <!-- PRODUCTS -->
 <div class="screen" id="screen-products">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Products</div>
@@ -510,7 +510,7 @@
 
 <!-- METAL DETECTOR -->
 <div class="screen" id="screen-metal">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Metal Detector Check</div>
   <div class="form-meta">Routine metal detector verification</div>
 
@@ -551,13 +551,13 @@
   <input type="text" class="field" id="md-completed" placeholder="Print name">
   <div class="sec-label">Verified By (optional)</div>
   <input type="text" class="field" id="md-verified" placeholder="Print name">
-  <button class="main-btn" onclick="saveMetal()">Save Check ✓</button>
+  <button class="main-btn" onclick="saveMetal()">Save Check</button>
 </div>
 
 
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title" id="title-reports">Reports</div>
   <div class="form-meta" id="meta-reports">Filter and export records to PDF</div>
 
@@ -597,7 +597,7 @@
         <div class="sec-label">Product Number (optional)</div>
         <input type="text" class="time-input" id="rpt-product" placeholder="Filter by product number" style="width:100%">
       </div>
-      <button class="main-btn" style="margin:0" onclick="applyRptFilters()">Apply Filters 🔍</button>
+      <button class="main-btn" style="margin:0" onclick="applyRptFilters()">Apply Filters</button>
     </div>
   </div>
 
@@ -609,47 +609,47 @@
   <div id="rpt-seal-list" style="margin-bottom:16px"></div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptWeightPDF()">📄 Export PDF</button>
-    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportRptExcel()">📊 Export Excel</button>
+    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptWeightPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
+    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportRptExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
   </div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendWeightSealForm()">⬇ Download Official Form (Word)</button>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendWeightSealForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Word)</button>
 
   <!-- GMP RECORDS -->
   <div class="sec-label">GMP Records</div>
   <div id="rpt-gmp-list" style="margin-bottom:6px"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptGmpPDF()">📄 Export PDF</button>
-    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportGmpExcel()">📊 Export Excel</button>
+    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptGmpPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
+    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportGmpExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
   </div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendGmpForm()">⬇ Download Official Form (Excel)</button>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendGmpForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Excel)</button>
 
   <!-- METAL DETECTOR RECORDS -->
   <div class="sec-label">Metal Detector Checks</div>
   <div id="rpt-metal-list" style="margin-bottom:10px"></div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendMetalForm()">⬇ Download Official Form (Word)</button>
+  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendMetalForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Word)</button>
 </div>
 
 
 <!-- HOLD MANAGEMENT -->
 <div class="screen" id="screen-hold">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Products on Hold</div>
   <div class="form-meta">Track and manage held products</div>
 
   <!-- TABS -->
   <div style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
-    <button class="pkg-chip selected" id="hold-tab-active" onclick="switchHoldTab('active',this)">🔒 Active</button>
-    <button class="pkg-chip" id="hold-tab-closed" onclick="switchHoldTab('closed',this)">✅ Closed</button>
-    <button class="pkg-chip" id="hold-tab-new" onclick="switchHoldTab('new',this)">➕ New</button>
-    <button class="pkg-chip" id="hold-tab-all" onclick="switchHoldTab('all',this)">📁 All</button>
+    <button class="pkg-chip selected" id="hold-tab-active" onclick="switchHoldTab('active',this)">Active</button>
+    <button class="pkg-chip" id="hold-tab-closed" onclick="switchHoldTab('closed',this)">Closed</button>
+    <button class="pkg-chip" id="hold-tab-new" onclick="switchHoldTab('new',this)">New</button>
+    <button class="pkg-chip" id="hold-tab-all" onclick="switchHoldTab('all',this)">All</button>
   </div>
 
   <!-- ACTIVE CASES (hold + review) -->
   <div id="hold-view-active">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="rpt-filter-btn active" data-group="hactive" data-val="all" onclick="setHoldActiveFilter(this)">All Active</button>
-      <button class="rpt-filter-btn" data-group="hactive" data-val="hold" onclick="setHoldActiveFilter(this)">🔒 Hold</button>
-      <button class="rpt-filter-btn" data-group="hactive" data-val="review" onclick="setHoldActiveFilter(this)">🔍 Under Review</button>
+      <button class="rpt-filter-btn" data-group="hactive" data-val="hold" onclick="setHoldActiveFilter(this)">Hold</button>
+      <button class="rpt-filter-btn" data-group="hactive" data-val="review" onclick="setHoldActiveFilter(this)">Under Review</button>
     </div>
     <div id="hold-active-list"></div>
   </div>
@@ -658,8 +658,8 @@
   <div id="hold-view-closed" style="display:none">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="rpt-filter-btn active" data-group="hclosed" data-val="all" onclick="setHoldClosedFilter(this)">All Closed</button>
-      <button class="rpt-filter-btn" data-group="hclosed" data-val="released" onclick="setHoldClosedFilter(this)">✅ Released</button>
-      <button class="rpt-filter-btn" data-group="hclosed" data-val="destroyed" onclick="setHoldClosedFilter(this)">🗑️ Destroyed</button>
+      <button class="rpt-filter-btn" data-group="hclosed" data-val="released" onclick="setHoldClosedFilter(this)">Released</button>
+      <button class="rpt-filter-btn" data-group="hclosed" data-val="destroyed" onclick="setHoldClosedFilter(this)">Destroyed</button>
     </div>
     <div id="hold-closed-list"></div>
   </div>
@@ -685,14 +685,14 @@
     <textarea class="field" id="hold-reason" placeholder="Describe the reason for placing on hold..." rows="3" style="resize:none;"></textarea>
     <div class="sec-label">Initiated By</div>
     <input type="text" class="field" id="hold-initby" placeholder="Name">
-    <button class="main-btn" onclick="saveHoldCase()">🔒 Place on Hold</button>
+    <button class="main-btn" onclick="saveHoldCase()">Place on Hold</button>
   </div>
 
   <!-- ALL CASES VIEW -->
   <div id="hold-view-all" style="display:none">
     <div style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="main-btn" style="margin:0;background:#1d6f42;flex:1" onclick="exportHoldExcel()">📊 Export Excel</button>
-      <button class="main-btn" style="margin:0;background:#1a5276;flex:1" onclick="exportHoldPDF()">📄 Export PDF</button>
+      <button class="main-btn" style="margin:0;background:#1d6f42;flex:1" onclick="exportHoldExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
+      <button class="main-btn" style="margin:0;background:#1a5276;flex:1" onclick="exportHoldPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
     </div>
     <div id="hold-all-list"></div>
   </div>
@@ -701,37 +701,47 @@
 
 <!-- LOT SEARCH SCREEN -->
 <div class="screen" id="screen-lotsearch">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
-  <div class="form-title">🔍 LOT Search</div>
-  <div class="form-meta">Full traceability by LOT number</div>
-  <div style="display:flex;gap:8px;margin-bottom:20px">
-    <input type="text" class="field" id="lot-search-input" placeholder="Enter LOT number..." onkeydown="if(event.key==='Enter')runLotSearch()" style="flex:1;text-transform:uppercase">
-    <button onclick="runLotSearch()" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-size:14px;cursor:pointer">SEARCH</button>
+  <button class="back-btn" onclick="goTo('screen-home')"><span data-icon="back"></span>BACK</button>
+  <div class="page-head">
+    <div>
+      <div class="form-title">Search</div>
+      <div class="form-meta">Full traceability by LOT, product number, barcode or description</div>
+    </div>
+    <div class="ph-tools">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="search-input" placeholder="LOT, product number, barcode or description"
+               autocomplete="off" autocapitalize="characters" onkeydown="searchOnKey(event)">
+      </div>
+      <button class="btn-ghost" onclick="openScanner('search')"><span data-icon="scan"></span>Scan</button>
+      <button class="btn-solid" onclick="runSearch()">Search</button>
+      <button class="btn-ghost" onclick="clearSearch()">Clear</button>
+    </div>
   </div>
-  <div id="lot-search-results"></div>
+  <div class="workspace" id="search-results"></div>
 </div>
 
 <!-- ACTIVITY LOG SCREEN -->
 <div class="screen" id="screen-activity">
-  <button class="back-btn" onclick="goTo('screen-home')">← BACK</button>
-  <div class="form-title">👁️ Activity Log</div>
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Activity Log</div>
   <div class="form-meta">Last 24 hours · Tap calendar to search by date</div>
 
   <!-- Type filters -->
   <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
     <button class="rpt-filter-btn active" data-group="alog" data-val="all" onclick="setActivityFilter(this)">All</button>
-    <button class="rpt-filter-btn" data-group="alog" data-val="weight" onclick="setActivityFilter(this)">⚖️ Weight</button>
-    <button class="rpt-filter-btn" data-group="alog" data-val="seal" onclick="setActivityFilter(this)">🧪 Seal</button>
-    <button class="rpt-filter-btn" data-group="alog" data-val="gmp" onclick="setActivityFilter(this)">📋 GMP</button>
-    <button class="rpt-filter-btn" data-group="alog" data-val="hold" onclick="setActivityFilter(this)">🔒 Hold</button>
-    <button class="rpt-filter-btn" data-group="alog" data-val="login" onclick="setActivityFilter(this)">👤 Login</button>
+    <button class="rpt-filter-btn" data-group="alog" data-val="weight" onclick="setActivityFilter(this)">Weight</button>
+    <button class="rpt-filter-btn" data-group="alog" data-val="seal" onclick="setActivityFilter(this)">Seal</button>
+    <button class="rpt-filter-btn" data-group="alog" data-val="gmp" onclick="setActivityFilter(this)">GMP</button>
+    <button class="rpt-filter-btn" data-group="alog" data-val="hold" onclick="setActivityFilter(this)">Hold</button>
+    <button class="rpt-filter-btn" data-group="alog" data-val="login" onclick="setActivityFilter(this)">Login</button>
   </div>
 
   <!-- Date selector row -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-    <div id="activity-date-label" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:var(--text)">📅 Today (last 24h)</div>
-    <button onclick="openActivityCalendar()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;cursor:pointer">📅 Pick Date</button>
-    <button onclick="resetActivityToToday()" id="activity-reset-btn" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer">✕ Today</button>
+    <div id="activity-date-label" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:var(--text)">Today (last 24h)</div>
+    <button onclick="openActivityCalendar()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;cursor:pointer"><span class="btn-ico" data-icon="calendar"></span>Pick Date</button>
+    <button onclick="resetActivityToToday()" id="activity-reset-btn" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer">Today</button>
   </div>
 
   <div id="activity-log-list"></div>
@@ -765,7 +775,7 @@
   <div class="dup-box" style="text-align:left;max-width:400px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em">New product</div>
-      <button onclick="closeProductModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer">✕</button>
+      <button onclick="closeProductModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer"><span class="btn-ico" data-icon="close"></span></button>
     </div>
     <div class="sec-label">Product Number</div>
     <input type="text" class="field" id="prod-number" placeholder="e.g. 880" autocapitalize="characters">
@@ -786,7 +796,7 @@
     <input type="text" class="field" id="prod-bags" placeholder="e.g. 4" inputmode="numeric">
     <div class="sec-label">Barcode <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional</span></div>
     <input type="text" class="field" id="prod-barcode" placeholder="Scanned code">
-    <button class="main-btn" style="margin:8px 0 0" onclick="saveProduct()">Save Product ✓</button>
+    <button class="main-btn" style="margin:8px 0 0" onclick="saveProduct()">Save Product</button>
   </div>
 </div>
 
@@ -807,7 +817,7 @@
 <!-- DUPLICATE LINE WARNING -->
 <div id="dup-modal" class="dup-modal">
   <div class="dup-box">
-    <div class="dup-ico">⚠️</div>
+    <div class="dup-ico" data-icon="alert"></div>
     <div class="dup-title" id="dup-modal-title"></div>
     <div class="dup-detail" id="dup-modal-detail"></div>
     <div class="dup-ask" id="dup-modal-ask">Is this the right line for this check?</div>
@@ -821,7 +831,7 @@
   <div style="background:var(--bg);border-radius:20px;max-width:500px;margin:0 auto;padding:24px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div id="modal-case-number" style="font-size:18px;font-weight:800"></div>
-      <button onclick="closeHoldModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer">✕ Close</button>
+      <button onclick="closeHoldModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer"><span class="btn-ico" data-icon="close"></span>Close</button>
     </div>
     <div id="modal-case-detail"></div>
 
@@ -829,14 +839,14 @@
     <div id="modal-status-change" style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
       <div class="sec-label">Change Status</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <button class="rpt-filter-btn" data-newstatus="hold" onclick="setNewStatus(this)">🔒 Hold</button>
-        <button class="rpt-filter-btn" data-newstatus="review" onclick="setNewStatus(this)">🔍 Under Review</button>
-        <button class="rpt-filter-btn" data-newstatus="released" onclick="setNewStatus(this)">✅ Released</button>
-        <button class="rpt-filter-btn" data-newstatus="destroyed" onclick="setNewStatus(this)">🗑️ Destroyed</button>
+        <button class="rpt-filter-btn" data-newstatus="hold" onclick="setNewStatus(this)">Hold</button>
+        <button class="rpt-filter-btn" data-newstatus="review" onclick="setNewStatus(this)">Under Review</button>
+        <button class="rpt-filter-btn" data-newstatus="released" onclick="setNewStatus(this)">Released</button>
+        <button class="rpt-filter-btn" data-newstatus="destroyed" onclick="setNewStatus(this)">Destroyed</button>
       </div>
       <div class="sec-label">Comment (required)</div>
       <textarea class="field" id="modal-comment" placeholder="Add a comment about this status change..." rows="2" style="resize:none;margin-bottom:12px"></textarea>
-      <button class="main-btn" style="margin:0" onclick="updateHoldStatus()">Update Status ✓</button>
+      <button class="main-btn" style="margin:0" onclick="updateHoldStatus()">Update Status</button>
     </div>
 
     <!-- HISTORY -->
@@ -872,7 +882,7 @@
 <script src="js/core/theme.js"></script>
 <script src="js/core/sound.js"></script>
 <script src="js/modules/check-timer.js"></script>
-<script src="js/modules/lotsearch.js"></script>
+<script src="js/modules/search.js"></script>
 <script src="js/modules/activity.js"></script>
 <script src="js/modules/hold-notify.js"></script>
 <script src="js/core/pwa.js"></script>

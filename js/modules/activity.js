@@ -32,7 +32,7 @@ function initActivity() {
   activitySelectedDate = null;
   activityFilter = 'all';
   var label = document.getElementById('activity-date-label');
-  if(label) label.textContent = '📅 Today (last 24h)';
+  if(label) label.textContent = 'Today (last 24h)';
   var resetBtn = document.getElementById('activity-reset-btn');
   if(resetBtn) resetBtn.style.display = 'none';
   document.querySelectorAll('[data-group="alog"]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-val')==='all'); });
@@ -103,14 +103,14 @@ function renderCalendar() {
 function selectActivityDate(date) {
   activitySelectedDate = date;
   var label = date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('activity-date-label').textContent = '📅 ' + label;
+  document.getElementById('activity-date-label').textContent = label;
   document.getElementById('activity-reset-btn').style.display = 'inline-block';
   loadActivityForDate(date);
 }
 
 function resetActivityToToday() {
   activitySelectedDate = null;
-  document.getElementById('activity-date-label').textContent = '📅 Today (last 24h)';
+  document.getElementById('activity-date-label').textContent = 'Today (last 24h)';
   document.getElementById('activity-reset-btn').style.display = 'none';
   renderActivityLog();
 }
@@ -162,13 +162,13 @@ function renderActivityLog() {
   }
 
   if(activityFilter !== 'all') logs = logs.filter(function(l){ return l.type === activityFilter; });
-  var icons = {weight:'⚖️', seal:'🧪', gmp:'📋', hold:'🔒', admin:'⚙️', login:'👤'};
+  var icons = {weight:'scale', seal:'droplet', gmp:'clipboard', hold:'lock', admin:'sliders', login:'user', temp:'thermo', metal:'magnet'};
   var el = document.getElementById('activity-log-list');
   if(!logs.length) { el.innerHTML = '<div class="empty">No activity recorded yet</div>'; return; }
   el.innerHTML = logs.slice(0,100).map(function(l) {
     var dt = l.date ? new Date(l.date).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start">'+
-      '<div style="font-size:18px;margin-top:1px">'+(icons[l.type]||'📝')+'</div>'+
+      '<div class="log-ico">'+(ICONS[icons[l.type]||'doc']||'')+'</div>'+
       '<div style="flex:1">'+
         '<div style="font-size:11px;font-weight:700;color:var(--text)">'+l.action+'</div>'+
         '<div style="font-size:10px;color:var(--muted)">'+l.details+'</div>'+

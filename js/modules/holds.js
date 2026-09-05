@@ -28,15 +28,15 @@ function getNextHoldNumber() {
 }
 
 var HSC = {
-  hold:     {bg:'#ffe0e0',border:'#ffb3b3',text:'#c1121f',icon:'🔒'},
-  review:   {bg:'#fff9e6',border:'#fde68a',text:'#b45309',icon:'🔍'},
-  released: {bg:'#d8f3dc',border:'#95d5b2',text:'#2d6a4f',icon:'✅'},
-  destroyed:{bg:'#f3f4f6',border:'#d1d5db',text:'#6b7280',icon:'🗑️'}
+  hold:     {bg:'#ffe0e0',border:'#ffb3b3',text:'#c1121f'},
+  review:   {bg:'#fff9e6',border:'#fde68a',text:'#b45309'},
+  released: {bg:'#d8f3dc',border:'#95d5b2',text:'#2d6a4f'},
+  destroyed:{bg:'#f3f4f6',border:'#d1d5db',text:'#6b7280'}
 };
 
 function statusBadge(status) {
   var s = HSC[status] || HSC.hold;
-  return '<span style="background:'+s.bg+';border:1px solid '+s.border+';color:'+s.text+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">'+s.icon+' '+status+'</span>';
+  return '<span style="background:'+s.bg+';border:1px solid '+s.border+';color:'+s.text+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">'+status+'</span>';
 }
 
 function initHold() {
@@ -84,9 +84,9 @@ function holdCard(h, showReleaseCert) {
   var dt = h.createdAt ? new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
   var certBtn = '';
   if(showReleaseCert && h.status==='released') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="release" style="background:#d8f3dc;border:1px solid #95d5b2;color:#2d6a4f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">📜 Release Certificate</button>';
+    certBtn = '<button data-certid="'+h.id+'" data-certtype="release" style="background:#d8f3dc;border:1px solid #95d5b2;color:#2d6a4f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">Release Certificate</button>';
   } else if(showReleaseCert && h.status==='destroyed') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="destroy" style="background:#ffe0e0;border:1px solid #ffb3b3;color:#c1121f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">🗑️ Destruction Certificate</button>';
+    certBtn = '<button data-certid="'+h.id+'" data-certtype="destroy" style="background:#ffe0e0;border:1px solid #ffb3b3;color:#c1121f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">Destruction Certificate</button>';
   }
   return '<div data-holdid="'+h.id+'" style="background:var(--surface);border:1px solid '+s.border+';border-left:4px solid '+s.text+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
@@ -127,7 +127,7 @@ function renderHoldActive() {
 
   var el = document.getElementById('hold-active-list');
   el.innerHTML = holds.length ? holds.map(function(h){return holdCard(h,false);}).join('') :
-    '<div class="empty">No active cases 🎉</div>';
+    '<div class="empty">No active cases</div>';
   attachHoldEvents('hold-active-list');
 }
 
@@ -192,7 +192,7 @@ function saveHoldCase() {
   document.getElementById('hold-reason').value  = '';
   document.querySelectorAll('[data-group="hline"]').forEach(function(b){b.classList.remove('active');});
 
-  toast(newCase.caseNumber + ' created! 🔒');
+  toast(newCase.caseNumber + ' created');
   logActivity('hold','Hold case created',newCase.caseNumber+' — '+product+' · LOT: '+(lot||'—')+' · '+reason, newCase.initiatedBy);
   notifySupervisorOfHold(newCase.caseNumber, product, lot, reason);
   switchHoldTab('active', document.getElementById('hold-tab-active'));
@@ -278,7 +278,7 @@ function updateHoldStatus() {
   // If released or destroyed → auto move to closed tab after closing modal
   var wasClosed = (newHoldStatus==='released' || newHoldStatus==='destroyed');
   var savedCase = holds[idx]; // save reference BEFORE closing modal
-  toast('Status → ' + newHoldStatus.toUpperCase() + ' ✓');
+  toast('Status changed to ' + newHoldStatus.toUpperCase());
   logActivity('hold','Hold status updated',savedCase.caseNumber+' → '+newHoldStatus.toUpperCase()+' · '+comment, currentUser?currentUser.name:'—');
 
   if(wasClosed) {
@@ -321,7 +321,7 @@ function exportReleaseCert(id) {
     var s = HSC[e.status] || HSC.hold;
     var dt = e.date ? new Date(e.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     return '<tr style="background:'+s.bg+'">'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+s.icon+' '+e.status.toUpperCase()+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+e.status.toUpperCase()+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+dt+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.comment+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.by+'</td>'+
@@ -355,7 +355,7 @@ function exportReleaseCert(id) {
   // Certificate Title
   '<div style="text-align:center;margin-bottom:24px">'+
     '<div style="background:#d8f3dc;border:2px solid #2d6a4f;border-radius:12px;padding:16px;display:inline-block;min-width:300px">'+
-      '<div style="font-size:22px;font-weight:900;color:#2d6a4f;letter-spacing:0.05em">✅ PRODUCT RELEASE CERTIFICATE</div>'+
+      '<div style="font-size:22px;font-weight:900;color:#2d6a4f;letter-spacing:0.05em">PRODUCT RELEASE CERTIFICATE</div>'+
       '<div style="font-size:11px;color:#2d6a4f;margin-top:4px;font-weight:700">CAPUTO CHEESE · QUALITY CONTROL DEPARTMENT</div>'+
     '</div>'+
   '</div>'+
@@ -397,7 +397,7 @@ function exportReleaseCert(id) {
 
   // Release info
   '<div style="background:#d8f3dc;border:1px solid #95d5b2;border-radius:10px;padding:16px;margin-bottom:18px">'+
-    '<div style="font-size:12px;font-weight:900;color:#2d6a4f;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">✅ Release Information</div>'+
+    '<div style="font-size:12px;font-weight:900;color:#2d6a4f;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">Release Information</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:10px">'+
       '<div><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Hold Date</div><div style="font-weight:700">'+openDate+'</div></div>'+
       '<div><div style="font-size:8px;color:#2d6a4f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Release Date</div><div style="font-weight:700">'+releaseDate+'</div></div>'+
@@ -469,7 +469,7 @@ function exportDestroyCert(id) {
     var s = HSC[e.status] || HSC.hold;
     var dt = e.date ? new Date(e.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     return '<tr style="background:'+s.bg+'">'+
-      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+s.icon+' '+e.status.toUpperCase()+'</td>'+
+      '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px;font-weight:700;color:'+s.text+'">'+e.status.toUpperCase()+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+dt+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.comment+'</td>'+
       '<td style="border:1px solid #ddd;padding:6px 10px;font-size:9px">'+e.by+'</td>'+
@@ -503,7 +503,7 @@ function exportDestroyCert(id) {
   // Certificate Title
   '<div style="text-align:center;margin-bottom:24px">'+
     '<div style="background:#ffe0e0;border:2px solid #c1121f;border-radius:12px;padding:16px;display:inline-block;min-width:300px">'+
-      '<div style="font-size:22px;font-weight:900;color:#c1121f;letter-spacing:0.05em">🗑️ PRODUCT DESTRUCTION CERTIFICATE</div>'+
+      '<div style="font-size:22px;font-weight:900;color:#c1121f;letter-spacing:0.05em">PRODUCT DESTRUCTION CERTIFICATE</div>'+
       '<div style="font-size:11px;color:#c1121f;margin-top:4px;font-weight:700">CAPUTO CHEESE · QUALITY CONTROL DEPARTMENT</div>'+
     '</div>'+
   '</div>'+
@@ -545,7 +545,7 @@ function exportDestroyCert(id) {
 
   // Release info
   '<div style="background:#ffe0e0;border:1px solid #ffb3b3;border-radius:10px;padding:16px;margin-bottom:18px">'+
-    '<div style="font-size:12px;font-weight:900;color:#c1121f;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">✅ Release Information</div>'+
+    '<div style="font-size:12px;font-weight:900;color:#c1121f;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em">Release Information</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:10px">'+
       '<div><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Hold Date</div><div style="font-weight:700">'+openDate+'</div></div>'+
       '<div><div style="font-size:8px;color:#c1121f;text-transform:uppercase;font-weight:700;margin-bottom:2px">Destruction Date</div><div style="font-weight:700">'+releaseDate+'</div></div>'+
@@ -623,7 +623,7 @@ function exportHoldExcel() {
   XLSX.utils.book_append_sheet(wb, ws2, 'Status History');
 
   XLSX.writeFile(wb, 'Caputo_HoldLog_'+localDateStr()+'.xlsx');
-  toast('Excel exported! ✓');
+  toast('Excel exported');
 }
 
 function exportHoldPDF() {
@@ -642,7 +642,7 @@ function exportHoldPDF() {
     return '<div style="border:1px solid '+s.border+';border-left:5px solid '+s.text+';border-radius:8px;padding:12px;margin-bottom:10px;page-break-inside:avoid">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
         '<div style="font-size:13px;font-weight:900;color:#2b2d42">'+h.caseNumber+' — '+h.product+'</div>'+
-        '<div style="background:'+s.bg+';color:'+s.text+';border:1px solid '+s.border+';border-radius:16px;padding:3px 10px;font-size:9px;font-weight:700">'+s.icon+' '+h.status.toUpperCase()+'</div>'+
+        '<div style="background:'+s.bg+';color:'+s.text+';border:1px solid '+s.border+';border-radius:16px;padding:3px 10px;font-size:9px;font-weight:700">'+h.status.toUpperCase()+'</div>'+
       '</div>'+
       '<div style="font-size:9px;color:#666">LOT: '+(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+' · '+dt+' · By: '+h.initiatedBy+'</div>'+
       '<div style="font-size:9px;color:#444;margin-top:4px;font-style:italic">'+h.reason+'</div>'+

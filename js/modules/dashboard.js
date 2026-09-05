@@ -195,8 +195,8 @@ function initDash(){
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
       '<div class="big-stat" style="border-color:#1a5276"><div class="blbl">TOTAL AUDITS</div><div class="bval" style="color:#1a5276">'+totalAudits+'</div><div class="bsub">completed</div></div>' +
       '<div class="big-stat green"><div class="blbl">GMP COMPLIANCE</div><div class="bval">'+gmpComp+'%</div><div class="bsub">items passed</div></div>' +
-      '<div class="big-stat green"><div class="blbl">ITEMS PASSED</div><div class="bval">'+totalPassed+'</div><div class="bsub">✓ acceptable</div></div>' +
-      '<div class="big-stat red"><div class="blbl">ITEMS FAILED</div><div class="bval">'+totalFailed+'</div><div class="bsub">✗ not acceptable</div></div>' +
+      '<div class="big-stat green"><div class="blbl">ITEMS PASSED</div><div class="bval">'+totalPassed+'</div><div class="bsub">acceptable</div></div>' +
+      '<div class="big-stat red"><div class="blbl">ITEMS FAILED</div><div class="bval">'+totalFailed+'</div><div class="bsub">not acceptable</div></div>' +
     '</div>' +
     '<div class="stat-card" style="margin-bottom:10px"><div class="slabel">TOP OPERATOR</div><div class="svalue" style="font-size:16px">'+topOperator+'</div></div>';
 
@@ -215,7 +215,7 @@ function initDash(){
         '<div style="display:flex;align-items:center;gap:8px">'+mkBar(pct,'var(--fail)','#ffe0e0')+'</div>'+
       '</div>';
     }).join('') :
-    '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">No GMP failures recorded 🎉</div>';
+    '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">No GMP failures recorded</div>';
 
   // ---- TEMP AVERAGES ----
   document.getElementById('dash-temp-avg').innerHTML =
@@ -331,7 +331,7 @@ function exportDashPDF() {
 
   // Weight summary cards
   '<div style="font-size:13px;font-weight:800;color:#2b2d42;margin-bottom:10px;display:flex;align-items:center;gap:8px">'+
-    '<div style="width:4px;height:16px;background:#c8102e;border-radius:2px"></div>⚖️ Weight Monitoring Summary'+
+    '<div style="width:4px;height:16px;background:#c8102e;border-radius:2px"></div>Weight Monitoring Summary'+
   '</div>'+
   '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">'+
     '<div style="background:#f5f5f7;border:1px solid #dcdce4;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:#2b2d42">'+tBags+'</div><div style="font-size:8px;color:#888;text-transform:uppercase">Total Bags</div></div>'+
@@ -359,7 +359,7 @@ function exportDashPDF() {
 
   // GMP header
   '<div style="font-size:13px;font-weight:800;color:#2b2d42;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:8px">'+
-    '<div style="width:4px;height:16px;background:#1a5276;border-radius:2px"></div>🏭 GMP Audit Summary'+
+    '<div style="width:4px;height:16px;background:#1a5276;border-radius:2px"></div>GMP Audit Summary'+
   '</div>'+
   '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'+
     '<div style="background:#e8f0fe;border:1px solid #b3c9f7;border-radius:10px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:#1a5276">'+totalAudits+'</div><div style="font-size:8px;color:#888;text-transform:uppercase">Total Audits</div></div>'+
@@ -448,7 +448,7 @@ var thEditing = false;   // true sólo si el usuario pidió corregir un checkpoi
 var TH_FIELDS = ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed'];
 var TH_CP_LABEL = {begin:'Beginning', mid:'Middle', end:'End'};
 var TH_CP_BTN   = {begin:'th-cp1', mid:'th-cp2', end:'th-cp3'};
-var TH_CP_ICON  = {begin:'🌅', mid:'☀️', end:'🌙'};
+
 
 function initTempScreen(){
   // Fecha LOCAL: con toISOString() la app saltaba al día siguiente por la tarde
@@ -534,7 +534,7 @@ function renderThUI(){
     if(!btn) return;
     var saved = !!thRecordFor(cp);
     btn.className = 'gmp-tog'+(thCheckpoint===cp?' yes-on':'')+(saved?' done':'');
-    btn.innerHTML = TH_CP_ICON[cp]+' '+TH_CP_LABEL[cp]+(saved?' ✓':'');
+    btn.innerHTML = TH_CP_LABEL[cp]+(saved?' <span class="cp-done">•</span>':'');
   });
 
   var locked = !!(thCheckpoint && thRecordFor(thCheckpoint) && !thEditing);
@@ -559,7 +559,7 @@ function renderThUI(){
 
   var btn = document.getElementById('th-save-btn');
   if(btn){
-    btn.textContent = thEditing ? 'Update Checkpoint ✓' : 'Save Checkpoint ✓';
+    btn.textContent = thEditing ? 'Update Checkpoint' : 'Save Checkpoint';
     btn.disabled = locked;
   }
   renderThSummary();
@@ -588,10 +588,10 @@ function renderThSummary(){
   var recs = (db.temps||[]).filter(function(t){ return t.date===date && t.shift===thShift; });
   if(!recs.length){ el.innerHTML=''; return; }
 
-  var cpLabel = {begin:'🌅 Beginning', mid:'☀️ Middle', end:'🌙 End'};
+  var cpLabel = {begin:'Beginning', mid:'Middle', end:'End'};
   var rows = ['begin','mid','end'].map(function(cp){
     var r = recs.find(function(t){ return t.checkpoint===cp; });
-    var saved = r ? '✓' : '—';
+    var saved = r ? 'Recorded' : '—';
     var color = r ? '#2d6a4f' : '#aaa';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:'+(r?'#d8f3dc':'#f5f5f7')+';border-radius:8px;margin-bottom:6px">'+
       '<span style="font-size:12px;font-weight:700;color:'+color+'">'+cpLabel[cp]+'</span>'+
@@ -667,7 +667,7 @@ function commitTempHumidity(date, existing){
     (wasEdit?' · corrected an existing checkpoint':''),
     rec.completedBy||(currentUser?currentUser.name:'—'));
 
-  toast(cpLabel[thCheckpoint]+(wasEdit?' checkpoint updated! ✓':' checkpoint saved! ✓'));
+  toast(cpLabel[thCheckpoint]+(wasEdit?' checkpoint updated':' checkpoint saved'));
 
   // El checkpoint queda sin seleccionar a propósito: así el siguiente registro
   // obliga a elegir cuál se está tomando y no cae sobre el anterior.

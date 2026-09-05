@@ -103,6 +103,12 @@ function onScanResult(code){
   playAlert('pass');
   var screen = scanScreen || 'weight';
   if(screen==='catalog'){ catalogScanResult(code); return; }
+  if(screen==='search'){
+    var si=document.getElementById('search-input');
+    if(si) si.value=code;
+    runSearch();
+    return;
+  }
   var p = findProduct(code);
   var ids = productIds(screen);
   if(p){

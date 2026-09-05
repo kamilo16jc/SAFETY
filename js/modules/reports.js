@@ -105,7 +105,7 @@ function renderRptWeights() {
       '<div class="rc-title">Line '+r.line+' · '+r.pkgLabel+'</div>' +
       '<div class="rc-meta">'+dt+' · '+(r.shift===1?'1st':'2nd')+' Shift · '+r.time+(r.lot?' · LOT: '+r.lot:'')+(r.product?' · Prod: '+r.product:'')+(r.initials?' · '+r.initials:'')+'</div>' +
       '<div class="rc-samples">'+samples+'</div>' +
-      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">📝 '+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+r.comments+'</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -148,8 +148,8 @@ function renderRptGmps() {
     return '<div class="rpt-record-card">' +
       '<div class="rc-title">GMP Audit · '+(r.location||'—')+'</div>' +
       '<div class="rc-meta">'+dt+' · '+(r.shift?(r.shift===1?'1st':'2nd')+' Shift':'—')+(r.completedBy?' · '+r.completedBy:'')+'</div>' +
-      '<div class="rc-samples" style="color:var(--pass)">✓ '+passed+' passed &nbsp;&nbsp;<span style="color:var(--fail)">✗ '+failed+' failed</span> &nbsp;&nbsp;<span style="color:var(--muted)">'+total+' checked</span></div>' +
-      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">📝 '+r.comments+'</div>' : '') +
+      '<div class="rc-samples" style="color:var(--pass)">'+passed+' passed &nbsp;&nbsp;<span style="color:var(--fail)">'+failed+' failed</span> &nbsp;&nbsp;<span style="color:var(--muted)">'+total+' checked</span></div>' +
+      (r.comments ? '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+r.comments+'</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -245,7 +245,7 @@ function exportRptWeightPDF() {
         '</div>' +
       '</div>' +
       sampleRows +
-      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">📝 '+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.comments+'</div>' : '') +
     '</div>';
   }).join('');
 
@@ -279,7 +279,7 @@ function exportRptWeightPDF() {
           '</div>';
         }).join('') +
       '</div>' +
-      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">📝 '+r.comments+'</div>' : '') +
+      (r.comments ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.comments+'</div>' : '') +
     '</div>';
   }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No bag seal records for this filter</div>';
 
@@ -310,7 +310,7 @@ function exportRptWeightPDF() {
         '</div>'+
       '</div>'+
       '<table style="width:100%;border-collapse:collapse">'+rows+'</table>'+
-      (r.corrective ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">📝 '+r.corrective+'</div>' : '')+
+      (r.corrective ? '<div style="margin-top:8px;font-size:9px;color:#888;background:'+C.yellowPastel+';border-radius:6px;padding:5px 8px">'+r.corrective+'</div>' : '')+
     '</div>';
   }).join('') : '<div style="background:'+C.grayPastel+';border-radius:10px;padding:14px;text-align:center;color:#aaa;font-size:10px;margin-bottom:12px">No metal detector checks for this filter</div>';
 
@@ -331,7 +331,7 @@ function exportRptWeightPDF() {
     '<div style="background:white;border:1px solid '+C.border+';border-radius:12px;padding:14px;margin-bottom:12px;page-break-inside:avoid">'+
       '<table style="width:100%;border-collapse:collapse"><thead><tr>'+
         '<th '+thHead+' style="border:1px solid '+C.border+';padding:5px;background:#1a5276;color:white;font-size:9px;text-align:left;width:34%"></th>'+
-        '<th '+thHead+'>🌅 BEGINNING</th><th '+thHead+'>☀️ MIDDLE</th><th '+thHead+'>🌙 END</th>'+
+        '<th '+thHead+'>BEGINNING</th><th '+thHead+'>MIDDLE</th><th '+thHead+'>END</th>'+
       '</tr></thead><tbody>'+
         thRow('TIME','time')+
         thRow('TEMPERATURE (°F)','temp')+
@@ -403,7 +403,7 @@ function exportRptWeightPDF() {
   // Weight section title
   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
     '<div style="width:4px;height:20px;background:'+C.red+';border-radius:2px"></div>' +
-    '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">⚖️ Weight Monitoring</div>' +
+    '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Weight Monitoring</div>' +
     '<div style="flex:1;height:1px;background:'+C.border+'"></div>' +
     '<div style="font-size:9px;color:#888">'+rptWeightResults.length+' records</div>' +
   '</div>' +
@@ -412,23 +412,23 @@ function exportRptWeightPDF() {
   // Bag seal section title
   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:6px">' +
     '<div style="width:4px;height:20px;background:#0070C0;border-radius:2px"></div>' +
-    '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">🔍 Bag Seal Monitoring</div>' +
+    '<div style="font-size:13px;font-weight:800;color:'+C.headerBg+'">Bag Seal Monitoring</div>' +
     '<div style="flex:1;height:1px;background:'+C.border+'"></div>' +
     '<div style="font-size:9px;color:#888">'+rptSealResults.length+' records</div>' +
   '</div>' +
   sealCards +
 
   // Metal detector section
-  sectionTitle('#8e8e93', '🧲', 'Metal Detector Check', rptMetalResults.length) +
+  sectionTitle('#8e8e93', '', 'Metal Detector Check', rptMetalResults.length) +
   metalCards +
 
   // Temp & humidity section
-  sectionTitle('#1a5276', '🌡️', 'Temperature &amp; Humidity — Building 1945', null) +
+  sectionTitle('#1a5276', '', 'Temperature &amp; Humidity — Building 1945', null) +
   tempCard +
 
   // Corrective actions
   '<div style="margin-top:10px">' +
-    '<div style="font-size:11px;font-weight:800;color:'+C.headerBg+';margin-bottom:6px">📋 Corrective Actions / Notes</div>' +
+    '<div style="font-size:11px;font-weight:800;color:'+C.headerBg+';margin-bottom:6px">Corrective Actions / Notes</div>' +
     '<div style="border:1px solid '+C.border+';border-radius:10px;min-height:60px;padding:10px;background:white;font-size:9px;color:#aaa">Write corrective actions here...</div>' +
   '</div>' +
 
@@ -535,7 +535,7 @@ function exportRptGmpPDF() {
     tempRows =
       '<div style="margin-bottom:12px;page-break-inside:avoid">' +
         '<div style="background:#1a5276;color:white;padding:8px 12px;border-radius:8px 8px 0 0;font-size:10px;font-weight:800;text-transform:uppercase">' +
-          '🌡️ Temperature & % Relative Humidity Monitoring — Building 1945' +
+          'Temperature &amp; % Relative Humidity Monitoring — Building 1945' +
         '</div>' +
         '<table style="width:100%;border-collapse:collapse">' +
           '<thead><tr>' +
@@ -551,7 +551,7 @@ function exportRptGmpPDF() {
             tRow('Completed By', tGet('begin','completedBy'), tGet('mid','completedBy'), tGet('end','completedBy')) +
           '</tbody></table>' +
         (matchedTemps.some(function(t){return t.comments;}) ?
-          '<div style="margin-top:5px;font-size:8px;background:#f0f4f8;border-radius:4px;padding:5px 8px">📝 ' +
+          '<div style="margin-top:5px;font-size:8px;background:#f0f4f8;border-radius:4px;padding:5px 8px">' +
             matchedTemps.filter(function(t){return t.comments;}).map(function(t){
               return (t.checkpoint==='begin'?'Beginning':t.checkpoint==='mid'?'Middle':'End')+': '+t.comments;
             }).join(' · ') +

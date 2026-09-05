@@ -85,7 +85,7 @@ function doLogin() {
 
 function loginSuccess() {
   // Update user badge
-  document.getElementById('user-badge').textContent = '👤 ' + currentUser.name;
+  document.getElementById('user-badge').textContent = currentUser.name;
   logActivity('login','User logged in','Role: '+currentUser.role, currentUser.name);
   startCheckTimer();
 

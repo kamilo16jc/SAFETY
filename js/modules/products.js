@@ -230,7 +230,7 @@ function saveProduct(){
     document.getElementById(ids.input).value = prod.number;
     onProductInput(productScreen);
   }
-  toast('Product saved ✓');
+  toast('Product saved');
 }
 
 // Asocia un código escaneado a un producto que ya existe

@@ -21,7 +21,20 @@ var ICONS = {
   sun:       _IC('<circle cx="12" cy="12" r="3.4"/><path d="M12 3.5V5.4"/><path d="M12 18.6v1.9"/><path d="M3.5 12h1.9"/><path d="M18.6 12h1.9"/><path d="m5.99 5.99 1.35 1.35"/><path d="m16.66 16.66 1.35 1.35"/><path d="m18.01 5.99-1.35 1.35"/><path d="m7.34 16.66-1.35 1.35"/>'),
   logout:    _IC('<path d="M9.5 21H6a1.5 1.5 0 0 1-1.5-1.5v-15A1.5 1.5 0 0 1 6 3h3.5"/><path d="M14.5 7.5 19 12l-4.5 4.5"/><path d="M19 12H9.5"/>'),
   scan:      _IC('<path d="M4 8.5V6a2 2 0 0 1 2-2h2.5"/><path d="M15.5 4H18a2 2 0 0 1 2 2v2.5"/><path d="M20 15.5V18a2 2 0 0 1-2 2h-2.5"/><path d="M8.5 20H6a2 2 0 0 1-2-2v-2.5"/><path d="M4 12h16"/>'),
-  box:       _IC('<path d="m12 3.5 7.5 4v9l-7.5 4-7.5-4v-9Z"/><path d="M4.5 7.5 12 11.5l7.5-4"/><path d="M12 11.5v9"/>')
+  box:       _IC('<path d="m12 3.5 7.5 4v9l-7.5 4-7.5-4v-9Z"/><path d="M4.5 7.5 12 11.5l7.5-4"/><path d="M12 11.5v9"/>'),
+  user:      _IC('<circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/>'),
+  calendar:  _IC('<rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16"/><path d="M8.5 3.5v4"/><path d="M15.5 3.5v4"/>'),
+  trash:     _IC('<path d="M5 7h14"/><path d="M9.5 7V5.3A1.3 1.3 0 0 1 10.8 4h2.4a1.3 1.3 0 0 1 1.3 1.3V7"/><path d="M6.8 7 7.7 19a1.6 1.6 0 0 0 1.6 1.5h5.4A1.6 1.6 0 0 0 16.3 19L17.2 7"/>'),
+  plus:      _IC('<path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/>'),
+  download:  _IC('<path d="M12 3.8v11"/><path d="m7.8 10.8 4.2 4 4.2-4"/><path d="M4.5 19.5h15"/>'),
+  close:     _IC('<path d="m6.5 6.5 11 11"/><path d="m17.5 6.5-11 11"/>'),
+  alert:     _IC('<path d="M12 4.6 21 19.4H3Z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none"/>'),
+  clock:     _IC('<circle cx="12" cy="12" r="8.3"/><path d="M12 7.4V12l3.1 2"/>'),
+  back:      _IC('<path d="M19 12H5.5"/><path d="m11 5.5-5.5 6.5 5.5 6.5"/>'),
+  chevron:   _IC('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
+  barcode:   _IC('<path d="M4 6v12"/><path d="M7.3 6v12"/><path d="M10.6 6v12"/><path d="M14.4 6v12"/><path d="M17.2 6v12"/><path d="M20 6v12"/>'),
+  factory:   _IC('<path d="M3.5 20.5h17"/><path d="M4.5 20.5V11l5 3.2V11l5 3.2V6.5h5v14"/>'),
+  history:   _IC('<path d="M3.8 12a8.2 8.2 0 1 0 2.6-6"/><path d="M3.6 3.9v4.4h4.4"/><path d="M12 7.6V12l3 1.9"/>')
 };
 // Fill every element carrying data-icon="name"
 function renderIcons(root){

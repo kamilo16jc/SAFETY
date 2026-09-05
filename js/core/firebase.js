@@ -77,11 +77,11 @@
       } catch(e) {}
 
       saveDB(localDb);
-      showSyncStatus('✓ Synced');
+      showSyncStatus('Synced');
       setTimeout(function(){ hideSyncStatus(); }, 2000);
       if(window.initLogin) window.initLogin();
     } catch(e) {
-      showSyncStatus('⚠ Offline');
+      showSyncStatus('Offline');
       setTimeout(function(){ hideSyncStatus(); }, 3000);
       console.error('Sync error:', e);
     }

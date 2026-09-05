@@ -40,7 +40,7 @@ function addOperator() {
     document.getElementById('role-operator').classList.add('active');
 
     initAdmin();
-    toast('User added! ✓');
+    toast('User added');
   });
 }
 
@@ -56,7 +56,7 @@ function resetPassword(id) {
     op.passHash = h;
     saveOperators(ops);
     initAdmin();
-    toast('Password updated ✓');
+    toast('Password updated');
   });
 }
 

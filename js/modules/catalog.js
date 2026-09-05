@@ -203,7 +203,7 @@ function saveCatalogEdits(){
   renderProductOptions('s-product-list');
   renderCatalog();
   renderCatalogDetail();
-  toast('Product updated ✓');
+  toast('Product updated');
 }
 
 function deleteCatalogProduct(){
