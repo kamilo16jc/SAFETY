@@ -1,5 +1,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD2QOrY7TyeYCcHE14hXoQ3nCsC4nozL-8",
@@ -10,8 +11,23 @@
     appId: "1:20561008857:web:cc24df6e99c5d893af86c8"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Sesión anónima: cuando las reglas exijan request.auth != null, la app ya
+  // llega con una sesión. Es tolerante a fallos — si Anonymous Auth todavía no
+  // está habilitado, se registra el error pero la app no se bloquea.
+  var authReady = new Promise(function(resolve){
+    var done = false;
+    var finish = function(){ if(!done){ done = true; resolve(); } };
+    onAuthStateChanged(auth, function(user){ if(user) finish(); });
+    signInAnonymously(auth).catch(function(e){
+      console.warn('Anonymous sign-in unavailable:', e && e.code);
+      finish(); // no bloquear la app aunque falle
+    });
+    setTimeout(finish, 4000); // red de seguridad
+  });
 
   // ---- SYNC: load all data from Firestore into localStorage on start ----
   async function syncFromFirebase() {
@@ -239,7 +255,8 @@
     }
   };
 
-  // Run sync on load
-  syncFromFirebase();
-  // Re-sync every 60 seconds
-  setInterval(syncFromFirebase, 60000);
+  // Run sync on load — después de que la sesión anónima esté lista
+  authReady.then(function(){
+    syncFromFirebase();
+    setInterval(syncFromFirebase, 60000);
+  });
