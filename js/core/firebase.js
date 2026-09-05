@@ -29,6 +29,13 @@
     setTimeout(finish, 4000); // red de seguridad
   });
 
+  // Conserva los registros creados sin señal (aún sin _fbId): así el sync no
+  // los borra al traer la copia de Firestore. Se suben con flushPending().
+  function mergePending(remote, local){
+    var pend = (local||[]).filter(function(r){ return r && !r._fbId; });
+    return remote.concat(pend);
+  }
+
   // ---- SYNC: load all data from Firestore into localStorage on start ----
   async function syncFromFirebase() {
     try {
@@ -37,38 +44,38 @@
 
       // Weights
       var wSnap = await getDocs(query(collection(db,'weights'), orderBy('date','asc')));
-      localDb.weights = wSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      localDb.weights = mergePending(wSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.weights);
 
       // Seals
       var sSnap = await getDocs(query(collection(db,'seals'), orderBy('date','asc')));
-      localDb.seals = sSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      localDb.seals = mergePending(sSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.seals);
 
       // GMPs
       var gSnap = await getDocs(query(collection(db,'gmps'), orderBy('date','asc')));
-      localDb.gmps = gSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      localDb.gmps = mergePending(gSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.gmps);
 
       // Temps
       try {
         var tSnap = await getDocs(query(collection(db,'temps'), orderBy('date','asc')));
-        localDb.temps = tSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.temps = mergePending(tSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.temps);
       } catch(e) { localDb.temps = localDb.temps||[]; }
 
       // Metal detector checks
       try {
         var mSnap = await getDocs(query(collection(db,'metal'), orderBy('date','asc')));
-        localDb.metal = mSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.metal = mergePending(mSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.metal);
       } catch(e) { localDb.metal = localDb.metal||[]; }
 
       // CAPA / incident reports
       try {
         var cSnap = await getDocs(collection(db,'capa'));
-        if(!cSnap.empty) localDb.capa = cSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.capa = mergePending(cSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.capa);
       } catch(e) { localDb.capa = localDb.capa||[]; }
 
       // Shift reports
       try {
         var srSnap = await getDocs(collection(db,'shifts'));
-        if(!srSnap.empty) localDb.shifts = srSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.shifts = mergePending(srSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.shifts);
       } catch(e) { localDb.shifts = localDb.shifts||[]; }
 
       // Areas (config doc)
@@ -80,13 +87,13 @@
       // Product catalog
       try {
         var pSnap = await getDocs(collection(db,'products'));
-        if(!pSnap.empty) localDb.products = pSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.products = mergePending(pSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.products);
       } catch(e) { localDb.products = localDb.products||[]; }
 
       // Holds
       try {
         var hSnap = await getDocs(collection(db,'holds'));
-        if(!hSnap.empty) localDb.holds = hSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+        localDb.holds = mergePending(hSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; }), localDb.holds);
       } catch(e) {}
 
       // Activity Log - last 7 days only
@@ -114,11 +121,43 @@
       showSyncStatus('Synced');
       setTimeout(function(){ hideSyncStatus(); }, 2000);
       if(window.initLogin) window.initLogin();
+      flushPending();   // sube lo que se creó sin señal
     } catch(e) {
       showSyncStatus('Offline');
       setTimeout(function(){ hideSyncStatus(); }, 3000);
       console.error('Sync error:', e);
     }
+  }
+
+  // ---- FLUSH: sube a Firestore los registros creados offline (sin _fbId) ----
+  var flushing = false;
+  async function flushPending(){
+    if(flushing) return;
+    flushing = true;
+    try {
+      var localDb = getDB();
+      var cols = ['weights','seals','gmps','temps','metal','capa','shifts','products'];
+      var changed = false;
+      for(var ci=0; ci<cols.length; ci++){
+        var arr = localDb[cols[ci]] || [];
+        for(var i=0; i<arr.length; i++){
+          var rec = arr[i];
+          if(rec && !rec._fbId){
+            try {
+              var payload = Object.assign({}, rec); delete payload._fbId;
+              var ref = await addDoc(collection(db, cols[ci]), payload);
+              rec._fbId = ref.id; changed = true;
+            } catch(e){ /* sigue offline: se reintenta en el próximo sync */ }
+          }
+        }
+      }
+      // Holds: reescritura completa si alguno quedó sin subir
+      var holds = localDb.holds || [];
+      if(holds.some(function(h){ return h && !h._fbId; }) && window.saveHoldsToFirebase){
+        try { await window.saveHoldsToFirebase(holds); } catch(e){}
+      }
+      if(changed) saveDB(localDb);
+    } finally { flushing = false; }
   }
 
   // ---- SAVE to Firestore ----

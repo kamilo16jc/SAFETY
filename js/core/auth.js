@@ -171,12 +171,6 @@ function logoutUser() {
   if(!confirm('Log out of the app?')) return;
   if(currentUser) logActivity('login','User logged out','', currentUser.name);
   currentUser = null;
-  initTheme();
-  setupPWA();
-  // Register service worker for PWA
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW:', e); });
-  }
   goTo('screen-login');
   initLogin();
 }
