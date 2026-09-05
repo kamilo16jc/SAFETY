@@ -794,3 +794,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .area-row{display:flex;gap:8px;align-items:stretch}
 .area-row .select-wrap{margin-bottom:0}
 .area-row .btn-ghost{white-space:nowrap;flex-shrink:0}
+
+/* --- Reporte diario del turno --- */
+.daily-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+  padding:14px 16px;margin-bottom:14px}
+.daily-main{min-width:0}
+.daily-title{font-size:13px;font-weight:700}
+.daily-hint{font-size:11.5px;color:var(--muted);margin-top:3px}
+.daily-row{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.daily-row .field{margin-bottom:0;max-width:170px}
+.daily-row .btn-solid{white-space:nowrap}

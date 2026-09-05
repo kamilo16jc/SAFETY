@@ -674,6 +674,17 @@
     </div>
   </div>
 
+  <div class="panel daily-bar">
+    <div class="daily-main">
+      <div class="daily-title">Daily shift report</div>
+      <div class="daily-hint" id="sr-daily-count">All the day's events in one document, split by 1st and 2nd shift.</div>
+    </div>
+    <div class="daily-row">
+      <input type="date" class="field" id="sr-daily-date" onchange="updateDailyCount()">
+      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Daily PDF</button>
+    </div>
+  </div>
+
   <div class="panel capa-form">
     <div class="capa-form-head"><span id="shift-form-head">New shift report</span></div>
     <div class="capa-form-body">

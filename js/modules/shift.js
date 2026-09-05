@@ -33,8 +33,29 @@ var SHIFT_STATUS = {
 
 function initShift(){
   shiftEditingId = null;
+  var dd = document.getElementById('sr-daily-date');
+  if(dd && !dd.value) dd.value = localDateStr();
   resetShiftForm();
   renderShiftList();
+  updateDailyCount();
+}
+
+// Muestra cuántos sucesos hay en la fecha del reporte diario, por turno
+function updateDailyCount(){
+  var el = document.getElementById('sr-daily-count');
+  if(!el) return;
+  var dd = document.getElementById('sr-daily-date');
+  var date = dd && dd.value ? dd.value : localDateStr();
+  var day = getShifts().filter(function(s){ return String(s.date).slice(0,10)===date; });
+  if(!day.length){
+    el.textContent = 'No events recorded for '+fmtShiftDate(date)+' yet.';
+    return;
+  }
+  var s1 = day.filter(function(s){ return s.shift===1; }).length;
+  var s2 = day.filter(function(s){ return s.shift===2; }).length;
+  var other = day.length - s1 - s2;
+  el.textContent = day.length+' event'+(day.length===1?'':'s')+' on '+fmtShiftDate(date)+
+    ' — 1st shift: '+s1+' · 2nd shift: '+s2+(other?' · unspecified: '+other:'');
 }
 
 function renderAreaOptions(){
@@ -164,6 +185,7 @@ function saveShift(){
   shiftEditingId = null;
   resetShiftForm();
   renderShiftList();
+  updateDailyCount();
   toast(wasEdit ? 'Report updated' : 'Report saved');
 }
 
