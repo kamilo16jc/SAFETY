@@ -189,26 +189,90 @@ function renderSearch(){
   renderIcons(el);
 }
 
+var SEV_CLS = {major:'bad', moderate:'warn', minimal:''};
+var STT_CLS = {open:'bad', progress:'warn', closed:'ok'};
+function cap1(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : '—'; }
+
 function capaPanel(list){
   if(!list || !list.length) return '';
-  var sev = {major:'bad', moderate:'warn', minimal:''};
-  var stt = {open:'bad', progress:'warn', closed:'ok'};
   var rows = list.map(function(c){
-    return '<tr onclick="goTo(\'screen-capa\')">'+
-      '<td class="mono code">'+(c.reportNumber||'—')+'</td>'+
-      '<td>'+(c.severity?'<span class="pill '+(sev[c.severity]||'')+'">'+
-        c.severity.charAt(0).toUpperCase()+c.severity.slice(1)+'</span>':'—')+'</td>'+
-      '<td>'+(c.status?'<span class="pill '+(stt[c.status]||'')+'">'+
-        c.status.charAt(0).toUpperCase()+c.status.slice(1)+'</span>':'—')+'</td>'+
-      '<td class="mono">'+(c.product||'—')+'</td>'+
-      '<td class="mono code">'+(c.lot||'—')+'</td>'+
+    return '<tr class="view-row" onclick="viewCapaReport('+c.id+')">'+
+      '<td class="mono code">'+esc(c.reportNumber||'—')+'</td>'+
+      '<td>'+(c.severity?'<span class="pill '+(SEV_CLS[c.severity]||'')+'">'+cap1(c.severity)+'</span>':'—')+'</td>'+
+      '<td>'+(c.status?'<span class="pill '+(STT_CLS[c.status]||'')+'">'+cap1(c.status)+'</span>':'—')+'</td>'+
+      '<td class="mono">'+esc(c.product||'—')+'</td>'+
+      '<td class="mono code">'+esc(c.lot||'—')+'</td>'+
       '<td>'+fmtDate(c.capaDate)+'</td>'+
-      '<td class="soft">'+(c.completedBy||'—')+'</td>'+
+      '<td class="soft">'+esc(c.completedBy||'—')+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View report" data-icon="search"></span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Incident & CAPA reports', list.length, [
-    {t:'Report #'},{t:'Severity'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Date'},{t:'By'}
+    {t:'Report #'},{t:'Severity'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Date'},{t:'By'},{t:''}
   ], rows);
+}
+
+// ===== VISOR DE REGISTROS (modal de sólo lectura) =====
+function closeRecordModal(){
+  var m = document.getElementById('record-modal');
+  if(m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openRecordModal(title, body, actions){
+  var m = document.getElementById('record-modal');
+  if(!m) return;
+  document.getElementById('rec-modal-title').innerHTML = title;
+  document.getElementById('rec-modal-body').innerHTML = body;
+  document.getElementById('rec-modal-actions').innerHTML = actions || '';
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  renderIcons(m);
+}
+
+function recRow(label, value){
+  return '<div class="rec-field"><div class="rec-lbl">'+label+'</div>'+
+         '<div class="rec-val">'+(value===''||value==null ? '—' : value)+'</div></div>';
+}
+function recBlock(label, value){
+  return '<div class="rec-block"><div class="rec-lbl">'+label+'</div>'+
+         '<div class="rec-text">'+(value ? esc(value).replace(/\n/g,'<br>') : '—')+'</div></div>';
+}
+
+function viewCapaReport(id){
+  var c = (getDB().capa||[]).filter(function(x){ return x.id===id; })[0];
+  if(!c){ toast('Report not found'); return; }
+  var sevInfo = (typeof CAPA_SEVERITY!=='undefined') ? CAPA_SEVERITY.filter(function(s){return s.key===c.severity;})[0] : null;
+  var sevTag  = c.severity ? '<span class="pill '+(SEV_CLS[c.severity]||'')+'">'+cap1(c.severity)+'</span>' : '—';
+  var sttTag  = c.status   ? '<span class="pill '+(STT_CLS[c.status]||'')+'">'+cap1(c.status)+'</span>'   : '—';
+
+  var body =
+    '<div class="rec-grid">'+
+      recRow('Report number', '<span class="mono">'+esc(c.reportNumber||'—')+'</span>')+
+      recRow('Date of CAPA', fmtDate(c.capaDate))+
+      recRow('Severity', sevTag + (sevInfo?' <span class="rec-hint">investigate '+sevInfo.deadline+'</span>':''))+
+      recRow('Status', sttTag)+
+      recRow('Product', esc(c.product||'—')+(c.productName?' · '+esc(c.productName):''))+
+      recRow('Lot number', '<span class="mono">'+esc(c.lot||'—')+'</span>')+
+      recRow('Customer complaint #', esc(c.complaint||'—'))+
+      recRow('Created by', esc(c.createdBy||'—')+' · '+fmtDate(c.createdAt))+
+    '</div>'+
+    recBlock('Problem / Deviation', c.problem)+
+    recBlock('Investigation, affected product/area and outcome(s)', c.description)+
+    recBlock('Short-term corrective action' + (c.shortDate?' — '+fmtDate(c.shortDate):''), c.shortTerm)+
+    recBlock('Long-term corrective / preventative action' + (c.longDate?' — '+fmtDate(c.longDate):''), c.longTerm)+
+    '<div class="rec-grid">'+
+      recRow('Completed by', esc(c.completedBy||'—'))+
+      recRow('Verified by', esc(c.verifiedBy||'—'))+
+    '</div>';
+
+  var canEdit = currentUser;
+  var actions =
+    '<button class="btn-solid" onclick="exportCapaPDF('+c.id+')"><span data-icon="doc"></span>Export PDF</button>'+
+    (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-capa\');editCapa('+c.id+')">Open to edit</button>':'')+
+    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+
+  openRecordModal('Incident &amp; CAPA · <span class="mono">'+esc(c.reportNumber||'')+'</span>', body, actions);
 }
 
 function productPanel(p, q){
@@ -335,7 +399,7 @@ function holdPanel(list){
   if(!list.length) return '';
   var rows = list.map(function(h){
     var open = h.status!=='released' && h.status!=='destroyed';
-    return '<tr onclick="goTo(\'screen-hold\')">'+
+    return '<tr class="view-row" onclick="viewHoldCase(\''+String(h.id)+'\')">'+
       '<td class="mono code">'+esc(h.caseNumber)+'</td>'+
       '<td><span class="pill '+(open?'bad':'ok')+'">'+String(h.status||'').toUpperCase()+'</span></td>'+
       '<td class="desc">'+esc((h.product||'—'))+'</td>'+
@@ -343,9 +407,39 @@ function holdPanel(list){
       '<td class="mono num">'+esc(h.quantity||'—')+'</td>'+
       '<td class="mono">'+fmtDate(h.createdAt)+'</td>'+
       '<td class="soft">'+esc((h.initiatedBy||'—'))+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View case" data-icon="search"></span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Hold cases', list.length, [
-    {t:'Case'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Qty',num:true},{t:'Opened'},{t:'By'}
+    {t:'Case'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Qty',num:true},{t:'Opened'},{t:'By'},{t:''}
   ], rows);
+}
+
+function viewHoldCase(id){
+  var h = (getDB().holds||[]).filter(function(x){ return String(x.id)===String(id); })[0];
+  if(!h){ toast('Case not found'); return; }
+  var open = h.status!=='released' && h.status!=='destroyed';
+  var body =
+    '<div class="rec-grid">'+
+      recRow('Case number', '<span class="mono">'+esc(h.caseNumber||'—')+'</span>')+
+      recRow('Status', '<span class="pill '+(open?'bad':'ok')+'">'+String(h.status||'').toUpperCase()+'</span>')+
+      recRow('Product', esc(h.product||'—'))+
+      recRow('Lot number', '<span class="mono">'+esc(h.lot||'—')+'</span>')+
+      recRow('Quantity', esc(h.quantity||'—'))+
+      recRow('Line', h.line?('Line '+esc(h.line)):'—')+
+      recRow('Opened', fmtDate(h.createdAt))+
+      recRow('Initiated by', esc(h.initiatedBy||'—'))+
+    '</div>'+
+    recBlock('Reason for hold', h.reason)+
+    ((h.history&&h.history.length)
+      ? '<div class="rec-block"><div class="rec-lbl">History</div>'+
+          h.history.slice().reverse().map(function(e){
+            return '<div class="rec-hist"><div class="rec-hist-top">'+
+              '<span class="pill '+((e.status!=='released'&&e.status!=='destroyed')?'bad':'ok')+'">'+String(e.status||'').toUpperCase()+'</span>'+
+              '<span class="rec-hint">'+fmtDate(e.date)+' · '+esc(e.by||'—')+'</span></div>'+
+              '<div class="rec-text">'+esc(e.comment||'')+'</div></div>';
+          }).join('')+'</div>'
+      : '');
+  var actions = '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Hold case · <span class="mono">'+esc(h.caseNumber||'')+'</span>', body, actions);
 }

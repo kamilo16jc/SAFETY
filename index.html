@@ -971,6 +971,18 @@
   <button class="dup-secondary" style="color:white" onclick="closeScanner()">Cancel</button>
 </div>
 
+<!-- RECORD VIEWER (Search) -->
+<div id="record-modal" class="rec-modal" onclick="if(event.target===this)closeRecordModal()">
+  <div class="rec-box">
+    <div class="rec-modal-head">
+      <div class="rec-modal-title" id="rec-modal-title"></div>
+      <button class="rec-close" onclick="closeRecordModal()" aria-label="Close"><span data-icon="close"></span></button>
+    </div>
+    <div class="rec-modal-body" id="rec-modal-body"></div>
+    <div class="rec-modal-actions" id="rec-modal-actions"></div>
+  </div>
+</div>
+
 <!-- DUPLICATE LINE WARNING -->
 <div id="dup-modal" class="dup-modal">
   <div class="dup-box">
