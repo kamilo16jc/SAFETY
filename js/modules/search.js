@@ -204,7 +204,7 @@ function renderSearch(){
 
 function shiftPanel(list){
   if(!list || !list.length) return '';
-  var stt = {open:'bad', monitoring:'warn', resolved:'ok'};
+  var stt = {open:'bad', monitoring:'warn', followup:'warn', resolved:'ok', na:''};
   var rows = list.map(function(s){
     return '<tr class="view-row" onclick="viewShiftReport('+s.id+')">'+
       '<td class="mono code">'+esc(s.reportNumber||'—')+'</td>'+
@@ -212,7 +212,7 @@ function shiftPanel(list){
       '<td>'+(s.shift?(s.shift===1?'1st':'2nd'):'—')+'</td>'+
       '<td>'+esc(s.area||'—')+'</td>'+
       '<td>'+(s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+'</td>'+
-      '<td>'+(s.status?'<span class="pill '+(stt[s.status]||'')+'">'+cap1(s.status)+'</span>':'—')+'</td>'+
+      '<td>'+(s.status?'<span class="pill '+(stt[s.status]||'')+'">'+(window.shiftStatusLabel?shiftStatusLabel(s.status):cap1(s.status))+'</span>':'—')+'</td>'+
       '<td class="soft">'+esc(s.reportedBy||'—')+'</td>'+
       '<td class="view-cell"><span class="view-btn" title="View report" data-icon="search"></span></td>'+
     '</tr>';
@@ -225,7 +225,7 @@ function shiftPanel(list){
 function viewShiftReport(id){
   var s = (getDB().shifts||[]).filter(function(x){ return x.id===id; })[0];
   if(!s){ toast('Report not found'); return; }
-  var stt = {open:'bad', monitoring:'warn', resolved:'ok'};
+  var stt = {open:'bad', monitoring:'warn', followup:'warn', resolved:'ok', na:''};
   var body =
     '<div class="rec-grid">'+
       recRow('Report number', '<span class="mono">'+esc(s.reportNumber||'—')+'</span>')+
@@ -233,7 +233,7 @@ function viewShiftReport(id){
       recRow('Shift', s.shift?(s.shift===1?'1st':'2nd')+' shift':'—')+
       recRow('Area', esc(s.area||'—'))+
       recRow('Category', s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+
-      recRow('Status', s.status?'<span class="pill '+(stt[s.status]||'')+'">'+cap1(s.status)+'</span>':'—')+
+      recRow('Status', s.status?'<span class="pill '+(stt[s.status]||'')+'">'+(window.shiftStatusLabel?shiftStatusLabel(s.status):cap1(s.status))+'</span>':'—')+
       recRow('Line', s.line?('Line '+esc(s.line)):'—')+
       recRow('Product', esc(s.product||'—')+(s.productName?' · '+esc(s.productName):''))+
       recRow('Lot', '<span class="mono">'+esc(s.lot||'—')+'</span>')+

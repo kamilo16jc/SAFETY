@@ -15,7 +15,7 @@ function exportDailyShiftPDF(){
   var cap1= function(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : '—'; };
   var dateLong = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   var generated = new Date().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'});
-  var stt = {open:'#b3261e', monitoring:'#b07d1a', resolved:'#1a7f4f'};
+  var stt = {open:'#b3261e', monitoring:'#b07d1a', followup:'#b07d1a', resolved:'#1a7f4f', na:'#6b756f'};
 
   var eventCard = function(s, i){
     var meta = [];
@@ -27,7 +27,7 @@ function exportDailyShiftPDF(){
         '<span style="font-size:9px;color:'+soft+';font-weight:700">#'+(i+1)+'</span>'+
         '<span style="font-weight:800;font-family:monospace;font-size:10px">'+esc(s.reportNumber||'—')+'</span>'+
         (s.category?'<span style="font-size:8.5px;background:'+head+';border-radius:10px;padding:1px 8px;font-weight:700">'+esc(s.category)+'</span>':'')+
-        '<span style="font-size:8.5px;font-weight:700;color:'+(stt[s.status]||soft)+'">'+cap1(s.status)+'</span>'+
+        '<span style="font-size:8.5px;font-weight:700;color:'+(stt[s.status]||soft)+'">'+(window.shiftStatusLabel?shiftStatusLabel(s.status):cap1(s.status))+'</span>'+
         (s.followUp?'<span style="font-size:8.5px;font-weight:700;color:#b07d1a">· Follow-up required</span>':'')+
         '<span style="margin-left:auto;font-size:9px;color:'+soft+'">'+(s.area?esc(s.area):'')+'</span>'+
       '</div>'+
@@ -130,7 +130,7 @@ function exportShiftPDF(id){
     field('Line:', rec.line)+
     field('Product / Item #:', rec.product + (rec.productName?' — '+rec.productName:''))+
     field('Lot Number:', rec.lot)+
-    field('Status:', cap1(rec.status))+
+    field('Status:', window.shiftStatusLabel?shiftStatusLabel(rec.status):cap1(rec.status))+
     field('Follow-up required:', rec.followUp?'Yes':'No')+
   '</div>'+
 

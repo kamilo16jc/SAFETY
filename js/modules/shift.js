@@ -28,8 +28,11 @@ function nextShiftNumber(){
 var SHIFT_STATUS = {
   open:       {label:'Open',       cls:'bad'},
   monitoring: {label:'Monitoring', cls:'warn'},
-  resolved:   {label:'Resolved',   cls:'ok'}
+  followup:   {label:'Follow-up',  cls:'warn'},
+  resolved:   {label:'Resolved',   cls:'ok'},
+  na:         {label:'N/A',        cls:''}
 };
+function shiftStatusLabel(k){ return (SHIFT_STATUS[k]||{}).label || (k?k.charAt(0).toUpperCase()+k.slice(1):'—'); }
 
 var dailyShiftSel = 1; // el reporte diario es por turno
 
