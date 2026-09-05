@@ -414,6 +414,11 @@ canvas{width:100%!important}
   .topbar .tb-dot{width:6px;height:6px;border-radius:50%;background:var(--pass)}
   .topbar .tb-stamp{color:var(--dim);font-size:11.5px}
 
+  /* --- sin sesión: sólo el login, a ventana completa --- */
+  body.logged-out .drawer,
+  body.logged-out .topbar{display:none}
+  body.logged-out .screen{padding:24px}
+
   /* --- área de contenido --- */
   .screen{max-width:none;margin:0;width:auto;padding:70px 24px 28px 256px;min-height:100vh}
   .back-btn{display:none}

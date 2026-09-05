@@ -40,9 +40,10 @@ var CRUMBS = {
   'screen-admin':    ['Setup', 'Admin']
 };
 function updateTopbar(id){
+  // Sin sesión no hay barra lateral ni barra superior: el login ocupa la ventana
+  document.body.classList.toggle('logged-out', id==='screen-login');
   var bar = document.getElementById('topbar');
   if(!bar) return;
-  bar.style.visibility = (id==='screen-login') ? 'hidden' : '';
   var c = CRUMBS[id] || ['', ''];
   var el = document.getElementById('tb-crumb');
   if(el) el.innerHTML = (c[0] ? c[0]+' / ' : '')+'<b>'+c[1]+'</b>';
