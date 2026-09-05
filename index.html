@@ -125,6 +125,7 @@
     <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
     <button class="d-item" data-screen="screen-metal" onclick="navDrawer('screen-metal')"><span class="d-ico" data-icon="magnet"></span>Metal Detector</button>
     <button class="d-item" data-screen="screen-capa" onclick="navDrawer('screen-capa')"><span class="d-ico" data-icon="alert"></span>Incident &amp; CAPA</button>
+    <button class="d-item" data-screen="screen-shift" onclick="navDrawer('screen-shift')"><span class="d-ico" data-icon="note"></span>Shift Reports</button>
     <div class="nav-label">Review</div>
     <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
     <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
@@ -663,6 +664,83 @@
 </div>
 
 
+<!-- SHIFT REPORTS -->
+<div class="screen" id="screen-shift">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="page-head">
+    <div>
+      <div class="form-title">Shift Reports</div>
+      <div class="form-meta">Notes of shift events that don't require a CAPA</div>
+    </div>
+  </div>
+
+  <div class="panel capa-form">
+    <div class="capa-form-head"><span id="shift-form-head">New shift report</span></div>
+    <div class="capa-form-body">
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Report number</div>
+          <input type="text" class="field" id="sr-report" placeholder="SR-2026-001"></div>
+        <div class="field-group"><div class="sec-label">Date</div>
+          <input type="date" class="field" id="sr-date"></div>
+      </div>
+      <div class="field-group"><div class="sec-label">Shift</div>
+        <div id="sr-shift" class="chip-row"></div></div>
+
+      <div class="field-group"><div class="sec-label">Area</div>
+        <div class="area-row">
+          <div class="select-wrap" style="flex:1"><select class="field" id="sr-area"></select></div>
+          <button class="btn-ghost" onclick="addShiftArea()"><span data-icon="plus"></span>Add area</button>
+        </div></div>
+
+      <div class="field-group"><div class="sec-label">Category</div>
+        <div id="sr-category" class="chip-row"></div></div>
+
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Line <span class="opt">· optional</span></div>
+          <div class="select-wrap"><select class="field" id="sr-line">
+            <option value="">—</option>
+            <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
+            <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+          </select></div></div>
+        <div class="field-group"><div class="sec-label">Lot <span class="opt">· optional</span></div>
+          <input type="text" class="field" id="sr-lot" placeholder="Lot"></div>
+      </div>
+      <div class="field-group"><div class="sec-label">Product / Item # <span class="opt">· optional</span></div>
+        <input type="text" class="field" id="sr-product" list="sr-product-list" placeholder="Product number or name" autocomplete="off">
+        <datalist id="sr-product-list"></datalist></div>
+
+      <div class="sec-label">What happened</div>
+      <textarea class="field" id="sr-notes" rows="4" placeholder="Describe the event, where and when"></textarea>
+
+      <div class="sec-label">Action taken <span class="opt">· optional</span></div>
+      <textarea class="field" id="sr-action" rows="3" placeholder="What was done about it, if anything"></textarea>
+
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Status</div>
+          <div id="sr-status" class="chip-row"></div></div>
+        <div class="field-group"><div class="sec-label">Follow-up</div>
+          <button type="button" class="pkg-chip" id="sr-follow" onclick="toggleShiftFollow()">No follow-up</button></div>
+      </div>
+
+      <div class="pair">
+        <div class="field-group"><div class="sec-label">Reported by</div>
+          <input type="text" class="field" id="sr-reported" placeholder="Name"></div>
+        <div class="field-group"><div class="sec-label">Shift supervisor</div>
+          <input type="text" class="field" id="sr-supervisor" placeholder="Name"></div>
+      </div>
+
+      <div class="capa-form-actions">
+        <button class="main-btn" id="shift-save-btn" onclick="saveShift()">Save report</button>
+        <button class="btn-ghost" id="shift-cancel-btn" style="display:none" onclick="cancelShiftEdit()">Cancel edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label" style="margin-top:6px">Saved reports</div>
+  <div id="shift-list"></div>
+</div>
+
+
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
   <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
@@ -870,6 +948,7 @@
           <option value="seal">Bag seal only</option>
           <option value="hold">Holds only</option>
           <option value="capa">CAPA only</option>
+          <option value="shift">Shift reports only</option>
         </select></div>
       </div>
     </div>
@@ -1045,6 +1124,7 @@
 <script src="js/export/pdf-reports.js"></script>
 <script src="js/export/dash-pdf.js"></script>
 <script src="js/export/capa-pdf.js"></script>
+<script src="js/export/shift-pdf.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/modules/admin.js"></script>
 <script src="js/modules/reports.js"></script>
@@ -1065,6 +1145,7 @@
 <script src="js/integrations/metal-fill.js"></script>
 <script src="js/modules/metal.js"></script>
 <script src="js/modules/capa.js"></script>
+<script src="js/modules/shift.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

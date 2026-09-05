@@ -49,6 +49,18 @@
         if(!cSnap.empty) localDb.capa = cSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
       } catch(e) { localDb.capa = localDb.capa||[]; }
 
+      // Shift reports
+      try {
+        var srSnap = await getDocs(collection(db,'shifts'));
+        if(!srSnap.empty) localDb.shifts = srSnap.docs.map(function(d){ var data=d.data(); data._fbId=d.id; return data; });
+      } catch(e) { localDb.shifts = localDb.shifts||[]; }
+
+      // Areas (config doc)
+      try {
+        var arDoc = await getDoc(doc(db,'config','areas'));
+        if(arDoc.exists() && (arDoc.data().list||[]).length) localDb.areas = arDoc.data().list;
+      } catch(e) {}
+
       // Product catalog
       try {
         var pSnap = await getDocs(collection(db,'products'));
@@ -193,6 +205,15 @@
       saveDB(localDb);
     } catch(e) { console.error('Load activity range error:', e); }
     if(callback) callback();
+  };
+
+  // ---- SAVE AREAS to Firestore ----
+  window.saveAreasToFirebase = async function(list) {
+    try {
+      await setDoc(doc(db,'config','areas'), {list: list, updatedAt: new Date().toISOString()});
+    } catch(e) {
+      console.error('Save areas error:', e);
+    }
   };
 
   // ---- SAVE OPERATORS to Firestore ----

@@ -34,7 +34,8 @@ var ICONS = {
   chevron:   _IC('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
   barcode:   _IC('<path d="M4 6v12"/><path d="M7.3 6v12"/><path d="M10.6 6v12"/><path d="M14.4 6v12"/><path d="M17.2 6v12"/><path d="M20 6v12"/>'),
   factory:   _IC('<path d="M3.5 20.5h17"/><path d="M4.5 20.5V11l5 3.2V11l5 3.2V6.5h5v14"/>'),
-  history:   _IC('<path d="M3.8 12a8.2 8.2 0 1 0 2.6-6"/><path d="M3.6 3.9v4.4h4.4"/><path d="M12 7.6V12l3 1.9"/>')
+  history:   _IC('<path d="M3.8 12a8.2 8.2 0 1 0 2.6-6"/><path d="M3.6 3.9v4.4h4.4"/><path d="M12 7.6V12l3 1.9"/>'),
+  note:      _IC('<path d="M6 3.5h8L18.5 8v12.5a0 0 0 0 1 0 0H6a1.5 1.5 0 0 1-1.5-1.5V5A1.5 1.5 0 0 1 6 3.5Z"/><path d="M13.5 3.8V8h4.4"/><path d="M8.5 13h7"/><path d="M8.5 16.5h7"/>')
 };
 // Fill every element carrying data-icon="name"
 function renderIcons(root){

@@ -789,3 +789,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .rec-hist-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .rec-modal-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 18px}
 .rec-modal-actions .btn-solid,.rec-modal-actions .btn-ghost{padding:9px 14px}
+
+/* --- SHIFT REPORTS: fila de area con boton de agregar --- */
+.area-row{display:flex;gap:8px;align-items:stretch}
+.area-row .select-wrap{margin-bottom:0}
+.area-row .btn-ghost{white-space:nowrap;flex-shrink:0}

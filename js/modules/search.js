@@ -122,7 +122,19 @@ function searchResults(){
                  String(c.problem||'').toLowerCase().indexOf(l)>-1 ||
                  (pnum && String(c.product||'').toLowerCase()===pnum);
                return hitTxt && inDateRange(c.capaDate);
-             }).sort(function(a,b){ return String(b.capaDate||'').localeCompare(String(a.capaDate||'')); }) : []
+             }).sort(function(a,b){ return String(b.capaDate||'').localeCompare(String(a.capaDate||'')); }) : [],
+    shifts:  (sf.type==='all'||sf.type==='shift') ? (db.shifts||[]).filter(function(s){
+               var hitTxt = !l ||
+                 String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
+                 String(s.lot||'').toLowerCase().indexOf(l)>-1 ||
+                 String(s.product||'').toLowerCase().indexOf(l)>-1 ||
+                 String(s.area||'').toLowerCase().indexOf(l)>-1 ||
+                 String(s.notes||'').toLowerCase().indexOf(l)>-1 ||
+                 (pnum && String(s.product||'').toLowerCase()===pnum);
+               var hitLine = sf.line==='all' || String(s.line||'')===sf.line;
+               var hitShift = sf.shift==='all' || String(s.shift||'')===sf.shift;
+               return hitTxt && hitLine && hitShift && inDateRange(s.date);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : []
   };
 }
 
@@ -138,7 +150,7 @@ function activeFilterChips(){
   else if(sf.to)            chips.push('Up to '+fmtDate(sf.to));
   if(sf.line!=='all')       chips.push('Line '+sf.line);
   if(sf.shift!=='all')      chips.push((sf.shift==='1'?'1st':'2nd')+' shift');
-  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only'}[sf.type]);
+  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only',shift:'Shift reports only'}[sf.type]);
   if(!chips.length) return '';
   return '<div class="filter-chips">'+chips.map(function(c){
     return '<span class="fchip">'+esc(c)+'</span>';
@@ -163,7 +175,7 @@ function renderSearch(){
   }
 
   var r = searchResults();
-  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0);
+  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) + (r.shifts?r.shifts.length:0);
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -185,8 +197,60 @@ function renderSearch(){
     ((sf.type==='all'||sf.type==='weight') ? weightPanel(r.weights) : '') +
     ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
     holdPanel(r.holds) +
-    capaPanel(r.capa);
+    capaPanel(r.capa) +
+    shiftPanel(r.shifts);
   renderIcons(el);
+}
+
+function shiftPanel(list){
+  if(!list || !list.length) return '';
+  var stt = {open:'bad', monitoring:'warn', resolved:'ok'};
+  var rows = list.map(function(s){
+    return '<tr class="view-row" onclick="viewShiftReport('+s.id+')">'+
+      '<td class="mono code">'+esc(s.reportNumber||'—')+'</td>'+
+      '<td>'+fmtDate(s.date)+'</td>'+
+      '<td>'+(s.shift?(s.shift===1?'1st':'2nd'):'—')+'</td>'+
+      '<td>'+esc(s.area||'—')+'</td>'+
+      '<td>'+(s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+'</td>'+
+      '<td>'+(s.status?'<span class="pill '+(stt[s.status]||'')+'">'+cap1(s.status)+'</span>':'—')+'</td>'+
+      '<td class="soft">'+esc(s.reportedBy||'—')+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View report" data-icon="search"></span></td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Shift reports', list.length, [
+    {t:'Report #'},{t:'Date'},{t:'Shift'},{t:'Area'},{t:'Category'},{t:'Status'},{t:'By'},{t:''}
+  ], rows);
+}
+
+function viewShiftReport(id){
+  var s = (getDB().shifts||[]).filter(function(x){ return x.id===id; })[0];
+  if(!s){ toast('Report not found'); return; }
+  var stt = {open:'bad', monitoring:'warn', resolved:'ok'};
+  var body =
+    '<div class="rec-grid">'+
+      recRow('Report number', '<span class="mono">'+esc(s.reportNumber||'—')+'</span>')+
+      recRow('Date', fmtDate(s.date))+
+      recRow('Shift', s.shift?(s.shift===1?'1st':'2nd')+' shift':'—')+
+      recRow('Area', esc(s.area||'—'))+
+      recRow('Category', s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+
+      recRow('Status', s.status?'<span class="pill '+(stt[s.status]||'')+'">'+cap1(s.status)+'</span>':'—')+
+      recRow('Line', s.line?('Line '+esc(s.line)):'—')+
+      recRow('Product', esc(s.product||'—')+(s.productName?' · '+esc(s.productName):''))+
+      recRow('Lot', '<span class="mono">'+esc(s.lot||'—')+'</span>')+
+      recRow('Follow-up', s.followUp?'<span class="pill warn">Required</span>':'No')+
+    '</div>'+
+    recBlock('What happened', s.notes)+
+    recBlock('Action taken', s.action)+
+    '<div class="rec-grid">'+
+      recRow('Reported by', esc(s.reportedBy||'—'))+
+      recRow('Shift supervisor', esc(s.supervisor||'—'))+
+    '</div>';
+  var canEdit = currentUser;
+  var actions =
+    '<button class="btn-solid" onclick="exportShiftPDF('+s.id+')"><span data-icon="doc"></span>Export PDF</button>'+
+    (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-shift\');editShift('+s.id+')">Open to edit</button>':'')+
+    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Shift report · <span class="mono">'+esc(s.reportNumber||'')+'</span>', body, actions);
 }
 
 var SEV_CLS = {major:'bad', moderate:'warn', minimal:''};

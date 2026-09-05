@@ -24,6 +24,26 @@ var MD_QUESTIONS = [
   'Was the learn process performed correctly or not needed as the machine was functional?',
   'Did the operator perform a routine check after the learn process?'
 ];
+// Shift reports: categorías de la nota y áreas por defecto (editables)
+var SHIFT_CATEGORIES = ['Quality','Maintenance','Sanitation','Safety','Operations','Personnel','Other'];
+var SHIFT_AREAS_DEFAULT = [
+  'Building 1931','Building 1935','Building 1945',
+  'Line 1','Line 2','Line 3','Line 4','Line 5','Line 6',
+  'Chopping Area','Grilling','Packaging','Cold Storage','Shipping / Receiving',
+  'Sanitation','Maintenance Shop','Warehouse'
+];
+function getAreas(){
+  var db = getDB();
+  if(!db.areas || !db.areas.length) db.areas = SHIFT_AREAS_DEFAULT.slice();
+  return db.areas;
+}
+function saveAreas(list){
+  var db = getDB();
+  db.areas = list;
+  saveDB(db);
+  if(window.saveAreasToFirebase) window.saveAreasToFirebase(list);
+}
+
 // SQF #2.5.C.2 — niveles de severidad del CAPA, con el plazo de investigación
 var CAPA_SEVERITY = [
   {key:'major', label:'Major', hours:24, deadline:'within 24 hours',
