@@ -367,10 +367,6 @@ function drawDonut(pass, fail){
   });
 }
 
-function clearData(){
-  if(confirm('Delete all records?')){localStorage.removeItem('safety_db');localStorage.removeItem('caputo_db');if(window.clearFirebase)window.clearFirebase();initDash();toast('Data cleared')}
-}
-
 // ===== GMP =====
 function initGmp(){
   document.getElementById('gmp-date').value=localDateStr();

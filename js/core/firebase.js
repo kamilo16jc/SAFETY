@@ -304,20 +304,6 @@
     }
   };
 
-  // ---- CLEAR Firestore ----
-  window.clearFirebase = async function() {
-    try {
-      var batch = writeBatch(db);
-      for(var col of ['weights','seals','gmps','temps']) {
-        var snap = await getDocs(collection(db, col));
-        snap.docs.forEach(function(d){ batch.delete(d.ref); });
-      }
-      await batch.commit();
-    } catch(e) {
-      console.error('Firebase clear error:', e);
-    }
-  };
-
   // Arranca los listeners en tiempo real cuando la sesión anónima esté lista.
   // Ya no hay polling cada 60s: onSnapshot trae solo los cambios.
   authReady.then(function(){
