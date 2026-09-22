@@ -2,8 +2,25 @@
 // Dos motores: el lector nativo del navegador (BarcodeDetector, Android) y
 // ZXing (js/vendor/zxing.min.js) para Safari/iPhone, que no lo trae.
 // Si la cámara falla, el overlay deja escribir el código a mano.
+//
+// Mejoras para evitar lecturas equivocadas y códigos grandes:
+//  - Solo formatos de retail (UPC/EAN): no lee el GS1-128 de la caja ni el de peso.
+//  - Confirma por repetición: acepta solo si lee el MISMO valor 2 veces seguidas.
+//  - Apunta al centro: en el motor nativo, solo acepta el código dentro del recuadro.
+//  - Cámara en alta resolución + enfoque continuo + botón de linterna.
 var scanStream = null, scanTimer = null, scanScreen = null;
-var scanDetector = null, zxingReader = null;
+var scanDetector = null, zxingReader = null, scanTrack = null, scanTorchOn = false;
+
+// Formatos de retail aceptados
+var SCAN_FORMATS_NATIVE = ['ean_13','ean_8','upc_a','upc_e'];
+function zxingFormats(){
+  var Z = window.ZXing; if(!Z || !Z.BarcodeFormat) return null;
+  return [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E];
+}
+
+// Confirmación por repetición
+var SCAN_CONFIRM = 2;
+var scanLast = null, scanHits = 0;
 
 function scanNative(){ return typeof window.BarcodeDetector !== 'undefined'; }
 function scanZXing(){  return typeof window.ZXing !== 'undefined' && !!window.ZXing.BrowserMultiFormatReader; }
@@ -11,6 +28,7 @@ function scanSupported(){ return scanNative() || scanZXing(); }
 
 function openScanner(screen){
   scanScreen = screen;
+  scanLast = null; scanHits = 0; scanTorchOn = false;
   if(!scanSupported()){
     showGuardModal({
       title:'Camera scanning is not available on this device',
@@ -23,8 +41,9 @@ function openScanner(screen){
   }
   document.getElementById('scan-overlay').style.display = 'flex';
   document.getElementById('scan-manual').value = '';
+  var tb = document.getElementById('scan-torch'); if(tb){ tb.style.display='none'; tb.textContent='Turn on light'; }
   document.body.style.overflow = 'hidden';
-  setScanMsg('Point the camera at the barcode');
+  setScanMsg('Center the barcode inside the frame');
 
   if(scanNative()) startNativeScan();
   else startZXingScan();
@@ -42,16 +61,82 @@ function scanCameraError(e){
   else                              setScanMsg('Could not open the camera. Type the code below.');
 }
 
-// ---- Motor 1: BarcodeDetector nativo ----
+// Restricciones de vídeo: cámara trasera, alta resolución, enfoque continuo
+function scanVideoConstraints(){
+  return {
+    facingMode:{ideal:'environment'},
+    width:{ideal:1920}, height:{ideal:1080},
+    focusMode:'continuous'
+  };
+}
+
+// Cuando el stream ya corre: guarda el track, aplica enfoque continuo y
+// muestra el botón de linterna si el dispositivo lo soporta.
+function setupTrackControls(track){
+  scanTrack = track || null;
+  if(!scanTrack) return;
+  try {
+    var caps = scanTrack.getCapabilities ? scanTrack.getCapabilities() : {};
+    if(caps.focusMode && caps.focusMode.indexOf('continuous')>=0){
+      scanTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
+    }
+    if(caps.torch){
+      var tb = document.getElementById('scan-torch');
+      if(tb) tb.style.display = 'inline-flex';
+    }
+  } catch(e){}
+}
+
+function toggleTorch(){
+  if(!scanTrack) return;
+  scanTorchOn = !scanTorchOn;
+  scanTrack.applyConstraints({advanced:[{torch:scanTorchOn}]})
+    .then(function(){
+      var tb=document.getElementById('scan-torch');
+      if(tb) tb.textContent = scanTorchOn ? 'Turn off light' : 'Turn on light';
+    })
+    .catch(function(){ scanTorchOn=!scanTorchOn; });
+}
+
+// ---- Validación + confirmación centralizada (ambos motores pasan por aquí) ----
+// Devuelve dígitos limpios si parece un UPC/EAN; null si no.
+function scanValidate(v){
+  var d = String(v||'').replace(/\D/g,'');
+  return (d.length>=8 && d.length<=13) ? d : null;
+}
+
+// value: texto decodificado. box/vw/vh: caja del código y tamaño del vídeo
+// (solo el motor nativo los pasa) para exigir que esté en el centro.
+function handleRawScan(value, box, vw, vh){
+  var code = scanValidate(value);
+  if(!code) return;                       // no es un UPC/EAN válido
+
+  // Apuntar al centro: la caja debe caer dentro del 60% central
+  if(box && vw && vh){
+    var cx = box.x + box.width/2, cy = box.y + box.height/2;
+    var inCenter = cx > vw*0.2 && cx < vw*0.8 && cy > vh*0.2 && cy < vh*0.8;
+    if(!inCenter){ setScanMsg('Move the barcode into the center frame'); return; }
+  }
+
+  // Confirmar por repetición: mismo valor 2 veces seguidas
+  if(code === scanLast){ scanHits++; } else { scanLast = code; scanHits = 1; }
+  if(scanHits < SCAN_CONFIRM){ setScanMsg('Reading… hold steady'); return; }
+
+  onScanResult(code);
+}
+
+// ---- Motor 1: BarcodeDetector nativo (Android) ----
 function startNativeScan(){
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+  navigator.mediaDevices.getUserMedia({video:scanVideoConstraints()})
     .then(function(stream){
       scanStream = stream;
       var v = document.getElementById('scan-video');
       v.srcObject = stream;
       v.play();
-      scanDetector = new window.BarcodeDetector();
-      scanTimer = setInterval(scanTick, 400);
+      setupTrackControls(stream.getVideoTracks()[0]);
+      try { scanDetector = new window.BarcodeDetector({formats:SCAN_FORMATS_NATIVE}); }
+      catch(e){ scanDetector = new window.BarcodeDetector(); }  // fallback: filtramos abajo
+      scanTimer = setInterval(scanTick, 300);
     })
     .catch(scanCameraError);
 }
@@ -60,21 +145,44 @@ function scanTick(){
   var v = document.getElementById('scan-video');
   if(!v || !scanDetector || v.readyState !== 4) return;
   scanDetector.detect(v).then(function(codes){
-    if(codes && codes.length) onScanResult(codes[0].rawValue);
+    if(!codes || !codes.length) return;
+    // Solo formatos de retail
+    var ok = codes.filter(function(c){ return SCAN_FORMATS_NATIVE.indexOf(c.format)>=0; });
+    if(!ok.length) return;
+    var vw = v.videoWidth, vh = v.videoHeight, cx0 = vw/2, cy0 = vh/2;
+    // El más cercano al centro del recuadro
+    ok.sort(function(a,b){ return boxDist(a.boundingBox,cx0,cy0) - boxDist(b.boundingBox,cx0,cy0); });
+    var best = ok[0];
+    handleRawScan(best.rawValue, best.boundingBox, vw, vh);
   }).catch(function(){});
+}
+
+function boxDist(box, cx0, cy0){
+  if(!box) return 1e9;
+  var cx = box.x + box.width/2, cy = box.y + box.height/2;
+  return Math.abs(cx-cx0) + Math.abs(cy-cy0);
 }
 
 // ---- Motor 2: ZXing (iPhone / navegadores sin BarcodeDetector) ----
 function startZXingScan(){
   try {
-    zxingReader = new window.ZXing.BrowserMultiFormatReader();
+    var hints = null, fmts = zxingFormats();
+    if(fmts && window.ZXing.DecodeHintType){
+      hints = new Map();
+      hints.set(window.ZXing.DecodeHintType.POSSIBLE_FORMATS, fmts);
+    }
+    zxingReader = new window.ZXing.BrowserMultiFormatReader(hints);
     zxingReader.decodeFromConstraints(
-      {video:{facingMode:{ideal:'environment'}}},
+      {video:scanVideoConstraints()},
       'scan-video',
       function(result, err){
-        if(result) onScanResult(result.getText ? result.getText() : String(result));
+        if(result) handleRawScan(result.getText ? result.getText() : String(result));
       }
-    ).catch(scanCameraError);
+    ).then(function(){
+      // El stream ya está en el <video>: toma el track para linterna/enfoque
+      var s = document.getElementById('scan-video').srcObject;
+      if(s && s.getVideoTracks) setupTrackControls(s.getVideoTracks()[0]);
+    }).catch(scanCameraError);
   } catch(e) {
     scanCameraError(e);
   }
@@ -82,6 +190,8 @@ function startZXingScan(){
 
 function closeScanner(){
   if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+  if(scanTorchOn && scanTrack){ try{ scanTrack.applyConstraints({advanced:[{torch:false}]}); }catch(e){} }
+  scanTrack = null; scanTorchOn = false;
   if(scanStream){ scanStream.getTracks().forEach(function(t){ t.stop(); }); scanStream = null; }
   if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader = null; }
   var v = document.getElementById('scan-video');
@@ -95,7 +205,7 @@ function closeScanner(){
 function submitManualScan(){
   var v = document.getElementById('scan-manual').value.trim();
   if(!v){ toast('Enter the code'); return; }
-  onScanResult(v);
+  onScanResult(v);   // entrada manual: sin validación de formato (el operador lo decidió)
 }
 
 function onScanResult(code){
