@@ -211,6 +211,7 @@ function exportRptWeightPDF() {
   // ---- WEIGHT RECORDS (vertical cards) ----
   var weightCards = rptWeightResults.map(function(r) {
     var p = recTarget(r);
+    var u = unitLabel(recUnit(r));
     var sampleRows = r.vals.map(function(v,i){
       if(v===undefined||v===null||v==='') return '';
       var num = parseFloat(v);
@@ -220,7 +221,7 @@ function exportRptWeightPDF() {
       var bg  = !p ? C.grayPastel  : inRange ? C.passBg    : C.failBg;
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:'+bg+';border-radius:6px;margin-bottom:4px">' +
         '<span style="font-size:10px;color:#555;font-weight:600">Sample '+(i+1)+'</span>' +
-        '<span style="font-size:12px;font-weight:800;color:'+col+'">'+num.toFixed(3)+' lbs</span>' +
+        '<span style="font-size:12px;font-weight:800;color:'+col+'">'+num.toFixed(3)+' '+u+'</span>' +
         '<span style="font-size:10px;font-weight:700;color:'+col+'">'+(!p?'— no target':inRange?'✓ IN':'✗ OUT')+'</span>' +
       '</div>';
     }).filter(Boolean).join('');
@@ -237,7 +238,7 @@ function exportRptWeightPDF() {
             esc(r.productName||'')+(r.productName&&r.bagsPerCase?' · ':'')+
             (r.bagsPerCase?r.bagsPerCase+' bags/case':'')+'</div>' : '') +
           '<div style="font-size:10px;color:#888;margin-top:2px">'+r.time+' · '+(r.shift===1?'1st':'2nd')+' Shift'+(r.lot?' · LOT: '+r.lot:'')+'</div>' +
-          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' lbs':'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' lbs'+(r.initials?' · '+esc(r.initials):'')+'</div>' +
+          '<div style="font-size:9px;color:#aaa;margin-top:1px">Target: '+(p?p.min+' – '+p.max+' '+u:'not set')+' · Avg: '+parseFloat(r.avg).toFixed(3)+' '+u+''+(r.initials?' · '+esc(r.initials):'')+'</div>' +
         '</div>' +
         '<div style="background:'+rcBg+';border:1px solid '+(r.compliance==null?C.border:r.compliance>=80?'#95d5b2':'#ffb3b3')+';border-radius:8px;padding:6px 12px;text-align:center">' +
           '<div style="font-size:18px;font-weight:900;color:'+rc+'">'+compLabel(r.compliance)+'</div>' +

@@ -82,12 +82,15 @@ function dashBreakdown(list, keyFn){
     var g = m[k];
     g.n++; g.bags += r.total; g.pass += r.pass;
     var t = recTarget(r); if(!t) return;
-    var mid = (t.min+t.max)/2;
+    // Normaliza a libras para que oz no ensucie las sumas de peso del Dashboard
+    var f = toLbFactor(recUnit(r));
+    var lo = t.min*f, hi = t.max*f, mid = (lo+hi)/2;
     (r.vals||[]).forEach(function(v){
       var x = parseFloat(v); if(isNaN(x)) return;
+      x *= f;
       g.devSum += (x-mid); g.devN++;
-      if(x>t.max){ g.over++; g.overSum += (x-t.max); }
-      else if(x<t.min){ g.under++; }
+      if(x>hi){ g.over++; g.overSum += (x-hi); }
+      else if(x<lo){ g.under++; }
     });
   });
   return Object.keys(m).map(function(k){
@@ -105,12 +108,15 @@ function dashFill(list){
   list.forEach(function(r){
     o.bags += r.total; o.pass += r.pass;
     var t = recTarget(r); if(!t) return;
-    var mid = (t.min+t.max)/2;
+    // Normaliza a libras para que oz no ensucie las sumas de peso del Dashboard
+    var f = toLbFactor(recUnit(r));
+    var lo = t.min*f, hi = t.max*f, mid = (lo+hi)/2;
     (r.vals||[]).forEach(function(v){
       var x = parseFloat(v); if(isNaN(x)) return;
+      x *= f;
       o.devSum += (x-mid); o.devN++;
-      if(x>t.max){ o.over++; o.overSum += (x-t.max); }
-      else if(x<t.min){ o.under++; o.underSum += (t.min-x); }
+      if(x>hi){ o.over++; o.overSum += (x-hi); }
+      else if(x<lo){ o.under++; o.underSum += (lo-x); }
     });
   });
   o.fail = o.bags - o.pass;

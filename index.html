@@ -211,7 +211,7 @@
     <button class="now-btn" onclick="setNow()">Now</button>
   </div>
   <div id="w-weight-bottom">
-  <div class="sec-label">Samples (LBS)</div>
+  <div class="sec-label" id="w-samples-label">Samples (LBS)</div>
   <div class="samples-wrap" id="samples-wrap"></div>
   <div class="stats-row">
     <div class="stat-card">
@@ -1044,11 +1044,11 @@
     <div class="select-wrap"><select class="field" id="prod-pkg" onchange="toggleProductCustom()"></select></div>
     <div id="prod-custom-wrap" style="display:none">
       <div class="sec-label">Size label</div>
-      <input type="text" class="field" id="prod-custom-label" placeholder="e.g. 3.5 lbs">
-      <div class="sec-label">Target range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional, can be set later</span></div>
+      <input type="text" class="field" id="prod-custom-label" placeholder="e.g. 3.5 lbs or 4 oz">
+      <div class="sec-label">Target range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional · in the same unit as the label (lb or oz)</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <input type="text" class="field" id="prod-min" placeholder="Min lbs" inputmode="decimal">
-        <input type="text" class="field" id="prod-max" placeholder="Max lbs" inputmode="decimal">
+        <input type="text" class="field" id="prod-min" placeholder="Min" inputmode="decimal">
+        <input type="text" class="field" id="prod-max" placeholder="Max" inputmode="decimal">
       </div>
     </div>
     <div class="sec-label">Bags per case</div>

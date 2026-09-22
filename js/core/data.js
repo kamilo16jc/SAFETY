@@ -1,15 +1,17 @@
 // ===== DATA =====
+// Cada paquete lleva su unidad. Los de onzas se miden y comparan EN ONZAS
+// (antes su target estaba en libras y marcaba error al pesar en oz).
 var PKGS = [
-  {label:'1 lb',    min:0.95,  max:1.04},
-  {label:'2 lbs',   min:1.93,  max:2.07},
-  {label:'2.5 lbs', min:2.41,  max:2.60},
-  {label:'3 lbs',   min:2.95,  max:3.10},
-  {label:'4.40 lbs',min:4.28,  max:4.52},
-  {label:'5 lbs',   min:4.86,  max:5.14},
-  {label:'7 lbs',   min:6.83,  max:7.17},
-  {label:'10 lbs',  min:9.78,  max:10.22},
-  {label:'4 oz',    min:0.234, max:0.266},
-  {label:'8 oz',    min:0.466, max:0.527}
+  {label:'1 lb',    min:0.95,  max:1.04,  unit:'lb'},
+  {label:'2 lbs',   min:1.93,  max:2.07,  unit:'lb'},
+  {label:'2.5 lbs', min:2.41,  max:2.60,  unit:'lb'},
+  {label:'3 lbs',   min:2.95,  max:3.10,  unit:'lb'},
+  {label:'4.40 lbs',min:4.28,  max:4.52,  unit:'lb'},
+  {label:'5 lbs',   min:4.86,  max:5.14,  unit:'lb'},
+  {label:'7 lbs',   min:6.83,  max:7.17,  unit:'lb'},
+  {label:'10 lbs',  min:9.78,  max:10.22, unit:'lb'},
+  {label:'4 oz',    min:3.744, max:4.256, unit:'oz'},   // = 0.234–0.266 lb, ahora en oz
+  {label:'8 oz',    min:7.456, max:8.432, unit:'oz'}    // = 0.466–0.527 lb, ahora en oz
 ];
 var SEAL_CHECKS = ['Visual','Dunk Tank','Printing'];
 
@@ -144,4 +146,22 @@ function recTarget(r){
 }
 // Etiqueta de compliance tolerante a registros sin target
 function compLabel(c){ return (c==null || isNaN(c)) ? '—' : c+'%'; }
+
+// ===== UNIDAD DE PESO (lb / oz) =====
+// Unidad de un paquete (PKGS o customPkg del producto). Si no trae unit, se
+// infiere del label ("4 oz" -> oz).
+function pkgUnit(p){
+  if(!p) return 'lb';
+  if(p.unit) return p.unit;
+  return /oz|ounce/i.test(p.label||'') ? 'oz' : 'lb';
+}
+// Unidad de un registro ya guardado (usa el campo unit o infiere del pkgLabel)
+function recUnit(r){
+  if(r && r.unit) return r.unit;
+  return /oz|ounce/i.test((r&&r.pkgLabel)||'') ? 'oz' : 'lb';
+}
+// Etiqueta legible de la unidad
+function unitLabel(u){ return u==='oz' ? 'oz' : 'lbs'; }
+// Factor para convertir un valor a libras (para sumas del Dashboard)
+function toLbFactor(u){ return u==='oz' ? 1/16 : 1; }
 

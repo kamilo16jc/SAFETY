@@ -68,7 +68,15 @@ function renderPkgChips(){
 function targetText(p){
   if(!p) return 'Select package size';
   if(p.min==null || p.max==null) return p.label+' · no target set';
-  return p.min+' – '+p.max+' lbs';
+  return p.min+' – '+p.max+' '+unitLabel(pkgUnit(p));
+}
+
+// Ajusta la etiqueta "Samples (LBS/OZ)" según la unidad del paquete activo
+function syncUnitLabel(){
+  var el = document.getElementById('w-samples-label');
+  if(!el) return;
+  var p = activePkg();
+  el.textContent = 'Samples ('+unitLabel(p?pkgUnit(p):'lb').toUpperCase()+')';
 }
 
 // Limpia estado Y pantalla: antes se borraba st.samples pero los números
@@ -156,6 +164,7 @@ function updateSampleUI(i){
   }
 }
 function updateStats(){
+  syncUnitLabel();
   var p=activePkg();
   var cv=document.getElementById('comp-val');
   if(!p){ document.getElementById('avg-val').textContent='—'; cv.textContent='—'; return; }
@@ -243,7 +252,7 @@ function commitWeight(){
   db.weights.push({
     id:Date.now(), date:isoFromDateTime(document.getElementById('w-date').value, document.getElementById('check-time').value),
     line:st.line, shift:st.shift,
-    pkg:st.pkg, pkgLabel:p.label,
+    pkg:st.pkg, pkgLabel:p.label, unit:pkgUnit(p),
     vals:vals, avg:vals.reduce(function(a,b){return a+b},0)/vals.length,
     pass:pass, total:vals.length,
     compliance: hasTarget ? Math.round((pass/vals.length)*100) : null,

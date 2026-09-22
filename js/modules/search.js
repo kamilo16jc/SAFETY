@@ -370,7 +370,7 @@ function productPanel(p, q){
     return '<div class="panel res-panel"><div class="res-head"><span class="res-title">No catalog product matches “'+esc(q)+'”</span></div>'+
       '<div class="cd-empty" style="padding:18px">The records below matched the LOT or the product number written on them.</div></div>';
   }
-  var target = (p.target && p.target.min!=null) ? p.target.min.toFixed(2)+' – '+p.target.max.toFixed(2)+' lbs' : 'not set';
+  var target = (p.target && p.target.min!=null) ? p.target.min.toFixed(2)+' – '+p.target.max.toFixed(2)+' '+unitLabel(pkgUnit({label:p.pkgLabel})) : 'not set';
   var f = function(label, value, strong){
     return '<div class="res-field"><div class="res-lbl">'+label+'</div>'+
            '<div class="res-val'+(strong?' strong':'')+'">'+value+'</div></div>';
@@ -454,7 +454,7 @@ function weightPanel(list){
   }).join('');
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
-    {t:'Samples (lbs)'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
+    {t:'Samples'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
   ], rows, page.length);
 }
 
@@ -527,7 +527,7 @@ function viewWeightRecord(id){
         recEdit('Product #','<input type="text" class="field" id="ew-product" value="'+esc(w.product||'')+'">')+
         recEdit('LOT','<input type="text" class="field" id="ew-lot" value="'+esc(w.lot||'')+'">')+
       '</div>'+
-      '<div class="rec-block"><div class="rec-lbl">Samples (lbs)</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Samples ('+unitLabel(recUnit(w))+')</div>'+
         '<div class="samp-edit">'+samps+'</div>'+
         '<div class="rec-hint">Compliance is recalculated from these against the target range.</div></div>'+
       '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
@@ -538,13 +538,13 @@ function viewWeightRecord(id){
       '<div class="rec-grid">'+
         recRow('Date', fmtDate(w.date))+ recRow('Time', w.time||'—')+
         recRow('Line', 'Line '+w.line)+ recRow('Shift', w.shift===1?'1st':'2nd')+
-        recRow('Package', esc(w.pkgLabel||'—'))+ recRow('Target', t?t.min.toFixed(2)+' – '+t.max.toFixed(2)+' lbs':'not set')+
+        recRow('Package', esc(w.pkgLabel||'—'))+ recRow('Target', t?t.min.toFixed(2)+' – '+t.max.toFixed(2)+' '+unitLabel(recUnit(w)):'not set')+
         recRow('Product', esc(w.product||'—'))+ recRow('LOT', '<span class="mono">'+esc(w.lot||'—')+'</span>')+
         recRow('Average', w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+
         recRow('Compliance', '<span class="pill '+cls+'">'+compLabel(w.compliance)+'</span>')+
         recRow('By', esc(w.initials||'—'))+
       '</div>'+
-      recBlock('Samples (lbs)', sampTxt)+
+      recBlock('Samples ('+unitLabel(recUnit(w))+')', sampTxt)+
       recBlock('Comments', w.comments);
   }
 

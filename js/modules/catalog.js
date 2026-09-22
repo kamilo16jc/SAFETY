@@ -58,7 +58,7 @@ function renderCatalog(){
         '<td class="code">'+esc(p.number)+'</td>'+
         '<td class="desc">'+esc(p.name||'—')+'</td>'+
         '<td class="mono">'+esc(p.pkgLabel||'—')+'</td>'+
-        '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">lbs</span>' : '<span class="tag warn">not set</span>')+'</td>'+
+        '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">'+unitLabel(pkgUnit({label:p.pkgLabel}))+'</span>' : '<span class="tag warn">not set</span>')+'</td>'+
         '<td class="mono num">'+(p.bagsPerCase||'—')+'</td>'+
         '<td>'+(linked ? '<span class="tag ok">Linked</span>' : '<span class="tag">Not linked</span>')+'</td>'+
         '<td class="soft col-by">'+esc(p.createdBy||'—')+'</td>'+
@@ -130,7 +130,7 @@ function renderCatalogDetail(){
         '<input type="text" class="field" id="cd-name" value="'+esc(p.name||'')+'"></div>'+
       '<div class="field-group"><div class="sec-label">Package Size</div>'+
         '<div class="select-wrap"><select class="field" id="cd-size">'+sizeOpts+'</select></div></div>'+
-      '<div class="field-group"><div class="sec-label">Target Range (lbs)</div>'+
+      '<div class="field-group"><div class="sec-label">Target Range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· in the unit of the package (lb or oz)</span></div>'+
         '<div class="pair">'+
           '<input type="text" class="field" id="cd-min" inputmode="decimal" placeholder="Min" value="'+(p.target&&p.target.min!=null?p.target.min:'')+'">'+
           '<input type="text" class="field" id="cd-max" inputmode="decimal" placeholder="Max" value="'+(p.target&&p.target.max!=null?p.target.max:'')+'">'+
