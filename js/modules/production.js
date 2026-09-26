@@ -176,6 +176,31 @@ function refreshRunViews(){
 
 function scanRunLot(id){ openScanner('runlot:'+id); }
 
+// ---- Desde la corrida a Hold / CAPA (ya ligados por LOT, producto y línea) ----
+function holdFromRun(id){
+  var r = findRun(id); if(!r) return;
+  if(!r.lot && !confirm('This run has no LOT yet. Continue anyway?')) return;
+  goTo('screen-hold');
+  if(typeof switchHoldTab==='function') switchHoldTab('new', document.getElementById('hold-tab-new'));
+  var set = function(el, v){ var e=document.getElementById(el); if(e) e.value = v; };
+  set('hold-product', r.productName || r.product || '');
+  set('hold-lot', r.lot || '');
+  set('hold-initby', currentUser ? currentUser.name : '');
+  var lb = document.querySelector('[data-group="hline"][data-val="'+r.line+'"]');
+  if(lb && typeof selectHoldLine==='function') selectHoldLine(lb);
+  toast('Hold prefilled from the run — add the reason');
+}
+
+function capaFromRun(id){
+  var r = findRun(id); if(!r) return;
+  goTo('screen-capa');
+  var set = function(el, v){ var e=document.getElementById(el); if(e) e.value = v; };
+  set('capa-date', String(r.date).slice(0,10));
+  set('capa-product', r.product || '');
+  set('capa-lot', r.lot || '');
+  toast('CAPA prefilled from the run — describe the problem');
+}
+
 // ---- Render ----
 function renderProduction(){
   prodFilters();
@@ -238,6 +263,10 @@ function renderProduction(){
           '<span class="run-auto">'+(t.tested ? (t.w+' weight · '+t.s+' seal') : 'no records yet')+'</span>'+
         '</div>'+
         (r.labSample ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
+      '</div>'+
+      '<div class="run-actions">'+
+        '<button class="btn-ghost" onclick="holdFromRun('+r.id+')"><span data-icon="lock"></span>Place on hold</button>'+
+        '<button class="btn-ghost" onclick="capaFromRun('+r.id+')"><span data-icon="alert"></span>Open CAPA</button>'+
       '</div>'+
     '</div>';
   }).join('');

@@ -215,6 +215,7 @@ function renderSearch(){
   el.innerHTML =
     activeFilterChips() +
     (searchQuery ? productPanel(r.product, searchQuery) : '') +
+    traceCard(r) +
     summaryStrip(r, avg, dates, openHolds) +
     ((sf.type==='all'||sf.type==='weight') ? weightPanel(r.weights) : '') +
     ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
@@ -224,6 +225,54 @@ function renderSearch(){
     runPanel(r.runs) +
     historyHint();
   renderIcons(el);
+}
+
+// Ficha de trazabilidad: junta toda la cadena de un LOT en un solo lugar y,
+// sobre todo, señala los HUECOS (lo que falta), que es lo que busca un auditor.
+function traceCard(r){
+  if(!searchQuery) return '';
+  var runs=r.runs||[], w=r.weights||[], s=r.seals||[], holds=r.holds||[], capa=r.capa||[];
+  if(!(runs.length+w.length+s.length+holds.length+capa.length)) return '';
+
+  var scored = w.filter(function(x){ return x.compliance!=null; });
+  var comp = scored.length ? Math.round(scored.reduce(function(a,x){ return a+x.compliance; },0)/scored.length) : null;
+  var openHolds = holds.filter(function(h){ return h.status!=='released' && h.status!=='destroyed'; }).length;
+  var labRuns  = runs.filter(function(x){ return x.labSample; });
+  var labPend  = labRuns.filter(function(x){ return !x.labSent; }).length;
+  var untested = runs.filter(function(x){
+    return !(typeof runTestCount==='function' && runTestCount(x).tested);
+  }).length;
+  var noLot    = runs.filter(function(x){ return !x.lot; }).length;
+  var notColl  = runs.filter(function(x){ return !x.collected; }).length;
+
+  var gaps = [];
+  if(untested)  gaps.push(untested+' scheduled run(s) with no weight or bag seal record');
+  if(notColl)   gaps.push(notColl+' run(s) with no sample collected from the line');
+  if(noLot)     gaps.push(noLot+' run(s) without a confirmed LOT');
+  if(labPend)   gaps.push(labPend+' lab sample(s) not sent yet');
+  if(openHolds) gaps.push(openHolds+' hold case(s) still open');
+  // Sin corridas programadas, el aviso de "sin QC" no lo cubre el gap de arriba
+  if(!runs.length && !w.length && !s.length) gaps.push('No weight or bag seal records for this LOT');
+
+  var cell = function(label, val, cls){
+    return '<div class="trace-cell"><span>'+label+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+val+'</b></div>';
+  };
+
+  return '<div class="panel trace-card">'+
+    '<div class="trace-head">Traceability · <span class="mono">'+esc(searchQuery)+'</span></div>'+
+    '<div class="trace-grid">'+
+      cell('Runs', runs.length)+
+      cell('Weight', w.length)+
+      cell('Bag seal', s.length)+
+      cell('Compliance', comp==null?'—':comp+'%', comp==null?'':(comp>=80?'ok':'bad'))+
+      cell('Lab sent', labRuns.length ? (labRuns.length-labPend)+'/'+labRuns.length : '—', labPend?'warn':'')+
+      cell('Holds', holds.length, openHolds?'bad':'')+
+      cell('CAPA', capa.length, capa.length?'warn':'')+
+    '</div>'+
+    (gaps.length
+      ? '<div class="trace-gaps"><b>Gaps to close</b><ul><li>'+gaps.map(function(g){ return esc(g); }).join('</li><li>')+'</li></ul></div>'
+      : '<div class="trace-ok">Chain complete — QC records, lab samples and holds all accounted for.</div>')+
+  '</div>';
 }
 
 // Corridas del Production Schedule que coinciden con la búsqueda: cierra la
