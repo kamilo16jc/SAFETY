@@ -172,7 +172,7 @@ function toggleRunCheck(id, field){
 }
 
 // ===== NUMERACIÓN DE SAMPLES =====
-// El contador es POR CLIENTE (Litehouse lleva la suya, cada cliente la suya) y
+// El contador es POR CLIENTE (cada cliente lleva su propia enumeración) y
 // se resetea cada semana. Como parte de las muestras se recogen fuera del
 // sistema, siempre se pregunta en qué número arrancar.
 function weekKey(d){
