@@ -14,6 +14,17 @@ renderIcons(document);
 initTheme();
 setupPWA();
 if('serviceWorker' in navigator){
+  // Cuando se publica una versión nueva, el service worker nuevo se instala y
+  // toma el control, PERO la página ya cargó los archivos viejos. Sin esto hay
+  // que recargar dos veces (o cerrar la PWA) para ver un cambio: se recarga
+  // sola en cuanto el SW nuevo toma el control.
+  var swReloading = false;
+  var hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(!hadController || swReloading) return;   // primera instalación: no recargar
+    swReloading = true;
+    window.location.reload();
+  });
   var registerSW = function(){
     navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW:', e); });
   };
