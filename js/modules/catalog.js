@@ -56,7 +56,7 @@ function renderCatalog(){
       var linked = (p.barcodes||[]).length;
       return '<tr data-num="'+esc(p.number)+'" tabindex="0" aria-selected="'+(p.number===catSelected)+'" onclick="selectCatalogRow(this.getAttribute(\'data-num\'))">'+
         '<td class="code">'+esc(p.number)+'</td>'+
-        '<td class="desc">'+esc(p.name||'—')+'</td>'+
+        '<td class="desc">'+esc(p.name||'—')+(p.labSample?' <span class="tag warn">LAB</span>':'')+'</td>'+
         '<td class="mono">'+esc(p.pkgLabel||'—')+'</td>'+
         '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">'+unitLabel(pkgUnit({label:p.pkgLabel}))+'</span>' : '<span class="tag warn">not set</span>')+'</td>'+
         '<td class="mono num">'+(p.bagsPerCase||'—')+'</td>'+
@@ -143,6 +143,8 @@ function renderCatalogDetail(){
           '<button class="btn-ghost" style="width:100%;justify-content:center" onclick="catalogRescan()">'+
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
+      '<label class="lab-check"><input type="checkbox" id="cd-lab"'+(p.labSample?' checked':'')+'>'+
+        '<span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>'+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
         '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
@@ -187,6 +189,7 @@ function saveCatalogEdits(){
   }
   p.target = (!isNaN(mn) && !isNaN(mx)) ? {min:mn, max:mx} : null;
   p.bagsPerCase = isNaN(bags) ? null : bags;
+  p.labSample = !!(document.getElementById('cd-lab')||{}).checked;
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
 

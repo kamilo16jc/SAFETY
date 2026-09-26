@@ -19,6 +19,7 @@ function goTo(id){
   if(id==='screen-lotsearch') initSearch();
   if(id==='screen-capa') initCapa();
   if(id==='screen-shift') initShift();
+  if(id==='screen-production') initProduction();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -29,6 +30,7 @@ function goTo(id){
 // ===== TOPBAR (sólo visible en escritorio) =====
 var CRUMBS = {
   'screen-home':     ['', 'Home'],
+  'screen-production':['Capture', 'Production Schedule'],
   'screen-weight':   ['Capture', 'Weight Log'],
   'screen-seal':     ['Capture', 'Bag Seal'],
   'screen-gmp':      ['Capture', 'GMP Audit'],

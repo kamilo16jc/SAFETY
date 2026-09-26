@@ -199,6 +199,12 @@ function onScanResult(code){
   closeScanner();
   playAlert('pass');
   var screen = scanScreen || 'weight';
+  // LOT de una corrida del Production Schedule: "runlot:<id>"
+  if(screen.indexOf('runlot:')===0){
+    setRunLot(parseInt(screen.slice(7)), code);
+    toast('LOT: '+code);
+    return;
+  }
   if(screen==='catalog'){ catalogScanResult(code); return; }
   if(screen==='search'){
     var si=document.getElementById('search-input');

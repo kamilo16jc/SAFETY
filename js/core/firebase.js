@@ -48,7 +48,7 @@
   var historyLoadedFrom = null;   // hasta donde atras esta cargado el historial
   var listenersUp = false;
   var BIG_COLS   = ['weights','seals','gmps','temps','metal'];  // por fecha (ventana)
-  var SMALL_COLS = ['products','holds','capa','shifts'];        // coleccion completa
+  var SMALL_COLS = ['products','holds','capa','shifts','runs']; // coleccion completa
 
   // Reconstruye una coleccion grande: la ventana en vivo + el historial ya
   // cargado (mas viejo que la ventana) + lo creado offline (sin _fbId).
@@ -140,6 +140,8 @@
     if(cb) cb();
   };
   window.isHistoryFull = function(){ return !!window._historyFull; };
+  // Fuerza la subida de lo pendiente (p.ej. tras copiar un schedule completo)
+  window.flushPendingNow = function(){ try { flushPending(); } catch(e){} };
 
   // ---- FLUSH: sube a Firestore los registros creados offline (sin _fbId) ----
   var flushing = false, flushTimer = null;
@@ -149,7 +151,7 @@
     flushing = true;
     try {
       var localDb = getDB();
-      var cols = ['weights','seals','gmps','temps','metal','capa','shifts','products'];
+      var cols = ['weights','seals','gmps','temps','metal','capa','shifts','products','runs'];
       var uploaded = {};   // {col: {recId: fbId}}
       for(var ci=0; ci<cols.length; ci++){
         var arr = localDb[cols[ci]] || [];

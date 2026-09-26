@@ -1,3 +1,43 @@
+// Sección del Production Schedule dentro del reporte diario del turno:
+// qué corrió, si se confirmó el LOT, si se recogió, si se testeó (automático)
+// y si la muestra de laboratorio ya salió.
+function scheduleSection(runs, C){
+  if(!runs || !runs.length) return '';
+  var yes = function(on){ return on ? '<span style="color:#1a7f4f;font-weight:800">Yes</span>'
+                                    : '<span style="color:#b3261e;font-weight:800">No</span>'; };
+  var th = 'style="border:1px solid '+C.line+';padding:4px 6px;background:'+C.head+';font-size:8.5px;text-align:left;font-weight:800"';
+  var td = 'style="border:1px solid '+C.line+';padding:4px 6px;font-size:9px"';
+
+  var pend = runs.filter(function(r){ return !runComplete(r); }).length;
+  var labs = runs.filter(function(r){ return r.labSample; });
+  var labsPend = labs.filter(function(r){ return !r.labSent; }).length;
+
+  var rows = runs.map(function(r){
+    var t = runTestCount(r);
+    return '<tr>'+
+      '<td '+td+'>Line '+C.esc(r.line)+'</td>'+
+      '<td '+td+'>'+C.esc(r.product||'—')+(r.productName?' — '+C.esc(r.productName):'')+
+        (r.labSample?' <b style="color:#b07d1a">[LAB]</b>':'')+'</td>'+
+      '<td '+td+'>'+C.esc(r.time||'—')+'</td>'+
+      '<td '+td+'>'+C.esc(r.lot||'—')+'</td>'+
+      '<td '+td+' align="center">'+yes(r.collected)+'</td>'+
+      '<td '+td+' align="center">'+yes(t.tested)+'</td>'+
+      '<td '+td+' align="center">'+(r.labSample ? yes(r.labSent) : '—')+'</td>'+
+    '</tr>';
+  }).join('');
+
+  return '<div style="font-size:10px;font-weight:800;color:'+C.ink+';margin:2px 0 6px">Production schedule</div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:6px">'+
+      '<tr><th '+th+'>Line</th><th '+th+'>Product</th><th '+th+'>Time</th><th '+th+'>LOT</th>'+
+        '<th '+th+' align="center">Collected</th><th '+th+' align="center">Tested</th><th '+th+' align="center">Lab sent</th></tr>'+
+      rows+
+    '</table>'+
+    '<div style="font-size:9px;color:'+C.soft+';margin-bottom:14px">'+
+      runs.length+' run(s) · '+(runs.length-pend)+' complete · '+pend+' pending'+
+      (labs.length ? ' · lab samples: '+(labs.length-labsPend)+'/'+labs.length+' sent' : '')+
+    '</div>';
+}
+
 // ===== PDF DIARIO — un reporte por turno (no mezcla los dos) =====
 function exportDailyShiftPDF(){
   var dateInput = document.getElementById('sr-daily-date');
@@ -7,7 +47,8 @@ function exportDailyShiftPDF(){
 
   var evs = (getShifts()||[]).filter(function(s){ return String(s.date).slice(0,10)===date && s.shift===shift; })
               .sort(function(a,b){ return String(a.reportNumber).localeCompare(String(b.reportNumber)); });
-  if(!evs.length){ toast('No '+shiftLabel.toLowerCase()+' events for that date'); return; }
+  var runs = (typeof runsFor==='function') ? runsFor(date, shift) : [];
+  if(!evs.length && !runs.length){ toast('No '+shiftLabel.toLowerCase()+' events or runs for that date'); return; }
 
   var ink='#141a17', body='#2f3833', soft='#6b756f', line='#c9cfc9', head='#eceee9';
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); };
@@ -66,6 +107,8 @@ function exportDailyShiftPDF(){
   '</header>'+
 
   (catLine?'<div style="font-size:9px;color:'+soft+';margin-bottom:12px">By category: '+esc(catLine)+'</div>':'')+
+  scheduleSection(runs, {ink:ink, soft:soft, line:line, head:head, esc:esc})+
+  (evs.length ? '<div style="font-size:10px;font-weight:800;color:'+ink+';margin:4px 0 8px">Shift events</div>' : '')+
   evs.map(eventCard).join('')+
 
   '<footer style="border-top:1px solid '+line+';padding-top:6px;margin-top:6px;font-size:8px;color:'+soft+';display:flex;justify-content:space-between">'+

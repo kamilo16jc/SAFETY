@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'safety-qc-v8';
+const CACHE = 'safety-qc-v9';
 
 const SHELL = [
   './',
@@ -18,7 +18,7 @@ const SHELL = [
   './js/modules/admin.js','./js/modules/reports.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
   './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',
-  './js/modules/catalog.js','./js/modules/scanner.js','./js/modules/capa.js','./js/modules/shift.js',
+  './js/modules/catalog.js','./js/modules/scanner.js','./js/modules/production.js','./js/modules/capa.js','./js/modules/shift.js',
   './js/export/pdf-reports.js','./js/export/excel.js','./js/export/dash-pdf.js',
   './js/export/capa-pdf.js','./js/export/shift-pdf.js',
   './js/integrations/word-fill.js','./js/integrations/excel-fill.js','./js/integrations/metal-fill.js',

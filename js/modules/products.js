@@ -141,6 +141,7 @@ function openProductModal(screen){
   document.getElementById('prod-min').value = '';
   document.getElementById('prod-max').value = '';
   document.getElementById('prod-barcode').value = pendingBarcode || '';
+  var labChk = document.getElementById('prod-lab'); if(labChk) labChk.checked = false;
 
   var sel = document.getElementById('prod-pkg');
   sel.innerHTML = '<option value="">Select package size</option>'+
@@ -202,6 +203,7 @@ function saveProduct(){
     pkgLabel: pkgLabel,
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
+    labSample: !!(document.getElementById('prod-lab')||{}).checked,
     barcodes: barcode ? [barcode] : [],
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()

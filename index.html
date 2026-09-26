@@ -119,6 +119,7 @@
   <nav class="d-nav">
     <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
     <div class="nav-label">Capture</div>
+    <button class="d-item" data-screen="screen-production" onclick="navDrawer('screen-production')"><span class="d-ico" data-icon="calendar"></span>Production</button>
     <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
     <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
     <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
@@ -150,6 +151,47 @@
 </aside>
 
 <!-- WEIGHT -->
+<!-- PRODUCTION SCHEDULE -->
+<div class="screen" id="screen-production">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Production Schedule</div>
+  <div class="form-meta">Run order and QC checklist</div>
+
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">Date</div>
+      <input type="date" class="time-input" id="pr-date" style="width:100%" onchange="renderProduction()"></div>
+    <div class="field-group"><div class="sec-label">Shift</div>
+      <div class="select-wrap"><select class="field" id="pr-shift" onchange="renderProduction()">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+  </div>
+
+  <div id="pr-summary"></div>
+
+  <div class="sec-label">Add run from the production sheet</div>
+  <div class="pr-add">
+    <input type="text" class="field" id="pr-product" list="pr-product-list" placeholder="Product #"
+           autocomplete="off" autocapitalize="characters">
+    <datalist id="pr-product-list"></datalist>
+    <select class="field" id="pr-line">
+      <option value="">Line</option>
+      <option value="1">Line 1</option>
+      <option value="2">Line 2</option>
+      <option value="3">Line 3</option>
+      <option value="4">Line 4</option>
+      <option value="5">Line 5</option>
+      <option value="6">Line 6</option>
+    </select>
+    <input type="time" class="time-input" id="pr-time">
+    <button class="btn-solid" onclick="addRun()">Add</button>
+  </div>
+  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="copySchedule()">
+    <span data-icon="calendar"></span>Copy schedule from another day</button>
+
+  <div id="pr-list"></div>
+</div>
+
 <div class="screen" id="screen-weight">
   <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Weight Log</div>
@@ -1055,6 +1097,8 @@
     <input type="text" class="field" id="prod-bags" placeholder="e.g. 4" inputmode="numeric">
     <div class="sec-label">Barcode <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional</span></div>
     <input type="text" class="field" id="prod-barcode" placeholder="Scanned code">
+    <label class="lab-check"><input type="checkbox" id="prod-lab">
+      <span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>
     <button class="main-btn" style="margin:8px 0 0" onclick="saveProduct()">Save Product</button>
   </div>
 </div>
@@ -1142,6 +1186,7 @@
 <script src="js/modules/products.js"></script>
 <script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
+<script src="js/modules/production.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>
