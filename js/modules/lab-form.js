@@ -59,9 +59,10 @@ function labFormRows(group){
 
 function labFormWarnings(group){
   var w = [];
+  var numbered = !!group.customer.numbered;   // sólo algunos clientes enumeran
   group.runs.forEach(function(r){
     if(!r.lot) w.push('Line '+r.line+' · '+(r.product||'—')+': no LOT');
-    if(!r.sampleFrom) w.push('Line '+r.line+' · '+(r.product||'—')+': no sample numbers');
+    if(numbered && !r.sampleFrom) w.push('Line '+r.line+' · '+(r.product||'—')+': no sample numbers');
   });
   return w;
 }

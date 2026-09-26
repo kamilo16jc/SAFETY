@@ -66,6 +66,14 @@ function labCustomerLine(r){
     '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div></div>';
 }
 
+// Los clientes numerados llevan un rango; los demás, 1 sample sin numerar
+function labSampleCell(r){
+  if(r.sampleFrom) return r.sampleFrom+'–'+r.sampleTo;
+  var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+  var c = (typeof productCustomer==='function') ? productCustomer(p || {number:r.product}) : null;
+  return (c && !c.numbered) ? '1' : '—';
+}
+
 function hhmm(iso){
   var s = String(iso||'');
   var i = s.indexOf('T');
@@ -118,7 +126,7 @@ function renderLab(){
       labCustomerLine(r)+
       '<div class="lab-grid">'+
         '<div><span>LOT</span><b class="mono">'+esc(r.lot||'—')+'</b></div>'+
-        '<div><span>Samples</span><b>'+(r.sampleFrom? r.sampleFrom+'–'+r.sampleTo : '—')+'</b></div>'+
+        '<div><span>Samples</span><b>'+labSampleCell(r)+'</b></div>'+
         '<div><span>Collected</span><b>'+(r.collected?hhmm(r.collectedAt):'—')+'</b></div>'+
         '<div><span>Sent</span><b>'+(r.labSent?hhmm(r.labSentAt):'—')+'</b></div>'+
       '</div>'+

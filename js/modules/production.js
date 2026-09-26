@@ -162,9 +162,11 @@ function toggleRunCheck(id, field){
   // Se guarda la hora: la de recolección la pide la forma del laboratorio
   if(field==='collected') run.collectedAt = run.collected ? localISOStr() : '';
   if(field==='labSent')   run.labSentAt   = run.labSent   ? localISOStr() : '';
-  // Al recoger una muestra de laboratorio se le asignan sus 5 números
+  // Al recoger, solo los clientes con numeración (5 samples por orden) piden
+  // números. Los demás llevan 1 sample y no se enumera.
   if(field==='collected' && run.collected && run.labSample && !run.sampleFrom){
-    assignLabSampleRange(run, db);
+    var rc = runCustomer(run);
+    if(rc && rc.numbered) assignLabSampleRange(run, db);
   }
   if(field==='collected' && !run.collected){ run.sampleFrom=null; run.sampleTo=null; }
   persistRunEdit(run, db);
@@ -200,18 +202,20 @@ function runCustomer(run){
 function assignLabSampleRange(run, db){
   var c = runCustomer(run);
   if(!c){ toast('Assign a customer to this product first (Products)'); return; }
+  if(!c.numbered) return;                               // este cliente no enumera
+  var per = c.samplesPerOrder || 5;
   var wk = weekKey(run.date);
   var st = ((db && db.labCounters) || getLabCounters())[c.customerId];
   var proposed = (st && st.week===wk) ? st.next : 1;   // semana nueva -> arranca en 1
   var ans = prompt('Sample numbers for '+c.company+'\n'+
-    'Week of '+wk+'. This order takes 5 samples.\n'+
+    'Week of '+wk+'. This order takes '+per+' samples.\n'+
     'Start at which sample number?', String(proposed));
   if(ans===null) return;                                // canceló: queda sin números
   var n = parseInt(ans,10);
   if(isNaN(n) || n<1){ toast('Invalid sample number'); return; }
-  run.sampleFrom = n; run.sampleTo = n+4;
-  setLabCounter(c.customerId, wk, n+5, db);
-  toast('Samples '+n+'–'+(n+4)+' assigned');
+  run.sampleFrom = n; run.sampleTo = n+per-1;
+  setLabCounter(c.customerId, wk, n+per, db);
+  toast('Samples '+run.sampleFrom+'–'+run.sampleTo+' assigned');
 }
 
 // Texto que va en la forma: "Producto (51-55)"
