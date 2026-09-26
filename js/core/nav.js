@@ -5,6 +5,7 @@ function goTo(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
   document.getElementById(id).classList.add('active');
   if(id==='screen-home') initHome();
+  if(id==='screen-module') renderModuleScreen();
   if(id==='screen-weight') initWeight();
   if(id==='screen-seal') initSeal();
   if(id==='screen-dashboard') initDash();
@@ -40,19 +41,37 @@ function goTo(id){
 // queda marcada. Los modulos que el usuario no tiene no se pintan.
 function selectModule(id){
   activeModule = id;
-  var m = moduleById(id);
-  renderModuleBar(null);
-  if(m && m.items.length){
-    var first = m.items.filter(function(i){ return !i.soon; })[0];
-    if(first) goTo(first.screen);
+  goTo('screen-module');
+}
+
+// Las funciones del módulo, como tarjetas de su color. Al tocar una se abre
+// el formulario.
+function renderModuleScreen(){
+  var m = moduleById(activeModule);
+  var hero = document.getElementById('mod-hero');
+  var grid = document.getElementById('mod-cards');
+  if(!m || !grid) return;
+  if(hero){
+    hero.innerHTML = '<span class="mod-hero-ico" data-icon="'+m.icon+'"></span>'+
+      '<div><b>'+esc(m.name)+'</b><span>'+
+      m.items.filter(function(i){return !i.soon;}).length+' functions</span></div>';
+    hero.style.setProperty('--mod', m.ink);
+    renderIcons(hero);
   }
+  grid.innerHTML = m.items.map(function(i){
+    if(i.soon) return '<span class="mcard solid soon" style="--mod:'+m.ink+'">'+
+      '<span class="mcard-ico" data-icon="'+i.icon+'"></span><b>'+esc(i.name)+'</b>'+
+      '<span class="mcard-n">coming soon</span></span>';
+    return '<button class="mcard solid" style="--mod:'+m.ink+'" onclick="goTo(\''+i.screen+'\')">'+
+      '<span class="mcard-ico" data-icon="'+i.icon+'"></span><b>'+esc(i.name)+'</b></button>';
+  }).join('');
+  renderIcons(grid);
 }
 
 function renderModuleBar(current){
   var bar = document.getElementById('module-bar');
-  var sub = document.getElementById('module-sub');
-  if(!bar || !sub) return;
-  if(!currentUser){ bar.innerHTML=''; sub.innerHTML=''; return; }
+  if(!bar) return;
+  if(!currentUser){ bar.innerHTML=''; return; }
 
   var mods = myModules();
   bar.innerHTML = mods.map(function(m){
@@ -60,23 +79,13 @@ function renderModuleBar(current){
       '<span class="mod-ico" data-icon="'+m.icon+'"></span>'+esc(m.name)+'</button>';
   }).join('');
 
-  var m = moduleById(activeModule);
-  if(!m){ sub.innerHTML=''; sub.classList.remove('open'); renderIcons(bar); return; }
-  sub.style.setProperty('--mod', m.ink);
-  var screen = current || (document.querySelector('.screen.active')||{}).id;
-  sub.innerHTML = m.items.map(function(i){
-    if(i.soon) return '<span class="mod-item soon" title="Coming soon">'+
-      '<span data-icon="'+i.icon+'"></span>'+esc(i.name)+'</span>';
-    return '<button class="mod-item'+(i.screen===screen?' on':'')+'" onclick="goTo(\''+i.screen+'\')">'+
-      '<span data-icon="'+i.icon+'"></span>'+esc(i.name)+'</button>';
-  }).join('');
-  sub.classList.add('open');
-  renderIcons(bar); renderIcons(sub);
+  renderIcons(bar);
 }
 
 // ===== TOPBAR (sólo visible en escritorio) =====
 var CRUMBS = {
   'screen-home':     ['', 'Home'],
+  'screen-module':   ['', 'Modules'],
   'screen-production':['Capture', 'Production Schedule'],
   'screen-lab':      ['Capture', 'Lab Samples'],
   'screen-analysis': ['Capture', 'Sample Analysis'],
@@ -141,80 +150,25 @@ function updateDate(){
 }
 
 function initHome(){
-  // Greeting
+  // Saludo
   var h = new Date().getHours();
-  var greet = h<12 ? 'Good morning' : h<18 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('home-greet').textContent = greet;
+  document.getElementById('home-greet').textContent =
+    h<12 ? 'Good morning' : h<18 ? 'Good afternoon' : 'Good evening';
   var first = currentUser ? currentUser.name.split(' ')[0] : '';
   first = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   document.getElementById('home-name').textContent = first || 'Welcome';
 
-  // Today stats
-  var db = getDB();
-  var today = localDateStr();
-  var isToday = function(r){ return r.date && r.date.slice(0,10)===today; };
-
-  var w = (db.weights||[]).filter(isToday);
-  var wc = w.filter(function(r){ return r.compliance!=null; });
-  var comp = wc.length ? Math.round(wc.reduce(function(a,r){return a+r.compliance},0)/wc.length) : null;
-  var seals = (db.seals||[]).filter(isToday).length;
-  var gmpDone = (db.gmps||[]).some(isToday);
-  var holds = (db.holds||[]).filter(function(x){return x.status!=='released' && x.status!=='destroyed'}).length;
-
-  var compColor = comp===null ? 'var(--dim)' : comp>=90 ? 'var(--pass)' : comp>=80 ? 'var(--warn)' : 'var(--fail)';
-  var tile = function(onclick, note, ico, val, lbl, valColor){
-    return '<div class="tile" onclick="'+onclick+'">'+
-      '<div class="t-top"><span class="t-lbl">'+lbl+'</span>'+
-        '<span class="t-ico">'+(ICONS[ico]||'')+'</span></div>'+
-      '<div class="t-val"'+(valColor?' style="color:'+valColor+'"':'')+'>'+val+'</div>'+
-      '<div class="t-note">'+note+'</div>'+
-    '</div>';
-  };
-  var lines={}; w.forEach(function(r){ if(r.line) lines[r.line]=1; });
-  var lineCount=Object.keys(lines).length;
-  var sealFails=(db.seals||[]).filter(isToday).filter(function(s){
-    return Object.keys(s.checks||{}).some(function(k){ return s.checks[k]==='fail'; });
-  }).length;
-
-  // Lanzador de módulos: cada uno con su color
-  var ml=document.getElementById('home-modules');
+  // Home = sólo los módulos a los que el usuario tiene acceso
+  var ml = document.getElementById('home-modules');
   if(ml && typeof myModules==='function'){
     ml.innerHTML = myModules().map(function(m){
-      var n=m.items.filter(function(i){return !i.soon;}).length;
-      return '<button class="mcard" style="--mod:'+m.ink+'" onclick="selectModule(\''+m.id+'\')">'+
+      var n = m.items.filter(function(i){ return !i.soon; }).length;
+      return '<button class="mcard solid" style="--mod:'+m.ink+'" onclick="selectModule(\''+m.id+'\')">'+
         '<span class="mcard-ico" data-icon="'+m.icon+'"></span>'+
         '<b>'+esc(m.name)+'</b><span class="mcard-n">'+n+' functions</span></button>';
     }).join('');
     renderIcons(ml);
   }
-
-  document.getElementById('home-tiles').innerHTML =
-    tile("goTo('screen-dashboard')", lineCount?lineCount+' line(s) active':'none logged yet',
-         'scale', w.length, 'Weight checks') +
-    tile("goTo('screen-dashboard')", 'target 90% or higher',
-         'check', comp===null ? '—' : comp+'<small>%</small>', 'Compliance', compColor) +
-    tile("goTo('screen-seal')", sealFails?sealFails+' with a failed check':'all checks passed',
-         'droplet', seals, 'Bag seals') +
-    (holds > 0
-      ? tile("goTo('screen-hold')", 'open cases', 'lock', holds, 'Hold cases', 'var(--warn)')
-      : tile("goTo('screen-gmp')", 'SQF 2.5.D.A daily',
-             'clipboard', gmpDone?'Done':'Pending', 'GMP audit', gmpDone?'var(--pass)':'var(--warn)'));
-
-  // Recent activity (last 3, most recent first)
-  var typeColor = {weight:'var(--accent)', seal:'var(--pass)', gmp:'var(--warn)', hold:'#ff9500', temp:'#5ac8fa', login:'var(--dim)'};
-  var recent = (db.activityLog||[]).slice(-3).reverse();
-  document.getElementById('home-recent').innerHTML = recent.length ?
-    recent.map(function(e){
-      return '<div class="recent-row">'+
-        '<div class="r-dot" style="background:'+(typeColor[e.type]||'var(--dim)')+'"></div>'+
-        '<div class="r-txt">'+
-          '<div class="r-action">'+esc(e.action)+'</div>'+
-          '<div class="r-meta">'+esc(e.user||'')+'</div>'+
-        '</div>'+
-        '<div class="r-time">'+(e.date ? e.date.slice(11,16) : '')+'</div>'+
-      '</div>';
-    }).join('') :
-    '<div class="empty" style="padding:20px">No activity yet today</div>';
 }
 
 function selectLine(n){

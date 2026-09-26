@@ -18,6 +18,65 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
+<!-- TOPBAR (escritorio) -->
+<div class="topstack" id="topstack">
+<header class="topbar" id="topbar">
+  <div class="tb-crumb" id="tb-crumb"></div>
+  <div class="tb-spacer"></div>
+  <span class="tb-chip"><span class="tb-dot"></span>Synced</span>
+  <span class="tb-stamp" id="tb-stamp"></span>
+  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span data-icon="user"></span><span id="tb-uname"></span></button>
+  <div class="user-menu" id="user-menu">
+    <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
+    <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
+    <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
+  </div>
+</header>
+<nav class="module-bar" id="module-bar"></nav>
+</div>
+
+<!-- DRAWER -->
+<!-- WEIGHT -->
+<!-- PRODUCTION SCHEDULE -->
+<div class="screen" id="screen-production">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Production Schedule</div>
+  <div class="form-meta">Run order and QC checklist</div>
+
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">Date</div>
+      <input type="date" class="time-input" id="pr-date" style="width:100%" onchange="renderProduction()"></div>
+    <div class="field-group"><div class="sec-label">Shift</div>
+      <div class="select-wrap"><select class="field" id="pr-shift" onchange="renderProduction()">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+  </div>
+
+  <div id="pr-summary"></div>
+
+  <div class="sec-label">Add run from the production sheet</div>
+  <div class="pr-add">
+    <input type="text" class="field" id="pr-product" list="pr-product-list" placeholder="Product #"
+           autocomplete="off" autocapitalize="characters">
+    <datalist id="pr-product-list"></datalist>
+    <select class="field" id="pr-line">
+      <option value="">Line</option>
+      <option value="1">Line 1</option>
+      <option value="2">Line 2</option>
+      <option value="3">Line 3</option>
+      <option value="4">Line 4</option>
+      <option value="5">Line 5</option>
+      <option value="6">Line 6</option>
+    </select>
+    <input type="time" class="time-input" id="pr-time">
+    <button class="btn-solid" onclick="addRun()">Add</button>
+  </div>
+  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="copySchedule()">
+    <span data-icon="calendar"></span>Copy schedule from another day</button>
+
+  <div id="pr-list"></div>
+</div>
 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
@@ -74,93 +133,15 @@
   <div class="home-greet" id="home-greet">Welcome</div>
   <div class="home-name" id="home-name">&nbsp;</div>
 
-  <div class="sec-label" style="margin-top:28px">Today</div>
   <div class="mcards" id="home-modules"></div>
-  <div class="tiles" id="home-tiles"></div>
-
-  <div class="sec-label">Quick Actions</div>
-  <div class="qa-col">
-    <button class="qa-btn" onclick="goTo('screen-weight')">
-      <div class="q-ico" style="background:rgba(0,122,255,0.1);color:#007aff" data-icon="scale"></div>
-      <div class="q-txt"><div class="q-title">Weight Log</div><div class="q-sub">Record package weights &amp; samples</div></div>
-      <div class="q-chev">›</div>
-    </button>
-    <button class="qa-btn" onclick="goTo('screen-seal')">
-      <div class="q-ico" style="background:rgba(52,199,89,0.1);color:#28a745" data-icon="droplet"></div>
-      <div class="q-txt"><div class="q-title">Bag Seal</div><div class="q-sub">Visual, Dunk Tank &amp; Printing</div></div>
-      <div class="q-chev">›</div>
-    </button>
-    <button class="qa-btn" onclick="goTo('screen-gmp')">
-      <div class="q-ico" style="background:rgba(255,149,0,0.1);color:#e08600" data-icon="clipboard"></div>
-      <div class="q-txt"><div class="q-title">GMP Audit</div><div class="q-sub">SQF # 2.5.D.A Daily Facility Audit</div></div>
-      <div class="q-chev">›</div>
-    </button>
-  </div>
-
-  <div class="sec-label">Recent Activity</div>
-  <div id="home-recent"></div>
 </div>
 
-<!-- TOPBAR (escritorio) -->
-<div class="topstack" id="topstack">
-<header class="topbar" id="topbar">
-  <div class="tb-crumb" id="tb-crumb"></div>
-  <div class="tb-spacer"></div>
-  <span class="tb-chip"><span class="tb-dot"></span>Synced</span>
-  <span class="tb-stamp" id="tb-stamp"></span>
-  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span data-icon="user"></span><span id="tb-uname"></span></button>
-  <div class="user-menu" id="user-menu">
-    <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
-    <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
-    <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
-  </div>
-</header>
-<nav class="module-bar" id="module-bar"></nav>
-<div class="module-sub" id="module-sub"></div>
+<!-- MODULO: sus funciones como tarjetas -->
+<div class="screen" id="screen-module">
+  <div class="mod-hero" id="mod-hero"></div>
+  <div class="mcards" id="mod-cards"></div>
 </div>
 
-<!-- DRAWER -->
-<!-- WEIGHT -->
-<!-- PRODUCTION SCHEDULE -->
-<div class="screen" id="screen-production">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Production Schedule</div>
-  <div class="form-meta">Run order and QC checklist</div>
-
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="pr-date" style="width:100%" onchange="renderProduction()"></div>
-    <div class="field-group"><div class="sec-label">Shift</div>
-      <div class="select-wrap"><select class="field" id="pr-shift" onchange="renderProduction()">
-        <option value="1">1st Shift</option>
-        <option value="2">2nd Shift</option>
-      </select></div></div>
-  </div>
-
-  <div id="pr-summary"></div>
-
-  <div class="sec-label">Add run from the production sheet</div>
-  <div class="pr-add">
-    <input type="text" class="field" id="pr-product" list="pr-product-list" placeholder="Product #"
-           autocomplete="off" autocapitalize="characters">
-    <datalist id="pr-product-list"></datalist>
-    <select class="field" id="pr-line">
-      <option value="">Line</option>
-      <option value="1">Line 1</option>
-      <option value="2">Line 2</option>
-      <option value="3">Line 3</option>
-      <option value="4">Line 4</option>
-      <option value="5">Line 5</option>
-      <option value="6">Line 6</option>
-    </select>
-    <input type="time" class="time-input" id="pr-time">
-    <button class="btn-solid" onclick="addRun()">Add</button>
-  </div>
-  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="copySchedule()">
-    <span data-icon="calendar"></span>Copy schedule from another day</button>
-
-  <div id="pr-list"></div>
-</div>
 
 <!-- LAB SAMPLES -->
 <!-- SAMPLE ANALYSIS (COA) -->

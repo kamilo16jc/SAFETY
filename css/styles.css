@@ -829,17 +829,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .mod-tab.on{color:var(--mod);border-bottom-color:var(--mod)}
 .mod-tab.on .mod-ico{opacity:1}
 .mod-ico svg,.mod-tab svg{width:16px;height:16px}
-.module-sub{display:none;gap:4px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);
   border-bottom:1px solid var(--border)}
-.module-sub.open{display:flex;border-bottom:2px solid var(--mod,var(--border))}
-.mod-item{display:flex;align-items:center;gap:7px;white-space:nowrap;background:var(--bg);
   border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:inherit;
   font-size:12.5px;font-weight:600;padding:8px 12px;cursor:pointer}
-.mod-item:hover{color:var(--text);border-color:var(--muted)}
-.mod-item.on{background:var(--mod,var(--accent));border-color:var(--mod,var(--accent));color:#fff}
-.mod-item svg{width:14px;height:14px}
-.mod-item.soon{opacity:.45;cursor:default}
-.mod-item.soon::after{content:'soon';font-size:9px;text-transform:uppercase;letter-spacing:.5px;
   background:var(--border);color:var(--muted);border-radius:4px;padding:1px 4px;margin-left:2px}
 /* Menú de usuario en la barra superior */
 .tb-user{display:flex;align-items:center;gap:7px;background:none;border:1px solid var(--border);
@@ -857,13 +849,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .um-item:hover{background:var(--bg)}
 .um-item.danger{color:var(--fail)}
 .um-item svg{width:15px;height:15px}
-body.logged-out .module-bar,body.logged-out .module-sub,body.logged-out .tb-user{display:none}
+body.logged-out .module-bar,body.logged-out .tb-user{display:none}
 @media(max-width:700px){
   .module-bar{padding:0 10px}
   .mod-tab{font-size:12px;padding:11px 10px}
   .mod-tab span:not(.mod-ico){display:none}
   .mod-ico svg{width:19px;height:19px}
-  .module-sub{padding:9px 10px}
 }
 .mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
 .mcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:var(--surface);
@@ -882,3 +873,22 @@ body.logged-out .module-bar,body.logged-out .module-sub,body.logged-out .tb-user
    breadcrumb puede ocupar dos líneas sin tapar nada. */
 .topstack{position:sticky;top:0;z-index:90;background:var(--surface)}
 body.logged-out .topstack{display:none}
+
+/* ===== TARJETAS SÓLIDAS DE MÓDULO Y DE FUNCIÓN ===== */
+.mcard.solid{background:var(--mod);border:0;border-radius:14px;padding:18px 16px;color:#fff;
+  min-height:104px;justify-content:flex-end;box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s,filter .12s}
+.mcard.solid:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.mcard.solid:active{transform:translateY(0)}
+.mcard.solid b{color:#fff;font-size:15px;line-height:1.25}
+.mcard.solid .mcard-n{color:rgba(255,255,255,.78)}
+.mcard.solid .mcard-ico{color:#fff;opacity:.95;margin-bottom:auto}
+.mcard.solid .mcard-ico svg{width:24px;height:24px}
+.mcard.solid.soon{opacity:.5;cursor:default}
+.mcard.solid.soon:hover{filter:none;transform:none}
+/* Cabecera de la pantalla de módulo */
+.mod-hero{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.mod-hero-ico{display:flex;align-items:center;justify-content:center;width:46px;height:46px;
+  border-radius:12px;background:var(--mod);color:#fff;flex-shrink:0}
+.mod-hero-ico svg{width:23px;height:23px}
+.mod-hero b{display:block;font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.mod-hero span{font-size:12.5px;color:var(--muted)}
