@@ -196,6 +196,34 @@ function toggleRunCheck(id, field){
   refreshRunViews();
 }
 
+// Al guardar un peso, si ese producto está programado hoy y todavía debe una
+// muestra de laboratorio, se ofrece marcarla como recogida: es justo el momento
+// en que QA está parado en la línea.
+function offerRunCollect(rec){
+  if(!rec || !rec.product || rec.issue) return;
+  var day = String(rec.date).slice(0,10);
+  var run = getRuns().filter(function(r){
+    return String(r.date).slice(0,10)===day &&
+           String(r.shift)===String(rec.shift) &&
+           String(r.line)===String(rec.line) &&
+           String(r.product||'')===String(rec.product||'') &&
+           r.labSample && !r.collected;
+  })[0];
+  if(!run) return;
+
+  var c = runCustomer(run);
+  var tests = c ? (c.tests||[]).join(', ') : '';
+  showGuardModal({
+    title: 'Lab sample due — '+(run.productName || run.product),
+    detail: 'Line '+run.line+(c ? ' · '+c.company : '')+(tests ? ' · '+tests : ''),
+    ask: 'Did you collect the lab sample from the line?',
+    primaryLabel: 'Yes, collected',
+    onPrimary: function(){ closeDupModal(); toggleRunCheck(run.id, 'collected'); },
+    secondaryLabel: 'Not yet',
+    onSecondary: closeDupModal
+  });
+}
+
 // ===== NUMERACIÓN DE SAMPLES =====
 // El contador es POR CLIENTE (cada cliente lleva su propia enumeración) y
 // se resetea cada semana. Como parte de las muestras se recogen fuera del

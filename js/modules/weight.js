@@ -288,6 +288,9 @@ function commitWeight(){
   if(rec.pass!=null && rec.pass < rec.total) playAlert('fail'); else playAlert('pass');
   toast('Record saved!');
   updateDupHint();
+  // Si ese producto está en el schedule y debe muestra de lab, ofrecer marcarla.
+  // Con un respiro para que cierre el modal de duplicidad si venía de ahí.
+  if(typeof offerRunCollect==='function') setTimeout(function(){ offerRunCollect(rec); }, 200);
 }
 
 // Registra un issue de línea (Labeling / On break / Line down) en vez de un peso.
