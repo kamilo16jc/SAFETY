@@ -21,6 +21,7 @@ function goTo(id){
   if(id==='screen-shift') initShift();
   if(id==='screen-production') initProduction();
   if(id==='screen-lab') initLab();
+  if(id==='screen-analysis') initAnalysis();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -33,6 +34,7 @@ var CRUMBS = {
   'screen-home':     ['', 'Home'],
   'screen-production':['Capture', 'Production Schedule'],
   'screen-lab':      ['Capture', 'Lab Samples'],
+  'screen-analysis': ['Capture', 'Sample Analysis'],
   'screen-weight':   ['Capture', 'Weight Log'],
   'screen-seal':     ['Capture', 'Bag Seal'],
   'screen-gmp':      ['Capture', 'GMP Audit'],

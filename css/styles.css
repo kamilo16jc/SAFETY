@@ -878,3 +878,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .lt-item input{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
 .lt-item.off{color:var(--dim)}
 .lt-item em{font-style:normal;color:var(--warn);font-size:10px}
+.an-vals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.an-vals span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);margin-bottom:4px}
+.an-vals .field{margin-bottom:0}

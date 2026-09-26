@@ -30,23 +30,24 @@ function runsFor(date, shift){
   });
 }
 
-// ---- Testeado automático desde los registros reales ----
+// ---- Testeado: viene del ANÁLISIS capturado, no de los pesos ----
+// Los pesos se toman con el producto que esté corriendo, así que un registro de
+// peso no prueba que este producto programado se haya analizado. Lo que sí lo
+// prueba es tener su Moisture / Fat / pH capturados.
 function runTestCount(run){
-  var db = getDB();
   var day = String(run.date).slice(0,10);
-  var match = function(r){
-    if(r.issue) return false;                       // un issue de línea no es un test
-    return String(r.date||'').slice(0,10)===day &&
-           String(r.shift)===String(run.shift) &&
-           String(r.line)===String(run.line) &&
-           String(r.product||'')===String(run.product||'');
-  };
-  var w = (db.weights||[]).filter(match).length;
-  var s = (db.seals||[]).filter(match).length;
-  var auto = (w+s)>0;
-  // Si no hay registro que lo pruebe, QA puede marcarlo a mano (queda constancia)
+  var list = (typeof getAnalyses==='function') ? getAnalyses().filter(function(a){
+    if(a.runId && a.runId===run.id) return true;
+    return String(a.product||'')===String(run.product||'') &&
+           String(a.date||'').slice(0,10)===day;
+  }) : [];
+  var full = list.filter(function(a){
+    return (typeof analysisComplete==='function') ? analysisComplete(a) : true; }).length;
+  var auto = list.length>0;
+  // Si no hay análisis que lo pruebe, QA puede marcarlo a mano (queda constancia)
   var manual = !!run.testedManual;
-  return {w:w, s:s, auto:auto, manual:manual, tested: auto || manual};
+  return {n:list.length, full:full, seq:(list[0]||{}).seq,
+          auto:auto, manual:manual, tested: auto || manual};
 }
 
 // Marca "testeado" a mano. Solo cuando no hay registro que lo confirme: lo que
@@ -369,17 +370,20 @@ function renderProduction(){
             (r.sampleFrom ? ' · samples '+r.sampleFrom+'–'+r.sampleTo : ''),
             'toggleRunCheck('+r.id+",'collected')")+
         (t.auto
-          // Confirmado por los registros: no se puede desmarcar
+          // Confirmado por el análisis capturado: no se puede desmarcar
           ? '<div class="run-chk auto on"><span class="run-box">✓</span>Tested'+
-              '<span class="run-auto">'+t.w+' weight · '+t.s+' seal</span></div>'
-          // Sin registro: QA lo puede marcar a mano
+              '<span class="run-auto">analysis #'+(t.seq||'—')+
+                (t.full<t.n||!t.full ? ' · partial' : '')+'</span></div>'
+          // Sin análisis: capturarlo, o marcarlo a mano
           : '<button class="run-chk'+(t.manual?' on':'')+'" onclick="toggleRunTested('+r.id+')">'+
               '<span class="run-box">'+(t.manual?'✓':'')+'</span>Tested'+
-              '<span class="run-auto">'+(t.manual?'marked manually':'no records — tap if tested')+'</span>'+
+              '<span class="run-auto">'+(t.manual?'marked manually':'no analysis yet')+'</span>'+
             '</button>')+
         (r.labSample ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
       '</div>'+
       '<div class="run-actions">'+
+        (t.auto ? '' :
+          '<button class="btn-ghost" onclick="analysisFromRun('+r.id+')"><span data-icon="clipboard"></span>Enter analysis</button>')+
         '<button class="btn-ghost" onclick="holdFromRun('+r.id+')"><span data-icon="lock"></span>Place on hold</button>'+
         '<button class="btn-ghost" onclick="capaFromRun('+r.id+')"><span data-icon="alert"></span>Open CAPA</button>'+
       '</div>'+

@@ -120,6 +120,7 @@
     <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
     <div class="nav-label">Capture</div>
     <button class="d-item" data-screen="screen-production" onclick="navDrawer('screen-production')"><span class="d-ico" data-icon="calendar"></span>Production</button>
+    <button class="d-item" data-screen="screen-analysis" onclick="navDrawer('screen-analysis')"><span class="d-ico" data-icon="clipboard"></span>Sample Analysis</button>
     <button class="d-item" data-screen="screen-lab" onclick="navDrawer('screen-lab')"><span class="d-ico" data-icon="droplet"></span>Lab Samples</button>
     <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
     <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
@@ -194,6 +195,52 @@
 </div>
 
 <!-- LAB SAMPLES -->
+<!-- SAMPLE ANALYSIS (COA) -->
+<div class="screen" id="screen-analysis">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Sample Analysis</div>
+  <div class="form-meta">Moisture, Fat and pH — this is what marks a product as tested</div>
+
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">Date</div>
+      <input type="date" class="time-input" id="an-date" style="width:100%"></div>
+    <div class="field-group"><div class="sec-label">Tested by</div>
+      <input type="text" class="field" id="an-by" placeholder="Initials"></div>
+  </div>
+  <div class="sec-label">Product Number</div>
+  <input type="text" class="field" id="an-product" list="an-product-list" placeholder="Product #"
+         autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()">
+  <datalist id="an-product-list"></datalist>
+  <div id="an-customer-hint"></div>
+  <div class="sec-label">Cheese / Description</div>
+  <input type="text" class="field" id="an-cheese" placeholder="Description">
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">Production Date</div>
+      <input type="text" class="field" id="an-proddate" placeholder="e.g. 26002"></div>
+    <div class="field-group"><div class="sec-label">Order #</div>
+      <input type="text" class="field" id="an-order" placeholder="Order"></div>
+  </div>
+  <div class="sec-label">PO #</div>
+  <input type="text" class="field" id="an-po" placeholder="PO">
+
+  <div class="sec-label">Results</div>
+  <div class="an-vals">
+    <div><span>Moisture</span><input type="text" class="field" id="an-moisture" inputmode="decimal" placeholder="%"></div>
+    <div><span>Fat</span><input type="text" class="field" id="an-fat" inputmode="decimal" placeholder="%"></div>
+    <div><span>pH</span><input type="text" class="field" id="an-ph" inputmode="decimal" placeholder="pH"></div>
+  </div>
+  <button class="main-btn" onclick="saveAnalysis()">Save Analysis</button>
+
+  <div class="sec-label" style="margin-top:22px">History</div>
+  <div class="pair">
+    <div class="field-group"><input type="date" class="time-input" id="an-from" style="width:100%" onchange="renderAnalysis()"></div>
+    <div class="field-group"><input type="date" class="time-input" id="an-to" style="width:100%" onchange="renderAnalysis()"></div>
+  </div>
+  <input type="text" class="field" id="an-search" placeholder="Search product, cheese, customer, order…" oninput="renderAnalysis()">
+  <div id="an-summary"></div>
+  <div id="an-list"></div>
+</div>
+
 <div class="screen" id="screen-lab">
   <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Lab Samples</div>
@@ -1220,6 +1267,7 @@
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>
 <script src="js/modules/lab.js"></script>
+<script src="js/modules/analysis.js"></script>
 <script src="js/modules/lab-tests.js"></script>
 <script src="js/modules/lab-form.js"></script>
 <script src="js/modules/weight.js"></script>
