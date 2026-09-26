@@ -49,6 +49,15 @@ function productLabTests(p){
   return c ? (c.tests||[]) : [];
 }
 
+// Código que va en la columna "Product Description" de la forma del laboratorio:
+// prefijo del cliente + número de producto. El prefijo viene de Firestore.
+// Solo aplica a productos que se mandan al lab.
+function productLabCode(p){
+  var c = productCustomer(p);
+  if(!c) return '';
+  return (c.prefix || c.customerId || '') + normNumber(p && p.number);
+}
+
 // Al escribir el número en el modal, muestra el cliente detectado y sus tests,
 // y marca solo la casilla de "Lab sample".
 function onProdNumberInput(){

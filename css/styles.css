@@ -866,3 +866,5 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .samp-edit{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .samp-edit .field{margin:0;padding:6px 8px;text-align:center}
 @media (max-width:520px){ .samp-edit{grid-template-columns:repeat(3,1fr)} }
+.lab-code{font-size:11px;color:var(--muted);margin-top:5px}
+.lab-code b{color:var(--text);font-size:12px}

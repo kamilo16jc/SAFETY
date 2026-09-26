@@ -58,10 +58,12 @@ function labCustomerLine(r){
   var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
   var c = (typeof productCustomer==='function') ? productCustomer(p || {number:r.product}) : null;
   if(!c) return '';
+  var code = (c.prefix || c.customerId || '') + String(r.product||'').trim().toUpperCase();
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
     '<div class="cust-tests">'+(c.tests||[]).map(function(t){
-      return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+'</div></div>';
+      return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+'</div>'+
+    '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div></div>';
 }
 
 function hhmm(iso){

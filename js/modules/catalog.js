@@ -173,6 +173,8 @@ function catalogCustomerBlock(p){
     '</div>'+
     '<div class="select-wrap"><select class="field" id="cd-customer" onchange="onCatalogCustomerChange()">'+opts+'</select></div>'+
     '<div class="cust-tests" id="cd-cust-tests">'+custTestsHTML(sel)+'</div>'+
+    (sel ? '<div class="lab-code">Lab form code: <b class="mono">'+
+             esc((sel.prefix||sel.customerId||'')+normNumber(p.number))+'</b></div>' : '')+
   '</div>';
 }
 
