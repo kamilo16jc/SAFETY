@@ -1108,6 +1108,8 @@
     <div class="sec-label">Product Number</div>
     <input type="text" class="field" id="prod-number" placeholder="e.g. 880" autocapitalize="characters"
            oninput="onProdNumberInput()">
+    <div class="sec-label">Customer <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· para muestras de laboratorio</span></div>
+    <div class="select-wrap"><select class="field" id="prod-customer" onchange="onProdCustomerChange()"></select></div>
     <div id="prod-customer-hint"></div>
     <div class="sec-label">Description</div>
     <input type="text" class="field" id="prod-name" placeholder="e.g. Shredded Mozzarella">

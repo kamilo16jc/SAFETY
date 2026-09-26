@@ -58,23 +58,47 @@ function productLabCode(p){
   return (c.prefix || c.customerId || '') + normNumber(p && p.number);
 }
 
-// Al escribir el número en el modal, muestra el cliente detectado y sus tests,
-// y marca solo la casilla de "Lab sample".
+// Llena el selector de clientes del modal de producto
+function fillProdCustomerSelect(sel){
+  var el = document.getElementById('prod-customer');
+  if(!el) return;
+  el.innerHTML = '<option value="">— none —</option>' + getCustomers().map(function(c){
+    return '<option value="'+esc(c.customerId)+'"'+(c.customerId===sel?' selected':'')+'>'+
+      esc(c.company)+' ('+esc(c.customerId)+')'+'</option>';
+  }).join('');
+}
+
+// Al escribir el número, si pertenece a un cliente conocido lo selecciona solo.
+// Si no (p.ej. un cliente sin lista de productos), se elige a mano.
 function onProdNumberInput(){
+  var c = findCustomerByProduct(document.getElementById('prod-number').value);
+  // Si el número no pertenece a nadie se limpia: nunca debe quedarse pegado
+  // el cliente del producto anterior.
+  fillProdCustomerSelect(c ? c.customerId : '');
+  onProdCustomerChange();
+}
+
+// Cambio manual de cliente: refresca tests, código de forma y marca Lab sample
+function onProdCustomerChange(){
   var el = document.getElementById('prod-customer-hint');
   if(!el) return;
-  var c = findCustomerByProduct(document.getElementById('prod-number').value);
-  el.innerHTML = c ? customerHintHTML(c) : '';
+  var id = (document.getElementById('prod-customer')||{}).value || '';
+  var c  = id ? customerById(id) : null;
+  var num = normNumber((document.getElementById('prod-number')||{}).value);
+  el.innerHTML = c ? customerHintHTML(c, num) : '';
   var chk = document.getElementById('prod-lab');
   if(chk && c) chk.checked = true;
 }
 
-function customerHintHTML(c){
+function customerHintHTML(c, number){
+  var code = (c.prefix || c.customerId || '') + (number||'');
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
     '<div class="cust-tests">Required lab tests: '+
       (c.tests||[]).map(function(t){ return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+
-    '</div></div>';
+    '</div>'+
+    (number ? '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div>' : '')+
+  '</div>';
 }
 
 function normNumber(v){
@@ -201,6 +225,8 @@ function openProductModal(screen){
   document.getElementById('prod-max').value = '';
   document.getElementById('prod-barcode').value = pendingBarcode || '';
   var labChk = document.getElementById('prod-lab'); if(labChk) labChk.checked = false;
+  fillProdCustomerSelect('');
+  onProdNumberInput();   // si el número ya venía escrito, detecta el cliente
 
   var sel = document.getElementById('prod-pkg');
   sel.innerHTML = '<option value="">Select package size</option>'+
@@ -263,7 +289,8 @@ function saveProduct(){
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
     labSample: !!(document.getElementById('prod-lab')||{}).checked,
-    customerId: (findCustomerByProduct(number)||{}).customerId || '',
+    customerId: ((document.getElementById('prod-customer')||{}).value)
+                || (findCustomerByProduct(number)||{}).customerId || '',
     barcodes: barcode ? [barcode] : [],
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()
