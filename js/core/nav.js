@@ -26,7 +26,52 @@ function goTo(id){
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
   });
+  // El modulo activo define el alcance de Search / Reports / Shift Report
+  if(id!=='screen-login' && id!=='screen-home'){
+    var m = (typeof moduleOfScreen==='function') ? moduleOfScreen(id) : null;
+    if(m) activeModule = m;
+  }
+  if(typeof renderModuleBar==='function') renderModuleBar(id);
   updateTopbar(id);
+}
+
+// ===== BARRA DE MODULOS (reemplaza el panel lateral) =====
+// Al elegir un modulo se despliegan sus funciones debajo; la pantalla activa
+// queda marcada. Los modulos que el usuario no tiene no se pintan.
+function selectModule(id){
+  activeModule = id;
+  var m = moduleById(id);
+  renderModuleBar(null);
+  if(m && m.items.length){
+    var first = m.items.filter(function(i){ return !i.soon; })[0];
+    if(first) goTo(first.screen);
+  }
+}
+
+function renderModuleBar(current){
+  var bar = document.getElementById('module-bar');
+  var sub = document.getElementById('module-sub');
+  if(!bar || !sub) return;
+  if(!currentUser){ bar.innerHTML=''; sub.innerHTML=''; return; }
+
+  var mods = myModules();
+  bar.innerHTML = mods.map(function(m){
+    return '<button class="mod-tab'+(m.id===activeModule?' on':'')+'" style="--mod:'+m.color+'" onclick="selectModule(\''+m.id+'\')">'+
+      '<span class="mod-ico" data-icon="'+m.icon+'"></span>'+esc(m.name)+'</button>';
+  }).join('');
+
+  var m = moduleById(activeModule);
+  if(!m){ sub.innerHTML=''; sub.classList.remove('open'); renderIcons(bar); return; }
+  sub.style.setProperty('--mod', m.ink);
+  var screen = current || (document.querySelector('.screen.active')||{}).id;
+  sub.innerHTML = m.items.map(function(i){
+    if(i.soon) return '<span class="mod-item soon" title="Coming soon">'+
+      '<span data-icon="'+i.icon+'"></span>'+esc(i.name)+'</span>';
+    return '<button class="mod-item'+(i.screen===screen?' on':'')+'" onclick="goTo(\''+i.screen+'\')">'+
+      '<span data-icon="'+i.icon+'"></span>'+esc(i.name)+'</button>';
+  }).join('');
+  sub.classList.add('open');
+  renderIcons(bar); renderIcons(sub);
 }
 
 // ===== TOPBAR (sólo visible en escritorio) =====
@@ -56,6 +101,8 @@ function updateTopbar(id){
   var bar = document.getElementById('topbar');
   if(!bar) return;
   var c = CRUMBS[id] || ['', ''];
+  var am = (typeof moduleById==='function' && activeModule) ? moduleById(activeModule) : null;
+  if(am) c = [am.name, c[1]];
   var el = document.getElementById('tb-crumb');
   if(el) el.innerHTML = '<span class="tb-eyebrow">'+(c[0]||'SAFETY')+'</span><b>'+c[1]+'</b>';
   var st = document.getElementById('tb-stamp');
@@ -68,31 +115,25 @@ function toast(msg){
   setTimeout(function(){t.classList.remove('show')},2500);
 }
 
-// ===== DRAWER =====
-// Ficha del usuario en el pie de la barra lateral
+// ===== MENÚ DE USUARIO (antes iba en el pie del panel lateral) =====
 function setDrawerUser(){
   if(!currentUser) return;
-  var b=document.getElementById('user-badge');   if(b) b.textContent = currentUser.name;
-  var r=document.getElementById('drawer-role');  if(r) r.textContent = currentUser.role;
-  var a=document.getElementById('user-initials');
-  if(a) a.textContent = currentUser.name.split(' ').map(function(n){return n[0]}).join('').slice(0,2).toUpperCase();
+  var n=document.getElementById('tb-uname'); if(n) n.textContent = currentUser.name.split(' ')[0];
+  var a=document.getElementById('um-name');  if(a) a.textContent = currentUser.name;
+  var r=document.getElementById('um-role');  if(r) r.textContent = currentUser.role;
 }
-
-function openDrawer(){
+function toggleUserMenu(){
+  var m=document.getElementById('user-menu'); if(!m) return;
   setDrawerUser();
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('drawer-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  m.classList.toggle('open');
 }
-function closeDrawer(){
-  document.getElementById('drawer').classList.remove('open');
-  document.getElementById('drawer-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function navDrawer(id){
-  closeDrawer();
-  goTo(id);
-}
+// Cerrar el menú al tocar fuera
+document.addEventListener('click', function(e){
+  var m=document.getElementById('user-menu'), b=document.getElementById('tb-user');
+  if(!m || !m.classList.contains('open')) return;
+  if(m.contains(e.target) || (b && b.contains(e.target))) return;
+  m.classList.remove('open');
+});
 
 // ===== HOME =====
 function updateDate(){
@@ -134,6 +175,18 @@ function initHome(){
   var sealFails=(db.seals||[]).filter(isToday).filter(function(s){
     return Object.keys(s.checks||{}).some(function(k){ return s.checks[k]==='fail'; });
   }).length;
+
+  // Lanzador de módulos: cada uno con su color
+  var ml=document.getElementById('home-modules');
+  if(ml && typeof myModules==='function'){
+    ml.innerHTML = myModules().map(function(m){
+      var n=m.items.filter(function(i){return !i.soon;}).length;
+      return '<button class="mcard" style="--mod:'+m.ink+'" onclick="selectModule(\''+m.id+'\')">'+
+        '<span class="mcard-ico" data-icon="'+m.icon+'"></span>'+
+        '<b>'+esc(m.name)+'</b><span class="mcard-n">'+n+' functions</span></button>';
+    }).join('');
+    renderIcons(ml);
+  }
 
   document.getElementById('home-tiles').innerHTML =
     tile("goTo('screen-dashboard')", lineCount?lineCount+' line(s) active':'none logged yet',

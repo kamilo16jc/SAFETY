@@ -65,7 +65,6 @@
 <!-- HOME -->
 <div class="screen" id="screen-home">
   <div class="app-header">
-    <button class="menu-btn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
     <div style="display:flex;align-items:center;gap:8px">
       <div id="sync-status" style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0.08em;display:none"></div>
       <div class="header-badge" id="home-date"></div>
@@ -76,6 +75,7 @@
   <div class="home-name" id="home-name">&nbsp;</div>
 
   <div class="sec-label" style="margin-top:28px">Today</div>
+  <div class="mcards" id="home-modules"></div>
   <div class="tiles" id="home-tiles"></div>
 
   <div class="sec-label">Quick Actions</div>
@@ -102,56 +102,24 @@
 </div>
 
 <!-- TOPBAR (escritorio) -->
+<div class="topstack" id="topstack">
 <header class="topbar" id="topbar">
   <div class="tb-crumb" id="tb-crumb"></div>
   <div class="tb-spacer"></div>
   <span class="tb-chip"><span class="tb-dot"></span>Synced</span>
   <span class="tb-stamp" id="tb-stamp"></span>
+  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span data-icon="user"></span><span id="tb-uname"></span></button>
+  <div class="user-menu" id="user-menu">
+    <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
+    <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
+    <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
+  </div>
 </header>
+<nav class="module-bar" id="module-bar"></nav>
+<div class="module-sub" id="module-sub"></div>
+</div>
 
 <!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer">
-  <div class="d-head">
-    <img id="header-logo" style="height:32px;object-fit:contain" alt="SAFETY">
-    <div class="d-brand-sub">QUALITY &amp; FOOD SAFETY</div>
-  </div>
-  <nav class="d-nav">
-    <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
-    <div class="nav-label">Capture</div>
-    <button class="d-item" data-screen="screen-production" onclick="navDrawer('screen-production')"><span class="d-ico" data-icon="calendar"></span>Production</button>
-    <button class="d-item" data-screen="screen-analysis" onclick="navDrawer('screen-analysis')"><span class="d-ico" data-icon="clipboard"></span>Sample Analysis</button>
-    <button class="d-item" data-screen="screen-lab" onclick="navDrawer('screen-lab')"><span class="d-ico" data-icon="droplet"></span>Lab Samples</button>
-    <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
-    <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
-    <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
-    <button class="d-item" data-screen="screen-temp" onclick="navDrawer('screen-temp')"><span class="d-ico" data-icon="thermo"></span>Temp &amp; Humidity</button>
-    <button class="d-item" data-screen="screen-metal" onclick="navDrawer('screen-metal')"><span class="d-ico" data-icon="magnet"></span>Metal Detector</button>
-    <button class="d-item" data-screen="screen-capa" onclick="navDrawer('screen-capa')"><span class="d-ico" data-icon="alert"></span>Incident &amp; CAPA</button>
-    <button class="d-item" data-screen="screen-shift" onclick="navDrawer('screen-shift')"><span class="d-ico" data-icon="note"></span>Shift Reports</button>
-    <div class="nav-label">Review</div>
-    <button class="d-item" data-screen="screen-dashboard" onclick="navDrawer('screen-dashboard')"><span class="d-ico" data-icon="chart"></span>Dashboard</button>
-    <button class="d-item" data-screen="screen-reports" onclick="navDrawer('screen-reports')"><span class="d-ico" data-icon="doc"></span>Reports</button>
-    <button class="d-item" data-screen="screen-lotsearch" onclick="navDrawer('screen-lotsearch')"><span class="d-ico" data-icon="search"></span>Search</button>
-    <button class="d-item" data-screen="screen-hold" onclick="navDrawer('screen-hold')"><span class="d-ico" data-icon="lock"></span>Hold Cases</button>
-    <button class="d-item" data-screen="screen-activity" onclick="navDrawer('screen-activity')"><span class="d-ico" data-icon="pulse"></span>Activity Log</button>
-    <div class="nav-label">Setup</div>
-    <button class="d-item" data-screen="screen-products" onclick="navDrawer('screen-products')"><span class="d-ico" data-icon="box"></span>Products</button>
-    <button class="d-item" id="admin-card" style="display:none" data-screen="screen-admin" onclick="navDrawer('screen-admin')"><span class="d-ico" data-icon="sliders"></span>Admin</button>
-  </nav>
-  <div class="d-foot">
-    <button class="d-item" onclick="toggleDarkMode()"><span class="d-ico" id="dark-btn" data-icon="moon"></span>Appearance</button>
-    <button class="d-item danger" onclick="closeDrawer();logoutUser()"><span class="d-ico" data-icon="logout"></span>Log Out</button>
-    <div class="d-user">
-      <div class="d-avatar" id="user-initials"></div>
-      <div class="d-user-txt">
-        <div id="user-badge"></div>
-        <div class="d-role" id="drawer-role"></div>
-      </div>
-    </div>
-  </div>
-</aside>
-
 <!-- WEIGHT -->
 <!-- PRODUCTION SCHEDULE -->
 <div class="screen" id="screen-production">
@@ -1260,6 +1228,7 @@
 <script type="module" src="js/core/firebase.js"></script>
 <script src="js/core/data.js"></script>
 <script src="js/core/icons.js"></script>
+<script src="js/core/modules.js"></script>
 <script src="js/core/nav.js"></script>
 <script src="js/core/dup-guard.js"></script>
 <script src="js/modules/products.js"></script>

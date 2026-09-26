@@ -160,9 +160,9 @@ function loginSuccess() {
   logActivity('login','User logged in','Role: '+currentUser.role, currentUser.name);
   startCheckTimer();
 
-  // Show admin card only for admins
-  var adminCard = document.getElementById('admin-card');
-  if(adminCard) adminCard.style.display = currentUser.role==='admin' ? 'flex' : 'none';
+  // La barra de módulos se arma según los módulos del usuario
+  activeModule = null;
+  if(typeof renderModuleBar==='function') renderModuleBar(null);
 
   goTo('screen-home');
 }
