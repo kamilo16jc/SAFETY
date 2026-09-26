@@ -159,7 +159,7 @@ function renderCatalogDetail(){
 }
 
 // Cliente del producto + los tests que exige. El número suele bastar, pero los
-// clientes marcados "all items" (p.ej. Nuestro Queso) hay que asignarlos a mano.
+// clientes marcados "all items" (no listan números) hay que asignarlos a mano.
 function catalogCustomerBlock(p){
   var auto = findCustomerByProduct(p.number);
   var cur  = p.customerId || (auto ? auto.customerId : '');
