@@ -18,6 +18,56 @@ function saveProducts(list){
   saveDB(db);
 }
 
+// ===== CLIENTES Y TESTS DE LABORATORIO =====
+// La matriz de clientes vive en Firestore (config/customers), no en el repo.
+function getCustomers(){ var d=getDB(); return (d.customers && d.customers.list) || []; }
+function getLabTests(){  var d=getDB(); return (d.customers && d.customers.tests) || []; }
+
+// ¿A qué cliente pertenece este número de producto?
+function findCustomerByProduct(number){
+  var n = normNumber(number); if(!n) return null;
+  var list = getCustomers();
+  for(var i=0;i<list.length;i++){
+    var c = list[i];
+    if((c.products||[]).some(function(p){ return normNumber(p)===n; })) return c;
+  }
+  return null;
+}
+function customerById(id){
+  return getCustomers().filter(function(c){ return c.customerId===id; })[0] || null;
+}
+// Cliente de un producto: el asignado a mano gana (necesario para los clientes
+// marcados "all items", que no listan números), si no se deduce del número.
+function productCustomer(p){
+  if(!p) return null;
+  if(p.customerId){ var m = customerById(p.customerId); if(m) return m; }
+  return findCustomerByProduct(p.number);
+}
+// Tests que exige el cliente de ese producto
+function productLabTests(p){
+  var c = productCustomer(p);
+  return c ? (c.tests||[]) : [];
+}
+
+// Al escribir el número en el modal, muestra el cliente detectado y sus tests,
+// y marca solo la casilla de "Lab sample".
+function onProdNumberInput(){
+  var el = document.getElementById('prod-customer-hint');
+  if(!el) return;
+  var c = findCustomerByProduct(document.getElementById('prod-number').value);
+  el.innerHTML = c ? customerHintHTML(c) : '';
+  var chk = document.getElementById('prod-lab');
+  if(chk && c) chk.checked = true;
+}
+
+function customerHintHTML(c){
+  return '<div class="cust-hint">'+
+    '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
+    '<div class="cust-tests">Required lab tests: '+
+      (c.tests||[]).map(function(t){ return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+
+    '</div></div>';
+}
+
 function normNumber(v){
   return String(v||'').trim().toUpperCase();
 }
@@ -204,6 +254,7 @@ function saveProduct(){
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
     labSample: !!(document.getElementById('prod-lab')||{}).checked,
+    customerId: (findCustomerByProduct(number)||{}).customerId || '',
     barcodes: barcode ? [barcode] : [],
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()

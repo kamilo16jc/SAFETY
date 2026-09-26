@@ -145,6 +145,7 @@ function renderCatalogDetail(){
       '</div>'+
       '<label class="lab-check"><input type="checkbox" id="cd-lab"'+(p.labSample?' checked':'')+'>'+
         '<span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>'+
+      catalogCustomerBlock(p)+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
         '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
@@ -155,6 +156,36 @@ function renderCatalogDetail(){
       '<button class="btn-solid" onclick="saveCatalogEdits()">Save changes</button>'+
       (canDelete ? '<button class="btn-danger" onclick="deleteCatalogProduct()">Delete</button>' : '')+
     '</div>';
+}
+
+// Cliente del producto + los tests que exige. El número suele bastar, pero los
+// clientes marcados "all items" (p.ej. Nuestro Queso) hay que asignarlos a mano.
+function catalogCustomerBlock(p){
+  var auto = findCustomerByProduct(p.number);
+  var cur  = p.customerId || (auto ? auto.customerId : '');
+  var opts = '<option value="">— none —</option>' + getCustomers().map(function(c){
+    return '<option value="'+esc(c.customerId)+'"'+(c.customerId===cur?' selected':'')+'>'+
+      esc(c.company)+' ('+esc(c.customerId)+')'+(c.allItems?' · all items':'')+'</option>';
+  }).join('');
+  var sel = cur ? customerById(cur) : null;
+  return '<div class="field-group"><div class="sec-label">Customer '+
+      (auto ? '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· detected from the product number</span>' : '')+
+    '</div>'+
+    '<div class="select-wrap"><select class="field" id="cd-customer" onchange="onCatalogCustomerChange()">'+opts+'</select></div>'+
+    '<div class="cust-tests" id="cd-cust-tests">'+custTestsHTML(sel)+'</div>'+
+  '</div>';
+}
+
+function custTestsHTML(c){
+  if(!c || !(c.tests||[]).length) return '';
+  return 'Required lab tests: '+c.tests.map(function(t){
+    return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ');
+}
+
+function onCatalogCustomerChange(){
+  var id = document.getElementById('cd-customer').value;
+  var el = document.getElementById('cd-cust-tests');
+  if(el) el.innerHTML = custTestsHTML(id ? customerById(id) : null);
 }
 
 // Cuántos registros usan el producto (para saber qué se arrastra al editarlo)
@@ -190,6 +221,7 @@ function saveCatalogEdits(){
   p.target = (!isNaN(mn) && !isNaN(mx)) ? {min:mn, max:mx} : null;
   p.bagsPerCase = isNaN(bags) ? null : bags;
   p.labSample = !!(document.getElementById('cd-lab')||{}).checked;
+  p.customerId = (document.getElementById('cd-customer')||{}).value || '';
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
 

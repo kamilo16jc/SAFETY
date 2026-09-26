@@ -53,6 +53,17 @@ function markLabSent(id){
     currentUser?currentUser.name:'—');
 }
 
+// Cliente del producto y los tests que exige (viene de Firestore, config/customers)
+function labCustomerLine(r){
+  var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+  var c = (typeof productCustomer==='function') ? productCustomer(p || {number:r.product}) : null;
+  if(!c) return '';
+  return '<div class="cust-hint">'+
+    '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
+    '<div class="cust-tests">'+(c.tests||[]).map(function(t){
+      return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+'</div></div>';
+}
+
 function hhmm(iso){
   var s = String(iso||'');
   var i = s.indexOf('T');
@@ -101,6 +112,7 @@ function renderLab(){
             fmtDate(r.date)+' · '+(r.shift===1?'1st':'2nd')+' shift</div>'+
         '</div>'+
       '</div>'+
+      labCustomerLine(r)+
       '<div class="lab-grid">'+
         '<div><span>LOT</span><b class="mono">'+esc(r.lot||'—')+'</b></div>'+
         '<div><span>Collected</span><b>'+(r.collected?hhmm(r.collectedAt):'—')+'</b></div>'+

@@ -1106,7 +1106,9 @@
       <button onclick="closeProductModal()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer"><span class="btn-ico" data-icon="close"></span></button>
     </div>
     <div class="sec-label">Product Number</div>
-    <input type="text" class="field" id="prod-number" placeholder="e.g. 880" autocapitalize="characters">
+    <input type="text" class="field" id="prod-number" placeholder="e.g. 880" autocapitalize="characters"
+           oninput="onProdNumberInput()">
+    <div id="prod-customer-hint"></div>
     <div class="sec-label">Description</div>
     <input type="text" class="field" id="prod-name" placeholder="e.g. Shredded Mozzarella">
     <div class="sec-label">Package Size</div>

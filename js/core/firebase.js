@@ -98,6 +98,11 @@
     onSnapshot(doc(db,'config','areas'), function(d){
       if(d.exists()){ var list=d.data().list||[]; if(list.length){ var ldb=getDB(); ldb.areas=list; saveDB(ldb); } }
     }, function(){});
+    // Clientes y tests de laboratorio requeridos. Es info confidencial: vive
+    // SOLO en Firestore (config/customers), nunca en el repo.
+    onSnapshot(doc(db,'config','customers'), function(d){
+      if(d.exists()){ var ldb=getDB(); ldb.customers=d.data(); saveDB(ldb); }
+    }, function(){});
     onSnapshot(doc(db,'config','operators'), function(d){
       if(d.exists()){ var list=d.data().list||[]; if(list.length){ var ldb=getDB(); ldb.operators=list; saveDB(ldb); } }
       if(window.initLogin) window.initLogin();
