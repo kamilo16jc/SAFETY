@@ -1,7 +1,7 @@
 // ===== TESTS DE LABORATORIO POR PRODUCTO =====
-// El test se guarda con su ETIQUETA EXACTA de la forma ("Salmonella (Vidas), 25g")
-// y no con un nombre genérico, porque las variantes (25g vs 125g, Vidas vs PCR)
-// son pruebas distintas. Al generar la forma la etiqueta se resuelve a columna.
+// El test se guarda con su ETIQUETA EXACTA tal como aparece en la forma, y no
+// con un nombre genérico: las variantes de gramaje y de método son pruebas
+// distintas. Al generar la forma la etiqueta se resuelve a columna.
 //
 // Se pre-cargan por defecto según lo que ya sabemos del cliente, pero se pueden
 // corregir producto por producto; queda la fecha de actualización.
