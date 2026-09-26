@@ -112,7 +112,11 @@ function updateTopbar(id){
   var el = document.getElementById('tb-crumb');
   if(el) el.innerHTML = '<span class="tb-eyebrow">'+(c[0]||'SAFETY')+'</span><b>'+c[1]+'</b>';
   var st = document.getElementById('tb-stamp');
-  if(st) st.textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · Building 1945';
+  if(st){
+    var now = new Date();
+    st.innerHTML = '<b>'+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+'</b>'+
+      '<span>'+now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'</span>';
+  }
 }
 
 function toast(msg){
@@ -145,6 +149,7 @@ document.addEventListener('click', function(e){
 
 // ===== HOME =====
 function updateDate(){
+  updateTopbar((document.querySelector('.screen.active')||{}).id||'screen-home');
   document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 }
 
