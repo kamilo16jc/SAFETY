@@ -4,13 +4,13 @@
    definition, system typography, one blue accent.
    ============================================================ */
 :root {
-  --font: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --radius:7px; --radius-sm:5px; --radius-lg:11px;
   --bg:#f7f6f3; --surface:#fefdfc; --surface2:#eeede8;
   --border:#d7dcd7; --accent:#005339; --accent-tint:#d0e9d7;
   --accent-fg:#fbfaf6; --accent-deep:#003a28;
-  --text:#16241e; --muted:#5f6d65; --dim:#8b978f;
+  --text:#0b1210; --muted:#3b4842; --dim:#6b7873;
   --pass:#1a8656; --pass-tint:#dfece3; --fail:#e7000b; --warn:#d49824; --warn-tint:#faf0d8;
   --rail:#132b22; --rail-2:#1d3d31; --rail-txt:#e2eae4; --rail-hi:#f6f9f7;
   --rail-dim:#8fa79a; --rail-mark:#60bb83;
@@ -36,12 +36,12 @@
 [data-theme="dark"] .rpt-filter-btn { background:var(--surface); color:var(--muted); border-color:var(--border); }
 [data-theme="dark"] .rpt-filter-btn.active { background:var(--accent); color:var(--accent-fg); }
 [data-theme="dark"] .home-btn { background:var(--surface) !important; border-color:var(--border) !important; color:var(--text) !important; }
-[data-theme="dark"] .sec-label { color:var(--muted); }
+[data-theme="dark"] .sec-label { color:var(--text); }
 [data-theme="dark"] .form-title { color:var(--text); }
 [data-theme="dark"] .back-btn { color:var(--muted); }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
 button,input,select,textarea{font-family:inherit}
 .screen{display:none;min-height:100vh;padding:20px 18px 32px;flex-direction:column}
 .screen.active{display:flex}
@@ -55,7 +55,7 @@ input[type=number]{-moz-appearance:textfield}
 .header-badge{font-size:12px;color:var(--muted);background:var(--surface);padding:6px 12px;border-radius:20px;font-weight:600;box-shadow:var(--shadow)}
 
 /* HOME */
-.home-greet{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:-0.01em}
+.home-greet{font-size:15px;color:var(--muted);font-weight:600;letter-spacing:-0.01em}
 .home-name{font-size:32px;font-weight:700;letter-spacing:-0.03em;line-height:1.15;margin-top:2px}
 .sec-label{font-size:12px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;font-weight:600;margin-bottom:10px}
 
@@ -132,7 +132,7 @@ input[type=number]{-moz-appearance:textfield}
 /* FORM */
 .back-btn{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--accent);font-size:14px;letter-spacing:-0.01em;cursor:pointer;margin-bottom:18px;padding:0;font-weight:600}
 .form-title{font-size:28px;font-weight:700;letter-spacing:-0.03em;margin-bottom:3px}
-.form-meta{font-size:12px;color:var(--muted);margin-bottom:22px}
+.form-meta{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:22px}
 .form-meta span{color:var(--accent);font-weight:600}
 .field{width:100%;background:var(--surface);border:1px solid transparent;border-radius:12px;padding:14px 16px;font-size:15px;color:var(--text);outline:none;margin-bottom:10px;transition:border-color 0.2s;box-shadow:var(--shadow)}
 .field:focus{border-color:var(--accent)}
@@ -211,7 +211,7 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding-righ
 .sample-row.pass{border-color:var(--pass)}
 .sample-row.fail{border-color:var(--fail)}
 .snum{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.06em;min-width:64px}
-.sinput{flex:1;background:none;border:none;outline:none;font-size:20px;font-weight:600;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.sinput{flex:1;min-width:0;background:none;border:none;outline:none;font-size:20px;font-weight:600;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
 .sicon{font-size:16px;min-width:20px;text-align:center}
 
 /* STATS */
@@ -481,7 +481,7 @@ canvas{width:100%!important}
   body.logged-out .screen{padding:24px}
 
   /* --- área de contenido --- */
-  .screen{max-width:none;margin:0;width:auto;padding:24px 28px 28px;min-height:100vh}
+  .screen{max-width:none;margin:0;width:auto;padding:24px 28px 28px;min-height:calc(100vh - 72px)}
   .back-btn{display:inline-flex}
   .form-title{font-size:21px}
   .form-meta{font-size:12.5px}
@@ -495,8 +495,7 @@ canvas{width:100%!important}
   .home-greet{margin-top:0}
 
   /* Los formularios de captura no se estiran a lo ancho del monitor */
-  #screen-weight > *,#screen-seal > *,#screen-metal > *,
-  #screen-temp > *,#screen-gmp > *,#screen-hold > *,#screen-admin > *,
+  #screen-hold > *,#screen-admin > *,
   #screen-lotsearch > *,#screen-activity > *,#screen-reports > *{max-width:720px}
   #screen-products > *{max-width:none}
 
@@ -554,7 +553,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .recent-row{border-radius:var(--radius)}
 
 /* --- tipografía de sección --- */
-.sec-label{font-size:10px;letter-spacing:0.1em;font-weight:700;color:var(--muted)}
+.sec-label{font-size:10.5px;letter-spacing:0.07em;font-weight:700;color:var(--text)}
 .form-title{font-weight:800;letter-spacing:-0.02em}
 .home-name{font-weight:800;letter-spacing:-0.02em}
 .home-greet{font-size:13px}
@@ -601,18 +600,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .toast{border-radius:var(--radius);background:var(--rail);color:var(--rail-hi)}
 #hold-modal > div,#product-modal .dup-box{border-radius:var(--radius-lg)}
 
-/* --- barra lateral (móvil: cajón oscuro igual que en escritorio) --- */
 
-/* --- ficha de usuario y marca en la barra lateral --- */
-.d-brand-sub{font-size:10px;letter-spacing:0.1em;color:var(--rail-dim);font-weight:600;margin-top:5px}
-  border-radius:var(--radius-sm);padding:10px;margin-top:10px}
-  display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0;letter-spacing:0.02em}
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  letter-spacing:0.08em;font-weight:700;margin-top:1px}
 
 @media (min-width:1024px){
-  /* barra lateral con las medidas del diseño: 240px, cabecera de 72px */
-    padding:0 20px;margin:0;border-bottom:1px solid rgba(255,255,255,0.12)}
 
   /* barra superior de 72px, sobre la superficie de tarjeta */
   .topbar{height:72px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -816,14 +806,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .an-vals span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);margin-bottom:4px}
 .an-vals .field{margin-bottom:0}
 
-/* ===== BARRA DE MÓDULOS (reemplaza el panel lateral) ===== */
-  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  border-bottom:2px solid transparent;color:var(--rail-dim);font-family:inherit;font-size:13px;
-  font-weight:700;letter-spacing:-.01em;padding:13px 14px;cursor:pointer}
-  border-bottom:1px solid var(--border)}
-  border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:inherit;
-  font-size:12.5px;font-weight:600;padding:8px 12px;cursor:pointer}
-  background:var(--border);color:var(--muted);border-radius:4px;padding:1px 4px;margin-left:2px}
+/* ===== MENU DE USUARIO EN LA BARRA SUPERIOR ===== */
 /* Menú de usuario en la barra superior */
 .tb-user{display:flex;align-items:center;gap:7px;background:none;border:1px solid var(--border);
   border-radius:9px;padding:6px 11px;font-family:inherit;font-size:12.5px;font-weight:600;
@@ -926,3 +909,42 @@ body.logged-out .topstack{display:none}
 /* El contenido arranca en el borde: nada de sangría heredada de la barra vieja */
 #screen-home{padding-top:22px}
 #screen-home > *{max-width:none;margin-left:0}
+
+
+/* ============================================================
+   ESCRITORIO A PANTALLA COMPLETA
+   Los formularios de captura se parten en dos columnas: a la
+   izquierda lo que se ingresa, a la derecha los datos (samples,
+   checklist, resumen) y el guardado. En telefono .fgrid y .fcol
+   desaparecen (display:contents) y todo vuelve a una columna.
+   ============================================================ */
+.fgrid,.fcol{display:contents}
+@media (min-width:1024px){
+  .fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:0 52px;align-items:start;width:100%}
+  .fgrid.narrow-right{grid-template-columns:minmax(0,960px) minmax(0,520px);
+    justify-content:space-between}
+  .fcol{display:block;min-width:0}
+  #screen-weight > *,#screen-seal > *,#screen-metal > *,
+  #screen-temp > *,#screen-gmp > *{max-width:none}
+  /* la columna derecha termina en el boton de guardar: que llene su ancho */
+  .fcol > .main-btn{max-width:none}
+  .fcol > .sec-label:first-child{margin-top:0}
+}
+
+/* ============================================================
+   COLOR DE LA FUNCION EN TODA LA PANTALLA
+   goTo() escribe --accent / --accent-deep / --accent-tint / --tint
+   con el color de la tarjeta por la que se entro, asi que botones,
+   chips, foco, titulo y el velo de arriba quedan de ese color.
+   ============================================================ */
+:root{--tint:transparent}
+.screen.active{background-image:linear-gradient(180deg,var(--tint) 0,transparent 340px);
+  background-repeat:no-repeat}
+#screen-login.active,#screen-home.active{background-image:none}
+.screen > .back-btn{align-self:flex-start}
+.screen.active > .back-btn{color:var(--accent)}
+.form-title{color:var(--accent-deep)}
+@media (min-width:1024px){
+  .topbar{border-bottom:2px solid var(--accent)}
+}

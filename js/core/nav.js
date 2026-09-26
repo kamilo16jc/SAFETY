@@ -1,4 +1,54 @@
 // ===== NAV =====
+// ===== COLOR DE LA FUNCION EN TODA LA PANTALLA =====
+// Cada tarjeta tiene su color. Al entrar, la pantalla completa se pinta con
+// ese mismo color: titulo, flecha, botones, chips, foco y un velo suave
+// arriba. En el inicio y en el login se vuelve al verde de la marca.
+function accentRgb(h){
+  h = String(h||'').replace('#','');
+  if(h.length===3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n = parseInt(h,16);
+  return isNaN(n) ? null : [(n>>16)&255,(n>>8)&255,n&255];
+}
+// Mezcla hacia negro (t=0) o hacia blanco (t=255)
+function accentMix(hex, t, amt){
+  var c = accentRgb(hex); if(!c) return hex;
+  var out = '#';
+  for(var i=0;i<3;i++){
+    var v = Math.round(c[i] + (t - c[i]) * amt);
+    out += (v<16?'0':'') + v.toString(16);
+  }
+  return out;
+}
+function screenColor(id){
+  var m = activeModule ? moduleById(activeModule) : null;
+  var it = m ? m.items.filter(function(i){ return i.screen===id; })[0] : null;
+  if(!it){
+    for(var k=0;k<MODULES.length && !it;k++){
+      var hit = MODULES[k].items.filter(function(i){ return i.screen===id; })[0];
+      if(hit){ it = hit; m = MODULES[k]; }
+    }
+  }
+  if(id==='screen-module') return m ? m.ink : null;
+  return it ? (it.color || (m && m.ink)) : null;
+}
+function applyScreenAccent(id){
+  var s = document.documentElement.style;
+  var c = (id==='screen-home' || id==='screen-login') ? null : screenColor(id);
+  if(!c){
+    ['--accent','--accent-deep','--accent-tint','--tint','--mod'].forEach(function(k){
+      s.removeProperty(k);
+    });
+    return;
+  }
+  // En oscuro el color de la tarjeta se aclara para que se lea sobre el fondo
+  var dark = document.documentElement.getAttribute('data-theme')==='dark';
+  s.setProperty('--accent',      dark ? accentMix(c,255,0.42) : c);
+  s.setProperty('--accent-deep', dark ? accentMix(c,255,0.66) : accentMix(c,0,0.24));
+  s.setProperty('--accent-tint', dark ? 'rgba(255,255,255,0.07)' : accentMix(c,255,0.87));
+  s.setProperty('--tint',        dark ? 'rgba(255,255,255,0.035)' : accentMix(c,255,0.92));
+  s.setProperty('--mod',         dark ? accentMix(c,255,0.42) : c);
+}
+
 function goTo(id){
   // Redirect to login if not authenticated
   if(id !== 'screen-login' && !currentUser) { id = 'screen-login'; }
@@ -33,6 +83,7 @@ function goTo(id){
     if(m) activeModule = m;
   }
   if(typeof renderModuleBar==='function') renderModuleBar(id);
+  applyScreenAccent(id);
   updateTopbar(id);
 }
 

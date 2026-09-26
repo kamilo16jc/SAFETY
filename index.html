@@ -14,7 +14,7 @@
      para las cifras. Si no cargan, cae a la fuente del sistema. -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
@@ -217,6 +217,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Weight Log</div>
   <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
+  <div class="fgrid">
+  <div class="fcol">
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
   <input type="date" class="time-input" id="w-date" style="width:100%;margin-bottom:18px">
   <div class="sec-label">Production Line</div>
@@ -273,6 +275,8 @@
     <input type="time" class="time-input" id="check-time">
     <button class="now-btn" onclick="setNow()">Now</button>
   </div>
+  </div>
+  <div class="fcol">
   <div id="w-weight-bottom">
   <div class="sec-label" id="w-samples-label">Samples (LBS)</div>
   <div class="samples-wrap" id="samples-wrap"></div>
@@ -294,6 +298,8 @@
   <div class="sec-label">Operator Initials</div>
   <input type="text" class="field" id="w-initials" placeholder="Initials">
   <button class="main-btn" onclick="saveWeight()">Save Record</button>
+  </div>
+  </div>
 </div>
 
 <!-- BAG SEAL -->
@@ -301,6 +307,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Bag Seal</div>
   <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
+  <div class="fgrid">
+  <div class="fcol">
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
   <input type="date" class="time-input" id="s-date" style="width:100%;margin-bottom:18px">
   <div class="sec-label">Production Line</div>
@@ -335,6 +343,8 @@
     <input type="time" class="time-input" id="seal-time">
     <button class="now-btn" onclick="setSealNow()">Now</button>
   </div>
+  </div>
+  <div class="fcol">
   <div class="sec-label">Monitoring Checks</div>
   <div id="seal-list"></div>
   <div class="sec-label">LOT Number</div>
@@ -344,6 +354,8 @@
   <div class="sec-label">Operator Initials</div>
   <input type="text" class="field" id="s-initials" placeholder="Initials">
   <button class="main-btn" onclick="saveSeal()">Save Record</button>
+  </div>
+  </div>
 </div>
 
 <!-- DASHBOARD -->
@@ -471,6 +483,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">GMP Audit</div>
   <div class="form-meta">SQF # 2.5.D.A · Daily GMP Facility Audit</div>
+  <div class="fgrid narrow-right">
+  <div class="fcol">
   <div class="sec-label">Location</div>
   <input type="text" class="field" id="gmp-loc" placeholder="Enter location">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
@@ -495,6 +509,8 @@
     <div id="gmp-list"></div>
   </div>
   
+  </div>
+  <div class="fcol">
   <div class="sec-label">Additional Comments / Corrective Actions</div>
   <textarea class="field" id="gmp-comments" placeholder="Add comments, notes or corrective actions..." rows="3"></textarea>
   <div class="sec-label">Completed By (Print Name)</div>
@@ -505,6 +521,8 @@
     <button class="sec-btn" style="margin:0" onclick="exportGmpPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
     <button class="main-btn" style="margin:0" onclick="saveGmp()">Save Record</button>
   </div>
+  </div>
+  </div>
 </div>
 
 <!-- TEMP & HUMIDITY -->
@@ -512,6 +530,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Temp & Humidity</div>
   <div class="form-meta">Building 1945 · SQF # 2.5.D.A</div>
+  <div class="fgrid">
+  <div class="fcol">
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
     <div>
@@ -566,6 +586,8 @@
   </div>
 
   <!-- Live summary of saved checkpoints for this date/shift -->
+  </div>
+  <div class="fcol">
   <div id="th-summary" style="margin-bottom:16px"></div>
 
   <div class="sec-label">Comments / Corrective Actions</div>
@@ -573,6 +595,8 @@
   <div class="sec-label">Completed By</div>
   <input type="text" class="field" id="th-completed" placeholder="Print name">
   <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint</button>
+  </div>
+  </div>
 </div>
 
 
@@ -623,6 +647,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Metal Detector Check</div>
   <div class="form-meta">Routine metal detector verification</div>
+  <div class="fgrid narrow-right">
+  <div class="fcol">
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
     <div>
@@ -654,6 +680,8 @@
   <div class="sec-label">Answer yes or no to the following</div>
   <div id="md-questions" style="margin-bottom:18px"></div>
 
+  </div>
+  <div class="fcol">
   <div class="sec-label">Corrective Actions / Additional Observations</div>
   <textarea class="field" id="md-corrective" placeholder="Corrective actions, training performed, observations..." rows="3"></textarea>
 
@@ -662,6 +690,8 @@
   <div class="sec-label">Verified By (optional)</div>
   <input type="text" class="field" id="md-verified" placeholder="Print name">
   <button class="main-btn" onclick="saveMetal()">Save Check</button>
+  </div>
+  </div>
 </div>
 
 
