@@ -27,7 +27,7 @@ function labFormDate(d){
 function labFormGroups(){
   var groups = {};
   getRuns().forEach(function(r){
-    if(!r.labSample || !r.collected) return;
+    if(runSampleCount(r)<=0 || !r.collected) return;
     var c = runCustomer(r);
     if(!c) return;
     var day = String(r.date).slice(0,10);

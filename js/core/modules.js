@@ -9,6 +9,7 @@
 var MODULES = [
   { id:'qa', color:'#4ade80', ink:'#047857', name:'QA Inspection', icon:'clipboard', items:[
       {screen:'screen-weight',    name:'Weights',          icon:'scale', color:'#047857'},
+      {screen:'screen-samplelist',name:'List Samples',     icon:'droplet', color:'#0f766e'},
       {screen:'screen-seal',      name:'Seal Bags',        icon:'droplet', color:'#0369a1'},
       {screen:'screen-temp',      name:'Temperatures',     icon:'thermo', color:'#b45309'},
       {screen:'screen-gmp',       name:'GMP Audit',        icon:'clipboard', color:'#7c3aed'},

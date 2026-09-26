@@ -76,6 +76,29 @@
   <div id="pr-list"></div>
 </div>
 
+<!-- LIST SAMPLES -->
+<div class="screen" id="screen-samplelist">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">List Samples</div>
+  <div class="form-meta">What to collect from the line, and how many</div>
+
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">Date</div>
+      <input type="date" class="time-input" id="sl-date" style="width:100%" onchange="renderSampleList()"></div>
+    <div class="field-group"><div class="sec-label">Shift</div>
+      <div class="select-wrap"><select class="field" id="sl-shift" onchange="renderSampleList()">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+  </div>
+
+  <div id="sl-summary"></div>
+  <div class="fgrid">
+    <div class="fcol" id="sl-left"></div>
+    <div class="fcol" id="sl-right"></div>
+  </div>
+</div>
+
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px">
@@ -1153,8 +1176,10 @@
     <input type="text" class="field" id="prod-bags" placeholder="e.g. 4" inputmode="numeric">
     <div class="sec-label">Barcode <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· optional</span></div>
     <input type="text" class="field" id="prod-barcode" placeholder="Scanned code">
-    <label class="lab-check"><input type="checkbox" id="prod-lab">
-      <span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>
+    <div class="sec-label">Lab samples per run <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· 0 = this product is not sampled</span></div>
+    <input type="text" class="field" id="prod-lab-n" placeholder="e.g. 1" inputmode="numeric"
+           oninput="this.dataset.touched='1'">
+    <div class="hint" id="prod-lab-hint" style="margin:-4px 0 10px"></div>
     <button class="main-btn" style="margin:8px 0 0" onclick="saveProduct()">Save Product</button>
   </div>
 </div>
@@ -1244,6 +1269,7 @@
 <script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>
+<script src="js/modules/samplelist.js"></script>
 <script src="js/modules/lab.js"></script>
 <script src="js/modules/analysis.js"></script>
 <script src="js/modules/lab-tests.js"></script>

@@ -33,6 +33,27 @@ function findCustomerByProduct(number){
   }
   return null;
 }
+// ===== CUANTOS SAMPLES PIDE UN PRODUCTO =====
+// Antes esto era un si/no y la cantidad salia del cliente. Ahora se elige al
+// crear el producto, porque dentro de un mismo cliente hay productos que no se
+// muestrean y otros que llevan mas de uno. Los productos viejos (sin el campo)
+// siguen respondiendo por su cliente, asi no hay que reeditarlos.
+function customerSampleCount(c){
+  if(!c) return 1;
+  return c.numbered ? (c.samplesPerOrder || 5) : (c.samplesPerOrder || 1);
+}
+function parseSampleCount(v){
+  var n = parseInt(String(v==null?'':v).trim(), 10);
+  if(isNaN(n) || n < 0) return 0;
+  return Math.min(n, 99);
+}
+function productSampleCount(p){
+  if(!p) return 0;
+  if(p.labSamples != null && p.labSamples !== '') return parseSampleCount(p.labSamples);
+  if(!p.labSample) return 0;
+  return customerSampleCount(productCustomer(p));
+}
+
 function customerById(id){
   return getCustomers().filter(function(c){ return c.customerId===id; })[0] || null;
 }
@@ -86,8 +107,11 @@ function onProdCustomerChange(){
   var c  = id ? customerById(id) : null;
   var num = normNumber((document.getElementById('prod-number')||{}).value);
   el.innerHTML = c ? customerHintHTML(c, num) : '';
-  var chk = document.getElementById('prod-lab');
-  if(chk && c) chk.checked = true;
+  var n = document.getElementById('prod-lab-n');
+  if(n && c && !n.dataset.touched) n.value = String(customerSampleCount(c));
+  var h = document.getElementById('prod-lab-hint');
+  if(h) h.textContent = c ? (c.company+' normally takes '+customerSampleCount(c)+
+       ' sample'+(customerSampleCount(c)===1?'':'s')+' per order'+(c.numbered?', numbered':'')+'.') : '';
 }
 
 function customerHintHTML(c, number){
@@ -224,7 +248,9 @@ function openProductModal(screen){
   document.getElementById('prod-min').value = '';
   document.getElementById('prod-max').value = '';
   document.getElementById('prod-barcode').value = pendingBarcode || '';
-  var labChk = document.getElementById('prod-lab'); if(labChk) labChk.checked = false;
+  var labN = document.getElementById('prod-lab-n');
+  if(labN){ labN.value = '1'; delete labN.dataset.touched; }
+  var labH = document.getElementById('prod-lab-hint'); if(labH) labH.textContent = '';
   fillProdCustomerSelect('');
   onProdNumberInput();   // si el número ya venía escrito, detecta el cliente
 
@@ -288,7 +314,8 @@ function saveProduct(){
     pkgLabel: pkgLabel,
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
-    labSample: !!(document.getElementById('prod-lab')||{}).checked,
+    labSamples: parseSampleCount((document.getElementById('prod-lab-n')||{}).value),
+    labSample: parseSampleCount((document.getElementById('prod-lab-n')||{}).value) > 0,
     customerId: ((document.getElementById('prod-customer')||{}).value)
                 || (findCustomerByProduct(number)||{}).customerId || '',
     barcodes: barcode ? [barcode] : [],

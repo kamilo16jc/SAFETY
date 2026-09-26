@@ -143,8 +143,9 @@ function renderCatalogDetail(){
           '<button class="btn-ghost" style="width:100%;justify-content:center" onclick="catalogRescan()">'+
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
-      '<label class="lab-check"><input type="checkbox" id="cd-lab"'+(p.labSample?' checked':'')+'>'+
-        '<span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>'+
+      '<div class="field-group"><div class="sec-label">Lab samples per run</div>'+
+        '<input type="text" class="field" id="cd-lab-n" inputmode="numeric" value="'+productSampleCount(p)+'">'+
+        '<div class="hint">How many samples QA must collect each run. 0 = this product is not sampled.</div></div>'+
       catalogCustomerBlock(p)+
       (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+
       '<div class="cd-meta">'+
@@ -223,7 +224,8 @@ function saveCatalogEdits(){
   }
   p.target = (!isNaN(mn) && !isNaN(mx)) ? {min:mn, max:mx} : null;
   p.bagsPerCase = isNaN(bags) ? null : bags;
-  p.labSample = !!(document.getElementById('cd-lab')||{}).checked;
+  p.labSamples = parseSampleCount((document.getElementById('cd-lab-n')||{}).value);
+  p.labSample  = p.labSamples > 0;
   p.customerId = (document.getElementById('cd-customer')||{}).value || '';
   if(typeof readLabTestPicker==='function') readLabTestPicker(p);
   p.updatedBy = currentUser ? currentUser.name : '—';

@@ -287,11 +287,11 @@ function runPanel(list){
       '<td>'+(r.shift===1?'1st':'2nd')+'</td>'+
       '<td>Line '+esc(r.line)+'</td>'+
       '<td class="mono">'+esc(r.product||'—')+'</td>'+
-      '<td>'+esc(r.productName||'—')+(r.labSample?' <span class="tag warn">LAB</span>':'')+'</td>'+
+      '<td>'+esc(r.productName||'—')+(runSampleCount(r)>0?' <span class="tag warn">LAB</span>':'')+'</td>'+
       '<td class="mono code">'+esc(r.lot||'—')+'</td>'+
       '<td>'+yn(r.collected)+'</td>'+
       '<td>'+yn(t.tested)+'</td>'+
-      '<td>'+(r.labSample ? yn(r.labSent) : '<span class="pill">—</span>')+'</td>'+
+      '<td>'+(runSampleCount(r)>0 ? yn(r.labSent) : '<span class="pill">—</span>')+'</td>'+
     '</tr>';
   }).join('');
   return tablePanel('Production runs', list.length, [

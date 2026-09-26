@@ -26,7 +26,7 @@ function labSamples(statusOverride){
   labFilters();
   var status = statusOverride || labStatus;
   return getRuns().filter(function(r){
-    if(!r.labSample) return false;
+    if(runSampleCount(r)<=0) return false;
     var d = String(r.date).slice(0,10);
     if(labFrom && d < labFrom) return false;
     if(labTo   && d > labTo)   return false;

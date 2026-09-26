@@ -73,7 +73,7 @@ function toggleRunTested(id){
 function runComplete(run){
   if(!run.lot || !run.collected) return false;
   if(!runTestCount(run).tested) return false;
-  if(run.labSample && !run.labSent) return false;
+  if(runSampleCount(run)>0 && !run.labSent) return false;
   return true;
 }
 
@@ -108,7 +108,8 @@ function addRun(){
     time: time || '',
     product: num,
     productName: p ? (p.name||'') : '',
-    labSample: p ? !!p.labSample : false,
+    labSamples: p ? productSampleCount(p) : 0,
+    labSample: p ? productSampleCount(p) > 0 : false,
     lot:'', collected:false, labSent:false, notes:'',
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()
@@ -188,7 +189,7 @@ function toggleRunCheck(id, field){
   if(field==='labSent')   run.labSentAt   = run.labSent   ? localISOStr() : '';
   // Al recoger, solo los clientes con numeración (5 samples por orden) piden
   // números. Los demás llevan 1 sample y no se enumera.
-  if(field==='collected' && run.collected && run.labSample && !run.sampleFrom){
+  if(field==='collected' && run.collected && runSampleCount(run)>0 && !run.sampleFrom){
     var rc = runCustomer(run);
     if(rc && rc.numbered) assignLabSampleRange(run, db);
   }
@@ -208,14 +209,15 @@ function offerRunCollect(rec){
            String(r.shift)===String(rec.shift) &&
            String(r.line)===String(rec.line) &&
            String(r.product||'')===String(rec.product||'') &&
-           r.labSample && !r.collected;
+           runSampleCount(r) > 0 && !r.collected;
   })[0];
   if(!run) return;
 
   var c = runCustomer(run);
   var tests = c ? (c.tests||[]).join(', ') : '';
+  var n = runSampleCount(run);
   showGuardModal({
-    title: 'Lab sample due — '+(run.productName || run.product),
+    title: n+' lab sample'+(n===1?'':'s')+' due — '+(run.productName || run.product),
     detail: 'Line '+run.line+(c ? ' · '+c.company : '')+(tests ? ' · '+tests : ''),
     ask: 'Did you collect the lab sample from the line?',
     primaryLabel: 'Yes, collected',
@@ -246,6 +248,15 @@ function setLabCounter(customerId, week, next, db){
   if(window.saveLabCountersToFirebase) window.saveLabCountersToFirebase(d.labCounters);
 }
 
+// Cuantos samples pide esta corrida: lo dice el producto (Products), y si es
+// un producto viejo sin el campo, su cliente.
+function runSampleCount(run){
+  var p = (typeof findProduct==='function') ? findProduct(run.product) : null;
+  if(p && typeof productSampleCount==='function') return productSampleCount(p);
+  var c = runCustomer(run);
+  return run.labSample ? (typeof customerSampleCount==='function' ? customerSampleCount(c) : 1) : 0;
+}
+
 function runCustomer(run){
   var p = (typeof findProduct==='function') ? findProduct(run.product) : null;
   return (typeof productCustomer==='function') ? productCustomer(p || {number:run.product}) : null;
@@ -255,7 +266,7 @@ function assignLabSampleRange(run, db){
   var c = runCustomer(run);
   if(!c){ toast('Assign a customer to this product first (Products)'); return; }
   if(!c.numbered) return;                               // este cliente no enumera
-  var per = c.samplesPerOrder || 5;
+  var per = runSampleCount(run) || (c.samplesPerOrder || 5);
   var wk = weekKey(run.date);
   var st = ((db && db.labCounters) || getLabCounters())[c.customerId];
   var proposed = (st && st.week===wk) ? st.next : 1;   // semana nueva -> arranca en 1
@@ -281,6 +292,8 @@ function refreshRunViews(){
   if(pr && pr.classList.contains('active')) renderProduction();
   var lb = document.getElementById('screen-lab');
   if(lb && lb.classList.contains('active') && typeof renderLab==='function') renderLab();
+  var sl = document.getElementById('screen-samplelist');
+  if(sl && sl.classList.contains('active') && typeof renderSampleList==='function') renderSampleList();
 }
 
 function scanRunLot(id){ openScanner('runlot:'+id); }
@@ -321,7 +334,7 @@ function renderProduction(){
   var done=0, labs=0, labsPending=0, untested=0;
   list.forEach(function(r){
     if(runComplete(r)) done++;
-    if(r.labSample){ labs++; if(!r.labSent) labsPending++; }
+    if(runSampleCount(r)>0){ labs++; if(!r.labSent) labsPending++; }
     if(!runTestCount(r).tested) untested++;
   });
   var sum = document.getElementById('pr-summary');
@@ -354,7 +367,7 @@ function renderProduction(){
       '<div class="run-head">'+
         '<div>'+
           '<div class="run-title">Line '+r.line+' · '+esc(r.product||'—')+
-            (r.labSample?' <span class="tag warn">LAB</span>':'')+
+            (runSampleCount(r)>0?' <span class="tag warn">LAB '+runSampleCount(r)+'</span>':'')+
             (complete?' <span class="tag ok">Complete</span>':'')+'</div>'+
           '<div class="run-meta">'+esc(r.productName||'—')+(r.time?' · '+esc(r.time):'')+'</div>'+
         '</div>'+
@@ -379,7 +392,7 @@ function renderProduction(){
               '<span class="run-box">'+(t.manual?'✓':'')+'</span>Tested'+
               '<span class="run-auto">'+(t.manual?'marked manually':'no analysis yet')+'</span>'+
             '</button>')+
-        (r.labSample ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
+        (runSampleCount(r)>0 ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
       '</div>'+
       '<div class="run-actions">'+
         (t.auto ? '' :
