@@ -76,9 +76,6 @@ function generateLabForm(customerId, date){
   if(warn.length && !confirm('Some rows are incomplete:\n\n'+warn.join('\n')+'\n\nGenerate anyway?')) return;
 
   var formName = group.customer.form || 'general';
-  var map = (getDB().labTestMap||{}).map || {};
-  var compositeCols = (getDB().labTestMap||{}).compositeCol || {};
-  var testMap = map[formName] || {};
 
   if(typeof JSZip==='undefined'){ toast('JSZip did not load'); return; }
   if(!window.loadLabTemplate){ toast('No connection to load the template'); return; }
@@ -101,10 +98,28 @@ function generateLabForm(customerId, date){
         return zip.file(path).async('string').then(function(x){ sheets[path]=x; });
       }
 
-      // Hojas que se van a tocar: la micro siempre; la chem sólo si hace falta
+      // Cada producto trae SUS tests (etiqueta exacta); se resuelven a columna
+      // en la forma de este cliente.
+      rows.forEach(function(row){
+        var p = (typeof findProduct==='function') ? findProduct(row.run.product) : null;
+        var sel = (typeof productTests==='function') ? productTests(p||{number:row.run.product}) : [];
+        row.marks = []; row.missing = [];
+        sel.forEach(function(t){
+          var col = (typeof labTestColumn==='function') ? labTestColumn(formName, t.sheet, t.label) : null;
+          if(col) row.marks.push({sheet:t.sheet, col:col, label:t.label});
+          else    row.missing.push(t.label);
+        });
+      });
+      var miss = rows.filter(function(r){ return r.missing.length; });
+      if(miss.length){
+        var txt = miss.map(function(r){ return r.code+': '+r.missing.join(', '); }).join('\n');
+        if(!confirm('These tests are not on this customer’s form and will be skipped:\n\n'+txt+
+                    '\n\nGenerate anyway?')) return Promise.reject(new Error('cancelled'));
+      }
+
+      // Hojas que se van a tocar: la micro siempre; las demás sólo si hacen falta
       var needed = [sheetFor('micro')];
-      var tests  = group.customer.tests || [];
-      if(tests.some(function(t){ return testMap[t] && testMap[t].sheet==='chem'; })) needed.push(sheetFor('chem'));
+      if(rows.some(function(r){ return r.marks.some(function(m){ return m.sheet==='chem'; }); })) needed.push(sheetFor('chem'));
       needed = needed.filter(Boolean);
 
       Promise.all(needed.map(load)).then(function(){
@@ -118,7 +133,7 @@ function generateLabForm(customerId, date){
 
           // Las pruebas de química van en su propia hoja: se repite la cabecera
           var chem = sheetFor('chem');
-          var usesChem = tests.some(function(t){ return testMap[t] && testMap[t].sheet==='chem'; });
+          var usesChem = row.marks.some(function(m){ return m.sheet==='chem'; });
           if(usesChem && chem && sheets[chem]!==undefined){
             sheets[chem] = xlsxSetCell(sheets[chem], cols.code+rn,   row.code);
             sheets[chem] = xlsxSetCell(sheets[chem], cols.sample+rn, row.sample);
@@ -126,19 +141,11 @@ function generateLabForm(customerId, date){
             sheets[chem] = xlsxSetCell(sheets[chem], cols.lot+rn,    row.lot);
           }
 
-          // Marca X en cada test que exige el cliente
-          tests.forEach(function(t){
-            var m = testMap[t]; if(!m) return;
+          // Marca X en la columna exacta de cada test de ESE producto
+          row.marks.forEach(function(m){
             var path = sheetFor(m.sheet==='chem' ? 'chem' : 'micro');
             if(path && sheets[path]!==undefined) sheets[path] = xlsxSetCell(sheets[path], m.col+rn, 'X');
           });
-
-          // Composite: 2-5 samples, si la forma del cliente lo usa
-          var cc = compositeCols[formName];
-          if(cc && group.customer.composite){
-            var mp = sheetFor('micro');
-            sheets[mp] = xlsxSetCell(sheets[mp], cc+rn, 'X');
-          }
         });
 
         Object.keys(sheets).forEach(function(p){ zip.file(p, sheets[p]); });

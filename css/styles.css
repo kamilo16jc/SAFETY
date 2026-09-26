@@ -868,3 +868,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 @media (max-width:520px){ .samp-edit{grid-template-columns:repeat(3,1fr)} }
 .lab-code{font-size:11px;color:var(--muted);margin-top:5px}
 .lab-code b{color:var(--text);font-size:12px}
+.lt-status{font-size:11px;color:var(--warn);font-weight:700;margin-bottom:7px}
+.lt-status.ok{color:var(--pass)}
+.lt-box{border:1px solid var(--border);border-radius:10px;max-height:260px;overflow-y:auto;background:var(--bg)}
+.lt-group{padding:8px 10px;border-bottom:1px solid var(--border)}
+.lt-group:last-child{border-bottom:0}
+.lt-title{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:800;margin-bottom:5px}
+.lt-item{display:flex;align-items:flex-start;gap:8px;padding:4px 2px;font-size:12px;color:var(--text);cursor:pointer;line-height:1.35}
+.lt-item input{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+.lt-item.off{color:var(--dim)}
+.lt-item em{font-style:normal;color:var(--warn);font-size:10px}

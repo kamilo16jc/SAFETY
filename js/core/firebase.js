@@ -103,6 +103,11 @@
     onSnapshot(doc(db,'config','customers'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.customers=d.data(); saveDB(ldb); }
     }, function(){});
+    // Cabeceras de cada forma: columna -> etiqueta exacta del test. Es lo que
+    // permite elegir la variante correcta (25g vs 125g) por producto.
+    onSnapshot(doc(db,'config','labFormHeaders'), function(d){
+      if(d.exists()){ var ldb=getDB(); ldb.labFormHeaders=d.data().forms||{}; saveDB(ldb); }
+    }, function(){});
     // Mapa test -> columna de cada forma del laboratorio (documento pequeño)
     onSnapshot(doc(db,'config','labTestMap'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.labTestMap=d.data(); saveDB(ldb); }

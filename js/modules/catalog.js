@@ -146,6 +146,7 @@ function renderCatalogDetail(){
       '<label class="lab-check"><input type="checkbox" id="cd-lab"'+(p.labSample?' checked':'')+'>'+
         '<span><b>Lab sample</b> · this product always needs a sample sent to the lab</span></label>'+
       catalogCustomerBlock(p)+
+      (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
         '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
@@ -224,6 +225,7 @@ function saveCatalogEdits(){
   p.bagsPerCase = isNaN(bags) ? null : bags;
   p.labSample = !!(document.getElementById('cd-lab')||{}).checked;
   p.customerId = (document.getElementById('cd-customer')||{}).value || '';
+  if(typeof readLabTestPicker==='function') readLabTestPicker(p);
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
 
