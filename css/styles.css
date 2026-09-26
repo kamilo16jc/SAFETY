@@ -843,7 +843,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 body.logged-out .tb-user{display:none}
 @media(max-width:700px){
 }
-.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;margin-bottom:18px;max-width:1240px}
+/* Las tarjetas llenan todo el ancho de la línea. Con una sola (p. ej. un
+   operador que sólo ve un módulo) NO se estira a lo ancho: conserva su
+   tamaño de tarjeta. */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;
+  margin-bottom:18px}
+.mcards:has(> :only-child){grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
 .mcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:var(--surface);
   border:1px solid var(--border);border-left:4px solid var(--mod);border-radius:12px;padding:14px 15px;
   font-family:inherit;cursor:pointer;text-align:left}
@@ -862,14 +867,14 @@ body.logged-out .tb-user{display:none}
 body.logged-out .topstack{display:none}
 
 /* ===== TARJETAS SÓLIDAS DE MÓDULO Y DE FUNCIÓN ===== */
-.mcard.solid{background:var(--mod);border:0;border-radius:14px;padding:18px 16px;color:#fff;
-  min-height:104px;justify-content:flex-end;box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s,filter .12s}
+.mcard.solid{background:var(--mod);border:0;border-radius:16px;padding:20px 18px;color:#fff;
+  min-height:124px;justify-content:flex-end;box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .12s,filter .12s}
 .mcard.solid:hover{filter:brightness(1.08);transform:translateY(-2px)}
 .mcard.solid:active{transform:translateY(0)}
-.mcard.solid b{color:#fff;font-size:15px;line-height:1.25}
+.mcard.solid b{color:#fff;font-size:16.5px;line-height:1.25}
 .mcard.solid .mcard-n{color:rgba(255,255,255,.78)}
 .mcard.solid .mcard-ico{color:#fff;opacity:.95;margin-bottom:auto}
-.mcard.solid .mcard-ico svg{width:24px;height:24px}
+.mcard.solid .mcard-ico svg{width:26px;height:26px}
 .mcard.solid.soon{opacity:.5;cursor:default}
 .mcard.solid.soon:hover{filter:none;transform:none}
 /* Cabecera de la pantalla de módulo */
