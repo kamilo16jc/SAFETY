@@ -482,7 +482,7 @@ canvas{width:100%!important}
 
   /* --- área de contenido --- */
   .screen{max-width:none;margin:0;width:auto;padding:24px 28px 28px;min-height:100vh}
-  .back-btn{display:none}
+  .back-btn{display:inline-flex}
   .form-title{font-size:21px}
   .form-meta{font-size:12.5px}
 
@@ -818,17 +818,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .an-vals .field{margin-bottom:0}
 
 /* ===== BARRA DE MÓDULOS (reemplaza el panel lateral) ===== */
-.module-bar{display:flex;gap:4px;align-items:center;padding:0 16px;background:var(--rail);
   overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.module-bar::-webkit-scrollbar{display:none}
-.mod-tab{display:flex;align-items:center;gap:8px;white-space:nowrap;background:none;border:0;
   border-bottom:2px solid transparent;color:var(--rail-dim);font-family:inherit;font-size:13px;
   font-weight:700;letter-spacing:-.01em;padding:13px 14px;cursor:pointer}
-.mod-tab:hover{color:var(--rail-txt)}
-.mod-tab .mod-ico{color:var(--mod);opacity:.75}
-.mod-tab.on{color:var(--mod);border-bottom-color:var(--mod)}
-.mod-tab.on .mod-ico{opacity:1}
-.mod-ico svg,.mod-tab svg{width:16px;height:16px}
   border-bottom:1px solid var(--border)}
   border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:inherit;
   font-size:12.5px;font-weight:600;padding:8px 12px;cursor:pointer}
@@ -849,14 +841,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .um-item:hover{background:var(--bg)}
 .um-item.danger{color:var(--fail)}
 .um-item svg{width:15px;height:15px}
-body.logged-out .module-bar,body.logged-out .tb-user{display:none}
+body.logged-out .tb-user{display:none}
 @media(max-width:700px){
-  .module-bar{padding:0 10px}
-  .mod-tab{font-size:12px;padding:11px 10px}
-  .mod-tab span:not(.mod-ico){display:none}
-  .mod-ico svg{width:19px;height:19px}
 }
-.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;margin-bottom:18px;max-width:1240px}
 .mcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:var(--surface);
   border:1px solid var(--border);border-left:4px solid var(--mod);border-radius:12px;padding:14px 15px;
   font-family:inherit;cursor:pointer;text-align:left}
@@ -892,3 +880,27 @@ body.logged-out .topstack{display:none}
 .mod-hero-ico svg{width:23px;height:23px}
 .mod-hero b{display:block;font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.02em}
 .mod-hero span{font-size:12.5px;color:var(--muted)}
+
+/* ===== LEGIBILIDAD EN TARJETAS DE COLOR ===== */
+.mcard.solid b{color:#fff;font-weight:800;letter-spacing:-.01em;
+  text-shadow:0 1px 2px rgba(0,0,0,.28)}
+.mcard.solid .mcard-n{color:#fff;opacity:.92;font-weight:600;
+  text-shadow:0 1px 2px rgba(0,0,0,.22)}
+.mcard.solid .mcard-ico{color:#fff;opacity:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
+
+/* ===== FLECHA DE VOLVER ===== */
+.back-btn{align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:8px 13px;cursor:pointer;margin-bottom:16px}
+.back-btn:hover{border-color:var(--muted)}
+.back-btn svg{width:15px;height:15px}
+.mod-hero .back-btn{margin-bottom:0;margin-right:4px;padding:9px;border-radius:12px}
+
+/* ===== CHIP DE USUARIO: minimalista, grueso y con color ===== */
+.tb-user{display:flex;align-items:center;gap:9px;background:none;border:0;padding:4px 6px 4px 4px;
+  font-family:inherit;font-size:13px;font-weight:800;letter-spacing:-.02em;color:var(--text);
+  cursor:pointer;margin-left:12px;border-radius:999px}
+.tb-user:hover{background:var(--bg)}
+.tb-avatar{display:flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:50%;background:linear-gradient(135deg,#047857,#0369a1);color:#fff;
+  font-size:11.5px;font-weight:800;letter-spacing:.02em;flex-shrink:0}

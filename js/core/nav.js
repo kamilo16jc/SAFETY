@@ -52,34 +52,31 @@ function renderModuleScreen(){
   var grid = document.getElementById('mod-cards');
   if(!m || !grid) return;
   if(hero){
-    hero.innerHTML = '<span class="mod-hero-ico" data-icon="'+m.icon+'"></span>'+
+    hero.innerHTML = '<button class="back-btn" onclick="goTo(\'screen-home\')">'+
+      '<span class="btn-ico" data-icon="back"></span></button>'+
+      '<span class="mod-hero-ico" data-icon="'+m.icon+'"></span>'+
       '<div><b>'+esc(m.name)+'</b><span>'+
       m.items.filter(function(i){return !i.soon;}).length+' functions</span></div>';
     hero.style.setProperty('--mod', m.ink);
     renderIcons(hero);
   }
   grid.innerHTML = m.items.map(function(i){
-    if(i.soon) return '<span class="mcard solid soon" style="--mod:'+m.ink+'">'+
+    if(i.soon) return '<span class="mcard solid soon" style="--mod:'+(i.color||m.ink)+'">'+
       '<span class="mcard-ico" data-icon="'+i.icon+'"></span><b>'+esc(i.name)+'</b>'+
       '<span class="mcard-n">coming soon</span></span>';
-    return '<button class="mcard solid" style="--mod:'+m.ink+'" onclick="goTo(\''+i.screen+'\')">'+
+    return '<button class="mcard solid" style="--mod:'+(i.color||m.ink)+'" onclick="goTo(\''+i.screen+'\')">'+
       '<span class="mcard-ico" data-icon="'+i.icon+'"></span><b>'+esc(i.name)+'</b></button>';
   }).join('');
   renderIcons(grid);
 }
 
-function renderModuleBar(current){
-  var bar = document.getElementById('module-bar');
-  if(!bar) return;
-  if(!currentUser){ bar.innerHTML=''; return; }
+function renderModuleBar(){ /* la barra se eliminó: se navega por tarjetas */ }
 
-  var mods = myModules();
-  bar.innerHTML = mods.map(function(m){
-    return '<button class="mod-tab'+(m.id===activeModule?' on':'')+'" style="--mod:'+m.color+'" onclick="selectModule(\''+m.id+'\')">'+
-      '<span class="mod-ico" data-icon="'+m.icon+'"></span>'+esc(m.name)+'</button>';
-  }).join('');
-
-  renderIcons(bar);
+// Volver: de un formulario al menú del módulo, y del módulo al inicio
+function goBack(){
+  var cur=(document.querySelector('.screen.active')||{}).id;
+  if(cur==='screen-module' || !activeModule) goTo('screen-home');
+  else goTo('screen-module');
 }
 
 // ===== TOPBAR (sólo visible en escritorio) =====
@@ -128,6 +125,8 @@ function toast(msg){
 function setDrawerUser(){
   if(!currentUser) return;
   var n=document.getElementById('tb-uname'); if(n) n.textContent = currentUser.name.split(' ')[0];
+  var iv=document.getElementById('tb-init');
+  if(iv) iv.textContent = currentUser.name.split(' ').map(function(x){return x[0];}).join('').slice(0,2).toUpperCase();
   var a=document.getElementById('um-name');  if(a) a.textContent = currentUser.name;
   var r=document.getElementById('um-role');  if(r) r.textContent = currentUser.role;
 }

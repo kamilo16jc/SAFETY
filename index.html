@@ -25,21 +25,20 @@
   <div class="tb-spacer"></div>
   <span class="tb-chip"><span class="tb-dot"></span>Synced</span>
   <span class="tb-stamp" id="tb-stamp"></span>
-  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span data-icon="user"></span><span id="tb-uname"></span></button>
+  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span class="tb-avatar" id="tb-init"></span><span id="tb-uname"></span></button>
   <div class="user-menu" id="user-menu">
     <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
     <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
     <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
   </div>
 </header>
-<nav class="module-bar" id="module-bar"></nav>
 </div>
 
 <!-- DRAWER -->
 <!-- WEIGHT -->
 <!-- PRODUCTION SCHEDULE -->
 <div class="screen" id="screen-production">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Production Schedule</div>
   <div class="form-meta">Run order and QC checklist</div>
 
@@ -99,7 +98,7 @@
 
 <!-- ADMIN -->
 <div class="screen" id="screen-admin">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Admin Panel</div>
   <div class="form-meta">Manage users</div>
 
@@ -146,7 +145,7 @@
 <!-- LAB SAMPLES -->
 <!-- SAMPLE ANALYSIS (COA) -->
 <div class="screen" id="screen-analysis">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Sample Analysis</div>
   <div class="form-meta">Moisture, Fat and pH — this is what marks a product as tested</div>
 
@@ -191,7 +190,7 @@
 </div>
 
 <div class="screen" id="screen-lab">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Lab Samples</div>
   <div class="form-meta">Samples due to the lab, from the production schedule</div>
 
@@ -216,7 +215,7 @@
 </div>
 
 <div class="screen" id="screen-weight">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Weight Log</div>
   <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
@@ -300,7 +299,7 @@
 
 <!-- BAG SEAL -->
 <div class="screen" id="screen-seal">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Bag Seal</div>
   <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
   <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
@@ -350,7 +349,7 @@
 
 <!-- DASHBOARD -->
 <div class="screen" id="screen-dashboard">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Dashboard</div>
@@ -470,7 +469,7 @@
 
 <!-- GMP -->
 <div class="screen" id="screen-gmp">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">GMP Audit</div>
   <div class="form-meta">SQF # 2.5.D.A · Daily GMP Facility Audit</div>
   <div class="sec-label">Location</div>
@@ -511,7 +510,7 @@
 
 <!-- TEMP & HUMIDITY -->
 <div class="screen" id="screen-temp">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Temp & Humidity</div>
   <div class="form-meta">Building 1945 · SQF # 2.5.D.A</div>
 
@@ -580,7 +579,7 @@
 
 <!-- PRODUCTS -->
 <div class="screen" id="screen-products">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Products</div>
@@ -622,7 +621,7 @@
 
 <!-- METAL DETECTOR -->
 <div class="screen" id="screen-metal">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Metal Detector Check</div>
   <div class="form-meta">Routine metal detector verification</div>
 
@@ -669,7 +668,7 @@
 
 <!-- INCIDENT & CAPA -->
 <div class="screen" id="screen-capa">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Incident &amp; CAPA</div>
@@ -742,7 +741,7 @@
 
 <!-- SHIFT REPORTS -->
 <div class="screen" id="screen-shift">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Shift Reports</div>
@@ -831,7 +830,7 @@
 
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title" id="title-reports">Reports</div>
   <div class="form-meta" id="meta-reports">Filter and export records to PDF</div>
 
@@ -906,7 +905,7 @@
 
 <!-- HOLD MANAGEMENT -->
 <div class="screen" id="screen-hold">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Hold Cases</div>
   <div class="form-meta">Track and manage held products</div>
 
@@ -975,7 +974,7 @@
 
 <!-- LOT SEARCH SCREEN -->
 <div class="screen" id="screen-lotsearch">
-  <button class="back-btn" onclick="goTo('screen-home')"><span data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Search</div>
@@ -1048,7 +1047,7 @@
 
 <!-- ACTIVITY LOG SCREEN -->
 <div class="screen" id="screen-activity">
-  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Activity Log</div>
   <div class="form-meta">Last 24 hours · Tap calendar to search by date</div>
 

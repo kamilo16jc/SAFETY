@@ -8,40 +8,40 @@
 
 var MODULES = [
   { id:'qa', color:'#4ade80', ink:'#047857', name:'QA Inspection', icon:'clipboard', items:[
-      {screen:'screen-weight',    name:'Weights',          icon:'scale'},
-      {screen:'screen-seal',      name:'Seal Bags',        icon:'droplet'},
-      {screen:'screen-temp',      name:'Temperatures',     icon:'thermo'},
-      {screen:'screen-gmp',       name:'GMP Audit',        icon:'clipboard'},
-      {screen:'screen-metal',     name:'Metal Detector',   icon:'magnet'},
-      {screen:'screen-capa',      name:'CAPA Reports',     icon:'alert'},
-      {screen:'screen-hold',      name:'Hold Cases',       icon:'lock'},
-      {screen:'screen-shift',     name:'Shift Report',     icon:'note'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc'},
-      {screen:'screen-lotsearch', name:'Search',           icon:'search'}
+      {screen:'screen-weight',    name:'Weights',          icon:'scale', color:'#047857'},
+      {screen:'screen-seal',      name:'Seal Bags',        icon:'droplet', color:'#0369a1'},
+      {screen:'screen-temp',      name:'Temperatures',     icon:'thermo', color:'#b45309'},
+      {screen:'screen-gmp',       name:'GMP Audit',        icon:'clipboard', color:'#7c3aed'},
+      {screen:'screen-metal',     name:'Metal Detector',   icon:'magnet', color:'#be123c'},
+      {screen:'screen-capa',      name:'CAPA Reports',     icon:'alert', color:'#0e7490'},
+      {screen:'screen-hold',      name:'Hold Cases',       icon:'lock', color:'#15803d'},
+      {screen:'screen-shift',     name:'Shift Report',     icon:'note', color:'#c2410c'},
+      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#6d28d9'},
+      {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#9d174d'}
   ]},
   { id:'lab', color:'#38bdf8', ink:'#0369a1', name:'QA Laboratory', icon:'droplet', items:[
-      {screen:'screen-analysis',  name:'Sample Analysis',  icon:'clipboard'},
-      {screen:'screen-lab',       name:'Lab Samples',      icon:'droplet'},
-      {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', soon:true},
-      {screen:'screen-raw',       name:'Raw Material',     icon:'box',    soon:true},
-      {screen:'screen-shift',     name:'Shift Report',     icon:'note'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc'},
-      {screen:'screen-lotsearch', name:'Search',           icon:'search'}
+      {screen:'screen-analysis',  name:'Sample Analysis',  icon:'clipboard', color:'#047857'},
+      {screen:'screen-lab',       name:'Lab Samples',      icon:'droplet', color:'#0369a1'},
+      {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', soon:true, color:'#b45309'},
+      {screen:'screen-raw',       name:'Raw Material',     icon:'box',    soon:true, color:'#7c3aed'},
+      {screen:'screen-shift',     name:'Shift Report',     icon:'note', color:'#be123c'},
+      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#0e7490'},
+      {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#15803d'}
   ]},
   { id:'production', color:'#fbbf24', ink:'#b45309', name:'Production', icon:'calendar', items:[
-      {screen:'screen-production',name:'Schedule',         icon:'calendar'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc'},
-      {screen:'screen-lotsearch', name:'Search',           icon:'search'}
+      {screen:'screen-production',name:'Schedule',         icon:'calendar', color:'#047857'},
+      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#0369a1'},
+      {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#b45309'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
-      {screen:'screen-products',  name:'Product Catalog',  icon:'box'}
+      {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'}
   ]},
   { id:'admin', color:'#fb7185', ink:'#be123c', name:'Administrator', icon:'sliders', items:[
-      {screen:'screen-dashboard', name:'Dashboard',        icon:'chart'},
-      {screen:'screen-reports',   name:'Reports · all',    icon:'doc'},
-      {screen:'screen-lotsearch', name:'Search · all',     icon:'search'},
-      {screen:'screen-activity',  name:'Activity Log',     icon:'pulse'},
-      {screen:'screen-admin',     name:'Users & Roles',    icon:'user'}
+      {screen:'screen-dashboard', name:'Dashboard',        icon:'chart', color:'#047857'},
+      {screen:'screen-reports',   name:'Reports · all',    icon:'doc', color:'#0369a1'},
+      {screen:'screen-lotsearch', name:'Search · all',     icon:'search', color:'#b45309'},
+      {screen:'screen-activity',  name:'Activity Log',     icon:'pulse', color:'#7c3aed'},
+      {screen:'screen-admin',     name:'Users & Roles',    icon:'user', color:'#be123c'}
   ]}
 ];
 
