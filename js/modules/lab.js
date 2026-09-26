@@ -117,6 +117,7 @@ function renderLab(){
       labCustomerLine(r)+
       '<div class="lab-grid">'+
         '<div><span>LOT</span><b class="mono">'+esc(r.lot||'—')+'</b></div>'+
+        '<div><span>Samples</span><b>'+(r.sampleFrom? r.sampleFrom+'–'+r.sampleTo : '—')+'</b></div>'+
         '<div><span>Collected</span><b>'+(r.collected?hhmm(r.collectedAt):'—')+'</b></div>'+
         '<div><span>Sent</span><b>'+(r.labSent?hhmm(r.labSentAt):'—')+'</b></div>'+
       '</div>'+

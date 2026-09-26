@@ -162,8 +162,61 @@ function toggleRunCheck(id, field){
   // Se guarda la hora: la de recolección la pide la forma del laboratorio
   if(field==='collected') run.collectedAt = run.collected ? localISOStr() : '';
   if(field==='labSent')   run.labSentAt   = run.labSent   ? localISOStr() : '';
+  // Al recoger una muestra de laboratorio se le asignan sus 5 números
+  if(field==='collected' && run.collected && run.labSample && !run.sampleFrom){
+    assignLabSampleRange(run, db);
+  }
+  if(field==='collected' && !run.collected){ run.sampleFrom=null; run.sampleTo=null; }
   persistRunEdit(run, db);
   refreshRunViews();
+}
+
+// ===== NUMERACIÓN DE SAMPLES =====
+// El contador es POR CLIENTE (Litehouse lleva la suya, cada cliente la suya) y
+// se resetea cada semana. Como parte de las muestras se recogen fuera del
+// sistema, siempre se pregunta en qué número arrancar.
+function weekKey(d){
+  var dt = new Date(String(d||'').slice(0,10)+'T12:00:00');
+  if(isNaN(dt)) dt = new Date();
+  dt.setDate(dt.getDate() - ((dt.getDay()+6)%7));   // lunes de esa semana
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function getLabCounters(){ var d=getDB(); return d.labCounters || {}; }
+// db: si viene, se muta esa MISMA referencia y la persiste quien llama. Sin
+// esto, el saveDB posterior del registro pisaba el contador recién escrito.
+function setLabCounter(customerId, week, next, db){
+  var d = db || getDB();
+  if(!d.labCounters) d.labCounters = {};
+  d.labCounters[customerId] = {week:week, next:next};
+  if(!db) saveDB(d);
+  if(window.saveLabCountersToFirebase) window.saveLabCountersToFirebase(d.labCounters);
+}
+
+function runCustomer(run){
+  var p = (typeof findProduct==='function') ? findProduct(run.product) : null;
+  return (typeof productCustomer==='function') ? productCustomer(p || {number:run.product}) : null;
+}
+
+function assignLabSampleRange(run, db){
+  var c = runCustomer(run);
+  if(!c){ toast('Assign a customer to this product first (Products)'); return; }
+  var wk = weekKey(run.date);
+  var st = ((db && db.labCounters) || getLabCounters())[c.customerId];
+  var proposed = (st && st.week===wk) ? st.next : 1;   // semana nueva -> arranca en 1
+  var ans = prompt('Sample numbers for '+c.company+'\n'+
+    'Week of '+wk+'. This order takes 5 samples.\n'+
+    'Start at which sample number?', String(proposed));
+  if(ans===null) return;                                // canceló: queda sin números
+  var n = parseInt(ans,10);
+  if(isNaN(n) || n<1){ toast('Invalid sample number'); return; }
+  run.sampleFrom = n; run.sampleTo = n+4;
+  setLabCounter(c.customerId, wk, n+5, db);
+  toast('Samples '+n+'–'+(n+4)+' assigned');
+}
+
+// Texto que va en la forma: "Producto (51-55)"
+function sampleRangeLabel(run){
+  return run.sampleFrom ? ' ('+run.sampleFrom+'-'+run.sampleTo+')' : '';
 }
 
 // Repinta la vista que esté abierta (Production o Lab Samples)
@@ -257,7 +310,9 @@ function renderProduction(){
         '<button class="scan-btn" title="Scan LOT" onclick="scanRunLot('+r.id+')"><span data-icon="scan"></span></button>'+
       '</div>'+
       '<div class="run-checks">'+
-        chk(r.collected, 'Collected from line', 'toggleRunCheck('+r.id+",'collected')")+
+        chk(r.collected, 'Collected from line'+
+            (r.sampleFrom ? ' · samples '+r.sampleFrom+'–'+r.sampleTo : ''),
+            'toggleRunCheck('+r.id+",'collected')")+
         '<div class="run-chk auto'+(t.tested?' on':'')+'">'+
           '<span class="run-box">'+(t.tested?'✓':'')+'</span>Tested'+
           '<span class="run-auto">'+(t.tested ? (t.w+' weight · '+t.s+' seal') : 'no records yet')+'</span>'+

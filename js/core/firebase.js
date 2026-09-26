@@ -103,6 +103,10 @@
     onSnapshot(doc(db,'config','customers'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.customers=d.data(); saveDB(ldb); }
     }, function(){});
+    // Contadores de sample por cliente (se comparten y se resetean cada semana)
+    onSnapshot(doc(db,'config','labCounters'), function(d){
+      if(d.exists()){ var ldb=getDB(); ldb.labCounters=d.data().counters||{}; saveDB(ldb); }
+    }, function(){});
     onSnapshot(doc(db,'config','operators'), function(d){
       if(d.exists()){ var list=d.data().list||[]; if(list.length){ var ldb=getDB(); ldb.operators=list; saveDB(ldb); } }
       if(window.initLogin) window.initLogin();
@@ -299,6 +303,15 @@
       await setDoc(doc(db,'config','areas'), {list: list, updatedAt: new Date().toISOString()});
     } catch(e) {
       console.error('Save areas error:', e);
+    }
+  };
+
+  // ---- SAVE LAB SAMPLE COUNTERS to Firestore ----
+  window.saveLabCountersToFirebase = async function(counters) {
+    try {
+      await setDoc(doc(db,'config','labCounters'), {counters: counters, updatedAt: new Date().toISOString()});
+    } catch(e) {
+      console.error('Save lab counters error:', e);
     }
   };
 
