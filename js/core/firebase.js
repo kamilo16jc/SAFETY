@@ -103,6 +103,10 @@
     onSnapshot(doc(db,'config','customers'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.customers=d.data(); saveDB(ldb); }
     }, function(){});
+    // Mapa test -> columna de cada forma del laboratorio (documento pequeño)
+    onSnapshot(doc(db,'config','labTestMap'), function(d){
+      if(d.exists()){ var ldb=getDB(); ldb.labTestMap=d.data(); saveDB(ldb); }
+    }, function(){});
     // Contadores de sample por cliente (se comparten y se resetean cada semana)
     onSnapshot(doc(db,'config','labCounters'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.labCounters=d.data().counters||{}; saveDB(ldb); }
@@ -303,6 +307,17 @@
       await setDoc(doc(db,'config','areas'), {list: list, updatedAt: new Date().toISOString()});
     } catch(e) {
       console.error('Save areas error:', e);
+    }
+  };
+
+  // ---- LOAD una plantilla del laboratorio (bajo demanda: pesan ~300KB) ----
+  window.loadLabTemplate = async function(name, cb) {
+    try {
+      var snap = await getDoc(doc(db,'labTemplates',name));
+      cb(snap.exists() ? snap.data() : null);
+    } catch(e) {
+      console.error('Load lab template error:', e);
+      cb(null);
     }
   };
 

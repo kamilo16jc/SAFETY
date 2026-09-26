@@ -73,6 +73,7 @@ function hhmm(iso){
 }
 
 function renderLab(){
+  if(typeof renderLabForms==='function') renderLabForms();
   var el = document.getElementById('lab-list');
   if(!el) return;
   var list = labSamples();
