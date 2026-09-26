@@ -362,6 +362,11 @@ canvas{width:100%!important}
 .run-box{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--border);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff}
 .run-chk.on .run-box{background:var(--pass);border-color:var(--pass)}
 .run-auto{margin-left:auto;font-size:10px;font-weight:500;color:var(--dim)}
+.lab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:9px}
+.lab-grid div{border:1px solid var(--border);border-radius:8px;padding:7px 9px;background:var(--bg)}
+.lab-grid span{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim)}
+.lab-grid b{font-size:12.5px;color:var(--text)}
+.lab-warn{font-size:11px;font-weight:700;color:var(--warn);margin-bottom:8px}
 .btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn-ghost:active{transform:scale(0.97)}
 .btn-ghost svg{width:15px;height:15px}

@@ -120,6 +120,7 @@
     <button class="d-item" data-screen="screen-home" onclick="navDrawer('screen-home')"><span class="d-ico" data-icon="home"></span>Home</button>
     <div class="nav-label">Capture</div>
     <button class="d-item" data-screen="screen-production" onclick="navDrawer('screen-production')"><span class="d-ico" data-icon="calendar"></span>Production</button>
+    <button class="d-item" data-screen="screen-lab" onclick="navDrawer('screen-lab')"><span class="d-ico" data-icon="droplet"></span>Lab Samples</button>
     <button class="d-item" data-screen="screen-weight" onclick="navDrawer('screen-weight')"><span class="d-ico" data-icon="scale"></span>Weight Log</button>
     <button class="d-item" data-screen="screen-seal" onclick="navDrawer('screen-seal')"><span class="d-ico" data-icon="droplet"></span>Bag Seal</button>
     <button class="d-item" data-screen="screen-gmp" onclick="navDrawer('screen-gmp')"><span class="d-ico" data-icon="clipboard"></span>GMP Audit</button>
@@ -190,6 +191,31 @@
     <span data-icon="calendar"></span>Copy schedule from another day</button>
 
   <div id="pr-list"></div>
+</div>
+
+<!-- LAB SAMPLES -->
+<div class="screen" id="screen-lab">
+  <button class="back-btn" onclick="goTo('screen-home')"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Lab Samples</div>
+  <div class="form-meta">Samples due to the lab, from the production schedule</div>
+
+  <div class="pair">
+    <div class="field-group"><div class="sec-label">From</div>
+      <input type="date" class="time-input" id="lab-from" style="width:100%" onchange="renderLab()"></div>
+    <div class="field-group"><div class="sec-label">To</div>
+      <input type="date" class="time-input" id="lab-to" style="width:100%" onchange="renderLab()"></div>
+  </div>
+  <div class="sec-label">Status</div>
+  <div class="select-wrap"><select class="field" id="lab-status" onchange="renderLab()">
+    <option value="pending">Pending</option>
+    <option value="sent">Sent</option>
+    <option value="all">All</option>
+  </select></div>
+
+  <div id="lab-summary"></div>
+  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="exportLabPDF()">
+    <span data-icon="doc"></span>Export lab sample list (PDF)</button>
+  <div id="lab-list"></div>
 </div>
 
 <div class="screen" id="screen-weight">
@@ -1014,6 +1040,7 @@
           <option value="hold">Holds only</option>
           <option value="capa">CAPA only</option>
           <option value="shift">Shift reports only</option>
+          <option value="run">Production runs only</option>
         </select></div>
       </div>
     </div>
@@ -1187,6 +1214,7 @@
 <script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>
+<script src="js/modules/lab.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>

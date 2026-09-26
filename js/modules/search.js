@@ -137,6 +137,14 @@ function searchResults(){
                  (pnum && String(c.product||'').toLowerCase()===pnum);
                return hitTxt && inDateRange(c.capaDate);
              }).sort(function(a,b){ return String(b.capaDate||'').localeCompare(String(a.capaDate||'')); }) : [],
+    runs:    (sf.type==='all'||sf.type==='run') ? (db.runs||[]).filter(function(r){
+               var hitTxt = !l ||
+                 String(r.lot||'').toLowerCase().indexOf(l)>-1 ||
+                 String(r.product||'').toLowerCase().indexOf(l)>-1 ||
+                 String(r.productName||'').toLowerCase().indexOf(l)>-1 ||
+                 (pnum && String(r.product||'').toLowerCase()===pnum);
+               return hitTxt && inDateRange(r.date) && matchLineShift(r);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : [],
     shifts:  (sf.type==='all'||sf.type==='shift') ? (db.shifts||[]).filter(function(s){
                var hitTxt = !l ||
                  String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
@@ -164,7 +172,7 @@ function activeFilterChips(){
   else if(sf.to)            chips.push('Up to '+fmtDate(sf.to));
   if(sf.line!=='all')       chips.push('Line '+sf.line);
   if(sf.shift!=='all')      chips.push((sf.shift==='1'?'1st':'2nd')+' shift');
-  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only',shift:'Shift reports only'}[sf.type]);
+  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only',shift:'Shift reports only',run:'Production runs only'}[sf.type]);
   if(!chips.length) return '';
   return '<div class="filter-chips">'+chips.map(function(c){
     return '<span class="fchip">'+esc(c)+'</span>';
@@ -189,7 +197,7 @@ function renderSearch(){
   }
 
   var r = searchResults();
-  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) + (r.shifts?r.shifts.length:0);
+  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) + (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0);
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -213,8 +221,34 @@ function renderSearch(){
     holdPanel(r.holds) +
     capaPanel(r.capa) +
     shiftPanel(r.shifts) +
+    runPanel(r.runs) +
     historyHint();
   renderIcons(el);
+}
+
+// Corridas del Production Schedule que coinciden con la búsqueda: cierra la
+// trazabilidad del LOT (qué se programó, si se recogió, testeó y fue al lab).
+function runPanel(list){
+  if(!list || !list.length) return '';
+  var yn = function(on){ return on ? '<span class="pill ok">Yes</span>' : '<span class="pill bad">No</span>'; };
+  var rows = list.map(function(r){
+    var t = (typeof runTestCount==='function') ? runTestCount(r) : {tested:false};
+    return '<tr>'+
+      '<td class="mono">'+fmtDate(r.date)+'</td>'+
+      '<td>'+(r.shift===1?'1st':'2nd')+'</td>'+
+      '<td>Line '+esc(r.line)+'</td>'+
+      '<td class="mono">'+esc(r.product||'—')+'</td>'+
+      '<td>'+esc(r.productName||'—')+(r.labSample?' <span class="tag warn">LAB</span>':'')+'</td>'+
+      '<td class="mono code">'+esc(r.lot||'—')+'</td>'+
+      '<td>'+yn(r.collected)+'</td>'+
+      '<td>'+yn(t.tested)+'</td>'+
+      '<td>'+(r.labSample ? yn(r.labSent) : '<span class="pill">—</span>')+'</td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Production runs', list.length, [
+    {t:'Date'},{t:'Shift'},{t:'Line'},{t:'Product'},{t:'Description'},{t:'LOT'},
+    {t:'Collected'},{t:'Tested'},{t:'Lab sent'}
+  ], rows);
 }
 
 // Solo los últimos 90 días están cargados en memoria. Si el operador busca un

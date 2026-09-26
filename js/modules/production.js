@@ -151,7 +151,7 @@ function setRunLot(id, val){
   if(!run) return;
   run.lot = String(val||'').trim();
   persistRunEdit(run, db);
-  renderProduction();
+  refreshRunViews();
 }
 
 function toggleRunCheck(id, field){
@@ -159,8 +159,19 @@ function toggleRunCheck(id, field){
   var run = (db.runs||[]).filter(function(r){ return r.id===id; })[0];
   if(!run) return;
   run[field] = !run[field];
+  // Se guarda la hora: la de recolección la pide la forma del laboratorio
+  if(field==='collected') run.collectedAt = run.collected ? localISOStr() : '';
+  if(field==='labSent')   run.labSentAt   = run.labSent   ? localISOStr() : '';
   persistRunEdit(run, db);
-  renderProduction();
+  refreshRunViews();
+}
+
+// Repinta la vista que esté abierta (Production o Lab Samples)
+function refreshRunViews(){
+  var pr = document.getElementById('screen-production');
+  if(pr && pr.classList.contains('active')) renderProduction();
+  var lb = document.getElementById('screen-lab');
+  if(lb && lb.classList.contains('active') && typeof renderLab==='function') renderLab();
 }
 
 function scanRunLot(id){ openScanner('runlot:'+id); }
