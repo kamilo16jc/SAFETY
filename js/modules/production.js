@@ -43,7 +43,30 @@ function runTestCount(run){
   };
   var w = (db.weights||[]).filter(match).length;
   var s = (db.seals||[]).filter(match).length;
-  return {w:w, s:s, tested:(w+s)>0};
+  var auto = (w+s)>0;
+  // Si no hay registro que lo pruebe, QA puede marcarlo a mano (queda constancia)
+  var manual = !!run.testedManual;
+  return {w:w, s:s, auto:auto, manual:manual, tested: auto || manual};
+}
+
+// Marca "testeado" a mano. Solo cuando no hay registro que lo confirme: lo que
+// los registros ya prueban no se puede desmarcar.
+function toggleRunTested(id){
+  var db = getDB();
+  var run = (db.runs||[]).filter(function(r){ return r.id===id; })[0];
+  if(!run) return;
+  if(runTestCount(run).auto){
+    toast('Already confirmed by the weight / bag seal records');
+    return;
+  }
+  run.testedManual   = !run.testedManual;
+  run.testedManualAt = run.testedManual ? localISOStr() : '';
+  run.testedManualBy = run.testedManual ? (currentUser ? currentUser.name : '—') : '';
+  persistRunEdit(run, db);
+  logActivity('production', run.testedManual ? 'Run marked as tested (manual)' : 'Manual tested mark removed',
+    'Line '+run.line+' · '+(run.product||'—')+' · '+String(run.date).slice(0,10),
+    currentUser?currentUser.name:'—');
+  refreshRunViews();
 }
 
 function runComplete(run){
@@ -317,10 +340,15 @@ function renderProduction(){
         chk(r.collected, 'Collected from line'+
             (r.sampleFrom ? ' · samples '+r.sampleFrom+'–'+r.sampleTo : ''),
             'toggleRunCheck('+r.id+",'collected')")+
-        '<div class="run-chk auto'+(t.tested?' on':'')+'">'+
-          '<span class="run-box">'+(t.tested?'✓':'')+'</span>Tested'+
-          '<span class="run-auto">'+(t.tested ? (t.w+' weight · '+t.s+' seal') : 'no records yet')+'</span>'+
-        '</div>'+
+        (t.auto
+          // Confirmado por los registros: no se puede desmarcar
+          ? '<div class="run-chk auto on"><span class="run-box">✓</span>Tested'+
+              '<span class="run-auto">'+t.w+' weight · '+t.s+' seal</span></div>'
+          // Sin registro: QA lo puede marcar a mano
+          : '<button class="run-chk'+(t.manual?' on':'')+'" onclick="toggleRunTested('+r.id+')">'+
+              '<span class="run-box">'+(t.manual?'✓':'')+'</span>Tested'+
+              '<span class="run-auto">'+(t.manual?'marked manually':'no records — tap if tested')+'</span>'+
+            '</button>')+
         (r.labSample ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
       '</div>'+
       '<div class="run-actions">'+

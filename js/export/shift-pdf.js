@@ -21,7 +21,7 @@ function scheduleSection(runs, C){
       '<td '+td+'>'+C.esc(r.time||'—')+'</td>'+
       '<td '+td+'>'+C.esc(r.lot||'—')+'</td>'+
       '<td '+td+' align="center">'+yes(r.collected)+'</td>'+
-      '<td '+td+' align="center">'+yes(t.tested)+'</td>'+
+      '<td '+td+' align="center">'+yes(t.tested)+(t.tested && !t.auto ? ' *' : '')+'</td>'+
       '<td '+td+' align="center">'+(r.labSample ? yes(r.labSent) : '—')+'</td>'+
     '</tr>';
   }).join('');
@@ -35,6 +35,8 @@ function scheduleSection(runs, C){
     '<div style="font-size:9px;color:'+C.soft+';margin-bottom:14px">'+
       runs.length+' run(s) · '+(runs.length-pend)+' complete · '+pend+' pending'+
       (labs.length ? ' · lab samples: '+(labs.length-labsPend)+'/'+labs.length+' sent' : '')+
+      (runs.some(function(r){ var t=runTestCount(r); return t.tested && !t.auto; })
+        ? '<br>* Tested marked manually — no weight or bag seal record on file.' : '')+
     '</div>';
 }
 
