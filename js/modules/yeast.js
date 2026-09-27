@@ -176,11 +176,13 @@ function ymStatusHTML(a){
   if(st==='done'){
     return '<span class="pill ok">Read'+(a.ymAt ? ' · '+esc(fmtDate(a.ymAt)) : '')+'</span>';
   }
+  // Mientras no este leida, la placa esta PENDIENTE; al lado, por que
   var left = ymDaysLeft(a);
   if(st==='ready'){
-    return '<span class="pill bad">Ready'+(left<0 ? ' · '+Math.abs(left)+'d late' : ' today')+'</span>';
+    return '<span class="pill bad">Pending'+
+      (left<0 ? ' · '+Math.abs(left)+'d late' : ' · read today')+'</span>';
   }
-  return '<span class="pill">'+left+' day'+(left===1?'':'s')+' left</span>';
+  return '<span class="pill">Pending · '+left+' day'+(left===1?'':'s')+' left</span>';
 }
 
 // Guarda una celda. NO repinta la tabla entera: si lo hiciera, al pasar de

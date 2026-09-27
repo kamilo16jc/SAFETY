@@ -353,8 +353,8 @@ function analysisPanel(list){
   var rows = list.slice(0, SEARCH_LIMIT).map(function(a){
     var plate = (typeof ymState==='function') ? ymState(a) : (a.yeast ? 'done' : 'waiting');
     var pill = plate==='done'  ? '<span class="pill ok">Read</span>'
-             : plate==='ready' ? '<span class="pill bad">Ready to read</span>'
-             : '<span class="pill">Incubating</span>';
+             : plate==='ready' ? '<span class="pill bad">Pending · read now</span>'
+             : '<span class="pill">Pending · incubating</span>';
     return '<tr class="view-row" onclick="viewAnalysisRecord('+a.id+')">'+
       '<td class="mono code">#'+v(a.seq)+'</td>'+
       '<td>'+fmtDate(a.date)+'</td>'+

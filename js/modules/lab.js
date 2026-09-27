@@ -164,9 +164,9 @@ function labRowHTML(r, i){
   var c = labCustomerOf(r);
   var ready = labReady(r);
   var status = r.labSent ? '<span class="pill ok">Sent</span>'
-             : !r.lot ? '<span class="pill bad">LOT missing</span>'
-             : !r.collected ? '<span class="pill bad">Not collected</span>'
-             : '<span class="pill warn">Ready</span>';
+             : !r.lot ? '<span class="pill bad">Pending · LOT missing</span>'
+             : !r.collected ? '<span class="pill bad">Pending · not collected</span>'
+             : '<span class="pill warn">Pending</span>';
   var tests = c && (c.tests||[]).length
     ? (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')
     : '<span class="soft">\u2014</span>';

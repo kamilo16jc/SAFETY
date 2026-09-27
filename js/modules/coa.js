@@ -395,8 +395,8 @@ function coaRowHTML(a, i){
   var v = function(x){ return (x==null || x==='') ? '—' : esc(x); };
   var st = coaState(a);
   var pill = st==='issued' ? '<span class="pill ok">Certified</span>'
-           : st==='ready'  ? '<span class="pill warn">Ready</span>'
-           : '<span class="pill bad">'+(coaMissing(a))+'</span>';
+           : st==='ready'  ? '<span class="pill warn">Pending</span>'
+           : '<span class="pill bad">Pending · '+(coaMissing(a))+'</span>';
   var dirty = a.coaNo && coaChangedAfterIssue(a)
     ? ' <span class="pill bad" title="Edited after the COA was issued">changed</span>' : '';
   return '<tr'+(st==='issued'?' class="done"':'')+'>'+
@@ -427,7 +427,7 @@ function coaMissing(a){
   var m = [];
   if(!(a.moisture && a.fat && a.ph)) m.push('analysis');
   if(!(a.result && String(a.result).trim())) m.push('verdict');
-  return m.length ? 'Missing '+m.join(' + ') : 'Incomplete';
+  return m.length ? 'missing '+m.join(' + ') : 'incomplete';
 }
 // ¿Se tocó algo después de emitir el certificado?
 function coaChangedAfterIssue(a){

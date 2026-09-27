@@ -420,7 +420,8 @@ function runRowHTML(r, i){
     '<td class="rn">'+i+'</td>'+
     '<td class="code">'+esc(r.product||'\u2014')+'</td>'+
     '<td class="wide">'+esc(r.productName||'\u2014')+
-      (complete?' <span class="tag ok">Complete</span>':'')+'</td>'+
+      (complete ? ' <span class="tag ok">Complete</span>'
+                : ' <span class="tag warn">Pending</span>')+'</td>'+
     '<td class="mid">'+esc(String(r.line||'\u2014'))+'</td>'+
     '<td><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
       'onchange="setRunLot('+r.id+', this.value)"></td>'+
