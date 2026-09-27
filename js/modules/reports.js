@@ -39,7 +39,47 @@ function renderRptDirty(){
   if(b) b.classList.toggle('pending', rptDirty);
 }
 
+// Reports es la misma pantalla en todos los modulos: cada bloque declara a que
+// alcance pertenece y solo se muestra si el modulo activo lo puede ver.
+function applyReportScope(){
+  document.querySelectorAll('#screen-reports .rpt-sec').forEach(function(el){
+    var k = el.getAttribute('data-scope');
+    el.style.display = (typeof scopeHas==='function' && !scopeHas(k)) ? 'none' : '';
+  });
+}
+
+// Resumen del laboratorio para el dia filtrado
+function renderRptLab(){
+  var el = document.getElementById('rpt-lab-list');
+  if(!el || (typeof scopeHas==='function' && !scopeHas('analysis'))) return;
+  var day = (document.getElementById('rpt-date')||{}).value || localDateStr();
+  var list = (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
+    return String(a.date||'').slice(0,10)===day;
+  });
+  if(!list.length){
+    el.innerHTML = '<div class="sheet-empty">No sample analysis for this date.</div>';
+    return;
+  }
+  var v = function(x){ return (x==null||x==='') ? '—' : esc(x); };
+  el.innerHTML = '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>ID</th><th>Product</th><th class="wide">Cheese</th><th>Customer</th>'+
+      '<th class="num">Moisture</th><th class="num">Fat</th><th class="num">pH</th>'+
+      '<th class="num">Yeast</th><th class="num">Mold</th><th>By</th>'+
+    '</tr></thead><tbody>'+
+    list.map(function(a,i){
+      return '<tr><td class="rn">'+(i+1)+'</td>'+
+        '<td class="code">#'+v(a.seq)+'</td>'+
+        '<td class="code">'+v(a.product)+'</td>'+
+        '<td class="wide">'+v(a.cheese)+'</td>'+
+        '<td class="soft">'+v(a.customer)+'</td>'+
+        '<td class="num">'+v(a.moisture)+'</td><td class="num">'+v(a.fat)+'</td>'+
+        '<td class="num">'+v(a.ph)+'</td><td class="num">'+v(a.yeast)+'</td>'+
+        '<td class="num">'+v(a.mold)+'</td><td class="soft">'+v(a.testedBy)+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
 function initReports() {
+  applyReportScope();
   var sd = document.getElementById('rpt-shift-date');
   if(sd && !sd.value) sd.value = localDateStr();
   var ss = document.getElementById('rpt-shift-sel');
@@ -75,6 +115,7 @@ function setRptFilter(btn) {
 function applyRptFilters() {
   rptDirty = false;
   renderRptDirty();
+  renderRptLab();
   rptFilters.date    = document.getElementById('rpt-date').value;
   rptFilters.product = (document.getElementById('rpt-product').value || '').trim().toLowerCase();
   var db = getDB();

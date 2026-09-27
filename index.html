@@ -946,6 +946,7 @@
   </div>
 
   <!-- DAILY SHIFT REPORT -->
+  <div class="rpt-sec" data-scope="shifts">
   <div class="sec-label">Daily Shift Report</div>
   <div class="sheet-bar">
     <div class="sb-field"><label for="rpt-shift-date">Date <span class="ord" data-dateorder></span></label>
@@ -960,8 +961,21 @@
     <span class="sb-gap"></span>
   </div>
   <div class="hint" id="rpt-shift-count" style="margin:-6px 0 18px"></div>
+  </div>
+
+  <!-- LAB RECORDS -->
+  <div class="rpt-sec" data-scope="analysis">
+    <div class="sec-head">
+      <div class="sec-label">Sample Analysis &amp; Plates</div>
+      <div class="ico-row">
+        <button class="ico-btn" onclick="exportAnalysisCSV()" aria-label="Export to Excel" title="Export sample analysis and plates to Excel"><span data-icon="grid"></span></button>
+      </div>
+    </div>
+    <div id="rpt-lab-list" style="margin-bottom:20px"></div>
+  </div>
 
   <!-- WEIGHT & SEAL RECORDS -->
+  <div class="rpt-sec" data-scope="weights">
   <div class="sec-head">
     <div class="sec-label">Weight &amp; Bag Seal Records</div>
     <div class="ico-row">
@@ -974,8 +988,10 @@
   <div id="rpt-weight-list" style="margin-bottom:14px"></div>
   <div class="sec-sub">Bag seal</div>
   <div id="rpt-seal-list" style="margin-bottom:20px"></div>
+  </div>
 
   <!-- GMP RECORDS -->
+  <div class="rpt-sec" data-scope="weights">
   <div class="sec-head">
     <div class="sec-label">GMP Records</div>
     <div class="ico-row">
@@ -985,8 +1001,10 @@
     </div>
   </div>
   <div id="rpt-gmp-list" style="margin-bottom:20px"></div>
+  </div>
 
   <!-- METAL DETECTOR RECORDS -->
+  <div class="rpt-sec" data-scope="weights">
   <div class="sec-head">
     <div class="sec-label">Metal Detector Checks</div>
     <div class="ico-row">
@@ -994,6 +1012,7 @@
     </div>
   </div>
   <div id="rpt-metal-list" style="margin-bottom:20px"></div>
+  </div>
 </div>
 
 

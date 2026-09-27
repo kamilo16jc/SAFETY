@@ -92,5 +92,27 @@ function moduleOfScreen(screen){
   return hit ? hit.id : null;
 }
 
+// ===== ALCANCE DE SEARCH Y REPORTS =====
+// Search y Reports son las MISMAS pantallas en todos los modulos, pero solo
+// deben traer los registros de aquel desde el que se entro: desde QA
+// Laboratory no tiene por que salir un peso ni un bag seal.
+//
+// 'runs' es la excepcion a proposito: ahi vive si la muestra se recogio de la
+// linea o no, y eso le sirve igual a QA y al laboratorio.
+var MODULE_SCOPE = {
+  qa:         ['weights','seals','holds','capa','shifts','runs'],
+  lab:        ['analysis','runs'],
+  production: ['runs','shifts'],
+  admin:      null                       // el administrador ve todo
+};
+function scopeKinds(){
+  var m = activeModule || 'admin';
+  return (m in MODULE_SCOPE) ? MODULE_SCOPE[m] : null;
+}
+function scopeHas(kind){
+  var s = scopeKinds();
+  return !s || s.indexOf(kind) >= 0;
+}
+
 // El administrador ve todo sin filtrar
 function scopeIsAll(){ return activeModule==='admin'; }

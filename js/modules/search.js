@@ -20,7 +20,33 @@ function anyFilter(){
   return !!(searchQuery || sf.from || sf.to || sf.line!=='all' || sf.shift!=='all');
 }
 
+// Los tipos de registro que ofrece el desplegable dependen del modulo
+var SEARCH_TYPES = [
+  {v:'all',      t:'All records',           k:null},
+  {v:'weight',   t:'Weight only',           k:'weights'},
+  {v:'seal',     t:'Bag seal only',         k:'seals'},
+  {v:'analysis', t:'Sample analysis only',  k:'analysis'},
+  {v:'hold',     t:'Holds only',            k:'holds'},
+  {v:'capa',     t:'CAPA only',             k:'capa'},
+  {v:'shift',    t:'Shift reports only',    k:'shifts'},
+  {v:'run',      t:'Production runs only',  k:'runs'}
+];
+function fillSearchTypes(){
+  var sel = document.getElementById('sf-type');
+  if(!sel) return;
+  var cur = sel.value || 'all', keep = false, html = '';
+  SEARCH_TYPES.forEach(function(o){
+    if(o.k && !scopeHas(o.k)) return;
+    if(o.v===cur) keep = true;
+    html += '<option value="'+o.v+'">'+o.t+'</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = keep ? cur : 'all';
+  if(!keep) sf.type = 'all';
+}
+
 function initSearch(){
+  fillSearchTypes();
   var i = document.getElementById('search-input');
   if(i) i.value = searchQuery;
   // Los filtros NO buscan solos: escribir una fecha dispara un change por cada
@@ -140,15 +166,27 @@ function searchResults(){
   var byDate = function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); };
 
   var db = getDB();
-  var wantW = sf.type==='all' || sf.type==='weight';
-  var wantS = sf.type==='all' || sf.type==='seal';
-  var wantH = sf.type==='all' || sf.type==='hold';
-  var wantC = sf.type==='all' || sf.type==='capa';
+  var wantW = scopeHas('weights')  && (sf.type==='all' || sf.type==='weight');
+  var wantS = scopeHas('seals')    && (sf.type==='all' || sf.type==='seal');
+  var wantH = scopeHas('holds')    && (sf.type==='all' || sf.type==='hold');
+  var wantC = scopeHas('capa')     && (sf.type==='all' || sf.type==='capa');
+  var wantA = scopeHas('analysis') && (sf.type==='all' || sf.type==='analysis');
 
   return {
     product: prod,
     weights: wantW ? (db.weights||[]).filter(keep).sort(byDate) : [],
     seals:   wantS ? (db.seals||[]).filter(keep).sort(byDate)   : [],
+    analysis: wantA ? (db.analysis||[]).filter(function(a){
+               var hitTxt = !l ||
+                 String(a.product||'').toLowerCase().indexOf(l)>-1 ||
+                 String(a.cheese||'').toLowerCase().indexOf(l)>-1 ||
+                 String(a.customer||'').toLowerCase().indexOf(l)>-1 ||
+                 String(a.order||'').toLowerCase().indexOf(l)>-1 ||
+                 String(a.po||'').toLowerCase().indexOf(l)>-1 ||
+                 ('#'+String(a.seq||'')).indexOf(l)>-1 ||
+                 (pnum && String(a.product||'').toLowerCase()===pnum);
+               return hitTxt && inDateRange(a.date);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : [],
     holds:   wantH ? (db.holds||[]).filter(function(h){
                var hitTxt = !l || String(h.lot||'').toLowerCase().indexOf(l)>-1 ||
                             String(h.product||'').toLowerCase().indexOf(l)>-1;
@@ -165,7 +203,7 @@ function searchResults(){
                  (pnum && String(c.product||'').toLowerCase()===pnum);
                return hitTxt && inDateRange(c.capaDate);
              }).sort(function(a,b){ return String(b.capaDate||'').localeCompare(String(a.capaDate||'')); }) : [],
-    runs:    (sf.type==='all'||sf.type==='run') ? (db.runs||[]).filter(function(r){
+    runs:    (scopeHas('runs') && (sf.type==='all'||sf.type==='run')) ? (db.runs||[]).filter(function(r){
                var hitTxt = !l ||
                  String(r.lot||'').toLowerCase().indexOf(l)>-1 ||
                  String(r.product||'').toLowerCase().indexOf(l)>-1 ||
@@ -173,7 +211,7 @@ function searchResults(){
                  (pnum && String(r.product||'').toLowerCase()===pnum);
                return hitTxt && inDateRange(r.date) && matchLineShift(r);
              }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : [],
-    shifts:  (sf.type==='all'||sf.type==='shift') ? (db.shifts||[]).filter(function(s){
+    shifts:  (scopeHas('shifts') && (sf.type==='all'||sf.type==='shift')) ? (db.shifts||[]).filter(function(s){
                var hitTxt = !l ||
                  String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
                  String(s.lot||'').toLowerCase().indexOf(l)>-1 ||
@@ -225,7 +263,8 @@ function renderSearch(){
   }
 
   var r = searchResults();
-  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) + (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0);
+  var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) +
+              (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0) + (r.analysis?r.analysis.length:0);
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -235,7 +274,8 @@ function renderSearch(){
   var avg = scored.length
     ? Math.round(scored.reduce(function(a,w){ return a+w.compliance; },0)/scored.length)
     : null;
-  var dates = r.weights.concat(r.seals).map(function(x){ return String(x.date||'').slice(0,10); })
+  var dates = r.weights.concat(r.seals).concat(r.analysis||[])
+              .map(function(x){ return String(x.date||'').slice(0,10); })
               .filter(Boolean).sort();
   var openHolds = r.holds.filter(function(h){ return h.status!=='released' && h.status!=='destroyed'; }).length;
 
@@ -245,8 +285,9 @@ function renderSearch(){
     (searchQuery ? productPanel(r.product, searchQuery) : '') +
     traceCard(r) +
     summaryStrip(r, avg, dates, openHolds) +
-    ((sf.type==='all'||sf.type==='weight') ? weightPanel(r.weights) : '') +
-    ((sf.type==='all'||sf.type==='seal')   ? sealPanel(r.seals)     : '') +
+    ((scopeHas('weights') && (sf.type==='all'||sf.type==='weight')) ? weightPanel(r.weights) : '') +
+    ((scopeHas('seals')   && (sf.type==='all'||sf.type==='seal'))   ? sealPanel(r.seals)     : '') +
+    analysisPanel(r.analysis) +
     holdPanel(r.holds) +
     capaPanel(r.capa) +
     shiftPanel(r.shifts) +
@@ -305,6 +346,63 @@ function traceCard(r){
 
 // Corridas del Production Schedule que coinciden con la búsqueda: cierra la
 // trazabilidad del LOT (qué se programó, si se recogió, testeó y fue al lab).
+// Los analisis del laboratorio: las tres medidas y la placa, en una tabla
+function analysisPanel(list){
+  if(!list || !list.length) return '';
+  var v = function(x){ return (x==null || x==='') ? '\u2014' : esc(x); };
+  var rows = list.slice(0, SEARCH_LIMIT).map(function(a){
+    var plate = (typeof ymState==='function') ? ymState(a) : (a.yeast ? 'done' : 'waiting');
+    var pill = plate==='done'  ? '<span class="pill ok">Read</span>'
+             : plate==='ready' ? '<span class="pill bad">Ready to read</span>'
+             : '<span class="pill">Incubating</span>';
+    return '<tr class="view-row" onclick="viewAnalysisRecord('+a.id+')">'+
+      '<td class="mono code">#'+v(a.seq)+'</td>'+
+      '<td>'+fmtDate(a.date)+'</td>'+
+      '<td class="mono">'+v(a.product)+'</td>'+
+      '<td>'+v(a.cheese)+'</td>'+
+      '<td class="soft">'+v(a.customer)+'</td>'+
+      '<td class="num mono">'+v(a.moisture)+'</td>'+
+      '<td class="num mono">'+v(a.fat)+'</td>'+
+      '<td class="num mono">'+v(a.ph)+'</td>'+
+      '<td class="num mono">'+v(a.yeast)+'</td>'+
+      '<td class="num mono">'+v(a.mold)+'</td>'+
+      '<td>'+pill+'</td>'+
+      '<td class="view-cell"><span class="view-btn" title="View" data-icon="search"></span></td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Sample analysis', list.length, [
+    {t:'ID'},{t:'Date'},{t:'Product'},{t:'Cheese'},{t:'Customer'},
+    {t:'Moisture',num:true},{t:'Fat',num:true},{t:'pH',num:true},
+    {t:'Yeast',num:true},{t:'Mold',num:true},{t:'Plate'},{t:''}
+  ], rows, Math.min(list.length, SEARCH_LIMIT));
+}
+
+function viewAnalysisRecord(id){
+  var a = (getDB().analysis||[]).filter(function(x){ return x.id===id; })[0];
+  if(!a){ toast('Analysis not found'); return; }
+  var due = (typeof ymDueDate==='function') ? ymDueDate(a) : '';
+  var body =
+    '<div class="rec-grid">'+
+      recRow('Analysis', '<span class="mono">#'+esc(a.seq||'\u2014')+'</span>')+
+      recRow('Sample date', fmtDate(a.date))+
+      recRow('Product', '<span class="mono">'+esc(a.product||'\u2014')+'</span>')+
+      recRow('Cheese', esc(a.cheese||'\u2014'))+
+      recRow('Customer', esc(a.customer||'\u2014'))+
+      recRow('Production date', esc(a.prodDate||'\u2014'))+
+      recRow('Order / PO', esc(a.order||'\u2014')+' / '+esc(a.po||'\u2014'))+
+      recRow('Moisture', esc(a.moisture||'\u2014'))+
+      recRow('Fat', esc(a.fat||'\u2014'))+
+      recRow('pH', esc(a.ph||'\u2014'))+
+      recRow('Tested by', esc(a.testedBy||'\u2014'))+
+      recRow('Plate reads on', due ? fmtDate(due) : '\u2014')+
+      recRow('Yeast', esc(a.yeast||'\u2014'))+
+      recRow('Mold', esc(a.mold||'\u2014'))+
+      recRow('Plate read by', esc(a.ymBy||'\u2014')+(a.ymAt ? ' \u00b7 '+fmtDate(a.ymAt) : ''))+
+    '</div>';
+  openRecordModal('Sample analysis \u00b7 <span class="mono">#'+esc(a.seq||'')+'</span>', body,
+    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>');
+}
+
 function runPanel(list){
   if(!list || !list.length) return '';
   var yn = function(on){ return on ? '<span class="pill ok">Yes</span>' : '<span class="pill bad">No</span>'; };
@@ -509,14 +607,31 @@ function summaryStrip(r, avg, dates, openHolds){
   var s = function(value, label, cls){
     return '<div class="res-stat"><div class="rs-val'+(cls?' '+cls:'')+'">'+value+'</div><div class="rs-lbl">'+label+'</div></div>';
   };
-  return '<div class="res-stats">'+
-    s(r.weights.length, 'Weight checks')+
-    s(avg==null ? '—' : avg+'<small>%</small>', 'Avg compliance', avg==null?'':avg>=80?'ok':'bad')+
-    s(r.seals.length, 'Bag seal checks')+
-    s(openHolds, 'Open holds', openHolds?'bad':'')+
-    s(dates.length ? fmtDate(dates[0])+' — '+fmtDate(dates[dates.length-1]) : '—', 'Date range', 'sm')+
-  '</div>';
+  // Solo se cuenta lo que este modulo puede ver: desde el laboratorio no tiene
+  // sentido una tarjeta de "weight checks" que siempre diria cero.
+  var out = '';
+  if(scopeHas('weights')){
+    out += s(r.weights.length, 'Weight checks');
+    out += s(avg==null ? '\u2014' : avg+'<small>%</small>', 'Avg compliance', avg==null?'':avg>=80?'ok':'bad');
+  }
+  if(scopeHas('seals')) out += s(r.seals.length, 'Bag seal checks');
+  if(scopeHas('analysis')){
+    var an = r.analysis||[];
+    var plates = (typeof ymDone==='function') ? an.filter(ymDone).length : 0;
+    out += s(an.length, 'Sample analyses');
+    out += s(plates, 'Plates read');
+  }
+  if(scopeHas('holds')) out += s(openHolds, 'Open holds', openHolds?'bad':'');
+  if(scopeHas('runs')){
+    var pend = (r.runs||[]).filter(function(x){
+      return (typeof runSampleCount==='function' ? runSampleCount(x) : 0) > 0 && !x.collected;
+    }).length;
+    out += s(pend, 'Samples to collect', pend?'bad':'');
+  }
+  out += s(dates.length ? fmtDate(dates[0])+' \u2014 '+fmtDate(dates[dates.length-1]) : '\u2014', 'Date range', 'sm');
+  return '<div class="res-stats">'+out+'</div>';
 }
+
 
 // Tope de filas por tabla: con filtros amplios hay cientos de registros y
 // pintarlos todos deja la pantalla lenta.
