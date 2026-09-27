@@ -627,13 +627,64 @@
 </div>
 
 
+<!-- ADD PRODUCT -->
+<div class="screen" id="screen-addproduct">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Add Product</div>
+  <div class="form-meta">New products only — to change one that already exists, use Product Catalog</div>
+
+  <div class="fgrid">
+  <div class="fcol">
+    <div class="sec-label">Product Number</div>
+    <div class="prod-row">
+      <input type="text" class="field" id="ap-number" placeholder="e.g. 880" autocapitalize="characters"
+             autocomplete="off" style="margin-bottom:0" oninput="onProdNumberInput('ap')">
+      <button class="scan-btn" onclick="scanNewProduct()" title="Scan barcode"><span data-icon="scan"></span></button>
+    </div>
+    <div class="sec-label">Customer <span class="opt">· for lab samples</span></div>
+    <div class="select-wrap"><select class="field" id="ap-customer" onchange="onProdCustomerChange('ap')"></select></div>
+    <div id="ap-customer-hint"></div>
+    <div class="sec-label">Description</div>
+    <input type="text" class="field" id="ap-name" placeholder="e.g. Shredded Mozzarella">
+    <div class="sec-label">Package Size</div>
+    <div class="select-wrap"><select class="field" id="ap-pkg" onchange="toggleProductCustom('ap')"></select></div>
+    <div id="ap-custom-wrap" style="display:none">
+      <div class="sec-label">Size label</div>
+      <input type="text" class="field" id="ap-custom-label" placeholder="e.g. 3.5 lbs or 4 oz">
+      <div class="sec-label">Target range <span class="opt">· optional · in the same unit as the label</span></div>
+      <div class="pair">
+        <input type="text" class="field" id="ap-min" placeholder="Min" inputmode="decimal">
+        <input type="text" class="field" id="ap-max" placeholder="Max" inputmode="decimal">
+      </div>
+    </div>
+  </div>
+  <div class="fcol">
+    <div class="sec-label">Bags per case</div>
+    <input type="text" class="field" id="ap-bags" placeholder="e.g. 4" inputmode="numeric">
+    <div class="sec-label">Barcode <span class="opt">· optional</span></div>
+    <input type="text" class="field" id="ap-barcode" placeholder="Scan it or type it">
+    <div class="sec-label">Lab samples per run <span class="opt">· 0 = this product is not sampled</span></div>
+    <input type="text" class="field" id="ap-lab-n" placeholder="e.g. 1" inputmode="numeric"
+           oninput="this.dataset.touched='1'">
+    <div class="hint" id="ap-lab-hint" style="margin:-4px 0 10px"></div>
+    <div class="capa-form-actions">
+      <button class="main-btn" onclick="saveNewProduct()">Save product</button>
+      <button class="btn-ghost" onclick="resetAddProduct()">Clear</button>
+    </div>
+    <div class="hint" style="margin-top:10px">Saved products go straight to the catalog and to the
+      product list of every screen. The yeast &amp; mold plate is on by default — turn it off in the
+      catalog for the product that is not plated.</div>
+  </div>
+  </div>
+</div>
+
 <!-- PRODUCTS -->
 <div class="screen" id="screen-products">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="page-head">
     <div>
       <div class="form-title">Products</div>
-      <div class="form-meta"><b id="cat-count">0</b> products in the catalog · shared across every device</div>
+      <div class="form-meta"><b id="cat-count">0</b> products in the catalog · search one to edit it</div>
     </div>
     <div class="ph-tools">
       <div class="search-wrap">
@@ -641,7 +692,7 @@
         <input type="search" id="cat-search" placeholder="Search by number or description" autocomplete="off" oninput="onCatalogSearch(this.value)">
       </div>
       <button class="btn-ghost" onclick="openScanner('catalog')"><span data-icon="scan"></span>Scan</button>
-      <button class="btn-solid" onclick="openProductModal('catalog')">+ New product</button>
+      <button class="btn-ghost" id="cat-all-btn" onclick="toggleCatalogAll()">Show all</button>
     </div>
   </div>
   <div class="workspace">

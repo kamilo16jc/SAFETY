@@ -67,6 +67,7 @@ function goTo(id){
   if(id==='screen-hold') initHold();
   if(id==='screen-activity') initActivity();
   if(id==='screen-products') initCatalog();
+  if(id==='screen-addproduct') initAddProduct();
   if(id==='screen-lotsearch') initSearch();
   if(id==='screen-capa') initCapa();
   if(id==='screen-shift') initShift();
@@ -153,7 +154,8 @@ var CRUMBS = {
   'screen-lotsearch':['Review', 'Search'],
   'screen-hold':     ['Review', 'Hold Cases'],
   'screen-activity': ['Review', 'Activity Log'],
-  'screen-products': ['Setup', 'Products'],
+  'screen-products': ['Setup', 'Product Catalog'],
+  'screen-addproduct':['Setup', 'Add Product'],
   'screen-admin':    ['Setup', 'Admin']
 };
 function updateTopbar(id){

@@ -206,6 +206,10 @@ function onScanResult(code){
     return;
   }
   if(screen==='catalog'){ catalogScanResult(code); return; }
+  if(screen==='addproduct'){
+    var e=document.getElementById('ap-barcode'); if(e) e.value=normNumber(code);
+    toast('Barcode linked to the new product'); return;
+  }
   if(screen==='search'){
     var si=document.getElementById('search-input');
     if(si) si.value=code;

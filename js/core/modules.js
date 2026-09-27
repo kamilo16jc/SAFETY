@@ -36,7 +36,8 @@ var MODULES = [
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#b45309'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
-      {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'}
+      {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'},
+      {screen:'screen-addproduct',name:'Add Product',      icon:'plus', color:'#0369a1'}
   ]},
   { id:'admin', color:'#fb7185', ink:'#be123c', name:'Administrator', icon:'sliders', items:[
       {screen:'screen-dashboard', name:'Dashboard',        icon:'chart', color:'#047857'},

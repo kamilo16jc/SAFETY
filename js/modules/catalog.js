@@ -2,16 +2,34 @@
 // Tabla del catálogo con búsqueda, orden y panel de edición. El alta sigue
 // viviendo en js/modules/products.js (el mismo modal que usan Weight y Seal).
 var catSort = 'number', catDir = 1, catFilter = '', catSelected = null;
+// El catalogo NO arrastra los cientos de productos de entrada: se busca el que
+// se quiere corregir. "Show all" los trae todos cuando de verdad hace falta.
+var catShowAll = false;
 
 function initCatalog(){
   var s = document.getElementById('cat-search');
   if(s) s.value = catFilter;
+  renderCatalogAllBtn();
   renderCatalog();
   renderCatalogDetail();
 }
 
+function renderCatalogAllBtn(){
+  var b = document.getElementById('cat-all-btn');
+  if(b){
+    b.textContent = catShowAll ? 'Show searched only' : 'Show all';
+    b.classList.toggle('on', catShowAll);
+  }
+}
+function toggleCatalogAll(){
+  catShowAll = !catShowAll;
+  renderCatalogAllBtn();
+  renderCatalog();
+}
+
 function catalogRows(){
   var q = catFilter.trim().toLowerCase();
+  if(!q && !catShowAll) return [];     // sin busqueda no se trae nada
   var list = getProducts().filter(function(p){
     if(!q) return true;
     return String(p.number).toLowerCase().indexOf(q)>-1 ||
@@ -47,9 +65,13 @@ function renderCatalog(){
   var all  = getProducts();
 
   if(!list.length){
-    body.innerHTML = '<tr><td colspan="8" class="cd-empty">'+
-      (all.length ? 'No product matches “'+catFilter+'”.' : 'No products yet. Create the first one and it fills in by itself from then on.')+
-      '</td></tr>';
+    var msg;
+    if(!all.length)                   msg = 'No products yet. Add the first one in Add Product.';
+    else if(!catFilter.trim() && !catShowAll)
+      msg = 'Search a product by number or description to open and edit it — or press "Show all".';
+    else if(catFilter.trim())         msg = 'No product matches “'+esc(catFilter)+'”.';
+    else                              msg = 'No products.';
+    body.innerHTML = '<tr><td colspan="8" class="cd-empty">'+msg+'</td></tr>';
   } else {
     body.innerHTML = list.map(function(p){
       var t = catTargetText(p);
@@ -73,7 +95,7 @@ function renderCatalog(){
     all.forEach(function(p){ if(p.pkgLabel) sizes[p.pkgLabel]=1; });
     var noTarget = all.filter(function(p){ return !p.target || p.target.min==null; }).length;
     foot.innerHTML =
-      '<span><b>'+list.length+'</b> shown</span>'+
+      '<span><b>'+list.length+'</b> shown of '+all.length+'</span>'+
       '<span><b>'+all.filter(function(p){return (p.barcodes||[]).length}).length+'</b> with barcode</span>'+
       '<span><b>'+Object.keys(sizes).length+'</b> package sizes in use</span>'+
       '<span><b>'+noTarget+'</b> missing a target range</span>';

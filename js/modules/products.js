@@ -79,9 +79,14 @@ function productLabCode(p){
   return (c.prefix || c.customerId || '') + normNumber(p && p.number);
 }
 
-// Llena el selector de clientes del modal de producto
-function fillProdCustomerSelect(sel){
-  var el = document.getElementById('prod-customer');
+// El alta de producto vive en dos sitios: el modal (cuando se escanea un
+// codigo desconocido desde Weight o Seal) y la pantalla Add Product. Los dos
+// usan los mismos campos, distinguidos por un prefijo: 'prod-' y 'ap-'.
+function pel(pre, f){ return document.getElementById((pre||'prod')+'-'+f); }
+
+// Llena el selector de clientes del formulario de producto
+function fillProdCustomerSelect(sel, pre){
+  var el = pel(pre, 'customer');
   if(!el) return;
   el.innerHTML = '<option value="">— none —</option>' + getCustomers().map(function(c){
     return '<option value="'+esc(c.customerId)+'"'+(c.customerId===sel?' selected':'')+'>'+
@@ -91,25 +96,29 @@ function fillProdCustomerSelect(sel){
 
 // Al escribir el número, si pertenece a un cliente conocido lo selecciona solo.
 // Si no (p.ej. un cliente sin lista de productos), se elige a mano.
-function onProdNumberInput(){
-  var c = findCustomerByProduct(document.getElementById('prod-number').value);
+function onProdNumberInput(pre){
+  pre = pre || 'prod';
+  var el = pel(pre, 'number');
+  if(!el) return;
+  var c = findCustomerByProduct(el.value);
   // Si el número no pertenece a nadie se limpia: nunca debe quedarse pegado
   // el cliente del producto anterior.
-  fillProdCustomerSelect(c ? c.customerId : '');
-  onProdCustomerChange();
+  fillProdCustomerSelect(c ? c.customerId : '', pre);
+  onProdCustomerChange(pre);
 }
 
 // Cambio manual de cliente: refresca tests, código de forma y marca Lab sample
-function onProdCustomerChange(){
-  var el = document.getElementById('prod-customer-hint');
+function onProdCustomerChange(pre){
+  pre = pre || 'prod';
+  var el = pel(pre, 'customer-hint');
   if(!el) return;
-  var id = (document.getElementById('prod-customer')||{}).value || '';
+  var id = (pel(pre,'customer')||{}).value || '';
   var c  = id ? customerById(id) : null;
-  var num = normNumber((document.getElementById('prod-number')||{}).value);
+  var num = normNumber((pel(pre,'number')||{}).value);
   el.innerHTML = c ? customerHintHTML(c, num) : '';
-  var n = document.getElementById('prod-lab-n');
+  var n = pel(pre,'lab-n');
   if(n && c && !n.dataset.touched) n.value = String(customerSampleCount(c));
-  var h = document.getElementById('prod-lab-hint');
+  var h = pel(pre,'lab-hint');
   if(h) h.textContent = c ? (c.company+' normally takes '+customerSampleCount(c)+
        ' sample'+(customerSampleCount(c)===1?'':'s')+' per order'+(c.numbered?', numbered':'')+'.') : '';
 }
@@ -248,18 +257,12 @@ function openProductModal(screen){
   document.getElementById('prod-min').value = '';
   document.getElementById('prod-max').value = '';
   document.getElementById('prod-barcode').value = pendingBarcode || '';
+  fillProductSizes('prod');
   var labN = document.getElementById('prod-lab-n');
   if(labN){ labN.value = '1'; delete labN.dataset.touched; }
   var labH = document.getElementById('prod-lab-hint'); if(labH) labH.textContent = '';
-  fillProdCustomerSelect('');
-  onProdNumberInput();   // si el número ya venía escrito, detecta el cliente
-
-  var sel = document.getElementById('prod-pkg');
-  sel.innerHTML = '<option value="">Select package size</option>'+
-    PKGS.map(function(p,i){ return '<option value="'+i+'">'+p.label+'</option>'; }).join('')+
-    '<option value="other">Other size…</option>';
-  sel.value = '';
-  toggleProductCustom();
+  fillProdCustomerSelect('', 'prod');
+  onProdNumberInput('prod');   // si el número ya venía escrito, detecta el cliente
 
   document.getElementById('product-modal').style.display='flex';
   document.body.style.overflow='hidden';
@@ -272,27 +275,41 @@ function closeProductModal(){
 }
 
 // Muestra los campos de peso libre sólo cuando se elige "Other size…"
-function toggleProductCustom(){
-  var other = document.getElementById('prod-pkg').value === 'other';
-  document.getElementById('prod-custom-wrap').style.display = other ? 'block' : 'none';
+function toggleProductCustom(pre){
+  pre = pre || 'prod';
+  var sel = pel(pre,'pkg'), wrap = pel(pre,'custom-wrap');
+  if(!sel || !wrap) return;
+  wrap.style.display = (sel.value === 'other') ? 'block' : 'none';
 }
 
-function saveProduct(){
-  var number = normNumber(document.getElementById('prod-number').value);
-  if(!number){ toast('Enter the product number'); return; }
-  if(findProduct(number)){ toast('That product number already exists'); return; }
+// Llena el selector de tamanos de cualquiera de los dos formularios
+function fillProductSizes(pre){
+  var sel = pel(pre,'pkg');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Select package size</option>'+
+    PKGS.map(function(p,i){ return '<option value="'+i+'">'+p.label+'</option>'; }).join('')+
+    '<option value="other">Other size\u2026</option>';
+  sel.value = '';
+  toggleProductCustom(pre);
+}
 
-  var sel = document.getElementById('prod-pkg').value;
-  var pkg = null, pkgLabel = '', target = null;
+// Lee el formulario y devuelve el producto listo para guardar, o null si
+// falta algo. Lo comparten el modal y la pantalla Add Product.
+function readProductForm(pre){
+  pre = pre || 'prod';
+  var g = function(f){ var e = pel(pre,f); return e ? e.value : ''; };
+  var number = normNumber(g('number'));
+  if(!number){ toast('Enter the product number'); return null; }
+  if(findProduct(number)){ toast('That product number already exists'); return null; }
 
+  var sel = g('pkg'), pkg = null, pkgLabel = '', target = null;
   if(sel==='other'){
-    pkgLabel = document.getElementById('prod-custom-label').value.trim();
-    if(!pkgLabel){ toast('Enter the package size (e.g. 3.5 lbs)'); return; }
-    var mn = parseFloat(document.getElementById('prod-min').value);
-    var mx = parseFloat(document.getElementById('prod-max').value);
-    // El target es opcional: sin él no se marca pass/fail, sólo se registra el peso
+    pkgLabel = g('custom-label').trim();
+    if(!pkgLabel){ toast('Enter the package size (e.g. 3.5 lbs)'); return null; }
+    var mn = parseFloat(g('min')), mx = parseFloat(g('max'));
+    // El target es opcional: sin el no se marca pass/fail, solo se registra el peso
     if(!isNaN(mn) && !isNaN(mx)){
-      if(mn>=mx){ toast('Min must be lower than max'); return; }
+      if(mn>=mx){ toast('Min must be lower than max'); return null; }
       target = {min:mn, max:mx};
     }
   } else if(sel!==''){
@@ -300,45 +317,52 @@ function saveProduct(){
     pkgLabel = PKGS[pkg].label;
     target = {min:PKGS[pkg].min, max:PKGS[pkg].max};
   } else {
-    toast('Select the package size'); return;
+    toast('Select the package size'); return null;
   }
 
-  var bags = parseInt(document.getElementById('prod-bags').value);
-  var barcode = normNumber(document.getElementById('prod-barcode').value);
-
-  var prod = {
+  var bags = parseInt(g('bags'));
+  var barcode = normNumber(g('barcode'));
+  var n = parseSampleCount(g('lab-n'));
+  return {
     id: Date.now(),
     number: number,
-    name: document.getElementById('prod-name').value.trim(),
+    name: g('name').trim(),
     pkg: pkg,
     pkgLabel: pkgLabel,
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
-    labSamples: parseSampleCount((document.getElementById('prod-lab-n')||{}).value),
-    labSample: parseSampleCount((document.getElementById('prod-lab-n')||{}).value) > 0,
-    customerId: ((document.getElementById('prod-customer')||{}).value)
-                || (findCustomerByProduct(number)||{}).customerId || '',
+    labSamples: n,
+    labSample: n > 0,
+    plate: true,
+    customerId: g('customer') || (findCustomerByProduct(number)||{}).customerId || '',
     barcodes: barcode ? [barcode] : [],
-    createdBy: currentUser ? currentUser.name : '—',
+    createdBy: currentUser ? currentUser.name : '\u2014',
     createdAt: localISOStr()
   };
+}
 
+function persistNewProduct(prod){
   var list = getProducts();
   list.push(prod);
   saveProducts(list);
   if(window.saveToFirebase) window.saveToFirebase('products', prod);
   logActivity('admin','Product created',
-    prod.number+(prod.name?' — '+prod.name:'')+' · '+productSummary(prod),
-    currentUser?currentUser.name:'—');
-
-  closeProductModal();
+    prod.number+(prod.name?' \u2014 '+prod.name:'')+' \u00b7 '+productSummary(prod),
+    currentUser?currentUser.name:'\u2014');
   renderProductOptions('w-product-list');
   renderProductOptions('s-product-list');
+}
+
+function saveProduct(){
+  var prod = readProductForm('prod');
+  if(!prod) return;
+  persistNewProduct(prod);
+  closeProductModal();
   // Deja el producto recién creado listo en la pantalla donde se pidió
   if(productScreen==='catalog'){
     catSelected = prod.number;
-    catFilter = '';
-    var s = document.getElementById('cat-search'); if(s) s.value='';
+    catFilter = prod.number;
+    var s = document.getElementById('cat-search'); if(s) s.value = prod.number;
     renderCatalog();
     renderCatalogDetail();
   } else {
@@ -348,6 +372,37 @@ function saveProduct(){
   }
   toast('Product saved');
 }
+
+// ===== PANTALLA ADD PRODUCT =====
+// Alta de productos nuevos, aparte del catalogo: el catalogo es para
+// modificar lo que ya existe.
+function initAddProduct(){
+  resetAddProduct();
+}
+
+function resetAddProduct(){
+  ['number','name','custom-label','min','max','bags','barcode'].forEach(function(f){
+    var e = pel('ap', f); if(e) e.value = '';
+  });
+  var n = pel('ap','lab-n');
+  if(n){ n.value = '1'; delete n.dataset.touched; }
+  var h = pel('ap','lab-hint'); if(h) h.textContent = '';
+  var hint = pel('ap','customer-hint'); if(hint) hint.innerHTML = '';
+  fillProductSizes('ap');
+  fillProdCustomerSelect('', 'ap');
+  var num = pel('ap','number'); if(num) num.focus();
+}
+
+function saveNewProduct(){
+  var prod = readProductForm('ap');
+  if(!prod) return;
+  persistNewProduct(prod);
+  resetAddProduct();
+  toast(prod.number+' saved \u2014 edit it in Product Catalog');
+}
+
+// Escanear el codigo del producto nuevo desde la pantalla de alta
+function scanNewProduct(){ openScanner('addproduct'); }
 
 // Asocia un código escaneado a un producto que ya existe
 function linkBarcode(product, code){

@@ -1114,3 +1114,6 @@ body.logged-out .topstack{display:none}
 .sheet td.acts .ico-btn.sm{width:26px;height:26px;margin-right:3px}
 .sheet td.acts .ico-btn.sm svg{width:13px;height:13px}
 .sheet tr.done td.rn{color:var(--pass)}
+
+/* "Show all" queda marcado mientras el catalogo trae todo */
+#cat-all-btn.on{background:var(--accent-tint);border-color:var(--accent);color:var(--accent)}
