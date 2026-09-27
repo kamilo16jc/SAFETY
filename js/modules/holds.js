@@ -39,117 +39,162 @@ function statusBadge(status) {
   return '<span style="background:'+s.bg+';border:1px solid '+s.border+';color:'+s.text+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">'+status+'</span>';
 }
 
+// ===== VISTA DE HOJA =====
+// Antes eran cuatro pestanas y dos filas de botones que no decian nada. Ahora
+// el menu son los propios estados, con el conteo de casos de cada uno, y todo
+// se lee en una sola hoja que se puede buscar, filtrar y ordenar.
+var holdView = 'open';   // open | hold | review | released | destroyed | all
+
+var HOLD_STATES = [
+  {k:'open',      label:'Open cases',   color:'var(--fail)'},
+  {k:'hold',      label:'On hold',      color:'#c1121f'},
+  {k:'review',    label:'Under review', color:'#b45309'},
+  {k:'released',  label:'Released',     color:'var(--pass)'},
+  {k:'destroyed', label:'Destroyed',    color:'var(--dim)'},
+  {k:'all',       label:'All cases',    color:''}
+];
+
 function initHold() {
-  holdActiveFilter = 'all';
-  holdClosedFilter = 'all';
-  switchHoldTab('active', document.getElementById('hold-tab-active'));
-  if(currentUser) document.getElementById('hold-initby').value = currentUser.name;
+  holdView = 'open';
+  var q = document.getElementById('hold-q'); if(q) q.value = '';
+  var f = document.getElementById('hold-line-f'); if(f) f.value = 'all';
+  var ib = document.getElementById('hold-initby');
+  if(ib && currentUser) ib.value = currentUser.name;
+  toggleHoldForm(false);
+  renderHoldSheet();
 }
 
-function switchHoldTab(tab, btn) {
-  document.querySelectorAll('[id^="hold-tab-"]').forEach(function(b){ b.classList.remove('selected'); });
-  if(btn) btn.classList.add('selected');
-  document.getElementById('hold-view-active').style.display  = tab==='active'  ? 'block' : 'none';
-  document.getElementById('hold-view-closed').style.display  = tab==='closed'  ? 'block' : 'none';
-  document.getElementById('hold-view-new').style.display     = tab==='new'     ? 'block' : 'none';
-  document.getElementById('hold-view-all').style.display     = tab==='all'     ? 'block' : 'none';
-  if(tab==='active')  renderHoldActive();
-  if(tab==='closed')  renderHoldClosed();
-  if(tab==='all')     renderHoldAll();
+function setHoldView(k){ holdView = k; renderHoldSheet(); }
+
+function toggleHoldForm(force){
+  var el = document.getElementById('hold-view-new');
+  if(!el) return;
+  var show = (force===undefined) ? el.style.display==='none' : !!force;
+  el.style.display = show ? 'block' : 'none';
+  if(show){
+    var ib = document.getElementById('hold-initby');
+    if(ib && !ib.value && currentUser) ib.value = currentUser.name;
+    var pr = document.getElementById('hold-product'); if(pr) pr.focus();
+  }
 }
 
 function selectHoldLine(btn) {
-  // Toggle selection
   var isActive = btn.classList.contains('active');
   document.querySelectorAll('[data-group="hline"]').forEach(function(b){ b.classList.remove('active'); });
   if(!isActive) btn.classList.add('active');
 }
 
-function setHoldActiveFilter(btn) {
-  holdActiveFilter = btn.getAttribute('data-val');
-  document.querySelectorAll('[data-group="hactive"]').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderHoldActive();
+// Dias que lleva abierto un caso: es lo que de verdad hay que mirar
+function holdAge(h){
+  var from = new Date(h.createdAt || Date.now());
+  var to   = (h.status==='released' || h.status==='destroyed') && h.closedAt
+             ? new Date(h.closedAt) : new Date();
+  var d = Math.floor((to - from) / 86400000);
+  return isNaN(d) ? 0 : Math.max(0, d);
+}
+function holdIsOpen(h){ return h.status==='hold' || h.status==='review'; }
+
+function holdMatchesView(h){
+  if(holdView==='all')  return true;
+  if(holdView==='open') return holdIsOpen(h);
+  return h.status===holdView;
 }
 
-function setHoldClosedFilter(btn) {
-  holdClosedFilter = btn.getAttribute('data-val');
-  document.querySelectorAll('[data-group="hclosed"]').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderHoldClosed();
+function holdStatusLabel(k){
+  return {hold:'On hold', review:'Under review', released:'Released', destroyed:'Destroyed'}[k] || k || '\u2014';
+}
+function fmtHoldDate(iso){
+  if(!iso) return '\u2014';
+  var d = new Date(iso);
+  return isNaN(d) ? '\u2014' : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 
-function holdCard(h, showReleaseCert) {
-  var s = HSC[h.status] || HSC.hold;
-  var dt = h.createdAt ? new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-  var certBtn = '';
-  if(showReleaseCert && h.status==='released') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="release" style="background:#d8f3dc;border:1px solid #95d5b2;color:#2d6a4f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">Release Certificate</button>';
-  } else if(showReleaseCert && h.status==='destroyed') {
-    certBtn = '<button data-certid="'+h.id+'" data-certtype="destroy" style="background:#ffe0e0;border:1px solid #ffb3b3;color:#c1121f;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;margin-top:6px">Destruction Certificate</button>';
+function renderHoldSheet(){
+  var host = document.getElementById('hold-sheet');
+  if(!host) return;
+  var all = getHolds();
+
+  // El menu: un conteo por estado, y se pulsa para filtrar la hoja
+  var kp = document.getElementById('hold-kpis');
+  if(kp){
+    var count = function(k){
+      if(k==='all')  return all.length;
+      if(k==='open') return all.filter(holdIsOpen).length;
+      return all.filter(function(h){ return h.status===k; }).length;
+    };
+    kp.innerHTML = HOLD_STATES.map(function(st){
+      return '<button class="kpi' + (holdView===st.k ? ' on' : '') +
+        '" onclick="setHoldView(' + "'" + st.k + "'" + ')">' +
+        '<b>' + count(st.k) + '</b><span>' +
+        (st.color ? '<i class="dot" style="background:' + st.color + '"></i>' : '') +
+        st.label + '</span></button>';
+    }).join('');
   }
-  return '<div data-holdid="'+h.id+'" style="background:var(--surface);border:1px solid '+s.border+';border-left:4px solid '+s.text+';border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer">' +
-    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
-      '<div style="font-size:13px;font-weight:800">'+esc(h.caseNumber)+'</div>' +
-      statusBadge(h.status) +
-    '</div>' +
-    '<div style="font-size:14px;font-weight:700;margin-bottom:3px">'+esc(h.product)+'</div>' +
-    '<div style="font-size:11px;color:var(--muted)">LOT: '+esc(h.lot||'—')+' · Qty: '+h.quantity+(h.line?' · Line '+h.line:'')+'</div>' +
-    '<div style="font-size:10px;color:var(--muted);margin-top:3px">'+dt+' · '+esc(h.initiatedBy)+'</div>' +
-    certBtn +
-  '</div>';
+
+  var q    = (document.getElementById('hold-q')||{}).value || '';
+  var line = (document.getElementById('hold-line-f')||{}).value || 'all';
+  var sort = (document.getElementById('hold-sort')||{}).value || 'new';
+  var needle = q.trim().toLowerCase();
+
+  var list = all.filter(function(h){
+    if(!holdMatchesView(h)) return false;
+    if(line!=='all' && String(h.line||'')!==line) return false;
+    if(!needle) return true;
+    return [h.caseNumber, h.product, h.lot, h.initiatedBy, h.reason].some(function(v){
+      return String(v||'').toLowerCase().indexOf(needle) >= 0;
+    });
+  });
+
+  list.sort(function(a,b){
+    if(sort==='age') return holdAge(b) - holdAge(a);
+    var c = String(a.createdAt||'').localeCompare(String(b.createdAt||''));
+    return sort==='old' ? c : -c;
+  });
+
+  if(!list.length){
+    host.innerHTML = '<div class="sheet-empty">' +
+      (all.length ? 'No cases match this view.'
+                  : 'No hold cases yet. Use "New hold case" when product has to be held.') +
+      '</div>';
+    return;
+  }
+
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>' +
+      '<th class="rn">#</th><th>Case</th><th>Status</th><th class="wide">Product</th><th>LOT</th>' +
+      '<th>Quantity</th><th>Line</th><th>Opened</th><th class="num">Days</th>' +
+      '<th>Initiated by</th><th>Certificate</th>' +
+    '</tr></thead><tbody>' +
+    list.map(function(h, i){ return holdRowHTML(h, i+1); }).join('') +
+    '</tbody></table></div>';
 }
 
-function attachHoldEvents(containerId) {
-  var el = document.getElementById(containerId);
-  if(!el) return;
-  el.onclick = function(e) {
-    // Release / Destroy cert button
-    var certBtn = e.target.closest('[data-certid]');
-    if(certBtn) {
-      e.stopPropagation();
-      if(certBtn.getAttribute('data-certtype')==='destroy') exportDestroyCert(certBtn.getAttribute('data-certid'));
-      else exportReleaseCert(certBtn.getAttribute('data-certid'));
-      return;
-    }
-    // Card click
-    var card = e.target.closest('[data-holdid]');
-    if(card) openHoldModal(card.getAttribute('data-holdid'));
-  };
-}
-
-function renderHoldActive() {
-  var holds = getHolds().filter(function(h){
-    var isActive = h.status==='hold' || h.status==='review';
-    var matchFilter = holdActiveFilter==='all' || h.status===holdActiveFilter;
-    return isActive && matchFilter;
-  }).sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
-
-  var el = document.getElementById('hold-active-list');
-  el.innerHTML = holds.length ? holds.map(function(h){return holdCard(h,false);}).join('') :
-    '<div class="empty">No active cases</div>';
-  attachHoldEvents('hold-active-list');
-}
-
-function renderHoldClosed() {
-  var holds = getHolds().filter(function(h){
-    var isClosed = h.status==='released' || h.status==='destroyed';
-    var matchFilter = holdClosedFilter==='all' || h.status===holdClosedFilter;
-    return isClosed && matchFilter;
-  }).sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
-
-  var el = document.getElementById('hold-closed-list');
-  el.innerHTML = holds.length ? holds.map(function(h){return holdCard(h,true);}).join('') :
-    '<div class="empty">No closed cases yet</div>';
-  attachHoldEvents('hold-closed-list');
-}
-
-function renderHoldAll() {
-  var holds = getHolds().sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
-  var el = document.getElementById('hold-all-list');
-  el.innerHTML = holds.length ? holds.map(function(h){return holdCard(h,true);}).join('') :
-    '<div class="empty">No cases yet</div>';
-  attachHoldEvents('hold-all-list');
+function holdRowHTML(h, i){
+  var cls = {hold:'bad', review:'warn', released:'ok', destroyed:''}[h.status] || '';
+  var age = holdAge(h);
+  var cert;
+  if(h.status==='released'){
+    cert = '<button class="sheet-btn" onclick="event.stopPropagation();exportReleaseCert(' +
+           "'" + h.id + "'" + ')">Release</button>';
+  } else if(h.status==='destroyed'){
+    cert = '<button class="sheet-btn" onclick="event.stopPropagation();exportDestroyCert(' +
+           "'" + h.id + "'" + ')">Destruction</button>';
+  } else {
+    cert = '<span class="soft">\u2014</span>';
+  }
+  return '<tr class="click" onclick="openHoldModal(' + "'" + h.id + "'" + ')">' +
+    '<td class="rn">' + i + '</td>' +
+    '<td class="code">' + esc(h.caseNumber||'\u2014') + '</td>' +
+    '<td><span class="pill ' + cls + '">' + esc(holdStatusLabel(h.status)) + '</span></td>' +
+    '<td class="wide">' + esc(h.product||'\u2014') + '</td>' +
+    '<td class="code">' + esc(h.lot||'\u2014') + '</td>' +
+    '<td class="soft">' + esc(h.quantity||'\u2014') + '</td>' +
+    '<td class="mid">' + esc(String(h.line||'\u2014')) + '</td>' +
+    '<td class="soft">' + esc(fmtHoldDate(h.createdAt)) + '</td>' +
+    '<td class="num">' + age + '</td>' +
+    '<td class="soft">' + esc(h.initiatedBy||'\u2014') + '</td>' +
+    '<td>' + cert + '</td>' +
+  '</tr>';
 }
 
 function saveHoldCase() {
@@ -195,7 +240,9 @@ function saveHoldCase() {
   toast(newCase.caseNumber + ' created');
   logActivity('hold','Hold case created',newCase.caseNumber+' — '+product+' · LOT: '+(lot||'—')+' · '+reason, newCase.initiatedBy);
   notifySupervisorOfHold(newCase.caseNumber, product, lot, reason);
-  switchHoldTab('active', document.getElementById('hold-tab-active'));
+  toggleHoldForm(false);
+  holdView = 'open';
+  renderHoldSheet();
 }
 
 function openHoldModal(id) {
@@ -267,6 +314,8 @@ function updateHoldStatus() {
 
   var now = localISOStr();
   holds[idx].status = newHoldStatus;
+  if(newHoldStatus==='released' || newHoldStatus==='destroyed') holds[idx].closedAt = now;
+  else holds[idx].closedAt = '';
   holds[idx].history.push({date:now, status:newHoldStatus, comment:comment, by:currentUser?currentUser.name:'—'});
   saveHoldsDB(holds);
   currentHoldCase = holds[idx];
@@ -289,7 +338,8 @@ function updateHoldStatus() {
           exportReleaseCert(savedCase.id);
         }
       }
-      switchHoldTab('closed', document.getElementById('hold-tab-closed'));
+      holdView = newHoldStatus;
+      renderHoldSheet();
     }, 500);
   }
 }

@@ -42,9 +42,11 @@ function scheduleSection(runs, C){
 
 // ===== PDF DIARIO — un reporte por turno (no mezcla los dos) =====
 function exportDailyShiftPDF(){
-  var dateInput = document.getElementById('sr-daily-date');
+  // Los controles viven en Reports; si se llama desde otro lado, el dia de hoy
+  var dateInput = document.getElementById('rpt-shift-date');
   var date  = dateInput && dateInput.value ? dateInput.value : localDateStr();
-  var shift = (typeof dailyShiftSel!=='undefined') ? dailyShiftSel : 1;
+  var sel   = document.getElementById('rpt-shift-sel');
+  var shift = parseInt(sel && sel.value ? sel.value : '') || expectedShift();
   var shiftLabel = shift===1 ? '1st Shift' : '2nd Shift';
 
   var evs = (getShifts()||[]).filter(function(s){ return String(s.date).slice(0,10)===date && s.shift===shift; })

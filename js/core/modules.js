@@ -69,6 +69,13 @@ function myModules(){
 }
 function canSeeModule(id){ return userModules().indexOf(id)>=0; }
 
+// Un reporte guardado solo lo cambia el manager (supervisor) o el
+// administrador. El operador lo crea y lo consulta, pero no lo modifica:
+// es un documento de calidad, no una nota suelta.
+function canEditReports(){
+  return !!currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+}
+
 // Módulo activo: define el ALCANCE de Search / Reports / Shift Report
 var activeModule = null;
 

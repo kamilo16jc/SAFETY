@@ -34,39 +34,9 @@ var SHIFT_STATUS = {
 };
 function shiftStatusLabel(k){ return (SHIFT_STATUS[k]||{}).label || (k?k.charAt(0).toUpperCase()+k.slice(1):'—'); }
 
-var dailyShiftSel = 1; // el reporte diario es por turno
-
 function initShift(){
   shiftEditingId = null;
-  var dd = document.getElementById('sr-daily-date');
-  if(dd && !dd.value) dd.value = localDateStr();
-  dailyShiftSel = expectedShift();
-  renderDailyShift();
   resetShiftForm();
-  renderShiftList();
-  updateDailyCount();
-}
-
-function renderDailyShift(){
-  var el = document.getElementById('sr-daily-shift');
-  if(!el) return;
-  el.innerHTML = [[1,'1st shift'],[2,'2nd shift']].map(function(s){
-    return '<button type="button" class="pkg-chip'+(dailyShiftSel===s[0]?' selected':'')+'" onclick="setDailyShift('+s[0]+')">'+s[1]+'</button>';
-  }).join('');
-}
-function setDailyShift(n){ dailyShiftSel = n; renderDailyShift(); updateDailyCount(); }
-
-// Muestra cuántos sucesos hay en la fecha y turno elegidos para el reporte
-function updateDailyCount(){
-  var el = document.getElementById('sr-daily-count');
-  if(!el) return;
-  var dd = document.getElementById('sr-daily-date');
-  var date = dd && dd.value ? dd.value : localDateStr();
-  var lbl = dailyShiftSel===1 ? '1st shift' : '2nd shift';
-  var day = getShifts().filter(function(s){ return String(s.date).slice(0,10)===date && s.shift===dailyShiftSel; });
-  el.textContent = day.length
-    ? day.length+' event'+(day.length===1?'':'s')+' · '+lbl+' · '+fmtShiftDate(date)
-    : 'No '+lbl+' events for '+fmtShiftDate(date)+' yet.';
 }
 
 function renderAreaOptions(){
@@ -198,14 +168,13 @@ function saveShift(){
   var wasEdit = !!shiftEditingId;
   shiftEditingId = null;
   resetShiftForm();
-  renderShiftList();
-  updateDailyCount();
   toast(wasEdit ? 'Report updated' : 'Report saved');
 }
 
 function cancelShiftEdit(){ shiftEditingId = null; resetShiftForm(); }
 
 function editShift(id){
+  if(!canEditReports()){ toast('Only managers and administrators can edit a saved report'); return; }
   var rec = getShifts().filter(function(s){ return s.id===id; })[0];
   if(!rec) return;
   shiftEditingId = id;
@@ -234,9 +203,7 @@ function editShift(id){
 }
 
 function deleteShift(id){
-  if(!currentUser || (currentUser.role!=='admin' && currentUser.role!=='supervisor')){
-    toast('Only admins and supervisors can delete reports'); return;
-  }
+  if(!canEditReports()){ toast('Only managers and administrators can delete a report'); return; }
   var rec = getShifts().filter(function(s){ return s.id===id; })[0];
   if(!rec) return;
   if(!confirm('Delete report '+rec.reportNumber+'? This cannot be undone.')) return;
@@ -244,46 +211,9 @@ function deleteShift(id){
   saveShiftsDB(rest);
   if(rec._fbId && window.deleteFromFirebase) window.deleteFromFirebase('shifts', rec._fbId);
   logActivity('shift','Shift report deleted', rec.reportNumber, currentUser?currentUser.name:'—');
-  renderShiftList();
   toast('Report deleted');
 }
 
-function renderShiftList(){
-  var el = document.getElementById('shift-list');
-  if(!el) return;
-  var list = getShifts().slice().sort(function(a,b){
-    return String(b.date||'').localeCompare(String(a.date||''));
-  });
-  var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
-  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
-  if(!list.length){
-    el.innerHTML = '<div class="cd-empty" style="padding:24px">No shift reports yet. Fill in the form above to add the first note.</div>';
-    return;
-  }
-  el.innerHTML = list.map(function(s){
-    var st = SHIFT_STATUS[s.status] || SHIFT_STATUS.open;
-    return '<div class="capa-card">'+
-      '<div class="capa-card-main">'+
-        '<div class="capa-card-top">'+
-          '<span class="capa-num">'+esc(s.reportNumber||'—')+'</span>'+
-          (s.category?'<span class="pill">'+esc(s.category)+'</span>':'')+
-          '<span class="pill '+st.cls+'">'+st.label+'</span>'+
-          (s.followUp?'<span class="pill warn">Follow-up</span>':'')+
-        '</div>'+
-        '<div class="capa-card-title">'+esc(s.notes||'—').slice(0,140)+'</div>'+
-        '<div class="capa-card-meta">'+fmtShiftDate(s.date)+
-          (s.shift?' · '+(s.shift===1?'1st':'2nd')+' shift':'')+
-          (s.area?' · '+esc(s.area):'')+(s.reportedBy?' · '+esc(s.reportedBy):'')+'</div>'+
-      '</div>'+
-      '<div class="capa-card-actions">'+
-        '<button class="btn-ghost" onclick="exportShiftPDF('+s.id+')"><span data-icon="doc"></span>PDF</button>'+
-        '<button class="btn-ghost" onclick="editShift('+s.id+')">Edit</button>'+
-        (canDelete?'<button class="btn-danger" onclick="deleteShift('+s.id+')">Delete</button>':'')+
-      '</div>'+
-    '</div>';
-  }).join('');
-  renderIcons(el);
-}
 
 function fmtShiftDate(iso){
   if(!iso) return '—';

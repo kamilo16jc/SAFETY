@@ -5,7 +5,30 @@ var rptSealResults = [];
 var rptGmpResults = [];
 var rptMetalResults = [];
 
+// Cuantos sucesos tiene el turno elegido, para saber si vale la pena el PDF
+function updateRptShiftCount(){
+  var el = document.getElementById('rpt-shift-count');
+  if(!el) return;
+  var d = document.getElementById('rpt-shift-date');
+  var s = document.getElementById('rpt-shift-sel');
+  var date  = (d && d.value) ? d.value : localDateStr();
+  var shift = parseInt((s && s.value) || '') || expectedShift();
+  var evs = (typeof getShifts==='function' ? getShifts() : []).filter(function(x){
+    return String(x.date).slice(0,10)===date && x.shift===shift;
+  });
+  var runs = (typeof runsFor==='function') ? runsFor(date, String(shift)) : [];
+  el.textContent = (evs.length||runs.length)
+    ? evs.length+' event'+(evs.length===1?'':'s')+' and '+runs.length+' run'+(runs.length===1?'':'s')+
+      ' in the '+(shift===1?'1st':'2nd')+' shift of that day.'
+    : 'No events or runs for that day and shift yet.';
+}
+
 function initReports() {
+  var sd = document.getElementById('rpt-shift-date');
+  if(sd && !sd.value) sd.value = localDateStr();
+  var ss = document.getElementById('rpt-shift-sel');
+  if(ss && !ss.value) ss.value = String(expectedShift());
+  updateRptShiftCount();
   // Set today as default date
   var today = localDateStr();
   document.getElementById('rpt-date').value = today;

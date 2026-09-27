@@ -1,12 +1,12 @@
 // ===== LIST SAMPLES =====
-// La lista de recolección del inspector de QA: para un día y turno, qué
-// muestras hay que sacar de la línea y cuántas de cada producto.
+// La lista de recolección del inspector de QA, en formato de hoja: para un día
+// y turno, qué muestras hay que sacar de la línea y cuántas de cada producto.
 //
 // La cantidad la define el PRODUCTO (Products → "Lab samples per run"), no el
 // cliente: dentro de un mismo cliente hay productos que no se muestrean. Los
-// que van en cero salen aparte, para que QA pueda verificar que no se toman
-// en vez de quedarse con la duda.
-var slDate = null, slShift = null;
+// que van en cero también salen en la hoja, marcados "no sample", para que QA
+// pueda verificar que no se toman en vez de quedarse con la duda.
+var slDate = null, slShift = null, slView = 'all';   // all | todo | done | none
 
 function initSampleList(){
   var d = document.getElementById('sl-date');
@@ -21,92 +21,126 @@ function slFilters(){
   slDate  = (d && d.value) ? d.value : localDateStr();
   slShift = String((s && s.value) ? s.value : expectedShift());
 }
+function setSlView(v){ slView = v; renderSampleList(); }
 
-// Una corrida en la lista: cuántas muestras pide y qué se sabe de ella
+// Una corrida en la hoja: cuántas muestras pide y en qué estado va
 function slRow(r){
   var n = runSampleCount(r);
-  var c = runCustomer(r);
-  var known = (typeof findProduct==='function') ? !!findProduct(r.product) : true;
-  return {run:r, n:n, cust:c, known:known};
+  return {
+    run: r,
+    n: n,
+    cust: runCustomer(r),
+    known: (typeof findProduct==='function') ? !!findProduct(r.product) : true,
+    kind: n===0 ? 'none' : (r.collected ? 'done' : 'todo')
+  };
 }
 
 function renderSampleList(){
   slFilters();
-  var left  = document.getElementById('sl-left');
-  var right = document.getElementById('sl-right');
-  if(!left || !right) return;
+  var host = document.getElementById('sl-sheet');
+  if(!host) return;
   var rows = runsFor(slDate, slShift).map(slRow);
 
-  var todo = rows.filter(function(x){ return x.n>0 && !x.run.collected; });
-  var done = rows.filter(function(x){ return x.n>0 &&  x.run.collected; });
-  var none = rows.filter(function(x){ return x.n===0; });
-  var sum  = function(list){ return list.reduce(function(a,x){ return a+x.n; }, 0); };
+  var by  = function(k){ return rows.filter(function(x){ return x.kind===k; }); };
+  var sum = function(list){ return list.reduce(function(a,x){ return a+x.n; }, 0); };
+  var todo = by('todo'), done = by('done'), none = by('none');
 
-  var el = document.getElementById('sl-summary');
-  if(el){
-    el.innerHTML = rows.length
-      ? '<div class="pr-sum">'+
-          '<div class="pr-stat"><b class="'+(sum(todo)?'warn':'ok')+'">'+sum(todo)+'</b><span>to collect</span></div>'+
-          '<div class="pr-stat"><b class="ok">'+sum(done)+'</b><span>collected</span></div>'+
-          '<div class="pr-stat"><b>'+(sum(todo)+sum(done))+'</b><span>samples today</span></div>'+
-          '<div class="pr-stat"><b>'+none.length+'</b><span>runs without sample</span></div>'+
-        '</div>'
-      : '';
+  var kp = document.getElementById('sl-kpis');
+  if(kp){
+    kp.innerHTML = [
+      ['all',  rows.length,  'runs scheduled', ''],
+      ['todo', sum(todo),    'samples to collect', 'var(--warn)'],
+      ['done', sum(done),    'collected', 'var(--pass)'],
+      ['none', none.length,  'runs without sample', 'var(--dim)']
+    ].map(function(k){
+      return '<button class="kpi'+(slView===k[0]?' on':'')+'" onclick="setSlView(\''+k[0]+'\')">'+
+        '<b>'+k[1]+'</b><span>'+
+        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+    }).join('');
   }
 
   if(!rows.length){
-    left.innerHTML = '<div class="panel"><div class="cd-empty">'+
-      'Nothing scheduled for this day and shift. The list comes from the '+
-      'Production Schedule — add the runs there and they show up here.</div></div>';
-    right.innerHTML = '';
+    host.innerHTML = '<div class="sheet-empty">Nothing scheduled for '+esc(fmtSheetDate(slDate))+
+      ', '+(slShift==='1'?'1st':'2nd')+' shift. The list comes from the Production Schedule — '+
+      'add the runs there and they show up here.</div>';
     return;
   }
 
-  // Izquierda lo que falta por recoger, derecha lo ya hecho y lo que no lleva
-  left.innerHTML  = slBlock('To collect', todo, 'todo');
-  right.innerHTML = slBlock('Collected', done, 'done') +
-                    slBlock('No sample required', none, 'none');
+  // El orden de trabajo: primero lo que falta, luego lo hecho, al final lo que no lleva
+  var order = {todo:0, done:1, none:2};
+  var view = rows.filter(function(x){ return slView==='all' || x.kind===slView; })
+                 .sort(function(a,b){
+                   return (order[a.kind]-order[b.kind]) ||
+                          String(a.run.time||'zz').localeCompare(String(b.run.time||'zz'));
+                 });
+
+  if(!view.length){
+    host.innerHTML = '<div class="sheet-empty">Nothing in this view for the day.</div>';
+    return;
+  }
+
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Line</th><th>Time</th><th>Product</th><th class="wide">Description</th>'+
+      '<th>Customer</th><th>LOT</th><th class="num">Samples</th><th>Sample #s</th>'+
+      '<th>Status</th><th>Collect</th>'+
+    '</tr></thead><tbody>'+
+    view.map(function(x, i){ return slRowHTML(x, i+1); }).join('')+
+    '</tbody></table></div>';
 }
 
-function slBlock(title, rows, kind){
-  if(!rows.length && kind==='none') return '';
-  var body = rows.length
-    ? rows.map(function(x){ return slCard(x, kind); }).join('')
-    : '<div class="panel"><div class="cd-empty">'+
-        (kind==='todo' ? 'Every sample for this shift is collected.' : 'Nothing here yet.')+
-      '</div></div>';
-  return '<div class="sec-label">'+title+' <span class="sl-count">'+rows.length+'</span></div>'+body;
-}
-
-function slCard(x, kind){
+function slRowHTML(x, i){
   var r = x.run;
-  var label = x.n + ' sample' + (x.n===1 ? '' : 's');
-  var numbered = x.cust && x.cust.numbered;
-  return '<div class="run-card'+(kind==='done'?' done':'')+(kind==='none'?' sl-skip':'')+'">'+
-    '<div class="run-head"><div>'+
-      '<div class="run-title">Line '+esc(String(r.line||'—'))+' · '+esc(r.product||'—')+
-        (kind==='none'
-          ? ' <span class="tag">no sample</span>'
-          : ' <span class="tag '+(kind==='done'?'ok':'warn')+'">'+label+'</span>')+
-        (numbered && kind!=='none' ? ' <span class="tag">numbered</span>' : '')+
-      '</div>'+
-      '<div class="run-meta">'+esc(r.productName||'—')+
-        (x.cust ? ' · '+esc(x.cust.company) : '')+
-        (r.time ? ' · '+esc(r.time) : '')+
-        (r.lot ? ' · LOT '+esc(r.lot) : '')+
-      '</div>'+
-      (!x.known
-        ? '<div class="run-warn">This product is not in the catalog yet — add it in Products to set how many samples it needs.</div>'
-        : '')+
-      (r.sampleFrom ? '<div class="run-meta"><b>Samples '+r.sampleFrom+'–'+r.sampleTo+'</b></div>' : '')+
-      (kind==='done' && r.collectedAt
-        ? '<div class="run-meta">Collected '+esc(fmtTime12(String(r.collectedAt).slice(11,16)))+'</div>' : '')+
-    '</div></div>'+
-    (kind==='none' ? '' :
-      '<div class="run-checks"><button class="run-chk'+(r.collected?' on':'')+'" '+
-        'onclick="toggleRunCheck('+r.id+",'collected')"+'">'+
-        '<span class="run-box">'+(r.collected?'✓':'')+'</span>'+
-        (r.collected ? 'Collected from line' : 'Mark collected')+
-      '</button></div>')+
-  '</div>';
+  var st = x.kind==='none' ? '<span class="pill">No sample</span>'
+         : x.kind==='done' ? '<span class="pill ok">Collected'+
+             (r.collectedAt ? ' · '+esc(fmtTime12(String(r.collectedAt).slice(11,16))) : '')+'</span>'
+         : '<span class="pill bad">Pending</span>';
+  var act = x.kind==='none' ? '<span class="soft">—</span>'
+          : '<button class="sheet-btn'+(r.collected?' done':'')+'" '+
+            'onclick="toggleRunCheck('+r.id+",'collected')"+'">'+
+            (r.collected ? '✓ Collected' : 'Mark collected')+'</button>';
+  return '<tr>'+
+    '<td class="rn">'+i+'</td>'+
+    '<td class="mid">'+esc(String(r.line||'—'))+'</td>'+
+    '<td class="soft">'+esc(r.time||'—')+'</td>'+
+    '<td class="code">'+esc(r.product||'—')+'</td>'+
+    '<td class="wide">'+esc(r.productName||'—')+
+      (x.known ? '' : ' <span class="pill bad">not in catalog</span>')+'</td>'+
+    '<td class="soft">'+esc(x.cust ? x.cust.company : '—')+'</td>'+
+    '<td class="code">'+esc(r.lot||'—')+'</td>'+
+    '<td class="num">'+(x.n||'—')+'</td>'+
+    '<td class="code soft">'+(r.sampleFrom ? r.sampleFrom+'–'+r.sampleTo : '—')+'</td>'+
+    '<td>'+st+'</td>'+
+    '<td>'+act+'</td>'+
+  '</tr>';
+}
+
+function fmtSheetDate(iso){
+  var d = new Date(String(iso||'').slice(0,10)+'T12:00:00');
+  return isNaN(d) ? String(iso||'—')
+    : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+// La hoja se baja tal cual se ve, para pasarla a Excel o imprimirla
+function exportSampleListCSV(){
+  slFilters();
+  var rows = runsFor(slDate, slShift).map(slRow);
+  if(!rows.length){ toast('Nothing scheduled for that day and shift'); return; }
+  var cell = function(v){
+    v = String(v==null?'':v);
+    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+  };
+  var out = [['Line','Time','Product','Description','Customer','LOT','Samples','Sample #s','Status']];
+  rows.forEach(function(x){
+    out.push([x.run.line||'', x.run.time||'', x.run.product||'', x.run.productName||'',
+      x.cust ? x.cust.company : '', x.run.lot||'', x.n,
+      x.run.sampleFrom ? x.run.sampleFrom+'-'+x.run.sampleTo : '',
+      x.kind==='none' ? 'No sample' : (x.run.collected ? 'Collected' : 'Pending')]);
+  });
+  var csv = out.map(function(r){ return r.map(cell).join(','); }).join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'sample-list-'+slDate+'-shift'+slShift+'.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }

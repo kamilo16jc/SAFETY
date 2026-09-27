@@ -82,21 +82,20 @@
   <div class="form-title">List Samples</div>
   <div class="form-meta">What to collect from the line, and how many</div>
 
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="sl-date" style="width:100%" onchange="renderSampleList()"></div>
-    <div class="field-group"><div class="sec-label">Shift</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="sl-date">Date</label>
+      <input type="date" class="field" id="sl-date" onchange="renderSampleList()"></div>
+    <div class="sb-field"><label for="sl-shift">Shift</label>
       <div class="select-wrap"><select class="field" id="sl-shift" onchange="renderSampleList()">
         <option value="1">1st Shift</option>
         <option value="2">2nd Shift</option>
       </select></div></div>
+    <span class="sb-gap"></span>
+    <button class="btn-ghost" onclick="exportSampleListCSV()"><span data-icon="download"></span>Export</button>
   </div>
 
-  <div id="sl-summary"></div>
-  <div class="fgrid">
-    <div class="fcol" id="sl-left"></div>
-    <div class="fcol" id="sl-right"></div>
-  </div>
+  <div class="kpi-row" id="sl-kpis"></div>
+  <div id="sl-sheet"></div>
 </div>
 
 <!-- LOGIN -->
@@ -731,6 +730,8 @@
   <div class="panel capa-form">
     <div class="capa-form-head"><span id="capa-title">New incident &amp; CAPA report</span></div>
     <div class="capa-form-body">
+      <div class="fgrid">
+      <div class="fcol">
       <div class="pair">
         <div class="field-group"><div class="sec-label">Report number</div>
           <input type="text" class="field" id="capa-report" placeholder="CAPA-2026-001"></div>
@@ -757,6 +758,8 @@
       <div class="sec-label" style="margin-top:6px">Problem / Deviation</div>
       <textarea class="field" id="capa-problem" rows="3" placeholder="What was found, where, and when"></textarea>
 
+      </div>
+      <div class="fcol">
       <div class="sec-label">Investigation, affected product/area and outcome(s)</div>
       <textarea class="field" id="capa-desc" rows="4" placeholder="Root cause analysis, affected quantity/area, and how it was resolved"></textarea>
 
@@ -783,6 +786,8 @@
         <button class="main-btn" id="capa-save-btn" onclick="saveCapa()">Save report</button>
         <button class="btn-ghost" id="capa-cancel-btn" style="display:none" onclick="cancelCapaEdit()">Cancel edit</button>
       </div>
+      </div>
+      </div>
     </div>
   </div>
 
@@ -801,21 +806,11 @@
     </div>
   </div>
 
-  <div class="panel daily-bar">
-    <div class="daily-main">
-      <div class="daily-title">Daily shift report</div>
-      <div class="daily-hint" id="sr-daily-count">One report per shift with all its events for the day.</div>
-    </div>
-    <div class="daily-row">
-      <input type="date" class="field" id="sr-daily-date" onchange="updateDailyCount()">
-      <div id="sr-daily-shift" class="chip-row"></div>
-      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Shift PDF</button>
-    </div>
-  </div>
-
   <div class="panel capa-form">
     <div class="capa-form-head"><span id="shift-form-head">New shift report</span></div>
     <div class="capa-form-body">
+      <div class="fgrid">
+      <div class="fcol">
       <div class="pair">
         <div class="field-group"><div class="sec-label">Report number</div>
           <input type="text" class="field" id="sr-report" placeholder="SR-2026-001"></div>
@@ -848,6 +843,8 @@
         <input type="text" class="field" id="sr-product" list="sr-product-list" placeholder="Product number or name" autocomplete="off">
         <datalist id="sr-product-list"></datalist></div>
 
+      </div>
+      <div class="fcol">
       <div class="sec-label">What happened</div>
       <textarea class="field" id="sr-notes" rows="4" placeholder="Describe the event, where and when"></textarea>
 
@@ -872,11 +869,12 @@
         <button class="main-btn" id="shift-save-btn" onclick="saveShift()">Save report</button>
         <button class="btn-ghost" id="shift-cancel-btn" style="display:none" onclick="cancelShiftEdit()">Cancel edit</button>
       </div>
+      </div>
+      </div>
     </div>
   </div>
 
-  <div class="sec-label" style="margin-top:6px">Saved reports</div>
-  <div id="shift-list"></div>
+  <div class="hint" style="margin-top:4px">Saved reports are not listed here — look them up in Search.</div>
 </div>
 
 
@@ -889,7 +887,7 @@
   <!-- FILTERS -->
   <div class="gmp-section" style="margin-bottom:18px">
     <div class="gmp-section-hdr">FILTER RECORDS</div>
-    <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+    <div class="rpt-filters">
 
       <div>
         <div class="sec-label" data-t="date">Date</div>
@@ -926,6 +924,22 @@
     </div>
   </div>
 
+  <!-- DAILY SHIFT REPORT -->
+  <div class="sec-label">Daily Shift Report</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="rpt-shift-date">Date</label>
+      <input type="date" class="field" id="rpt-shift-date" onchange="updateRptShiftCount()"></div>
+    <div class="sb-field"><label for="rpt-shift-sel">Shift</label>
+      <div class="select-wrap"><select class="field" id="rpt-shift-sel" onchange="updateRptShiftCount()">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Shift PDF</button></div>
+    <span class="sb-gap"></span>
+  </div>
+  <div class="hint" id="rpt-shift-count" style="margin:-6px 0 18px"></div>
+
   <!-- WEIGHT & SEAL RECORDS -->
   <div class="sec-label">Weight Records</div>
   <div id="rpt-weight-list" style="margin-bottom:16px"></div>
@@ -959,68 +973,75 @@
 <div class="screen" id="screen-hold">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Hold Cases</div>
-  <div class="form-meta">Track and manage held products</div>
+  <div class="form-meta">Product on hold, under review, released or destroyed</div>
 
-  <!-- TABS -->
-  <div style="display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
-    <button class="pkg-chip selected" id="hold-tab-active" onclick="switchHoldTab('active',this)">Active</button>
-    <button class="pkg-chip" id="hold-tab-closed" onclick="switchHoldTab('closed',this)">Closed</button>
-    <button class="pkg-chip" id="hold-tab-new" onclick="switchHoldTab('new',this)">New</button>
-    <button class="pkg-chip" id="hold-tab-all" onclick="switchHoldTab('all',this)">All</button>
-  </div>
+  <!-- El menu son los estados: cada tarjeta dice cuantos casos hay y filtra la hoja -->
+  <div class="kpi-row" id="hold-kpis"></div>
 
-  <!-- ACTIVE CASES (hold + review) -->
-  <div id="hold-view-active">
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="rpt-filter-btn active" data-group="hactive" data-val="all" onclick="setHoldActiveFilter(this)">All Active</button>
-      <button class="rpt-filter-btn" data-group="hactive" data-val="hold" onclick="setHoldActiveFilter(this)">Hold</button>
-      <button class="rpt-filter-btn" data-group="hactive" data-val="review" onclick="setHoldActiveFilter(this)">Under Review</button>
-    </div>
-    <div id="hold-active-list"></div>
-  </div>
-
-  <!-- CLOSED CASES (released + destroyed) -->
-  <div id="hold-view-closed" style="display:none">
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="rpt-filter-btn active" data-group="hclosed" data-val="all" onclick="setHoldClosedFilter(this)">All Closed</button>
-      <button class="rpt-filter-btn" data-group="hclosed" data-val="released" onclick="setHoldClosedFilter(this)">Released</button>
-      <button class="rpt-filter-btn" data-group="hclosed" data-val="destroyed" onclick="setHoldClosedFilter(this)">Destroyed</button>
-    </div>
-    <div id="hold-closed-list"></div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="hold-q">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="hold-q" placeholder="Case, product or LOT" autocomplete="off" oninput="renderHoldSheet()">
+      </div></div>
+    <div class="sb-field"><label for="hold-line-f">Line</label>
+      <div class="select-wrap"><select class="field" id="hold-line-f" onchange="renderHoldSheet()">
+        <option value="all">All lines</option>
+        <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
+        <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+      </select></div></div>
+    <div class="sb-field"><label for="hold-sort">Sort by</label>
+      <div class="select-wrap"><select class="field" id="hold-sort" onchange="renderHoldSheet()">
+        <option value="new">Newest first</option>
+        <option value="old">Oldest first</option>
+        <option value="age">Longest open</option>
+      </select></div></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" onclick="toggleHoldForm()"><span data-icon="plus"></span>New hold case</button></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="exportHoldExcel()"><span data-icon="download"></span>Excel</button></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="exportHoldPDF()"><span data-icon="doc"></span>PDF</button></div>
   </div>
 
   <!-- NEW CASE FORM -->
-  <div id="hold-view-new" style="display:none">
-    <div class="sec-label">Product Name</div>
-    <input type="text" class="field" id="hold-product" placeholder="Product name">
-    <div class="sec-label">LOT Number</div>
-    <input type="text" class="field" id="hold-lot" placeholder="LOT number">
-    <div class="sec-label">Quantity on Hold</div>
-    <input type="text" class="field" id="hold-qty" placeholder="e.g. 50 cases / 200 lbs">
-    <div class="sec-label">Line</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button class="rpt-filter-btn" data-group="hline" data-val="1" onclick="selectHoldLine(this)">L1</button>
-      <button class="rpt-filter-btn" data-group="hline" data-val="2" onclick="selectHoldLine(this)">L2</button>
-      <button class="rpt-filter-btn" data-group="hline" data-val="3" onclick="selectHoldLine(this)">L3</button>
-      <button class="rpt-filter-btn" data-group="hline" data-val="4" onclick="selectHoldLine(this)">L4</button>
-      <button class="rpt-filter-btn" data-group="hline" data-val="5" onclick="selectHoldLine(this)">L5</button>
-      <button class="rpt-filter-btn" data-group="hline" data-val="6" onclick="selectHoldLine(this)">L6</button>
+  <div class="panel capa-form" id="hold-view-new" style="display:none">
+    <div class="capa-form-head"><span>Place product on hold</span></div>
+    <div class="capa-form-body">
+      <div class="fgrid">
+      <div class="fcol">
+        <div class="sec-label">Product Name</div>
+        <input type="text" class="field" id="hold-product" placeholder="Product name">
+        <div class="sec-label">LOT Number</div>
+        <input type="text" class="field" id="hold-lot" placeholder="LOT number">
+        <div class="sec-label">Quantity on Hold</div>
+        <input type="text" class="field" id="hold-qty" placeholder="e.g. 50 cases / 200 lbs">
+        <div class="sec-label">Line</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="rpt-filter-btn" data-group="hline" data-val="1" onclick="selectHoldLine(this)">L1</button>
+          <button class="rpt-filter-btn" data-group="hline" data-val="2" onclick="selectHoldLine(this)">L2</button>
+          <button class="rpt-filter-btn" data-group="hline" data-val="3" onclick="selectHoldLine(this)">L3</button>
+          <button class="rpt-filter-btn" data-group="hline" data-val="4" onclick="selectHoldLine(this)">L4</button>
+          <button class="rpt-filter-btn" data-group="hline" data-val="5" onclick="selectHoldLine(this)">L5</button>
+          <button class="rpt-filter-btn" data-group="hline" data-val="6" onclick="selectHoldLine(this)">L6</button>
+        </div>
+      </div>
+      <div class="fcol">
+        <div class="sec-label">Reason for Hold</div>
+        <textarea class="field" id="hold-reason" placeholder="Describe the reason for placing on hold..." rows="5"></textarea>
+        <div class="sec-label">Initiated By</div>
+        <input type="text" class="field" id="hold-initby" placeholder="Name">
+        <div class="capa-form-actions">
+          <button class="main-btn" onclick="saveHoldCase()">Place on Hold</button>
+          <button class="btn-ghost" onclick="toggleHoldForm(false)">Cancel</button>
+        </div>
+      </div>
+      </div>
     </div>
-    <div class="sec-label">Reason for Hold</div>
-    <textarea class="field" id="hold-reason" placeholder="Describe the reason for placing on hold..." rows="3" style="resize:none;"></textarea>
-    <div class="sec-label">Initiated By</div>
-    <input type="text" class="field" id="hold-initby" placeholder="Name">
-    <button class="main-btn" onclick="saveHoldCase()">Place on Hold</button>
   </div>
 
-  <!-- ALL CASES VIEW -->
-  <div id="hold-view-all" style="display:none">
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      <button class="main-btn" style="margin:0;background:#1d6f42;flex:1" onclick="exportHoldExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
-      <button class="main-btn" style="margin:0;background:#1a5276;flex:1" onclick="exportHoldPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
-    </div>
-    <div id="hold-all-list"></div>
-  </div>
+  <div id="hold-sheet"></div>
 </div>
 
 

@@ -303,7 +303,7 @@ function holdFromRun(id){
   var r = findRun(id); if(!r) return;
   if(!r.lot && !confirm('This run has no LOT yet. Continue anyway?')) return;
   goTo('screen-hold');
-  if(typeof switchHoldTab==='function') switchHoldTab('new', document.getElementById('hold-tab-new'));
+  if(typeof toggleHoldForm==='function') toggleHoldForm(true);
   var set = function(el, v){ var e=document.getElementById(el); if(e) e.value = v; };
   set('hold-product', r.productName || r.product || '');
   set('hold-lot', r.lot || '');

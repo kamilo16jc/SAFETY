@@ -354,7 +354,7 @@ function viewShiftReport(id){
       recRow('Reported by', esc(s.reportedBy||'—'))+
       recRow('Shift supervisor', esc(s.supervisor||'—'))+
     '</div>';
-  var canEdit = currentUser;
+  var canEdit = (typeof canEditReports==='function') && canEditReports();
   var actions =
     '<button class="btn-solid" onclick="exportShiftPDF('+s.id+')"><span data-icon="doc"></span>Export PDF</button>'+
     (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-shift\');editShift('+s.id+')">Open to edit</button>':'')+
