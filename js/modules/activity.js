@@ -15,7 +15,7 @@ function logActivity(type, action, details, user) {
   db.activityLog.push(entry);
   // Keep last 500 entries
   if(db.activityLog.length > 500) db.activityLog = db.activityLog.slice(-500);
-  saveDB(db);
+  saveDB(db,'activityLog');
   // Sync to Firebase
   if(window.saveActivityToFirebase) window.saveActivityToFirebase(entry);
 }

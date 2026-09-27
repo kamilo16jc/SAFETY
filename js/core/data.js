@@ -128,66 +128,148 @@ var donutChart = null, trendChart = null;
 // ===== DB =====
 function getDB(){
   if(_dbCache) return _dbCache;
-  var db;
-  try {
-    db = JSON.parse(localStorage.getItem('safety_db')||localStorage.getItem('caputo_db')||'{}');
-  } catch(e){ db = {}; }
+  _dbCache = _readAll();
+  return _dbCache;
+}
+
+// ============================================================
+// LA BASE EN EL EQUIPO
+//
+// Dos cosas se arreglaron aqui, las dos medidas con la prueba de carga:
+//
+// 1. LEER. getDB() hacia JSON.parse de TODA la base en cada llamada, y se la
+//    llama dentro de bucles: pintar una hoja con un mes de datos hacia 1.698
+//    lecturas y el 99% del tiempo se iba en reinterpretar los mismos bytes.
+//    Ahora se interpreta una vez y se comparte el objeto.
+//
+// 2. GUARDAR. Todo vivia en UNA sola llave, asi que guardar un peso reescribia
+//    las once colecciones: 140 ms de pantalla congelada con 30.000 registros.
+//    Ahora cada coleccion tiene su llave y solo se reescribe la que cambio.
+//    Quien guarda puede decir cual toco —saveDB(db,'weights')—; si no lo dice,
+//    se revisan todas comparando contra lo ultimo escrito, que sigue siendo
+//    mas barato que escribirlo todo.
+// ============================================================
+var DB_PREFIX = 'safety_db__';
+var LEGACY_KEY = 'safety_db';
+var _dbCache = null;
+// Coleccion -> huella de lo que quedo guardado. Se guarda la HUELLA y no el
+// texto: comparar cuesta lo mismo y no se tiene una segunda copia de toda la
+// base ocupando memoria.
+var _lastWritten = {};
+function _huella(txt){
+  var h = 5381;
+  for(var i=0;i<txt.length;i++) h = ((h*33) ^ txt.charCodeAt(i)) >>> 0;
+  return txt.length + ':' + h;
+}
+var _dirty = {};           // colecciones por escribir
+var _saveTimer = null;
+
+function _readAll(){
+  var db = {};
+  // Primero lo nuevo: una llave por coleccion
+  var idx = null;
+  try { idx = JSON.parse(localStorage.getItem(DB_PREFIX+'_index') || 'null'); } catch(e){}
+  if(idx && idx.length){
+    for(var i=0;i<idx.length;i++){
+      var k = idx[i];
+      try {
+        var raw = localStorage.getItem(DB_PREFIX+k);
+        db[k] = raw ? JSON.parse(raw) : null;
+        _lastWritten[k] = _huella(raw || '');
+      } catch(e){ db[k] = null; }
+    }
+  } else {
+    // Migracion desde la llave unica de siempre
+    try {
+      db = JSON.parse(localStorage.getItem(LEGACY_KEY) || localStorage.getItem('caputo_db') || '{}');
+    } catch(e){ db = {}; }
+    _dbCache = db;
+    _markAllDirty(db);
+    _writeNow();
+    try { localStorage.removeItem(LEGACY_KEY); } catch(e){}
+  }
   if(!db.weights) db.weights=[];
   if(!db.seals)   db.seals=[];
   if(!db.gmps)    db.gmps=[];
   if(!db.holds)   db.holds=[];
   if(!db.temps)   db.temps=[];
-  _dbCache = db;
   return db;
 }
 
-// ===== LA BASE EN MEMORIA =====
-// getDB() hacia JSON.parse de TODA la base en cada llamada, y se la llama
-// dentro de bucles: al pintar Lab Samples con un mes de datos se llamaba 1.698
-// veces y el 99% de los 5 segundos se iba en volver a interpretar los mismos
-// 764 KB. Ahora se interpreta una vez y se guarda el objeto; quien lo pide
-// recibe SIEMPRE el mismo, asi que lo que uno modifica lo ve el siguiente.
-var _dbCache = null;
+function _markAllDirty(db){
+  Object.keys(db||{}).forEach(function(k){ _dirty[k] = 1; });
+}
 
-// Guardar serializa la base entera, asi que varias llamadas seguidas dentro
-// del mismo trabajo se juntan en una sola escritura. La memoria ya quedo
-// actualizada, de modo que nadie lee datos viejos mientras tanto.
-var _saveTimer = null;
-
-function _writeDB(){
+// Escribe lo pendiente. Devuelve false si el navegador se quedo sin sitio.
+// Con todo=true revisa TODAS las colecciones, ignorando las pistas: asi, si
+// alguna pista se quedara corta, nada se queda sin guardar.
+function _writeNow(todo){
   _saveTimer = null;
   if(!_dbCache) return true;
-  try {
-    localStorage.setItem('safety_db', JSON.stringify(_dbCache));
-    return true;
-  } catch(e){
-    // Sin sitio en el navegador: el registro NO se pierde en silencio
-    console.error('No se pudo guardar en el equipo:', e && e.name);
-    if(typeof toast === 'function'){
-      toast('El almacenamiento del equipo esta lleno — el registro no se guardo');
+  var db = _dbCache;
+  var claves = todo ? Object.keys(db) : Object.keys(_dirty);
+  if(!claves.length) claves = Object.keys(db);
+  var ok = true, escritas = 0;
+  for(var i=0;i<claves.length;i++){
+    var k = claves[i];
+    if(!(k in db)) continue;
+    var txt;
+    try { txt = JSON.stringify(db[k]); } catch(e){ continue; }
+    var h = _huella(txt);
+    if(_lastWritten[k] === h) continue;         // esa coleccion no cambio
+    try {
+      localStorage.setItem(DB_PREFIX+k, txt);
+      _lastWritten[k] = h;
+      escritas++;
+    } catch(e){
+      ok = false;
+      console.error('No se pudo guardar en el equipo:', e && e.name);
+      if(typeof toast === 'function'){
+        toast('El almacenamiento del equipo esta lleno \u2014 el registro no se guardo');
+      }
+      break;
     }
-    return false;
   }
+  if(escritas){
+    try { localStorage.setItem(DB_PREFIX+'_index', JSON.stringify(Object.keys(db))); } catch(e){}
+  }
+  _dirty = {};
+  return ok;
 }
 
-function saveDB(db){
-  if(db) _dbCache = db;
-  if(_saveTimer) return;                 // ya hay una escritura en camino
-  _saveTimer = setTimeout(_writeDB, 0);
+// saveDB(db)            -> revisa todas las colecciones
+// saveDB(db,'weights')  -> solo esa, que es lo normal al guardar un registro
+function _marcar(coleccion){
+  if(!coleccion) return false;
+  if(Object.prototype.toString.call(coleccion)==='[object Array]'){
+    for(var i=0;i<coleccion.length;i++) _dirty[coleccion[i]] = 1;
+    return coleccion.length > 0;
+  }
+  _dirty[coleccion] = 1;
+  return true;
 }
 
-// Escribe ya, sin esperar: para cuando la pagina se va a cerrar
-function saveDBNow(db){
+function saveDB(db, coleccion){
   if(db) _dbCache = db;
+  if(!_marcar(coleccion)) _markAllDirty(_dbCache);
+  if(_saveTimer) return;
+  _saveTimer = setTimeout(_writeNow, 0);
+}
+
+// Escribe ya, sin esperar
+function saveDBNow(db, coleccion){
+  if(db) _dbCache = db;
+  if(!_marcar(coleccion)) _markAllDirty(_dbCache);
   if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
-  return _writeDB();
+  return _writeNow();
 }
 
 // Si la pestana se oculta o se cierra, lo pendiente se escribe de inmediato
 if(typeof window !== 'undefined'){
-  window.addEventListener('pagehide', function(){ if(_saveTimer) saveDBNow(); });
+  // Al cerrar u ocultar la pestana se revisa TODO, no solo lo marcado
+  window.addEventListener('pagehide', function(){ _writeNow(true); });
   document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'hidden' && _saveTimer) saveDBNow();
+    if(document.visibilityState === 'hidden') _writeNow(true);
   });
 }
 

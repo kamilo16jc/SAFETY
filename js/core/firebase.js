@@ -1,5 +1,5 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -12,7 +12,29 @@
   };
 
   const app  = initializeApp(firebaseConfig);
-  const db   = getFirestore(app);
+
+  // ===== CACHE EN EL EQUIPO =====
+  // Sin esto, cada vez que alguien abria la app se volvia a descargar TODA la
+  // ventana de dias: con 50 personas abriendo tres veces al dia eran ~180.000
+  // lecturas diarias contra las 50.000 del plan gratuito. Con la cache en el
+  // equipo, cada uno se trae solo lo que cambio desde la ultima vez, y lo que
+  // ya tenia lo lee de su propio disco sin gastar lectura.
+  //
+  // persistentMultipleTabManager permite tener la app abierta en varias
+  // pestanas a la vez sin pelearse por la cache.
+  var db;
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      })
+    });
+  } catch(e) {
+    // Navegador sin IndexedDB (o modo privado): se sigue sin cache
+    console.warn('Sin cache local de Firestore:', e && e.message);
+    db = getFirestore(app);
+  }
   const auth = getAuth(app);
 
   // Sesión anónima: cuando las reglas exijan request.auth != null, la app ya
@@ -36,7 +58,10 @@
   //  y luego solo los cambios. El historial mas viejo se carga bajo
   //  demanda (Dashboard "all time" / Search por fecha antigua).
   // ============================================================
-  var WINDOW_DAYS = 90;
+  // 30 dias en vivo. El historial anterior se pide cuando se busca
+  // (loadHistory), asi que nada se pierde de vista: solo se deja de arrastrar
+  // tres meses de datos en cada equipo y en cada arranque.
+  var WINDOW_DAYS = 30;
   // Fecha-solo (YYYY-MM-DD): así compara bien contra registros con fecha ISO
   // completa (weights/seals) y con fecha-solo (gmps/temps).
   function windowStartISO(){

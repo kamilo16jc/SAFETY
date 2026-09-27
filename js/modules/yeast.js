@@ -203,7 +203,7 @@ function setYM(id, field, value){
     if(!a.ymAt) a.ymAt = localISOStr();
     if(!a.ymBy && currentUser && typeof getInitials==='function') a.ymBy = getInitials();
   }
-  saveDB(db);
+  saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
 
   if(!before && ymDone(a)){

@@ -13,7 +13,7 @@ function getHolds() {
 function saveHoldsDB(holds) {
   var db = getDB();
   db.holds = holds;
-  saveDB(db);
+  saveDB(db,'holds');
   if(window.saveHoldsToFirebase) window.saveHoldsToFirebase(holds);
 }
 

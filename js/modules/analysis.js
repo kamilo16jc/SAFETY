@@ -219,7 +219,7 @@ function saveAnalysisFields(id, obj){
   });
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '\u2014';
-  saveDB(db);
+  saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
   return a;
 }
@@ -235,7 +235,7 @@ function setAnalysisCell(id, field, value){
   a[field] = nv;
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '—';
-  saveDB(db);
+  saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
   anRefreshCounts();
   if(typeof refreshRunViews==='function') refreshRunViews();
@@ -306,7 +306,7 @@ function saveAnalysis(){
     createdBy: currentUser ? currentUser.name : '—'
   };
   db.analysis.push(rec);
-  saveDB(db);
+  saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', rec);
   logActivity('analysis','Sample analysis recorded',
     'Product '+rec.product+(rec.cheese?' — '+rec.cheese:'')+
@@ -327,7 +327,7 @@ function deleteAnalysis(id){
   if(!confirm('Delete analysis #'+a.seq+'?')) return;
   var db = getDB();
   db.analysis = (db.analysis||[]).filter(function(x){ return x.id!==id; });
-  saveDB(db);
+  saveDB(db,'analysis');
   if(a._fbId && window.deleteFromFirebase) window.deleteFromFirebase('analysis', a._fbId);
   renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();

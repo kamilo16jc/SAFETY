@@ -265,7 +265,7 @@ function commitWeight(){
     initials:document.getElementById('w-initials').value,
     target:{min:hasTarget?p.min:null, max:hasTarget?p.max:null}
   });
-  saveDB(db);
+  saveDB(db,'weights');
   if(window.saveToFirebase) window.saveToFirebase('weights', db.weights[db.weights.length-1]);
   st.samples=['','','','',''];
   document.getElementById('samples-wrap').innerHTML='';

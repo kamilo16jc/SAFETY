@@ -39,7 +39,7 @@ function setAnalysisValue(id, field, value){
   a[field] = v;
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '—';
-  saveDB(db);
+  saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
   return a;
 }

@@ -15,7 +15,7 @@ function getProducts(){
 function saveProducts(list){
   var db = getDB();
   db.products = list;
-  saveDB(db);
+  saveDB(db,'products');
 }
 
 // ===== CLIENTES Y TESTS DE LABORATORIO =====

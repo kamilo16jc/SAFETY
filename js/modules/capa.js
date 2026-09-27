@@ -11,7 +11,7 @@ function getCapa(){
 function saveCapaDB(list){
   var db = getDB();
   db.capa = list;
-  saveDB(db);
+  saveDB(db,'capa');
 }
 
 function nextCapaNumber(){

@@ -436,7 +436,7 @@ function saveGmp(){
     // temp now in separate db.temps
     comments:gv('gmp-comments'), completedBy:gv('gmp-completed'), verifiedBy:gv('gmp-verified')
   });
-  saveDB(db);
+  saveDB(db,'gmps');
   if(window.saveToFirebase) window.saveToFirebase('gmps', db.gmps[db.gmps.length-1]);
   var grec = db.gmps[db.gmps.length-1];
   logActivity('gmp','GMP Audit completed',
@@ -665,10 +665,10 @@ function commitTempHumidity(date, existing){
   // volvería en la próxima sincronización y desharía la corrección.
   if(existing && existing._fbId && window.saveToFirebaseAt){
     rec._fbId = existing._fbId;
-    saveDB(db);
+    saveDB(db,'temps');
     window.saveToFirebaseAt('temps', existing._fbId, rec);
   } else {
-    saveDB(db);
+    saveDB(db,'temps');
     if(window.saveToFirebase) window.saveToFirebase('temps', rec);
   }
   var wasEdit = !!existing;

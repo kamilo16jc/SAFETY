@@ -89,7 +89,7 @@ function commitSeal(){
     comments:document.getElementById('s-comments').value,
     initials:document.getElementById('s-initials').value
   });
-  saveDB(db);
+  saveDB(db,'seals');
   if(window.saveToFirebase) window.saveToFirebase('seals', db.seals[db.seals.length-1]);
   var srec = db.seals[db.seals.length-1];
   logActivity('seal','Bag seal record saved',

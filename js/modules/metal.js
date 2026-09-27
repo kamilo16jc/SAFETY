@@ -47,7 +47,7 @@ function saveMetal(){
     verifiedBy: document.getElementById('md-verified').value
   };
   db.metal.push(rec);
-  saveDB(db);
+  saveDB(db,'metal');
   if(window.saveToFirebase) window.saveToFirebase('metal', rec);
 
   var fails = MD_QUESTIONS.filter(function(q,i){ return metalAnswers[i]==='no'; }).length;

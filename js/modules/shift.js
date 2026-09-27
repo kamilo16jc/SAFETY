@@ -12,7 +12,7 @@ function getShifts(){
 function saveShiftsDB(list){
   var db = getDB();
   db.shifts = list;
-  saveDB(db);
+  saveDB(db,'shifts');
 }
 
 function nextShiftNumber(){

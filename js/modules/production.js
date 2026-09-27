@@ -123,7 +123,7 @@ function runComplete(run){
 // Edición: saveToFirebaseAt sobre el mismo doc; si aún no tiene _fbId (creado
 // sin señal) se queda local y lo sube flushPending.
 function persistRunEdit(run, db){
-  saveDB(db);
+  saveDB(db,['runs','labCounters']);
   if(run._fbId && window.saveToFirebaseAt) window.saveToFirebaseAt('runs', run._fbId, run);
 }
 
@@ -155,7 +155,7 @@ function addRun(){
     createdAt: localISOStr()
   };
   db.runs.push(run);
-  saveDB(db);
+  saveDB(db,'runs');
   if(window.saveToFirebase) window.saveToFirebase('runs', run);
   logActivity('production','Run scheduled',
     'Line '+run.line+' · Product '+run.product+(run.productName?' — '+run.productName:'')+
@@ -173,7 +173,7 @@ function deleteRun(id){
   if(!confirm('Remove this run from the schedule?')) return;
   var db = getDB();
   db.runs = (db.runs||[]).filter(function(r){ return r.id!==id; });
-  saveDB(db);
+  saveDB(db,'runs');
   if(run._fbId && window.deleteFromFirebase) window.deleteFromFirebase('runs', run._fbId);
   renderProduction();
 }
@@ -201,7 +201,7 @@ function copySchedule(){
     delete copy._fbId;          // es un registro nuevo
     db.runs.push(copy);
   });
-  saveDB(db);
+  saveDB(db,'runs');
   if(window.flushPendingNow) window.flushPendingNow();   // sube las copias
   logActivity('production','Schedule copied',
     src.length+' run(s) copied from '+from+' to '+prodDate,
