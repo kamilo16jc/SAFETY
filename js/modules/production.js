@@ -12,8 +12,48 @@ function initProduction(){
   if(d && !d.value) d.value = localDateStr();
   var s=document.getElementById('pr-shift');
   if(s && !s.value) s.value = String(expectedShift());
+  showDateOrder(document.getElementById('screen-production'));
+  echoDateRange('pr-date-echo','pr-date','');
+  buildProductionSheet();
   renderProductOptions('pr-product-list');
   renderProduction();
+}
+
+// ===== LA HOJA =====
+// El esqueleto se arma una vez: la fila de alta (numero de producto + linea)
+// no se borra al cambiar de dia ni al agregar una corrida. El orden de
+// produccion llega en papel, asi que no se pide hora: solo que producto y en
+// que linea va.
+function buildProductionSheet(){
+  var host = document.getElementById('pr-sheet');
+  if(!host || document.getElementById('pr-body')) return;
+  var lines = '';
+  for(var i=1;i<=6;i++) lines += '<option value="'+i+'">Line '+i+'</option>';
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Product</th><th class="wide">Description</th><th>Line</th>'+
+      '<th>LOT</th><th class="num">Samples</th><th>Collected</th><th>Tested</th>'+
+      '<th>Sent to lab</th><th></th>'+
+    '</tr></thead>'+
+    '<tbody id="pr-new"><tr class="newrow">'+
+      '<td class="rn">new</td>'+
+      '<td><input class="cell" id="pr-product" list="pr-product-list" placeholder="Product #" '+
+        'autocomplete="off" autocapitalize="characters" oninput="onScheduleProduct()" '+
+        'onkeydown="if(event.key===\'Enter\')addRun()"></td>'+
+      '<td class="wide soft" id="pr-desc">\u2014</td>'+
+      '<td><select class="cell" id="pr-line"><option value="">Line</option>'+lines+'</select></td>'+
+      '<td colspan="5" class="soft">The checklist fills in as the run goes</td>'+
+      '<td><button class="sheet-btn" onclick="addRun()">Add</button></td>'+
+    '</tr></tbody>'+
+    '<tbody id="pr-body"></tbody></table></div>';
+}
+
+// Al escribir el numero, la descripcion sale del catalogo
+function onScheduleProduct(){
+  var el = document.getElementById('pr-desc');
+  if(!el) return;
+  var p = findProduct(normNumber((document.getElementById('pr-product')||{}).value||''));
+  el.textContent = p ? (p.name || '\u2014') : '\u2014';
 }
 
 function prodFilters(){
@@ -26,7 +66,8 @@ function runsFor(date, shift){
   return getRuns().filter(function(r){
     return String(r.date).slice(0,10)===String(date) && String(r.shift)===String(shift);
   }).sort(function(a,b){
-    return String(a.time||'zz').localeCompare(String(b.time||'zz')) || (a.id||0)-(b.id||0);
+    // Sin hora, el orden es el de captura: como viene el papel de produccion
+    return String(a.time||'').localeCompare(String(b.time||'')) || (a.id||0)-(b.id||0);
   });
 }
 
@@ -96,7 +137,6 @@ function addRun(){
   var numEl = document.getElementById('pr-product');
   var num  = normNumber(numEl.value);
   var line = document.getElementById('pr-line').value;
-  var time = document.getElementById('pr-time').value;
   if(!num){  toast('Enter the product number'); return; }
   if(!line){ toast('Select the line'); return; }
 
@@ -105,7 +145,7 @@ function addRun(){
   var run = {
     id: Date.now(),
     date: prodDate, shift: parseInt(prodShift), line: parseInt(line),
-    time: time || '',
+    time: '',                              // el orden llega en papel: no se pide hora
     product: num,
     productName: p ? (p.name||'') : '',
     labSamples: p ? productSampleCount(p) : 0,
@@ -122,8 +162,9 @@ function addRun(){
     (run.labSample?' · LAB sample':''),
     currentUser?currentUser.name:'—');
 
-  numEl.value=''; document.getElementById('pr-time').value='';
-  if(window.renderProductCard) { /* no-op: el schedule no usa tarjeta de producto */ }
+  numEl.value='';
+  onScheduleProduct();
+  numEl.focus();
   renderProduction();
 }
 
@@ -323,14 +364,14 @@ function capaFromRun(id){
   toast('CAPA prefilled from the run — describe the problem');
 }
 
-// ---- Render ----
 function renderProduction(){
   prodFilters();
-  var el = document.getElementById('pr-list');
-  if(!el) return;
+  echoDateRange('pr-date-echo','pr-date','');
+  buildProductionSheet();
+  var body = document.getElementById('pr-body');
+  if(!body) return;
   var list = runsFor(prodDate, prodShift);
 
-  // Resumen
   var done=0, labs=0, labsPending=0, untested=0;
   list.forEach(function(r){
     if(runComplete(r)) done++;
@@ -339,68 +380,80 @@ function renderProduction(){
   });
   var sum = document.getElementById('pr-summary');
   if(sum){
+    var k = function(n, label, color){
+      return '<div class="kpi"><b>'+n+'</b><span>'+
+        (color ? '<i class="dot" style="background:'+color+'"></i>' : '')+label+'</span></div>';
+    };
     sum.innerHTML = list.length
-      ? '<div class="pr-sum">'+
-          '<div class="pr-stat"><b>'+list.length+'</b><span>runs</span></div>'+
-          '<div class="pr-stat"><b class="'+(done===list.length?'ok':'')+'">'+done+'</b><span>complete</span></div>'+
-          '<div class="pr-stat"><b class="'+(untested?'bad':'')+'">'+untested+'</b><span>not tested</span></div>'+
-          '<div class="pr-stat"><b class="'+(labsPending?'warn':'')+'">'+labsPending+'/'+labs+'</b><span>lab pending</span></div>'+
-        '</div>'
+      ? k(list.length, 'runs scheduled', '') +
+        k(done, 'complete', 'var(--pass)') +
+        k(untested, 'not tested', untested?'var(--fail)':'var(--dim)') +
+        k(labsPending+'/'+labs, 'lab samples pending', labsPending?'var(--warn)':'var(--dim)')
       : '';
   }
 
   if(!list.length){
-    el.innerHTML = '<div class="panel"><div class="cd-empty">'+
-      'No runs scheduled for this day and shift. Add them from the production sheet above, '+
-      'or copy the schedule from another day.</div></div>';
+    body.innerHTML = '<tr><td colspan="10" class="sheet-empty" style="border:0">'+
+      'No runs scheduled for this day and shift. Add them in the top row as they come on the '+
+      'production sheet, or copy the schedule from another day.</td></tr>';
     return;
   }
-
-  el.innerHTML = list.map(function(r){
-    var t = runTestCount(r);
-    var complete = runComplete(r);
-    var chk = function(on, label, onclick){
-      return '<button class="run-chk'+(on?' on':'')+'" onclick="'+onclick+'">'+
-        '<span class="run-box">'+(on?'✓':'')+'</span>'+label+'</button>';
-    };
-    return '<div class="run-card'+(complete?' done':'')+'">'+
-      '<div class="run-head">'+
-        '<div>'+
-          '<div class="run-title">Line '+r.line+' · '+esc(r.product||'—')+
-            (runSampleCount(r)>0?' <span class="tag warn">LAB '+runSampleCount(r)+'</span>':'')+
-            (complete?' <span class="tag ok">Complete</span>':'')+'</div>'+
-          '<div class="run-meta">'+esc(r.productName||'—')+(r.time?' · '+esc(r.time):'')+'</div>'+
-        '</div>'+
-        '<button class="run-del" title="Remove from schedule" onclick="deleteRun('+r.id+')"><span data-icon="close"></span></button>'+
-      '</div>'+
-      '<div class="run-lot">'+
-        '<input type="text" class="field" placeholder="LOT number" value="'+esc(r.lot||'')+'" '+
-          'onchange="setRunLot('+r.id+', this.value)">'+
-        '<button class="scan-btn" title="Scan LOT" onclick="scanRunLot('+r.id+')"><span data-icon="scan"></span></button>'+
-      '</div>'+
-      '<div class="run-checks">'+
-        chk(r.collected, 'Collected from line'+
-            (r.sampleFrom ? ' · samples '+r.sampleFrom+'–'+r.sampleTo : ''),
-            'toggleRunCheck('+r.id+",'collected')")+
-        (t.auto
-          // Confirmado por el análisis capturado: no se puede desmarcar
-          ? '<div class="run-chk auto on"><span class="run-box">✓</span>Tested'+
-              '<span class="run-auto">analysis #'+(t.seq||'—')+
-                (t.full<t.n||!t.full ? ' · partial' : '')+'</span></div>'
-          // Sin análisis: capturarlo, o marcarlo a mano
-          : '<button class="run-chk'+(t.manual?' on':'')+'" onclick="toggleRunTested('+r.id+')">'+
-              '<span class="run-box">'+(t.manual?'✓':'')+'</span>Tested'+
-              '<span class="run-auto">'+(t.manual?'marked manually':'no analysis yet')+'</span>'+
-            '</button>')+
-        (runSampleCount(r)>0 ? chk(r.labSent, 'Sent to lab', 'toggleRunCheck('+r.id+",'labSent')") : '')+
-      '</div>'+
-      '<div class="run-actions">'+
-        (t.auto ? '' :
-          '<button class="btn-ghost" onclick="analysisFromRun('+r.id+')"><span data-icon="clipboard"></span>Enter analysis</button>')+
-        '<button class="btn-ghost" onclick="holdFromRun('+r.id+')"><span data-icon="lock"></span>Place on hold</button>'+
-        '<button class="btn-ghost" onclick="capaFromRun('+r.id+')"><span data-icon="alert"></span>Open CAPA</button>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-  renderIcons(el);
+  body.innerHTML = list.map(function(r,i){ return runRowHTML(r,i+1); }).join('');
+  renderIcons(body);
 }
+
+function runRowHTML(r, i){
+  var t = runTestCount(r);
+  var n = runSampleCount(r);
+  var complete = runComplete(r);
+  var tog = function(on, label, onclick){
+    return '<button class="cell-tog'+(on?' on':'')+'" onclick="'+onclick+'">'+
+      (on ? '\u2713 ' : '') + label + '</button>';
+  };
+  var tested = t.auto
+    ? '<span class="pill ok" title="Confirmed by analysis #'+(t.seq||'')+'">\u2713 #'+(t.seq||'\u2014')+'</span>'
+    : tog(t.manual, t.manual ? 'Marked' : 'Not tested', 'toggleRunTested('+r.id+')');
+  var ico = function(icon, title, onclick){
+    return '<button class="ico-btn sm" title="'+title+'" onclick="'+onclick+'"><span data-icon="'+icon+'"></span></button>';
+  };
+  return '<tr'+(complete?' class="done"':'')+'>'+
+    '<td class="rn">'+i+'</td>'+
+    '<td class="code">'+esc(r.product||'\u2014')+'</td>'+
+    '<td class="wide">'+esc(r.productName||'\u2014')+
+      (complete?' <span class="tag ok">Complete</span>':'')+'</td>'+
+    '<td class="mid">'+esc(String(r.line||'\u2014'))+'</td>'+
+    '<td><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
+      'onchange="setRunLot('+r.id+', this.value)"></td>'+
+    '<td class="num">'+(n||'\u2014')+
+      (r.sampleFrom ? ' <span class="soft">('+r.sampleFrom+'\u2013'+r.sampleTo+')</span>' : '')+'</td>'+
+    '<td>'+(n>0 ? tog(r.collected, r.collected?'Collected':'Collect', "toggleRunCheck("+r.id+",'collected')")
+                : '<span class="soft">\u2014</span>')+'</td>'+
+    '<td>'+tested+'</td>'+
+    '<td>'+(n>0 ? tog(r.labSent, r.labSent?'Sent':'Send', "toggleRunCheck("+r.id+",'labSent')")
+                : '<span class="soft">\u2014</span>')+'</td>'+
+    '<td class="acts">'+
+      (t.auto ? '' : ico('clipboard','Enter analysis','analysisFromRun('+r.id+')'))+
+      ico('scan','Scan LOT','scanRunLot('+r.id+')')+
+      ico('lock','Place on hold','holdFromRun('+r.id+')')+
+      ico('alert','Open CAPA','capaFromRun('+r.id+')')+
+      ico('close','Remove from schedule','deleteRun('+r.id+')')+
+    '</td>'+
+  '</tr>';
+}
+
+// La hoja del dia, tal como se ve
+function exportScheduleCSV(){
+  prodFilters();
+  var list = runsFor(prodDate, prodShift);
+  if(!list.length){ toast('Nothing scheduled for that day and shift'); return; }
+  var out = [['Product','Description','Line','LOT','Samples','Sample #s','Collected','Tested','Sent to lab']];
+  list.forEach(function(r){
+    var t = runTestCount(r), n = runSampleCount(r);
+    out.push([r.product||'', r.productName||'', r.line||'', r.lot||'', n,
+      r.sampleFrom ? r.sampleFrom+'-'+r.sampleTo : '',
+      n>0 ? (r.collected?'Yes':'No') : '', t.tested?'Yes':'No',
+      n>0 ? (r.labSent?'Yes':'No') : '']);
+  });
+  downloadCSV('schedule-'+prodDate+'-shift'+prodShift+'.csv', out);
+}
+

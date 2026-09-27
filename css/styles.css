@@ -1101,3 +1101,16 @@ body.logged-out .topstack{display:none}
 .sheet .run-del{border:0;background:none;color:var(--dim);cursor:pointer;padding:2px;display:flex}
 .sheet .run-del:hover{color:var(--fail)}
 .sheet .run-del svg{width:14px;height:14px}
+
+/* Interruptor dentro de una celda: apagado se lee como pendiente, encendido
+   toma el verde de "pasa". Se usa en el checklist del Production Schedule. */
+.cell-tog{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);
+  padding:4px 9px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--muted);
+  cursor:pointer;white-space:nowrap}
+.cell-tog:hover{border-color:var(--accent);color:var(--accent)}
+.cell-tog.on{background:var(--pass-tint);border-color:var(--pass);color:var(--pass)}
+.sheet select.cell{cursor:pointer;min-width:92px}
+.sheet td.acts{white-space:nowrap}
+.sheet td.acts .ico-btn.sm{width:26px;height:26px;margin-right:3px}
+.sheet td.acts .ico-btn.sm svg{width:13px;height:13px}
+.sheet tr.done td.rn{color:var(--pass)}

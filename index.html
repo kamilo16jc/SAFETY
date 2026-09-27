@@ -41,39 +41,25 @@
   <div class="form-title">Production Schedule</div>
   <div class="form-meta">Run order and QC checklist</div>
 
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="pr-date" style="width:100%" onchange="renderProduction()"></div>
-    <div class="field-group"><div class="sec-label">Shift</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="pr-date">Date <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="pr-date" onchange="renderProduction()"></div>
+    <div class="sb-field"><label for="pr-shift">Shift</label>
       <div class="select-wrap"><select class="field" id="pr-shift" onchange="renderProduction()">
         <option value="1">1st Shift</option>
         <option value="2">2nd Shift</option>
       </select></div></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="copySchedule()"><span data-icon="calendar"></span>Copy from another day</button></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="exportScheduleCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
+  <div class="date-echo" id="pr-date-echo" style="display:none"></div>
 
-  <div id="pr-summary"></div>
-
-  <div class="sec-label">Add run from the production sheet</div>
-  <div class="pr-add">
-    <input type="text" class="field" id="pr-product" list="pr-product-list" placeholder="Product #"
-           autocomplete="off" autocapitalize="characters">
-    <datalist id="pr-product-list"></datalist>
-    <select class="field" id="pr-line">
-      <option value="">Line</option>
-      <option value="1">Line 1</option>
-      <option value="2">Line 2</option>
-      <option value="3">Line 3</option>
-      <option value="4">Line 4</option>
-      <option value="5">Line 5</option>
-      <option value="6">Line 6</option>
-    </select>
-    <input type="time" class="time-input" id="pr-time">
-    <button class="btn-solid" onclick="addRun()">Add</button>
-  </div>
-  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="copySchedule()">
-    <span data-icon="calendar"></span>Copy schedule from another day</button>
-
-  <div id="pr-list"></div>
+  <div class="kpi-row" id="pr-summary"></div>
+  <div id="pr-sheet"></div>
+  <datalist id="pr-product-list"></datalist>
 </div>
 
 <!-- LIST SAMPLES -->
