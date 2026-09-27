@@ -14,7 +14,7 @@
      para las cifras. Si no cargan, cae a la fuente del sistema. -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
@@ -399,9 +399,9 @@
       <button class="pkg-chip" data-dashrange onclick="dashQuickRange(0,this)">All time</button>
     </div>
     <div class="filter-grid">
-      <div class="f-field"><label for="dash-from">Date from</label>
+      <div class="f-field"><label for="dash-from">Date from <span class="ord" data-dateorder></span></label>
         <input type="date" class="field" id="dash-from" oninput="markDashDirty()"></div>
-      <div class="f-field"><label for="dash-to">Date to</label>
+      <div class="f-field"><label for="dash-to">Date to <span class="ord" data-dateorder></span></label>
         <input type="date" class="field" id="dash-to" oninput="markDashDirty()"></div>
       <div class="f-field"><label for="dash-product">Product</label>
         <div class="select-wrap"><select class="field" id="dash-product" onchange="markDashDirty()">
@@ -421,6 +421,7 @@
       <div class="f-field"><label>&nbsp;</label>
         <button class="btn-solid" id="dash-go" style="justify-content:center" onclick="applyDashFilters()">Apply</button></div>
     </div>
+    <div class="date-echo" id="dash-date-echo" style="display:none"></div>
     <div class="hint" id="dash-dirty" style="display:none">Filters changed — press Apply to load them.</div>
   </div>
 
@@ -893,8 +894,9 @@
     <div class="rpt-filters">
 
       <div>
-        <div class="sec-label" data-t="date">Date</div>
+        <div class="sec-label" data-t="date">Date <span class="ord" data-dateorder></span></div>
         <input type="date" class="time-input" id="rpt-date" style="width:100%" oninput="markRptDirty()">
+        <div class="date-echo" id="rpt-date-echo" style="display:none"></div>
       </div>
 
       <div>
@@ -931,7 +933,7 @@
   <!-- DAILY SHIFT REPORT -->
   <div class="sec-label">Daily Shift Report</div>
   <div class="sheet-bar">
-    <div class="sb-field"><label for="rpt-shift-date">Date</label>
+    <div class="sb-field"><label for="rpt-shift-date">Date <span class="ord" data-dateorder></span></label>
       <input type="date" class="field" id="rpt-shift-date" onchange="updateRptShiftCount()"></div>
     <div class="sb-field"><label for="rpt-shift-sel">Shift</label>
       <div class="select-wrap"><select class="field" id="rpt-shift-sel" onchange="updateRptShiftCount()">
@@ -1088,11 +1090,11 @@
         </select></div>
       </div>
       <div class="f-field">
-        <label for="sf-from">Date from</label>
+        <label for="sf-from">Date from <span class="ord" data-dateorder></span></label>
         <input type="date" class="field" id="sf-from">
       </div>
       <div class="f-field">
-        <label for="sf-to">Date to</label>
+        <label for="sf-to">Date to <span class="ord" data-dateorder></span></label>
         <input type="date" class="field" id="sf-to">
       </div>
       <div class="f-field">
@@ -1124,6 +1126,7 @@
         </select></div>
       </div>
     </div>
+    <div class="date-echo" id="search-date-echo" style="display:none"></div>
     <div class="hint" id="search-dirty" style="display:none">Filters changed — press Search to apply them.</div>
   </div>
 

@@ -28,12 +28,14 @@ function initSearch(){
   // marcan que hay algo pendiente; la busqueda la manda el boton o Enter.
   ['sf-field','sf-from','sf-to','sf-line','sf-shift','sf-type'].forEach(function(id){
     var e = document.getElementById(id);
-    if(e && !e.oninput) e.oninput = markSearchDirty;
+    if(e && !e.oninput) e.oninput = function(){ markSearchDirty(); echoDateRange('search-date-echo','sf-from','sf-to'); };
   });
   var q = document.getElementById('search-input');
   if(q && !q.oninput) q.oninput = markSearchDirty;
   searchDirty = false;
   renderSearchDirty();
+  showDateOrder(document.getElementById('screen-lotsearch'));
+  echoDateRange('search-date-echo','sf-from','sf-to');
   renderSearch();
 }
 
@@ -87,6 +89,7 @@ function clearSearch(){
   ['sf-field','sf-line','sf-shift','sf-type'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value='all'; });
   searchDirty = false;
   renderSearchDirty();
+  echoDateRange('search-date-echo','sf-from','sf-to');
   renderSearch();
 }
 
@@ -555,7 +558,7 @@ function weightPanel(list){
       '<td class="mono">'+esc(w.issue&&WEIGHT_ISSUES[w.issue]?('Issue · '+WEIGHT_ISSUES[w.issue].label):(w.pkgLabel||'—'))+'</td>'+
       '<td class="samples">'+(samples||'—')+'</td>'+
       '<td class="mono num">'+(w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+'</td>'+
-      '<td class="num"><span class="pill '+cls+'">'+compLabel(w.compliance)+'</span></td>'+
+      '<td class="num"><span class="numstate '+cls+'">'+compLabel(w.compliance)+'</span></td>'+
       '<td class="soft">'+esc((w.initials||'—'))+'</td>'+
       '<td class="view-cell"><span class="view-btn" title="View / edit" data-icon="search"></span></td>'+
     '</tr>';
@@ -649,7 +652,7 @@ function viewWeightRecord(id){
         recRow('Package', esc(w.pkgLabel||'—'))+ recRow('Target', t?t.min.toFixed(2)+' – '+t.max.toFixed(2)+' '+unitLabel(recUnit(w)):'not set')+
         recRow('Product', esc(w.product||'—'))+ recRow('LOT', '<span class="mono">'+esc(w.lot||'—')+'</span>')+
         recRow('Average', w.avg!=null?parseFloat(w.avg).toFixed(3):'—')+
-        recRow('Compliance', '<span class="pill '+cls+'">'+compLabel(w.compliance)+'</span>')+
+        recRow('Compliance', '<span class="numstate '+cls+'">'+compLabel(w.compliance)+'</span>')+
         recRow('By', esc(w.initials||'—'))+
       '</div>'+
       recBlock('Samples ('+unitLabel(recUnit(w))+')', sampTxt)+

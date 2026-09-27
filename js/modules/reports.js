@@ -27,6 +27,7 @@ function updateRptShiftCount(){
 // reporte, solo avisa que hay algo sin aplicar.
 var rptDirty = false;
 function markRptDirty(){
+  echoDateRange('rpt-date-echo','rpt-date','');
   if(rptDirty) return;
   rptDirty = true;
   renderRptDirty();
@@ -44,6 +45,7 @@ function initReports() {
   var ss = document.getElementById('rpt-shift-sel');
   if(ss && !ss.value) ss.value = String(expectedShift());
   updateRptShiftCount();
+  showDateOrder(document.getElementById('screen-reports'));
   // Set today as default date
   var today = localDateStr();
   document.getElementById('rpt-date').value = today;
@@ -55,6 +57,7 @@ function initReports() {
 
   document.getElementById('rpt-line').value = 'all';
   document.getElementById('rpt-shift').value = 'all';
+  echoDateRange('rpt-date-echo','rpt-date','');
 
   applyRptFilters();
 }

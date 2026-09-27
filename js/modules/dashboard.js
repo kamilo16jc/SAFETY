@@ -130,6 +130,7 @@ function dashFill(list){
 // una fecha disparaba una descarga por cada pedazo tecleado.
 var dashDirty = false;
 function markDashDirty(){
+  echoDateRange('dash-date-echo','dash-from','dash-to');
   if(dashDirty) return;
   dashDirty = true;
   renderDashDirty();
@@ -152,6 +153,8 @@ function initDash(){
   if(!dashReady){
     dashReady = true;
     dashQuickRange(dashDays, document.querySelector('[data-dashrange].selected'));
+    showDateOrder(document.getElementById('screen-dashboard'));
+    echoDateRange('dash-date-echo','dash-from','dash-to');
     dashDirty = false; renderDashDirty();
     return;
   }
