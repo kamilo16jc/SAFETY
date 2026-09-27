@@ -52,6 +52,21 @@
 
   // Reconstruye una coleccion grande: la ventana en vivo + el historial ya
   // cargado (mas viejo que la ventana) + lo creado offline (sin _fbId).
+  // Si la base quedo con copias de un mismo registro (lo que provocaba el
+  // addDoc de antes), la pantalla muestra una sola.
+  function dedupe(list){
+    var seen = {}, out = [];
+    for(var i=0;i<list.length;i++){
+      var r = list[i];
+      if(r && r.id != null){
+        if(seen[r.id]) continue;
+        seen[r.id] = 1;
+      }
+      out.push(r);
+    }
+    return out;
+  }
+
   function replaceBig(col, snap){
     var ldb = getDB();
     var ws = windowStartISO();
@@ -63,7 +78,7 @@
       if(!r._fbId) return true;             // creado offline, pendiente de subir
       return String(r.date||'') < ws;       // historial anterior a la ventana
     });
-    ldb[col] = remote.concat(keep);
+    ldb[col] = dedupe(remote.concat(keep));
     saveDB(ldb);
   }
   // Coleccion pequena completa + lo creado offline.
@@ -72,7 +87,7 @@
     var remote = snap.docs.map(function(d){ var x=d.data(); x._fbId=d.id; return x; });
     var rids = {}; remote.forEach(function(x){ if(x && x.id!=null) rids[x.id]=1; });
     var keep = (ldb[col]||[]).filter(function(r){ return r && !r._fbId && !(r.id!=null && rids[r.id]); });
-    ldb[col] = remote.concat(keep);
+    ldb[col] = dedupe(remote.concat(keep));
     saveDB(ldb);
   }
 
@@ -148,7 +163,7 @@
         var have = {}; (ldb[col]||[]).forEach(function(r){ if(r._fbId) have[r._fbId]=true; });
         var add = snap.docs.map(function(d){ var x=d.data(); x._fbId=d.id; return x; })
                       .filter(function(x){ return !have[x._fbId]; });
-        ldb[col] = (ldb[col]||[]).concat(add);
+        ldb[col] = dedupe((ldb[col]||[]).concat(add));
       }
       historyLoadedFrom = fromISO;
       if(fromISO <= '1970-01-02') window._historyFull = true;
@@ -178,10 +193,11 @@
           if(rec && !rec._fbId){
             try {
               var payload = Object.assign({}, rec); delete payload._fbId;
-              var ref = await addDoc(collection(db, cols[ci]), payload);
+              var fid = docIdFor(rec);
+              await setDoc(doc(db, cols[ci], fid), payload);
               if(!uploaded[cols[ci]]) uploaded[cols[ci]] = {};
-              uploaded[cols[ci]][rec.id] = ref.id;
-            } catch(e){ /* sigue offline: se reintenta luego */ }
+              uploaded[cols[ci]][rec.id] = fid;
+            } catch(e){ /* sigue offline: se reintenta, y reescribe el mismo doc */ }
           }
         }
       }
@@ -205,14 +221,33 @@
   }
 
   // ---- SAVE to Firestore ----
+  // El documento se llama como el registro. Antes se usaba addDoc, que crea
+  // uno NUEVO en cada intento: si la confirmacion no llegaba (sin senal, o con
+  // la cuota de lecturas agotada) el reintento volvia a subir lo mismo, y un
+  // registro acababa repetido decenas de veces. Con un id propio, reintentar
+  // reescribe el mismo documento y no duplica nunca.
+  function docIdFor(record){
+    if(record && record.id != null) return String(record.id);
+    return 'r'+Date.now()+Math.random().toString(36).slice(2,8);
+  }
+  // Marca el _fbId EN EL REGISTRO QUE SE SUBIO. Antes se lo ponia al ultimo
+  // del arreglo, que despues de una sincronizacion podia ser otro.
+  function stampFbId(colName, recId, fbId){
+    var ldb = getDB();
+    var hit = false;
+    (ldb[colName]||[]).forEach(function(r){
+      if(r && r.id===recId && !r._fbId){ r._fbId = fbId; hit = true; }
+    });
+    if(hit) saveDB(ldb);
+  }
+
   window.saveToFirebase = async function(colName, record) {
+    var fid = docIdFor(record);
     try {
-      var docRef = await addDoc(collection(db, colName), record);
-      var localDb = getDB();
-      var arr = localDb[colName] || [];
-      var last = arr[arr.length - 1];
-      if(last) last._fbId = docRef.id;
-      saveDB(localDb);
+      var payload = Object.assign({}, record);
+      delete payload._fbId;
+      await setDoc(doc(db, colName, fid), payload);
+      stampFbId(colName, record.id, fid);
     } catch(e) {
       console.error('Firebase save error:', e);
     }
@@ -227,6 +262,34 @@
     } catch(e) {
       console.error('Firebase overwrite error:', e);
     }
+  };
+
+  // ---- LIMPIEZA: borra las copias de un mismo registro, deja una ----
+  // Se conserva el documento cuyo id coincide con el del registro (el nuevo
+  // formato) y, si no hay, el primero que llegue.
+  window.dedupeCollection = async function(colName){
+    try {
+      var snap = await getDocs(collection(db, colName));
+      var byId = {};
+      snap.docs.forEach(function(d){
+        var rid = (d.data()||{}).id;
+        if(rid == null) return;
+        (byId[rid] = byId[rid] || []).push(d.id);
+      });
+      var removed = 0, groups = 0;
+      var keys = Object.keys(byId);
+      for(var k=0;k<keys.length;k++){
+        var ids = byId[keys[k]];
+        if(ids.length < 2) continue;
+        groups++;
+        var keep = ids.indexOf(String(keys[k])) >= 0 ? String(keys[k]) : ids[0];
+        for(var i=0;i<ids.length;i++){
+          if(ids[i] === keep) continue;
+          try { await deleteDoc(doc(db, colName, ids[i])); removed++; } catch(e){}
+        }
+      }
+      return {collection: colName, duplicated: groups, removed: removed};
+    } catch(e){ return {collection: colName, error: String(e)}; }
   };
 
   // ---- DELETE a single doc ----
