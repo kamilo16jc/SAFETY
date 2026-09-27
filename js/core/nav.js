@@ -74,6 +74,7 @@ function goTo(id){
   if(id==='screen-samplelist') initSampleList();
   if(id==='screen-lab') initLab();
   if(id==='screen-analysis') initAnalysis();
+  if(id==='screen-yeast') initYeast();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -139,6 +140,7 @@ var CRUMBS = {
   'screen-samplelist':['Capture', 'List Samples'],
   'screen-lab':      ['Capture', 'Lab Samples'],
   'screen-analysis': ['Capture', 'Sample Analysis'],
+  'screen-yeast':    ['Capture', 'Yeast & Mold'],
   'screen-weight':   ['Capture', 'Weight Log'],
   'screen-seal':     ['Capture', 'Bag Seal'],
   'screen-gmp':      ['Capture', 'GMP Audit'],

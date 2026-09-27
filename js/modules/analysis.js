@@ -3,6 +3,11 @@
 // Es la fuente REAL de "testeado": un producto está testeado cuando tiene su
 // análisis capturado, no porque se haya tomado un peso (los pesos se toman con
 // el producto que esté corriendo, así que no prueban nada sobre otro producto).
+//
+// La captura es una hoja: la primera fila es la de alta y debajo van los
+// registros guardados, con Moisture / Fat / pH editables en su celda. El
+// segundo paso del laboratorio (la placa) vive en Yeast & Mold y arrastra
+// estos mismos registros.
 var anFrom = '', anTo = '', anQuery = '';
 
 function getAnalyses(){ var d=getDB(); if(!d.analysis) d.analysis=[]; return d.analysis; }
@@ -14,11 +19,12 @@ function initAnalysis(){
     f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   if(t && !t.value) t.value = localDateStr();
-  var dt=document.getElementById('an-date'); if(dt && !dt.value) dt.value = localDateStr();
-  var by=document.getElementById('an-by');
-  if(by && !by.value && typeof getInitials==='function' && currentUser) by.value = getInitials();
+  anDirty = false; renderAnDirty();
+  showDateOrder(document.getElementById('screen-analysis'));
+  echoDateRange('an-date-echo','an-from','an-to');
+  buildAnalysisSheet();
   renderProductOptions('an-product-list');
-  renderAnalysis();
+  renderAnalysisRows();
 }
 
 // Número correlativo del año (como el ID de la hoja)
@@ -45,6 +51,174 @@ function analysisComplete(a){
              a.ph!=='' && a.ph!=null;
 }
 
+// ===== FILTROS =====
+// El texto filtra al instante (es la lista que ya está en memoria); el rango
+// de fechas espera al botón, porque puede tener que pedir historial.
+var anDirty = false;
+function markAnDirty(){
+  echoDateRange('an-date-echo','an-from','an-to');
+  if(anDirty) return;
+  anDirty = true;
+  renderAnDirty();
+}
+function renderAnDirty(){
+  var el = document.getElementById('an-dirty');
+  if(el) el.style.display = anDirty ? 'block' : 'none';
+  var b = document.getElementById('an-go');
+  if(b) b.classList.toggle('pending', anDirty);
+}
+function applyAnFilters(){
+  anDirty = false; renderAnDirty();
+  var f = document.getElementById('an-from');
+  var from = f ? f.value : '';
+  if(from && window.loadHistory){ window.loadHistory(from, renderAnalysisRows); return; }
+  renderAnalysisRows();
+}
+function anOnKey(e){ if(e.key==='Enter') applyAnFilters(); }
+
+function anFilters(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  anFrom=g('an-from'); anTo=g('an-to'); anQuery=(g('an-search')||'').trim().toLowerCase();
+}
+
+function analysisResults(){
+  anFilters();
+  return getAnalyses().filter(function(a){
+    var d=String(a.date||'').slice(0,10);
+    if(anFrom && d<anFrom) return false;
+    if(anTo   && d>anTo)   return false;
+    if(anQuery){
+      var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
+               String(a.order||'')+' '+String(a.po||'')+' #'+String(a.seq||'')).toLowerCase();
+      if(hay.indexOf(anQuery)<0) return false;
+    }
+    return true;
+  }).sort(function(a,b){
+    return String(b.date).localeCompare(String(a.date)) || (b.seq||0)-(a.seq||0);
+  });
+}
+
+// ===== LA HOJA =====
+// El esqueleto se arma una sola vez: así la fila de alta no se borra cuando
+// se filtra o se guarda. Solo se repinta el cuerpo con los registros.
+function buildAnalysisSheet(){
+  var host = document.getElementById('an-sheet');
+  if(!host || document.getElementById('an-body')) return;
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Date</th><th>Product</th><th class="wide">Cheese</th>'+
+      '<th>Customer</th><th>Prod. date</th><th>Order</th><th>PO</th>'+
+      '<th class="num">Moisture</th><th class="num">Fat</th><th class="num">pH</th>'+
+      '<th>By</th><th></th>'+
+    '</tr></thead>'+
+    '<tbody id="an-new"><tr class="newrow">'+
+      '<td class="rn">new</td>'+
+      '<td><input type="date" class="cell" id="an-date"></td>'+
+      '<td><input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
+        'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()"></td>'+
+      '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
+      '<td class="soft" id="an-customer-cell">—</td>'+
+      '<td><input class="cell" id="an-proddate" placeholder="e.g. 26002"></td>'+
+      '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
+      '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
+      '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%"></td>'+
+      '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%"></td>'+
+      '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH"></td>'+
+      '<td><input class="cell" id="an-by" placeholder="Initials"></td>'+
+      '<td><button class="sheet-btn" onclick="saveAnalysis()">Add</button></td>'+
+    '</tr></tbody>'+
+    '<tbody id="an-body"></tbody></table></div>';
+  resetAnalysisRow();
+}
+
+// Deja la fila de alta lista para el siguiente registro
+function resetAnalysisRow(){
+  var set=function(id,v){ var e=document.getElementById(id); if(e) e.value=v; };
+  set('an-date', localDateStr());
+  ['an-product','an-cheese','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
+    .forEach(function(id){ set(id,''); });
+  var by=document.getElementById('an-by');
+  if(by && !by.value && typeof getInitials==='function' && currentUser) by.value = getInitials();
+  var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
+}
+
+function renderAnalysisRows(){
+  var body = document.getElementById('an-body');
+  if(!body) return;
+  var list = analysisResults();
+
+  var sum = document.getElementById('an-summary');
+  if(sum){
+    var full = list.filter(analysisComplete).length;
+    var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
+    sum.innerHTML =
+      '<div class="kpi"><b>'+list.length+'</b><span>analyses</span></div>'+
+      '<div class="kpi"><b>'+full+'</b><span><i class="dot" style="background:var(--pass)"></i>complete</span></div>'+
+      '<div class="kpi"><b>'+(list.length-full)+'</b><span><i class="dot" style="background:var(--warn)"></i>partial</span></div>'+
+      '<div class="kpi"><b>'+plate+'</b><span>plates read</span></div>';
+  }
+
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="13" class="sheet-empty" style="border:0">'+
+      'No analyses for these filters. Fill the top row to add the first one.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.slice(0,300).map(function(a,i){ return anRowHTML(a,i+1); }).join('');
+  renderIcons(body);
+}
+
+function anRowHTML(a, i){
+  var cell = function(field, val, ph){
+    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" '+
+      'value="'+esc(val==null?'':val)+'" onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
+  };
+  return '<tr>'+
+    '<td class="rn">'+i+'</td>'+
+    '<td class="soft">'+esc(fmtDate(a.date))+'</td>'+
+    '<td class="code">'+esc(a.product||'—')+'</td>'+
+    '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
+    '<td class="soft">'+esc(a.customer||'—')+'</td>'+
+    '<td class="soft">'+esc(a.prodDate||'—')+'</td>'+
+    '<td class="soft">'+esc(a.order||'—')+'</td>'+
+    '<td class="soft">'+esc(a.po||'—')+'</td>'+
+    '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
+    '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
+    '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
+    '<td><input class="cell" placeholder="Initials" value="'+esc(a.testedBy||'')+'" '+
+      'onchange="setAnalysisCell('+a.id+',\'testedBy\',this.value)"></td>'+
+    '<td><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
+      '<span data-icon="close"></span></button></td>'+
+  '</tr>';
+}
+
+// Editar una celda guardada. No repinta la hoja: se perdería el foco al pasar
+// de Moisture a Fat. Solo se actualizan los conteos de arriba.
+function setAnalysisCell(id, field, value){
+  var db = getDB();
+  var a = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
+  if(!a) return;
+  a[field] = String(value==null?'':value).trim();
+  a.editedAt = localISOStr();
+  a.editedBy = currentUser ? currentUser.name : '—';
+  saveDB(db);
+  if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  anRefreshCounts();
+  if(typeof refreshRunViews==='function') refreshRunViews();
+}
+
+function anRefreshCounts(){
+  var sum = document.getElementById('an-summary');
+  if(!sum || !sum.children.length) return;
+  var list = analysisResults();
+  var full = list.filter(analysisComplete).length;
+  var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
+  var vals = [list.length, full, list.length-full, plate];
+  for(var i=0;i<vals.length;i++){
+    var b = sum.children[i] && sum.children[i].querySelector('b');
+    if(b) b.textContent = vals[i];
+  }
+}
+
 // ---- Alta ----
 function onAnalysisProduct(){
   var num = normNumber(document.getElementById('an-product').value);
@@ -52,9 +226,8 @@ function onAnalysisProduct(){
   var ch = document.getElementById('an-cheese');
   if(p && ch && !ch.value) ch.value = p.name || '';
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
-  var el = document.getElementById('an-customer-hint');
-  if(el) el.innerHTML = c ? '<div class="cust-hint"><div class="cust-name">'+esc(c.company)+
-    ' <span class="tag">'+esc(c.customerId)+'</span></div></div>' : '';
+  var el = document.getElementById('an-customer-cell');
+  if(el) el.textContent = c ? c.company : '—';
 }
 
 function saveAnalysis(){
@@ -80,6 +253,7 @@ function saveAnalysis(){
     order: g('an-order'),
     po: g('an-po'),
     moisture: moisture, fat: fat, ph: ph,
+    yeast: '', mold: '',                 // los llena Yeast & Mold a los 5 días
     testedBy: g('an-by') || (currentUser ? getInitials() : ''),
     runId: window._anRunId || null,
     createdAt: localISOStr(),
@@ -94,11 +268,10 @@ function saveAnalysis(){
     rec.testedBy||(currentUser?currentUser.name:'—'));
 
   window._anRunId = null;
-  ['an-product','an-cheese','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
-    .forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
-  var hint=document.getElementById('an-customer-hint'); if(hint) hint.innerHTML='';
+  resetAnalysisRow();
+  var pe=document.getElementById('an-product'); if(pe) pe.focus();
   toast('Analysis #'+rec.seq+' saved');
-  renderAnalysis();
+  renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
 }
 
@@ -110,7 +283,7 @@ function deleteAnalysis(id){
   db.analysis = (db.analysis||[]).filter(function(x){ return x.id!==id; });
   saveDB(db);
   if(a._fbId && window.deleteFromFirebase) window.deleteFromFirebase('analysis', a._fbId);
-  renderAnalysis();
+  renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
 }
 
@@ -130,65 +303,31 @@ function analysisFromRun(runId){
   toast('Analysis prefilled from the run');
 }
 
-// ---- Render ----
-function anFilters(){
-  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
-  anFrom=g('an-from'); anTo=g('an-to'); anQuery=(g('an-search')||'').trim().toLowerCase();
-}
+// El sistema sigue llamando a renderAnalysis() desde otras pantallas
+function renderAnalysis(){ renderAnalysisRows(); }
 
-function analysisResults(){
-  anFilters();
-  return getAnalyses().filter(function(a){
-    var d=String(a.date||'').slice(0,10);
-    if(anFrom && d<anFrom) return false;
-    if(anTo   && d>anTo)   return false;
-    if(anQuery){
-      var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
-               String(a.order||'')+' '+String(a.po||'')).toLowerCase();
-      if(hay.indexOf(anQuery)<0) return false;
-    }
-    return true;
-  }).sort(function(a,b){
-    return String(b.date).localeCompare(String(a.date)) || (b.seq||0)-(a.seq||0);
+// ---- Exportar la hoja tal como se ve ----
+function csvCell(v){
+  v = String(v==null?'':v);
+  return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+}
+function downloadCSV(name, rows){
+  var csv = rows.map(function(r){ return r.map(csvCell).join(','); }).join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function exportAnalysisCSV(){
+  var list = analysisResults();
+  if(!list.length){ toast('Nothing to export for these filters'); return; }
+  var out = [['ID','Date','Product','Cheese','Customer','Prod. date','Order','PO',
+              'Moisture','Fat','pH','Tested by','Yeast','Mold','Plate read']];
+  list.forEach(function(a){
+    out.push([a.seq||'', String(a.date||'').slice(0,10), a.product||'', a.cheese||'', a.customer||'',
+      a.prodDate||'', a.order||'', a.po||'', a.moisture||'', a.fat||'', a.ph||'',
+      a.testedBy||'', a.yeast||'', a.mold||'', String(a.ymAt||'').slice(0,10)]);
   });
-}
-
-function renderAnalysis(){
-  var el=document.getElementById('an-list');
-  if(!el) return;
-  var list=analysisResults();
-  var sum=document.getElementById('an-summary');
-  if(sum){
-    var full=list.filter(analysisComplete).length;
-    sum.innerHTML = list.length
-      ? '<div class="pr-sum">'+
-          '<div class="pr-stat"><b>'+list.length+'</b><span>analyses</span></div>'+
-          '<div class="pr-stat"><b class="ok">'+full+'</b><span>complete</span></div>'+
-          '<div class="pr-stat"><b class="'+(list.length-full?'warn':'')+'">'+(list.length-full)+'</b><span>partial</span></div>'+
-        '</div>' : '';
-  }
-  if(!list.length){
-    el.innerHTML='<div class="panel"><div class="cd-empty">No analyses for these filters.</div></div>';
-    return;
-  }
-  var rows=list.slice(0,200).map(function(a){
-    return '<tr>'+
-      '<td class="mono">#'+(a.seq||'—')+'</td>'+
-      '<td class="mono">'+fmtDate(a.date)+'</td>'+
-      '<td class="mono">'+esc(a.product||'—')+'</td>'+
-      '<td>'+esc(a.cheese||'—')+'</td>'+
-      '<td class="soft">'+esc(a.customer||'—')+'</td>'+
-      '<td class="mono num">'+esc(a.moisture||'—')+'</td>'+
-      '<td class="mono num">'+esc(a.fat||'—')+'</td>'+
-      '<td class="mono num">'+esc(a.ph||'—')+'</td>'+
-      '<td class="soft">'+esc(a.testedBy||'—')+'</td>'+
-      '<td class="view-cell"><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
-        '<span data-icon="close"></span></button></td>'+
-    '</tr>';
-  }).join('');
-  el.innerHTML = tablePanel('Sample analysis', list.length, [
-    {t:'ID'},{t:'Date'},{t:'Product'},{t:'Cheese'},{t:'Customer'},
-    {t:'Moisture',num:true},{t:'Fat',num:true},{t:'pH',num:true},{t:'By'},{t:''}
-  ], rows, Math.min(list.length,200));
-  renderIcons(el);
+  downloadCSV('sample-analysis-'+localDateStr()+'.csv', out);
 }

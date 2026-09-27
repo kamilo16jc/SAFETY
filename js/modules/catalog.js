@@ -146,6 +146,8 @@ function renderCatalogDetail(){
       '<div class="field-group"><div class="sec-label">Lab samples per run</div>'+
         '<input type="text" class="field" id="cd-lab-n" inputmode="numeric" value="'+productSampleCount(p)+'">'+
         '<div class="hint">How many samples QA must collect each run. 0 = this product is not sampled.</div></div>'+
+      '<label class="lab-check"><input type="checkbox" id="cd-plate"'+(p.plate===false?'':' checked')+'>'+
+        '<span><b>Yeast &amp; mold plate</b> · a plate is made for this product and read 5 days later</span></label>'+
       catalogCustomerBlock(p)+
       (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+
       '<div class="cd-meta">'+
@@ -226,6 +228,7 @@ function saveCatalogEdits(){
   p.bagsPerCase = isNaN(bags) ? null : bags;
   p.labSamples = parseSampleCount((document.getElementById('cd-lab-n')||{}).value);
   p.labSample  = p.labSamples > 0;
+  p.plate      = !!(document.getElementById('cd-plate')||{checked:true}).checked;
   p.customerId = (document.getElementById('cd-customer')||{}).value || '';
   if(typeof readLabTestPicker==='function') readLabTestPicker(p);
   p.updatedBy = currentUser ? currentUser.name : '—';

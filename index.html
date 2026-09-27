@@ -170,44 +170,59 @@
   <div class="form-title">Sample Analysis</div>
   <div class="form-meta">Moisture, Fat and pH — this is what marks a product as tested</div>
 
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="an-date" style="width:100%"></div>
-    <div class="field-group"><div class="sec-label">Tested by</div>
-      <input type="text" class="field" id="an-by" placeholder="Initials"></div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="an-from">Date from <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="an-from" oninput="markAnDirty()"></div>
+    <div class="sb-field"><label for="an-to">Date to <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="an-to" oninput="markAnDirty()"></div>
+    <div class="sb-field"><label for="an-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="an-search" placeholder="Product, cheese, customer, order…" autocomplete="off"
+               oninput="renderAnalysisRows()" onkeydown="anOnKey(event)">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="an-go" onclick="applyAnFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="exportAnalysisCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
-  <div class="sec-label">Product Number</div>
-  <input type="text" class="field" id="an-product" list="an-product-list" placeholder="Product #"
-         autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()">
+  <div class="date-echo" id="an-date-echo" style="display:none"></div>
+  <div class="hint" id="an-dirty" style="display:none">Filters changed — press Apply.</div>
+
+  <div class="kpi-row" id="an-summary"></div>
+  <div id="an-sheet"></div>
   <datalist id="an-product-list"></datalist>
-  <div id="an-customer-hint"></div>
-  <div class="sec-label">Cheese / Description</div>
-  <input type="text" class="field" id="an-cheese" placeholder="Description">
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">Production Date</div>
-      <input type="text" class="field" id="an-proddate" placeholder="e.g. 26002"></div>
-    <div class="field-group"><div class="sec-label">Order #</div>
-      <input type="text" class="field" id="an-order" placeholder="Order"></div>
-  </div>
-  <div class="sec-label">PO #</div>
-  <input type="text" class="field" id="an-po" placeholder="PO">
+</div>
 
-  <div class="sec-label">Results</div>
-  <div class="an-vals">
-    <div><span>Moisture</span><input type="text" class="field" id="an-moisture" inputmode="decimal" placeholder="%"></div>
-    <div><span>Fat</span><input type="text" class="field" id="an-fat" inputmode="decimal" placeholder="%"></div>
-    <div><span>pH</span><input type="text" class="field" id="an-ph" inputmode="decimal" placeholder="pH"></div>
-  </div>
-  <button class="main-btn" onclick="saveAnalysis()">Save Analysis</button>
+<!-- YEAST & MOLD -->
+<div class="screen" id="screen-yeast">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Yeast &amp; Mold</div>
+  <div class="form-meta">Plates from Sample Analysis — read 5 days after the sample</div>
 
-  <div class="sec-label" style="margin-top:22px">History</div>
-  <div class="pair">
-    <div class="field-group"><input type="date" class="time-input" id="an-from" style="width:100%" onchange="renderAnalysis()"></div>
-    <div class="field-group"><input type="date" class="time-input" id="an-to" style="width:100%" onchange="renderAnalysis()"></div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="ym-from">Sampled from <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="ym-from" oninput="markYmDirty()"></div>
+    <div class="sb-field"><label for="ym-to">Sampled to <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="ym-to" oninput="markYmDirty()"></div>
+    <div class="sb-field"><label for="ym-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="ym-search" placeholder="Product, cheese, customer, order, ID…" autocomplete="off"
+               oninput="renderYeast()" onkeydown="ymOnKey(event)">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="ym-go" onclick="applyYmFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-ghost" onclick="exportYeastCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
-  <input type="text" class="field" id="an-search" placeholder="Search product, cheese, customer, order…" oninput="renderAnalysis()">
-  <div id="an-summary"></div>
-  <div id="an-list"></div>
+  <div class="date-echo" id="ym-date-echo" style="display:none"></div>
+  <div class="hint" id="ym-dirty" style="display:none">Dates changed — press Apply.</div>
+
+  <div class="kpi-row" id="ym-kpis"></div>
+  <div id="ym-sheet"></div>
 </div>
 
 <div class="screen" id="screen-lab">
@@ -1308,6 +1323,7 @@
 <script src="js/modules/samplelist.js"></script>
 <script src="js/modules/lab.js"></script>
 <script src="js/modules/analysis.js"></script>
+<script src="js/modules/yeast.js"></script>
 <script src="js/modules/lab-tests.js"></script>
 <script src="js/modules/lab-form.js"></script>
 <script src="js/modules/weight.js"></script>

@@ -22,6 +22,7 @@ var MODULES = [
   ]},
   { id:'lab', color:'#38bdf8', ink:'#0369a1', name:'QA Laboratory', icon:'droplet', items:[
       {screen:'screen-analysis',  name:'Sample Analysis',  icon:'clipboard', color:'#047857'},
+      {screen:'screen-yeast',     name:'Yeast & Mold',     icon:'clock', color:'#a16207'},
       {screen:'screen-lab',       name:'Lab Samples',      icon:'droplet', color:'#0369a1'},
       {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', soon:true, color:'#b45309'},
       {screen:'screen-raw',       name:'Raw Material',     icon:'box',    soon:true, color:'#7c3aed'},
