@@ -432,10 +432,7 @@ function runRowHTML(r, i){
     '<td>'+(n>0 ? tog(r.labSent, r.labSent?'Sent':'Send', "toggleRunCheck("+r.id+",'labSent')")
                 : '<span class="soft">\u2014</span>')+'</td>'+
     '<td class="acts">'+
-      (t.auto ? '' : ico('clipboard','Enter analysis','analysisFromRun('+r.id+')'))+
       ico('scan','Scan LOT','scanRunLot('+r.id+')')+
-      ico('lock','Place on hold','holdFromRun('+r.id+')')+
-      ico('alert','Open CAPA','capaFromRun('+r.id+')')+
       ico('close','Remove from schedule','deleteRun('+r.id+')')+
     '</td>'+
   '</tr>';
