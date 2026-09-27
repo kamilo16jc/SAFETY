@@ -215,7 +215,7 @@ function saveHoldCase() {
 
   var now = localISOStr();
   var newCase = {
-    id:          Date.now(),
+    id:          newRecordId(),
     caseNumber:  getNextHoldNumber(),
     product:     product,
     lot:         lot,

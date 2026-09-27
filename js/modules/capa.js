@@ -102,7 +102,7 @@ function saveCapa(){
     rec = list.filter(function(c){ return c.id===capaEditingId; })[0];
     if(!rec){ capaEditingId=null; return; }
   } else {
-    rec = { id: Date.now(), createdBy: currentUser?currentUser.name:'—', createdAt: now };
+    rec = { id: newRecordId(), createdBy: currentUser?currentUser.name:'—', createdAt: now };
     list.push(rec);
   }
   rec.reportNumber = report;

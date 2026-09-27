@@ -250,7 +250,7 @@ function commitWeight(){
   var pass = hasTarget ? vals.filter(function(v){return v>=p.min&&v<=p.max}).length : null;
   var db=getDB();
   db.weights.push({
-    id:Date.now(), date:isoFromDateTime(document.getElementById('w-date').value, document.getElementById('check-time').value),
+    id:newRecordId(), date:isoFromDateTime(document.getElementById('w-date').value, document.getElementById('check-time').value),
     line:st.line, shift:st.shift,
     pkg:st.pkg, pkgLabel:p.label, unit:pkgUnit(p),
     vals:vals, avg:vals.reduce(function(a,b){return a+b},0)/vals.length,
@@ -304,7 +304,7 @@ function commitWeightIssue(){
   var comment = document.getElementById('w-comments').value.trim() || weightIssueComment(issue, timeVal);
   var db = getDB();
   db.weights.push({
-    id: Date.now(),
+    id: newRecordId(),
     date: isoFromDateTime(document.getElementById('w-date').value, timeVal),
     line: st.line, shift: st.shift,
     issue: issue,

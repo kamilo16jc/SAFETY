@@ -227,7 +227,14 @@
   // registro acababa repetido decenas de veces. Con un id propio, reintentar
   // reescribe el mismo documento y no duplica nunca.
   function docIdFor(record){
-    if(record && record.id != null) return String(record.id);
+    if(record && record.id != null){
+      // La huella del equipo que sube va en el nombre del documento: aunque
+      // dos equipos sacaran el mismo numero, escriben documentos distintos y
+      // ninguno pisa al otro. Reintentar desde el mismo equipo reescribe el
+      // suyo, que es lo que evita los duplicados.
+      var dev = (typeof deviceSalt === 'function') ? deviceSalt() : 0;
+      return String(record.id) + '-' + dev;
+    }
     return 'r'+Date.now()+Math.random().toString(36).slice(2,8);
   }
   // Marca el _fbId EN EL REGISTRO QUE SE SUBIO. Antes se lo ponia al ultimo

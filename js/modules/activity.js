@@ -5,7 +5,7 @@ function logActivity(type, action, details, user) {
   var db = getDB();
   if(!db.activityLog) db.activityLog = [];
   var entry = {
-    id: Date.now(),
+    id: newRecordId(),
     type: type,
     action: action,
     details: details,

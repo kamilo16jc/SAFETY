@@ -28,7 +28,7 @@ function addOperator() {
   }
 
   hashPassword(username, pass).then(function(h){
-    ops.push({id:Date.now(), name:name, username:username, email:email, passHash:h, role:adminRole, createdAt:localDateStr()});
+    ops.push({id:newRecordId(), name:name, username:username, email:email, passHash:h, role:adminRole, createdAt:localDateStr()});
     saveOperators(ops);
 
     document.getElementById('admin-name').value = '';

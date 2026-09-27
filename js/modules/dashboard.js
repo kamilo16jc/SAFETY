@@ -431,7 +431,7 @@ function gv(id){var e=document.getElementById(id);return e?e.value:'';}
 function saveGmp(){
   var db=getDB();
   db.gmps.push({
-    id:Date.now(), date:gv('gmp-date'), location:gv('gmp-loc'),
+    id:newRecordId(), date:gv('gmp-date'), location:gv('gmp-loc'),
     shift:gmpShift, answers:Object.assign({},gmpAnswers),
     // temp now in separate db.temps
     comments:gv('gmp-comments'), completedBy:gv('gmp-completed'), verifiedBy:gv('gmp-verified')
@@ -648,7 +648,7 @@ function commitTempHumidity(date, existing){
 
   var cpLabel = TH_CP_LABEL;
   var rec = {
-    id: Date.now(),
+    id: newRecordId(),
     date: date,
     shift: thShift,
     checkpoint: thCheckpoint,

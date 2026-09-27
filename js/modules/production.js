@@ -143,7 +143,7 @@ function addRun(){
   var p = findProduct(num);
   var db = getDB(); if(!db.runs) db.runs = [];
   var run = {
-    id: Date.now(),
+    id: newRecordId(),
     date: prodDate, shift: parseInt(prodShift), line: parseInt(line),
     time: '',                              // el orden llega en papel: no se pide hora
     product: num,

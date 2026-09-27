@@ -136,7 +136,7 @@ function saveShift(){
     rec = list.filter(function(s){ return s.id===shiftEditingId; })[0];
     if(!rec){ shiftEditingId=null; return; }
   } else {
-    rec = { id: Date.now(), createdBy: currentUser?currentUser.name:'—', createdAt: now };
+    rec = { id: newRecordId(), createdBy: currentUser?currentUser.name:'—', createdAt: now };
     list.push(rec);
   }
   rec.reportNumber = report;

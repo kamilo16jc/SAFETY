@@ -78,7 +78,7 @@ function saveSeal(){
 function commitSeal(){
   var db=getDB();
   db.seals.push({
-    id:Date.now(), date:isoFromDateTime(document.getElementById('s-date').value, document.getElementById('seal-time').value),
+    id:newRecordId(), date:isoFromDateTime(document.getElementById('s-date').value, document.getElementById('seal-time').value),
     line:st.line, shift:st.shift,
     checks:Object.assign({},st.sealChecks),
     time:document.getElementById('seal-time').value,

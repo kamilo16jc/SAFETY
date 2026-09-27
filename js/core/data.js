@@ -127,15 +127,95 @@ var donutChart = null, trendChart = null;
 
 // ===== DB =====
 function getDB(){
-  var db=JSON.parse(localStorage.getItem('safety_db')||localStorage.getItem('caputo_db')||'{}');
+  if(_dbCache) return _dbCache;
+  var db;
+  try {
+    db = JSON.parse(localStorage.getItem('safety_db')||localStorage.getItem('caputo_db')||'{}');
+  } catch(e){ db = {}; }
   if(!db.weights) db.weights=[];
   if(!db.seals)   db.seals=[];
   if(!db.gmps)    db.gmps=[];
   if(!db.holds)   db.holds=[];
   if(!db.temps)   db.temps=[];
+  _dbCache = db;
   return db;
 }
-function saveDB(db){localStorage.setItem('safety_db',JSON.stringify(db))}
+
+// ===== LA BASE EN MEMORIA =====
+// getDB() hacia JSON.parse de TODA la base en cada llamada, y se la llama
+// dentro de bucles: al pintar Lab Samples con un mes de datos se llamaba 1.698
+// veces y el 99% de los 5 segundos se iba en volver a interpretar los mismos
+// 764 KB. Ahora se interpreta una vez y se guarda el objeto; quien lo pide
+// recibe SIEMPRE el mismo, asi que lo que uno modifica lo ve el siguiente.
+var _dbCache = null;
+
+// Guardar serializa la base entera, asi que varias llamadas seguidas dentro
+// del mismo trabajo se juntan en una sola escritura. La memoria ya quedo
+// actualizada, de modo que nadie lee datos viejos mientras tanto.
+var _saveTimer = null;
+
+function _writeDB(){
+  _saveTimer = null;
+  if(!_dbCache) return true;
+  try {
+    localStorage.setItem('safety_db', JSON.stringify(_dbCache));
+    return true;
+  } catch(e){
+    // Sin sitio en el navegador: el registro NO se pierde en silencio
+    console.error('No se pudo guardar en el equipo:', e && e.name);
+    if(typeof toast === 'function'){
+      toast('El almacenamiento del equipo esta lleno — el registro no se guardo');
+    }
+    return false;
+  }
+}
+
+function saveDB(db){
+  if(db) _dbCache = db;
+  if(_saveTimer) return;                 // ya hay una escritura en camino
+  _saveTimer = setTimeout(_writeDB, 0);
+}
+
+// Escribe ya, sin esperar: para cuando la pagina se va a cerrar
+function saveDBNow(db){
+  if(db) _dbCache = db;
+  if(_saveTimer){ clearTimeout(_saveTimer); _saveTimer = null; }
+  return _writeDB();
+}
+
+// Si la pestana se oculta o se cierra, lo pendiente se escribe de inmediato
+if(typeof window !== 'undefined'){
+  window.addEventListener('pagehide', function(){ if(_saveTimer) saveDBNow(); });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden' && _saveTimer) saveDBNow();
+  });
+}
+
+// ===== IDENTIFICADOR DE UN REGISTRO =====
+// Era Date.now(): con veinte equipos guardando a la vez, dos registros
+// distintos salian con el mismo numero, y como el documento de Firestore se
+// llama como el registro, uno pisaba al otro. Ahora el numero lleva pegada la
+// huella del equipo, y dentro del equipo nunca se repite.
+function deviceSalt(){
+  var v = 0;
+  try {
+    v = parseInt(localStorage.getItem('safety_device') || '', 10);
+    if(!v || isNaN(v) || v < 1 || v > 4095){
+      v = 1 + Math.floor(Math.random() * 4095);
+      localStorage.setItem('safety_device', String(v));
+    }
+  } catch(e){ v = 1 + Math.floor(Math.random() * 4095); }
+  return v;
+}
+
+var _lastRecordId = 0;
+function newRecordId(){
+  // 4096 huellas posibles por milisegundo; el tope sigue siendo seguro en JS
+  var id = Date.now() * 4096 + deviceSalt();
+  if(id <= _lastRecordId) id = _lastRecordId + 4096;   // dos en el mismo ms
+  _lastRecordId = id;
+  return id;
+}
 
 // Rango objetivo de un registro de peso. Puede no existir: los productos
 // creados sin target sólo registran el peso, sin marcar pass/fail.

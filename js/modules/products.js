@@ -619,7 +619,7 @@ function readProductForm(pre){
     plate: true
   };
   return {
-    id: Date.now(),
+    id: newRecordId(),
     number: number,
     name: g('name').trim(),
     pkg: pkg,

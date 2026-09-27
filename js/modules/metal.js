@@ -37,7 +37,7 @@ function saveMetal(){
   var db = getDB();
   if(!db.metal) db.metal = [];
   var rec = {
-    id: Date.now(), date: document.getElementById('md-date').value,
+    id: newRecordId(), date: document.getElementById('md-date').value,
     line: line,
     startTime: document.getElementById('md-start').value,
     endTime: document.getElementById('md-end').value,

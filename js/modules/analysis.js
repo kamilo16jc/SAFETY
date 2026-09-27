@@ -287,7 +287,7 @@ function saveAnalysis(){
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
   var db = getDB(); if(!db.analysis) db.analysis = [];
   var rec = {
-    id: Date.now(),
+    id: newRecordId(),
     seq: nextAnalysisSeq(date.slice(0,4)),
     date: date,
     product: product,

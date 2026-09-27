@@ -91,7 +91,7 @@ function initLogin() {
     hashPassword('admin','admin123').then(function(h){
       var db = getDB();
       if(db.operators && db.operators.length) return; // Firebase sync won the race
-      db.operators = [{id:Date.now(), name:'Administrator', username:'admin', email:'', passHash:h, role:'admin'}];
+      db.operators = [{id:newRecordId(), name:'Administrator', username:'admin', email:'', passHash:h, role:'admin'}];
       saveDB(db);
     });
   }
