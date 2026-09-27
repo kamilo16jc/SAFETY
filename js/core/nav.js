@@ -78,7 +78,7 @@ function goTo(id){
   if(id==='screen-yeast') initYeast();
   if(id==='screen-coa') initCoa();
   if(id==='screen-labresults') initLabResults();
-  if(id==='screen-coachanges') initCoaChanges();
+  if(id==='screen-coastatus') initCoaStatus();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -147,7 +147,7 @@ var CRUMBS = {
   'screen-yeast':    ['Capture', 'Yeast & Mold'],
   'screen-coa':      ['COA', 'COA Generator'],
   'screen-labresults':['COA', 'Lab Results'],
-  'screen-coachanges':['COA', 'Changes'],
+  'screen-coastatus':['COA', 'Status'],
   'screen-weight':   ['Capture', 'Weight Log'],
   'screen-seal':     ['Capture', 'Bag Seal'],
   'screen-gmp':      ['Capture', 'GMP Audit'],

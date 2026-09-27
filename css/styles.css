@@ -1257,3 +1257,13 @@ body.logged-out .topstack{display:none}
 
 /* El boton de guardar de la fila, y su acuse */
 .sheet-btn.ok{background:var(--pass-tint);border-color:var(--pass);color:var(--pass)}
+
+/* Leyenda de estados: que significa cada pastilla */
+.legend{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);
+  padding:12px 14px;margin-bottom:16px;display:grid;gap:9px}
+.legend > div{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);
+  line-height:1.5}
+.legend .pill{flex:0 0 auto;margin-top:1px}
+@media (max-width:760px){
+  .legend > div{flex-direction:column;gap:5px}
+}

@@ -35,6 +35,20 @@ function nextAnalysisSeq(year){
   return max+1;
 }
 
+// El LOT del analisis. Si no se escribio, se toma el de la corrida de ese
+// producto y ese dia, que es de donde salio la muestra.
+function analysisLot(a){
+  if(!a) return '';
+  if(a.lot && String(a.lot).trim()) return a.lot;
+  if(typeof getRuns !== 'function') return '';
+  var day = String(a.date||'').slice(0,10);
+  var run = getRuns().filter(function(r){
+    return String(r.product||'')===String(a.product||'') &&
+           String(r.date||'').slice(0,10)===day && r.lot;
+  })[0];
+  return run ? run.lot : '';
+}
+
 function analysisFor(product, day){
   return getAnalyses().filter(function(a){
     return String(a.product||'')===String(product||'') &&
@@ -105,7 +119,7 @@ function buildAnalysisSheet(){
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Date</th><th>Product</th><th class="wide">Cheese</th>'+
-      '<th>Customer</th><th>Prod. date</th><th>Order</th><th>PO</th>'+
+      '<th>Customer</th><th>LOT</th><th>Prod. date</th><th>Order</th><th>PO</th>'+
       '<th class="num">Moisture</th><th class="num">Fat</th><th class="num">pH</th>'+
       '<th>By</th><th>Save</th><th></th>'+
     '</tr></thead>'+
@@ -116,6 +130,7 @@ function buildAnalysisSheet(){
         'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()"></td>'+
       '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
       '<td class="soft" id="an-customer-cell">—</td>'+
+      '<td><input class="cell" id="an-lot" placeholder="LOT"></td>'+
       '<td><input class="cell" id="an-proddate" placeholder="e.g. 26002"></td>'+
       '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
       '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
@@ -134,7 +149,7 @@ function buildAnalysisSheet(){
 function resetAnalysisRow(){
   var set=function(id,v){ var e=document.getElementById(id); if(e) e.value=v; };
   set('an-date', localDateStr());
-  ['an-product','an-cheese','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
+  ['an-product','an-cheese','an-lot','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
     .forEach(function(id){ set(id,''); });
   var by=document.getElementById('an-by');
   if(by && typeof getInitials==='function') by.textContent = getInitials();
@@ -158,7 +173,7 @@ function renderAnalysisRows(){
   }
 
   if(!list.length){
-    body.innerHTML = '<tr><td colspan="14" class="sheet-empty" style="border:0">'+
+    body.innerHTML = '<tr><td colspan="15" class="sheet-empty" style="border:0">'+
       'No analyses for these filters. Fill the top row to add the first one.</td></tr>';
     return;
   }
@@ -177,6 +192,7 @@ function anRowHTML(a, i){
     '<td class="code">'+esc(a.product||'—')+'</td>'+
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
     '<td class="soft">'+esc(a.customer||'—')+'</td>'+
+    '<td class="code">'+esc(analysisLot(a)||'—')+'</td>'+
     '<td class="soft">'+esc(a.prodDate||'—')+'</td>'+
     '<td class="soft">'+esc(a.order||'—')+'</td>'+
     '<td class="soft">'+esc(a.po||'—')+'</td>'+
@@ -278,6 +294,7 @@ function saveAnalysis(){
     cheese: g('an-cheese') || (p ? (p.name||'') : ''),
     customerId: c ? c.customerId : '',
     customer: c ? c.company : '',
+    lot: g('an-lot'),
     prodDate: g('an-proddate'),
     order: g('an-order'),
     po: g('an-po'),
@@ -326,6 +343,7 @@ function analysisFromRun(runId){
   set('an-date', String(r.date).slice(0,10));
   set('an-product', r.product||'');
   set('an-cheese', r.productName||'');
+  set('an-lot', r.lot||'');
   set('an-order', '');
   onAnalysisProduct();
   var mo=document.getElementById('an-moisture'); if(mo) mo.focus();
@@ -351,11 +369,11 @@ function downloadCSV(name, rows){
 function exportAnalysisCSV(){
   var list = analysisResults();
   if(!list.length){ toast('Nothing to export for these filters'); return; }
-  var out = [['ID','Date','Product','Cheese','Customer','Prod. date','Order','PO',
+  var out = [['ID','Date','Product','Cheese','Customer','LOT','Prod. date','Order','PO',
               'Moisture','Fat','pH','Tested by','Yeast','Mold','Plate read']];
   list.forEach(function(a){
     out.push([a.seq||'', String(a.date||'').slice(0,10), a.product||'', a.cheese||'', a.customer||'',
-      a.prodDate||'', a.order||'', a.po||'', a.moisture||'', a.fat||'', a.ph||'',
+      analysisLot(a), a.prodDate||'', a.order||'', a.po||'', a.moisture||'', a.fat||'', a.ph||'',
       a.testedBy||'', a.yeast||'', a.mold||'', String(a.ymAt||'').slice(0,10)]);
   });
   downloadCSV('sample-analysis-'+localDateStr()+'.csv', out);

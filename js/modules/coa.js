@@ -585,140 +585,168 @@ function openCoaDocument(g){
 }
 
 // ============================================================
-// CHANGES — el rastro, sobre todo de lo que se tocó tras certificar
+// STATUS
+// En que va cada muestra, sin numeros ni detalle: el LOT, de quien es, su PO
+// y su orden, si la placa ya se leyo y si el laboratorio externo ya respondio.
+//
+// Dos pendientes distintos, que es lo que hay que saber para perseguirlos:
+//   Pending QA Lab  -> falta leer la placa, que la lee la casa
+//   Pending Lab     -> la placa esta leida, pero falta el informe del externo
 // ============================================================
-var chView = 'after';   // after | all
-function setChView(v){ chView = v; renderCoaChanges(); }
+var stView = 'all';   // all | qa | lab | done
+var stDirty = false;
 
-var chDirty = false;
-function markChDirty(){
-  echoDateRange('ch-date-echo','ch-from','ch-to');
-  if(chDirty) return;
-  chDirty = true; renderChDirty();
-}
-function renderChDirty(){
-  var el = document.getElementById('ch-dirty');
-  if(el) el.style.display = chDirty ? 'block' : 'none';
-  var b = document.getElementById('ch-go');
-  if(b) b.classList.toggle('pending', chDirty);
-}
-function applyChFilters(){
-  chDirty = false; renderChDirty();
-  var f = document.getElementById('ch-from');
-  var from = f ? f.value : '';
-  if(from && window.loadHistory){ window.loadHistory(from, renderCoaChanges); return; }
-  renderCoaChanges();
-}
-
-function initCoaChanges(){
-  var f=document.getElementById('ch-from'), t=document.getElementById('ch-to');
+function initCoaStatus(){
+  var f=document.getElementById('st-from'), t=document.getElementById('st-to');
   if(f && !f.value){
     var d=new Date(); d.setDate(d.getDate()-30);
     f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   if(t && !t.value) t.value = localDateStr();
-  chDirty = false; renderChDirty();
-  showDateOrder(document.getElementById('screen-coachanges'));
-  echoDateRange('ch-date-echo','ch-from','ch-to');
-  renderCoaChanges();
+  stDirty = false; renderStDirty();
+  showDateOrder(document.getElementById('screen-coastatus'));
+  echoDateRange('st-date-echo','st-from','st-to');
+  renderCoaStatus();
+}
+function markStDirty(){
+  echoDateRange('st-date-echo','st-from','st-to');
+  if(stDirty) return;
+  stDirty = true; renderStDirty();
+}
+function renderStDirty(){
+  var el = document.getElementById('st-dirty');
+  if(el) el.style.display = stDirty ? 'block' : 'none';
+  var b = document.getElementById('st-go');
+  if(b) b.classList.toggle('pending', stDirty);
+}
+function applyStFilters(){
+  stDirty = false; renderStDirty();
+  var f = document.getElementById('st-from');
+  var from = f ? f.value : '';
+  if(from && window.loadHistory){ window.loadHistory(from, renderCoaStatus); return; }
+  renderCoaStatus();
+}
+function setStView(v){ stView = v; renderCoaStatus(); }
+
+// La placa la lee la casa; el informe lo manda el laboratorio externo
+function stPlateDone(a){ return (typeof ymDone==='function') ? ymDone(a) : !!(a.yeast && a.mold); }
+function stLabDone(a){ return !!(a.result && String(a.result).trim()); }
+function stState(a){
+  if(!stPlateDone(a)) return 'qa';
+  if(!stLabDone(a))   return 'lab';
+  return 'done';
 }
 
-function changeRows(){
+function stRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
-  var from=g('ch-from'), to=g('ch-to'), q=(g('ch-search')||'').trim().toLowerCase();
-  var out = [];
-  (typeof getAnalyses==='function' ? getAnalyses() : []).forEach(function(a){
-    (a.changes||[]).forEach(function(c){
-      var d = String(c.at||'').slice(0,10);
-      if(from && d<from) return;
-      if(to   && d>to)   return;
-      if(chView==='after' && !c.afterCoa) return;
-      if(q){
-        var hay=(String(a.product||'')+' '+String(a.customer||'')+' '+String(a.coaNo||'')+' '+
-                 String(c.field||'')+' '+String(c.by||'')+' #'+String(a.seq||'')).toLowerCase();
-        if(hay.indexOf(q)<0) return;
-      }
-      out.push({rec:a, ch:c});
-    });
+  var from=g('st-from'), to=g('st-to'), q=(g('st-search')||'').trim().toLowerCase();
+  return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
+    var d=String(a.date||'').slice(0,10);
+    if(from && d<from) return false;
+    if(to   && d>to)   return false;
+    if(q){
+      var hay=(String(analysisLot(a)||'')+' '+String(a.customer||'')+' '+String(a.po||'')+' '+
+               String(a.order||'')+' '+String(a.product||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  }).sort(function(a,b){
+    // Primero lo que lleva mas tiempo esperando
+    var rank = {qa:0, lab:1, done:2};
+    return (rank[stState(a)]-rank[stState(b)]) || String(a.date).localeCompare(String(b.date));
   });
-  return out.sort(function(x,y){ return String(y.ch.at||'').localeCompare(String(x.ch.at||'')); });
 }
 
-var CH_LABELS = {
-  moisture:'Moisture', fat:'Fat', ph:'pH', yeast:'Yeast', mold:'Mold',
-  mxMoisture:'Matrix moisture', mxFat:'Matrix fat', mxPh:'Matrix pH',
-  mxYeast:'Matrix yeast', mxMold:'Matrix mold',
-  coliform:'Coliform', ecoli:'E. coli', result:'Result', resultBy:'Result by',
-  testedBy:'Tested by', ymBy:'Read by', COA:'Certificate'
-};
-
-function renderCoaChanges(){
-  var host = document.getElementById('ch-sheet');
+function renderCoaStatus(){
+  var host = document.getElementById('st-sheet');
   if(!host) return;
-  var list = changeRows();
+  var all = stRows();
 
-  var kp = document.getElementById('ch-kpis');
+  var kp = document.getElementById('st-kpis');
   if(kp){
-    var afterAll = 0, total = 0;
-    (typeof getAnalyses==='function' ? getAnalyses() : []).forEach(function(a){
-      (a.changes||[]).forEach(function(c){ total++; if(c.afterCoa) afterAll++; });
-    });
-    kp.innerHTML =
-      '<button class="kpi'+(chView==='after'?' on':'')+'" onclick="setChView(\'after\')">'+
-        '<b>'+afterAll+'</b><span><i class="dot" style="background:var(--fail)"></i>'+
-        'changed after the COA</span></button>'+
-      '<button class="kpi'+(chView==='all'?' on':'')+'" onclick="setChView(\'all\')">'+
-        '<b>'+total+'</b><span>all changes</span></button>'+
-      '<div class="kpi"><b>'+list.length+'</b><span>in this view</span></div>';
+    var n = function(k){ return k==='all' ? all.length
+      : all.filter(function(a){ return stState(a)===k; }).length; };
+    kp.innerHTML = [
+      ['qa',   n('qa'),    'pending QA lab', 'var(--warn)'],
+      ['lab',  n('lab'),   'pending lab', 'var(--fail)'],
+      ['done', n('done'),  'complete', 'var(--pass)'],
+      ['all',  all.length, 'samples in range', '']
+    ].map(function(k){
+      return '<button class="kpi'+(stView===k[0]?' on':'')+'" onclick="setStView(\''+k[0]+'\')">'+
+        '<b>'+k[1]+'</b><span>'+
+        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+    }).join('');
   }
 
+  var list = all.filter(function(a){ return stView==='all' || stState(a)===stView; });
   if(!list.length){
     host.innerHTML = '<div class="sheet-empty">'+
-      (chView==='after'
-        ? 'Nothing was changed after a certificate was issued in this range. That is the good case.'
-        : 'No changes recorded in this range.')+'</div>';
+      (all.length ? 'Nothing in this view for the dates selected.'
+                  : 'No samples in range.')+'</div>';
     return;
   }
 
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
-      '<th class="rn">#</th><th>When</th><th>Who</th><th>ID</th><th>Customer</th>'+
-      '<th>Product</th><th class="wide">Cheese</th><th>Field</th><th>From</th><th>To</th>'+
-      '<th>COA</th><th>After COA</th>'+
+      '<th class="rn">#</th><th>LOT</th><th>Customer</th><th>PO</th><th>Order</th>'+
+      '<th>Plate</th><th>Lab report</th><th>Status</th>'+
     '</tr></thead><tbody>'+
-    list.slice(0,400).map(function(x,i){
-      var a=x.rec, c=x.ch;
-      var v=function(s){ return (s==null||s==='') ? '—' : esc(s); };
-      return '<tr>'+
-        '<td class="rn">'+(i+1)+'</td>'+
-        '<td class="soft">'+esc(fmtDate(c.at))+' '+esc(String(c.at||'').slice(11,16))+'</td>'+
-        '<td>'+v(c.by)+'</td>'+
-        '<td class="code">#'+v(a.seq)+'</td>'+
-        '<td class="soft">'+v(a.customer)+'</td>'+
-        '<td class="code">'+v(a.product)+'</td>'+
-        '<td class="wide">'+v(a.cheese)+'</td>'+
-        '<td>'+esc(CH_LABELS[c.field] || c.field)+'</td>'+
-        '<td class="soft">'+v(c.from)+'</td>'+
-        '<td><b>'+v(c.to)+'</b></td>'+
-        '<td class="code soft">'+v(a.coaNo)+'</td>'+
-        '<td>'+(c.afterCoa ? '<span class="pill bad">Yes</span>' : '<span class="pill">No</span>')+'</td>'+
-      '</tr>';
-    }).join('')+
+    list.map(function(a,i){ return stRowHTML(a,i+1); }).join('')+
     '</tbody></table></div>';
 }
 
-function exportChangesCSV(){
-  var list = changeRows();
-  if(!list.length){ toast('Nothing to export for these filters'); return; }
-  var out = [['When','Who','ID','Customer','Product','Cheese','Field','From','To','COA','After COA']];
-  list.forEach(function(x){
-    var a=x.rec, c=x.ch;
-    out.push([String(c.at||'').replace('T',' ').slice(0,16), c.by||'', a.seq||'', a.customer||'',
-      a.product||'', a.cheese||'', CH_LABELS[c.field]||c.field||'', c.from||'', c.to||'',
-      a.coaNo||'', c.afterCoa?'Yes':'No']);
-  });
-  downloadCSV('coa-changes-'+localDateStr()+'.csv', out);
+function stRowHTML(a, i){
+  var v = function(x){ return (x==null || x==='') ? '\u2014' : esc(x); };
+  var st = stState(a);
+
+  // La placa: leida, o para cuando se estima. El domingo no se leen placas.
+  var plate;
+  if(stPlateDone(a)){
+    plate = '<span class="pill ok">Read'+(a.ymAt ? ' \u00b7 '+esc(fmtDate(a.ymAt)) : '')+'</span>';
+  } else {
+    var due = (typeof ymDueDate==='function') ? ymDueDate(a) : '';
+    var left = (typeof ymDaysLeft==='function') ? ymDaysLeft(a) : 0;
+    plate = '<span class="pill'+(left<=0?' bad':'')+'">'+
+      (due ? esc(fmtDate(due)) : '\u2014')+
+      (left>0 ? ' \u00b7 in '+left+'d' : (left<0 ? ' \u00b7 '+Math.abs(left)+'d late' : ' \u00b7 today'))+
+      '</span>';
+  }
+
+  var lab = stLabDone(a)
+    ? '<span class="pill ok">In \u00b7 '+v(a.result)+'</span>'
+    : '<span class="pill">Waiting</span>';
+
+  var status = st==='done' ? '<span class="pill ok">Complete</span>'
+             : st==='qa'   ? '<span class="pill warn">Pending QA Lab</span>'
+             : '<span class="pill bad">Pending Lab</span>';
+
+  return '<tr'+(st==='done'?' class="done"':'')+'>'+
+    '<td class="rn">'+i+'</td>'+
+    '<td class="code">'+v(analysisLot(a))+'</td>'+
+    '<td>'+v(a.customer)+'</td>'+
+    '<td class="soft">'+v(a.po)+'</td>'+
+    '<td class="soft">'+v(a.order)+'</td>'+
+    '<td>'+plate+'</td>'+
+    '<td>'+lab+'</td>'+
+    '<td>'+status+'</td>'+
+  '</tr>';
 }
+
+function exportCoaStatusCSV(){
+  var list = stRows().filter(function(a){ return stView==='all' || stState(a)===stView; });
+  if(!list.length){ toast('Nothing to export for this view'); return; }
+  var label = {qa:'Pending QA Lab', lab:'Pending Lab', done:'Complete'};
+  var out = [['LOT','Customer','PO','Order','Plate read','Plate due','Lab report','Status']];
+  list.forEach(function(a){
+    out.push([analysisLot(a), a.customer||'', a.po||'', a.order||'',
+      stPlateDone(a) ? String(a.ymAt||'').slice(0,10) : '',
+      stPlateDone(a) ? '' : (typeof ymDueDate==='function' ? ymDueDate(a) : ''),
+      stLabDone(a) ? (a.result||'in') : '',
+      label[stState(a)]]);
+  });
+  downloadCSV('coa-status-'+localDateStr()+'.csv', out);
+}
+
 
 function exportCoaCSV(){
   var list = coaRows().filter(function(a){ return coaView==='all' || coaState(a)===coaView; });

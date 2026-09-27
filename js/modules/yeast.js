@@ -27,10 +27,13 @@ function initYeast(){
 }
 
 // ---- Fechas: la lectura cae a los 5 dias de tomada la muestra ----
+// La placa se lee a los 5 dias, pero el domingo no se lee: si cae domingo,
+// pasa al lunes.
 function ymDueDate(a){
   var d = new Date(String(a.date||'').slice(0,10)+'T12:00:00');
   if(isNaN(d)) return '';
   d.setDate(d.getDate() + YM_DAYS);
+  if(d.getDay() === 0) d.setDate(d.getDate() + 1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function ymDaysLeft(a){

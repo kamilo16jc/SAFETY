@@ -147,35 +147,47 @@
   <div id="lr-sheet"></div>
 </div>
 
-<div class="screen" id="screen-coachanges">
+<div class="screen" id="screen-coastatus">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Changes</div>
-  <div class="form-meta">Every edit to a lab record — and which ones happened after the COA went out</div>
+  <div class="form-title">Status</div>
+  <div class="form-meta">Where every sample stands, by LOT</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="ch-from">From <span class="ord" data-dateorder></span></label>
-      <input type="date" class="field" id="ch-from" oninput="markChDirty()"></div>
-    <div class="sb-field"><label for="ch-to">To <span class="ord" data-dateorder></span></label>
-      <input type="date" class="field" id="ch-to" oninput="markChDirty()"></div>
-    <div class="sb-field"><label for="ch-search">Search</label>
+    <div class="sb-field"><label for="st-from">From <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="st-from" oninput="markStDirty()"></div>
+    <div class="sb-field"><label for="st-to">To <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="st-to" oninput="markStDirty()"></div>
+    <div class="sb-field"><label for="st-search">Search</label>
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
-        <input type="search" id="ch-search" placeholder="Product, cheese, customer, order, ID…"
-               autocomplete="off" oninput="renderCoaChanges()">
+        <input type="search" id="st-search" placeholder="LOT, customer, PO, order\u2026"
+               autocomplete="off" oninput="renderCoaStatus()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="ch-go" onclick="applyChFilters()">Apply</button></div>
+      <button class="btn-solid" id="st-go" onclick="applyStFilters()">Apply</button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportChangesCSV()" aria-label="Export to Excel"
+      <button class="ico-btn" onclick="exportCoaStatusCSV()" aria-label="Export to Excel"
               title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="ch-date-echo" style="display:none"></div>
-  <div class="hint" id="ch-dirty" style="display:none">Dates changed — press Apply.</div>
+  <div class="date-echo" id="st-date-echo" style="display:none"></div>
+  <div class="hint" id="st-dirty" style="display:none">Dates changed \u2014 press Apply.</div>
 
-  <div class="kpi-row" id="ch-kpis"></div>
-  
-  <div id="ch-sheet"></div>
+  <div class="kpi-row" id="st-kpis"></div>
+
+  <div class="legend">
+    <div><span class="pill warn">Pending QA Lab</span>
+      The yeast &amp; mold plate has not been read yet. It is read 5 days after the
+      sample; if that falls on a Sunday it moves to Monday, so the date shown is
+      when it is due.</div>
+    <div><span class="pill bad">Pending Lab</span>
+      The plate is read, but the outside laboratory has not sent its report back
+      (moisture, fat, pH, coliform, E. coli) and there is no verdict yet.</div>
+    <div><span class="pill ok">Complete</span>
+      Plate read and lab report in. The sample can go to the COA Generator.</div>
+  </div>
+
+  <div id="st-sheet"></div>
 </div>
 
 <!-- LOGIN -->
