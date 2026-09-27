@@ -216,24 +216,33 @@
   <div class="form-title">Lab Samples</div>
   <div class="form-meta">Samples due to the lab, from the production schedule</div>
 
-  <div class="pair">
-    <div class="field-group"><div class="sec-label">From</div>
-      <input type="date" class="time-input" id="lab-from" style="width:100%" onchange="renderLab()"></div>
-    <div class="field-group"><div class="sec-label">To</div>
-      <input type="date" class="time-input" id="lab-to" style="width:100%" onchange="renderLab()"></div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="lab-from">From <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="lab-from" oninput="markLabDirty()"></div>
+    <div class="sb-field"><label for="lab-to">To <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="lab-to" oninput="markLabDirty()"></div>
+    <div class="sb-field"><label for="lab-status">Status</label>
+      <div class="select-wrap"><select class="field" id="lab-status" onchange="renderLab()">
+        <option value="pending">Pending</option>
+        <option value="sent">Sent</option>
+        <option value="all">All</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="lab-go" onclick="applyLabFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportLabPDF()" aria-label="Export to PDF"
+              title="Export the lab sample list to PDF"><span data-icon="pdf"></span></button></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportLabCSV()" aria-label="Export to Excel"
+              title="Export the lab sample list to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="sec-label">Status</div>
-  <div class="select-wrap"><select class="field" id="lab-status" onchange="renderLab()">
-    <option value="pending">Pending</option>
-    <option value="sent">Sent</option>
-    <option value="all">All</option>
-  </select></div>
+  <div class="date-echo" id="lab-date-echo" style="display:none"></div>
+  <div class="hint" id="lab-dirty" style="display:none">Dates changed — press Apply.</div>
 
-  <div id="lab-summary"></div>
-  <button class="btn-ghost" style="width:100%;justify-content:center;margin-bottom:14px" onclick="exportLabPDF()">
-    <span data-icon="doc"></span>Export lab sample list (PDF)</button>
+  <div class="kpi-row" id="lab-summary"></div>
   <div id="lab-forms"></div>
-  <div id="lab-list"></div>
+  <div id="lab-sheet"></div>
 </div>
 
 <div class="screen" id="screen-weight">

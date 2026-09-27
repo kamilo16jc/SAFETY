@@ -11,6 +11,30 @@ function initLab(){
     f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   if(t && !t.value) t.value = localDateStr();
+  labDirty = false; renderLabDirty();
+  showDateOrder(document.getElementById('screen-lab'));
+  echoDateRange('lab-date-echo','lab-from','lab-to');
+  renderLab();
+}
+
+// Las fechas esperan al boton: pueden tener que pedir historial
+var labDirty = false;
+function markLabDirty(){
+  echoDateRange('lab-date-echo','lab-from','lab-to');
+  if(labDirty) return;
+  labDirty = true; renderLabDirty();
+}
+function renderLabDirty(){
+  var el = document.getElementById('lab-dirty');
+  if(el) el.style.display = labDirty ? 'block' : 'none';
+  var b = document.getElementById('lab-go');
+  if(b) b.classList.toggle('pending', labDirty);
+}
+function applyLabFilters(){
+  labDirty = false; renderLabDirty();
+  var f = document.getElementById('lab-from');
+  var from = f ? f.value : '';
+  if(from && window.loadHistory){ window.loadHistory(from, renderLab); return; }
   renderLab();
 }
 
@@ -53,6 +77,17 @@ function markLabSent(id){
     currentUser?currentUser.name:'—');
 }
 
+// Cliente del producto, su codigo de forma y los tests que exige
+function labCustomerOf(r){
+  var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+  return (typeof productCustomer==='function') ? productCustomer(p || {number:r.product}) : null;
+}
+function labFormCode(r, c){
+  c = c || labCustomerOf(r);
+  if(!c) return '';
+  return (c.prefix || c.customerId || '') + String(r.product||'').trim().toUpperCase();
+}
+
 // Cliente del producto y los tests que exige (viene de Firestore, config/customers)
 function labCustomerLine(r){
   var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
@@ -82,61 +117,95 @@ function hhmm(iso){
 
 function renderLab(){
   if(typeof renderLabForms==='function') renderLabForms();
-  var el = document.getElementById('lab-list');
-  if(!el) return;
+  var host = document.getElementById('lab-sheet');
+  if(!host) return;
   var list = labSamples();
 
-  // Resumen sobre TODO el rango (no sólo el estado filtrado)
+  // Resumen sobre TODO el rango (no solo el estado filtrado)
   var all = labSamples('all');
   var pend = all.filter(function(r){ return !r.labSent; });
   var notReady = pend.filter(function(r){ return !labReady(r); }).length;
 
   var sum = document.getElementById('lab-summary');
   if(sum){
+    var k = function(n, label, color){
+      return '<div class="kpi"><b>'+n+'</b><span>'+
+        (color ? '<i class="dot" style="background:'+color+'"></i>' : '')+label+'</span></div>';
+    };
     sum.innerHTML = all.length
-      ? '<div class="pr-sum">'+
-          '<div class="pr-stat"><b>'+all.length+'</b><span>samples</span></div>'+
-          '<div class="pr-stat"><b class="'+(pend.length?'warn':'ok')+'">'+pend.length+'</b><span>pending</span></div>'+
-          '<div class="pr-stat"><b class="ok">'+(all.length-pend.length)+'</b><span>sent</span></div>'+
-          '<div class="pr-stat"><b class="'+(notReady?'bad':'')+'">'+notReady+'</b><span>missing data</span></div>'+
-        '</div>'
+      ? k(all.length, 'samples', '') +
+        k(pend.length, 'pending', pend.length?'var(--warn)':'var(--pass)') +
+        k(all.length-pend.length, 'sent', 'var(--pass)') +
+        k(notReady, 'missing data', notReady?'var(--fail)':'var(--dim)')
       : '';
   }
 
   if(!list.length){
-    el.innerHTML = '<div class="panel"><div class="cd-empty">'+
+    host.innerHTML = '<div class="sheet-empty">'+
       (labStatus==='pending'
-        ? 'No lab samples pending in this range. Products are flagged with <b>Lab sample</b> in the product catalog.'
-        : 'No lab samples in this range.')+'</div></div>';
+        ? 'No lab samples pending in this range. A product asks for a sample when its '+
+          '"Lab samples per run" is above zero in the catalog.'
+        : 'No lab samples in this range.')+'</div>';
     return;
   }
 
-  el.innerHTML = list.map(function(r){
-    var ready = labReady(r);
-    var warn = !r.lot ? 'LOT missing' : (!r.collected ? 'Not collected yet' : '');
-    return '<div class="run-card'+(r.labSent?' done':'')+'">'+
-      '<div class="run-head">'+
-        '<div>'+
-          '<div class="run-title">'+esc(r.product||'—')+
-            (r.labSent?' <span class="tag ok">Sent</span>':' <span class="tag warn">Pending</span>')+'</div>'+
-          '<div class="run-meta">'+esc(r.productName||'—')+' · Line '+r.line+' · '+
-            fmtDate(r.date)+' · '+(r.shift===1?'1st':'2nd')+' shift</div>'+
-        '</div>'+
-      '</div>'+
-      labCustomerLine(r)+
-      '<div class="lab-grid">'+
-        '<div><span>LOT</span><b class="mono">'+esc(r.lot||'—')+'</b></div>'+
-        '<div><span>Samples</span><b>'+labSampleCell(r)+'</b></div>'+
-        '<div><span>Collected</span><b>'+(r.collected?hhmm(r.collectedAt):'—')+'</b></div>'+
-        '<div><span>Sent</span><b>'+(r.labSent?hhmm(r.labSentAt):'—')+'</b></div>'+
-      '</div>'+
-      (warn && !r.labSent ? '<div class="lab-warn">'+warn+'</div>' : '')+
-      '<button class="run-chk'+(r.labSent?' on':'')+'" onclick="markLabSent('+r.id+')" '+
-        (!ready && !r.labSent ? 'style="opacity:.6"' : '')+'>'+
-        '<span class="run-box">'+(r.labSent?'✓':'')+'</span>'+
-        (r.labSent?'Sent to lab — tap to undo':'Mark as sent to lab')+'</button>'+
-    '</div>';
-  }).join('');
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Date</th><th>Shift</th><th>Line</th><th>Product</th>'+
+      '<th class="wide">Description</th><th>Customer</th><th>Lab code</th><th>Tests</th>'+
+      '<th>LOT</th><th class="num">Samples</th><th>Collected</th><th>Sent</th><th>Status</th><th></th>'+
+    '</tr></thead><tbody>'+
+    list.map(function(r,i){ return labRowHTML(r,i+1); }).join('')+
+    '</tbody></table></div>';
+  renderIcons(host);
+}
+
+function labRowHTML(r, i){
+  var c = labCustomerOf(r);
+  var ready = labReady(r);
+  var status = r.labSent ? '<span class="pill ok">Sent</span>'
+             : !r.lot ? '<span class="pill bad">LOT missing</span>'
+             : !r.collected ? '<span class="pill bad">Not collected</span>'
+             : '<span class="pill warn">Ready</span>';
+  var tests = c && (c.tests||[]).length
+    ? (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')
+    : '<span class="soft">\u2014</span>';
+  return '<tr'+(r.labSent?' class="done"':'')+'>'+
+    '<td class="rn">'+i+'</td>'+
+    '<td class="soft">'+esc(fmtDate(r.date))+'</td>'+
+    '<td class="mid soft">'+(r.shift===1?'1st':'2nd')+'</td>'+
+    '<td class="mid">'+esc(String(r.line||'\u2014'))+'</td>'+
+    '<td class="code">'+esc(r.product||'\u2014')+'</td>'+
+    '<td class="wide">'+esc(r.productName||'\u2014')+'</td>'+
+    '<td class="soft">'+esc(c ? c.company : '\u2014')+'</td>'+
+    '<td class="code">'+esc(labFormCode(r,c)||'\u2014')+'</td>'+
+    '<td class="wide">'+tests+'</td>'+
+    '<td><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
+      'onchange="setRunLot('+r.id+', this.value); renderLab()"></td>'+
+    '<td class="num">'+labSampleCell(r)+'</td>'+
+    '<td class="soft">'+(r.collected?esc(hhmm(r.collectedAt)):'\u2014')+'</td>'+
+    '<td class="soft">'+(r.labSent?esc(hhmm(r.labSentAt)):'\u2014')+'</td>'+
+    '<td>'+status+'</td>'+
+    '<td><button class="cell-tog'+(r.labSent?' on':'')+'" onclick="markLabSent('+r.id+')"'+
+      (!ready && !r.labSent ? ' style="opacity:.6"' : '')+'>'+
+      (r.labSent ? '\u2713 Sent' : 'Send')+'</button></td>'+
+  '</tr>';
+}
+
+// La lista tal como se ve, para Excel
+function exportLabCSV(){
+  var list = labSamples();
+  if(!list.length){ toast('No lab samples for these filters'); return; }
+  var out = [['Date','Shift','Line','Product','Description','Customer','Lab code','Tests',
+              'LOT','Samples','Collected','Sent']];
+  list.forEach(function(r){
+    var c = labCustomerOf(r);
+    out.push([String(r.date||'').slice(0,10), r.shift===1?'1st':'2nd', r.line||'',
+      r.product||'', r.productName||'', c?c.company:'', labFormCode(r,c),
+      c?(c.tests||[]).join(' / '):'', r.lot||'', labSampleCell(r),
+      r.collected?hhmm(r.collectedAt):'', r.labSent?hhmm(r.labSentAt):'']);
+  });
+  downloadCSV('lab-samples-'+localDateStr()+'.csv', out);
 }
 
 // ---- PDF: lista de muestras para llevar al laboratorio ----

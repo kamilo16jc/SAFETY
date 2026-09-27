@@ -193,19 +193,32 @@ function renderLabForms(){
   if(!el) return;
   var groups = labFormGroups();
   if(!groups.length){ el.innerHTML=''; return; }
-  el.innerHTML = '<div class="sec-label">Ready to submit</div>' + groups.map(function(g){
-    var warn = labFormWarnings(g);
-    return '<div class="run-card'+(g.sent===g.runs.length?' done':'')+'">'+
-      '<div class="run-head"><div>'+
-        '<div class="run-title">'+esc(g.customer.company)+
-          (g.sent===g.runs.length?' <span class="tag ok">All sent</span>':'')+'</div>'+
-        '<div class="run-meta">'+fmtDate(g.date)+' · '+g.runs.length+' product(s) · form: '+
-          esc(g.customer.form||'general')+'</div>'+
-      '</div></div>'+
-      (warn.length ? '<div class="lab-warn">'+esc(warn.join(' · '))+'</div>' : '')+
-      '<button class="btn-solid" style="width:100%;justify-content:center" '+
-        'onclick="generateLabForm(\''+esc(g.customer.customerId)+'\',\''+esc(g.date)+'\')">'+
-        'Generate submission form</button>'+
-    '</div>';
-  }).join('');
+  // Una fila por cliente y día, con el icono que genera su forma
+  el.innerHTML =
+    '<div class="sec-label">Ready to submit</div>'+
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Customer</th><th>Date</th><th class="num">Products</th>'+
+      '<th>Form</th><th class="wide">Status</th><th></th>'+
+    '</tr></thead><tbody>'+
+    groups.map(function(g, i){
+      var warn = labFormWarnings(g);
+      var st = warn.length
+        ? '<span class="pill bad">'+esc(warn.join(' · '))+'</span>'
+        : (g.sent===g.runs.length ? '<span class="pill ok">All sent</span>'
+                                  : '<span class="pill warn">'+g.sent+' of '+g.runs.length+' sent</span>');
+      return '<tr'+(g.sent===g.runs.length?' class="done"':'')+'>'+
+        '<td class="rn">'+(i+1)+'</td>'+
+        '<td>'+esc(g.customer.company)+'</td>'+
+        '<td class="soft">'+fmtDate(g.date)+'</td>'+
+        '<td class="num">'+g.runs.length+'</td>'+
+        '<td class="code soft">'+esc(g.customer.form||'general')+'</td>'+
+        '<td class="wide">'+st+'</td>'+
+        '<td><button class="ico-btn sm" title="Generate the submission form" '+
+          'aria-label="Generate submission form" '+
+          'onclick="generateLabForm(\'' + esc(g.customer.customerId) + '\',\'' + esc(g.date) + '\')">'+
+          '<span data-icon="grid"></span></button></td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table></div>';
+  renderIcons(el);
 }
