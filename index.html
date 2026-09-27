@@ -84,6 +84,100 @@
   <div id="sl-sheet"></div>
 </div>
 
+<!-- MODULO COA -->
+<div class="screen" id="screen-coa">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">COA Generator</div>
+  <div class="form-meta">Certificate of analysis — built from what is already captured</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="coa-from">From <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="coa-from" oninput="markCoaDirty()"></div>
+    <div class="sb-field"><label for="coa-to">To <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="coa-to" oninput="markCoaDirty()"></div>
+    <div class="sb-field"><label for="coa-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="coa-search" placeholder="Product, cheese, customer, order, ID…"
+               autocomplete="off" oninput="renderCoa()">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="coa-go" onclick="applyCoaFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportCoaCSV()" aria-label="Export to Excel"
+              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+  </div>
+  <div class="date-echo" id="coa-date-echo" style="display:none"></div>
+  <div class="hint" id="coa-dirty" style="display:none">Dates changed — press Apply.</div>
+
+  <div class="kpi-row" id="coa-kpis"></div>
+  <div class="picked-bar" id="coa-picked" style="display:none"></div>
+  <div id="coa-sheet"></div>
+</div>
+
+<div class="screen" id="screen-labresults">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Lab Results</div>
+  <div class="form-meta">Results that come back from the external laboratory, and the final verdict</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="lr-from">From <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="lr-from" oninput="markLrDirty()"></div>
+    <div class="sb-field"><label for="lr-to">To <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="lr-to" oninput="markLrDirty()"></div>
+    <div class="sb-field"><label for="lr-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="lr-search" placeholder="Product, cheese, customer, order, ID…"
+               autocomplete="off" oninput="renderLabResults()">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="lr-go" onclick="applyLrFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportLabResultsCSV()" aria-label="Export to Excel"
+              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+  </div>
+  <div class="date-echo" id="lr-date-echo" style="display:none"></div>
+  <div class="hint" id="lr-dirty" style="display:none">Dates changed — press Apply.</div>
+
+  <div class="kpi-row" id="lr-kpis"></div>
+  
+  <div id="lr-sheet"></div>
+</div>
+
+<div class="screen" id="screen-coachanges">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Changes</div>
+  <div class="form-meta">Every edit to a lab record — and which ones happened after the COA went out</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="ch-from">From <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="ch-from" oninput="markChDirty()"></div>
+    <div class="sb-field"><label for="ch-to">To <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="ch-to" oninput="markChDirty()"></div>
+    <div class="sb-field"><label for="ch-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="ch-search" placeholder="Product, cheese, customer, order, ID…"
+               autocomplete="off" oninput="renderCoaChanges()">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="ch-go" onclick="applyChFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportChangesCSV()" aria-label="Export to Excel"
+              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+  </div>
+  <div class="date-echo" id="ch-date-echo" style="display:none"></div>
+  <div class="hint" id="ch-dirty" style="display:none">Dates changed — press Apply.</div>
+
+  <div class="kpi-row" id="ch-kpis"></div>
+  
+  <div id="ch-sheet"></div>
+</div>
+
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px">
@@ -1385,6 +1479,7 @@
 <script src="js/modules/yeast.js"></script>
 <script src="js/modules/lab-tests.js"></script>
 <script src="js/modules/lab-form.js"></script>
+<script src="js/modules/coa.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>

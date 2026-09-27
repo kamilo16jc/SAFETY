@@ -39,6 +39,12 @@ var MODULES = [
       {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'},
       {screen:'screen-addproduct',name:'Add Product',      icon:'plus', color:'#0369a1'}
   ]},
+  { id:'coa', color:'#e879f9', ink:'#a21caf', name:'COA', icon:'doc', items:[
+      {screen:'screen-coa',        name:'COA Generator',   icon:'doc', color:'#047857'},
+      {screen:'screen-lotsearch',  name:'Search',          icon:'search', color:'#0369a1'},
+      {screen:'screen-coachanges', name:'Changes',         icon:'history', color:'#b45309'},
+      {screen:'screen-labresults', name:'Lab Results',     icon:'droplet', color:'#a21caf'}
+  ]},
   { id:'admin', color:'#fb7185', ink:'#be123c', name:'Administrator', icon:'sliders', items:[
       {screen:'screen-dashboard', name:'Dashboard',        icon:'chart', color:'#047857'},
       {screen:'screen-reports',   name:'Reports · all',    icon:'doc', color:'#0369a1'},
@@ -51,8 +57,8 @@ var MODULES = [
 // Acceso por defecto según el rol. El administrador podrá asignar módulos por
 // usuario (user.modules) y eso manda sobre este default.
 var ROLE_MODULES = {
-  admin:      ['qa','lab','production','products','admin'],
-  supervisor: ['qa','lab','production','products'],
+  admin:      ['qa','lab','production','products','coa','admin'],
+  supervisor: ['qa','lab','production','products','coa'],
   operator:   ['qa']
 };
 
@@ -103,6 +109,7 @@ function moduleOfScreen(screen){
 var MODULE_SCOPE = {
   qa:         ['weights','seals','holds','capa','shifts','runs'],
   lab:        ['analysis','runs'],
+  coa:        ['analysis','runs'],
   production: ['runs','shifts'],
   admin:      null                       // el administrador ve todo
 };

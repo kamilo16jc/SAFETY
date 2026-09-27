@@ -191,7 +191,9 @@ function setYM(id, field, value){
   var a = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
   if(!a) return;
   var before = ymDone(a);
-  a[field] = String(value==null?'':value).trim();
+  var nv = String(value==null?'':value).trim();
+  if(typeof logAnalysisChange==='function') logAnalysisChange(a, field, a[field], nv);
+  a[field] = nv;
   if(ymDone(a)){
     if(!a.ymAt) a.ymAt = localISOStr();
     if(!a.ymBy && currentUser && typeof getInitials==='function') a.ymBy = getInitials();

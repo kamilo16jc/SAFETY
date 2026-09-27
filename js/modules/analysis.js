@@ -197,7 +197,9 @@ function setAnalysisCell(id, field, value){
   var db = getDB();
   var a = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
   if(!a) return;
-  a[field] = String(value==null?'':value).trim();
+  var nv = String(value==null?'':value).trim();
+  if(typeof logAnalysisChange==='function') logAnalysisChange(a, field, a[field], nv);
+  a[field] = nv;
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db);
