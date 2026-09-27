@@ -413,7 +413,7 @@ function runPanel(list){
       '<td>'+(r.shift===1?'1st':'2nd')+'</td>'+
       '<td>Line '+esc(r.line)+'</td>'+
       '<td class="mono">'+esc(r.product||'—')+'</td>'+
-      '<td>'+esc(r.productName||'—')+(runSampleCount(r)>0?' <span class="tag warn">LAB</span>':'')+'</td>'+
+      '<td>'+esc(r.productName||'—')+(runSampleCount(r)>0?' <span class="tag">LAB</span>':'')+'</td>'+
       '<td class="mono code">'+esc(r.lot||'—')+'</td>'+
       '<td>'+yn(r.collected)+'</td>'+
       '<td>'+yn(t.tested)+'</td>'+

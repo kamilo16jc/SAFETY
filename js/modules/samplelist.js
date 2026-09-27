@@ -49,7 +49,7 @@ function renderSampleList(){
   if(kp){
     kp.innerHTML = [
       ['all',  rows.length,  'runs scheduled', ''],
-      ['todo', sum(todo),    'samples to collect', 'var(--warn)'],
+      ['todo', sum(todo),    'samples to collect', 'var(--fail)'],
       ['done', sum(done),    'collected', 'var(--pass)'],
       ['none', none.length,  'runs without sample', 'var(--dim)']
     ].map(function(k){

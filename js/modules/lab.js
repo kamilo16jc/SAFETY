@@ -97,7 +97,7 @@ function labCustomerLine(r){
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
     '<div class="cust-tests">'+(c.tests||[]).map(function(t){
-      return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+'</div>'+
+      return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')+'</div>'+
     '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div></div>';
 }
 
@@ -134,7 +134,7 @@ function renderLab(){
     };
     sum.innerHTML = all.length
       ? k(all.length, 'samples', '') +
-        k(pend.length, 'pending', pend.length?'var(--warn)':'var(--pass)') +
+        k(pend.length, 'pending', pend.length?'var(--fail)':'var(--pass)') +
         k(all.length-pend.length, 'sent', 'var(--pass)') +
         k(notReady, 'missing data', notReady?'var(--fail)':'var(--dim)')
       : '';

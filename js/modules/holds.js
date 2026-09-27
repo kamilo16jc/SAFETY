@@ -34,9 +34,11 @@ var HSC = {
   destroyed:{bg:'#f3f4f6',border:'#d1d5db',text:'#6b7280'}
 };
 
+// Sin fondo: solo la palabra. Verde cuando el caso se cerro liberando el
+// producto, roja mientras siga abierto.
 function statusBadge(status) {
-  var s = HSC[status] || HSC.hold;
-  return '<span style="background:'+s.bg+';border:1px solid '+s.border+';color:'+s.text+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">'+status+'</span>';
+  var cls = (status==='released') ? 'ok' : (status==='destroyed') ? '' : 'bad';
+  return '<span class="pill '+cls+'">'+esc(holdStatusLabel(status))+'</span>';
 }
 
 // ===== VISTA DE HOJA =====

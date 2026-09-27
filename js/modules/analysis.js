@@ -168,7 +168,7 @@ function renderAnalysisRows(){
     sum.innerHTML =
       '<div class="kpi"><b>'+list.length+'</b><span>analyses</span></div>'+
       '<div class="kpi"><b>'+full+'</b><span><i class="dot" style="background:var(--pass)"></i>complete</span></div>'+
-      '<div class="kpi"><b>'+(list.length-full)+'</b><span><i class="dot" style="background:var(--warn)"></i>partial</span></div>'+
+      '<div class="kpi"><b>'+(list.length-full)+'</b><span><i class="dot" style="background:var(--fail)"></i>partial</span></div>'+
       '<div class="kpi"><b>'+plate+'</b><span>plates read</span></div>';
   }
 

@@ -133,7 +133,7 @@ function renderLabResults(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return lrState(a)===k; }).length; };
     kp.innerHTML = [
-      ['waiting', n('waiting'), 'waiting for the lab', 'var(--warn)'],
+      ['waiting', n('waiting'), 'waiting for the lab', 'var(--fail)'],
       ['in',      n('in'),      'results in, no verdict', 'var(--dim)'],
       ['done',    n('done'),    'closed', 'var(--pass)'],
       ['all',     all.length,   'records in range', '']
@@ -348,7 +348,7 @@ function renderCoa(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return coaState(a)===k; }).length; };
     kp.innerHTML = [
-      ['ready',   n('ready'),   'ready to certify', 'var(--warn)'],
+      ['ready',   n('ready'),   'ready to certify', 'var(--fail)'],
       ['waiting', n('waiting'), 'incomplete', 'var(--dim)'],
       ['issued',  n('issued'),  'certified', 'var(--pass)'],
       ['all',     all.length,   'records in range', '']
@@ -667,7 +667,7 @@ function renderCoaStatus(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return stState(a)===k; }).length; };
     kp.innerHTML = [
-      ['qa',   n('qa'),    'pending QA lab', 'var(--warn)'],
+      ['qa',   n('qa'),    'pending QA lab', 'var(--fail)'],
       ['lab',  n('lab'),   'pending lab', 'var(--fail)'],
       ['done', n('done'),  'complete', 'var(--pass)'],
       ['all',  all.length, 'samples in range', '']
@@ -713,8 +713,8 @@ function stRowHTML(a, i){
   }
 
   var lab = stLabDone(a)
-    ? '<span class="pill ok">In \u00b7 '+v(a.result)+'</span>'
-    : '<span class="pill">Waiting</span>';
+    ? '<span class="pill ok">Completed</span>'
+    : '<span class="pill bad">Pending</span>';
 
   var status = st==='done' ? '<span class="pill ok">Complete</span>'
              : st==='qa'   ? '<span class="pill warn">Pending QA Lab</span>'

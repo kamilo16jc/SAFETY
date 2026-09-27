@@ -603,7 +603,7 @@ function renderThSummary(){
     var r = recs.find(function(t){ return t.checkpoint===cp; });
     var saved = r ? 'Recorded' : '—';
     var color = r ? '#2d6a4f' : '#aaa';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:'+(r?'#d8f3dc':'#f5f5f7')+';border-radius:8px;margin-bottom:6px">'+
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)">'+
       '<span style="font-size:12px;font-weight:700;color:'+color+'">'+cpLabel[cp]+'</span>'+
       '<span style="font-size:11px;color:'+color+'">'+(r ? r.temp+'°F · '+r.time : 'Not recorded')+'</span>'+
       '<span style="font-size:14px;font-weight:900;color:'+color+'">'+saved+'</span>'+

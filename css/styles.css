@@ -1267,3 +1267,28 @@ body.logged-out .topstack{display:none}
 @media (max-width:760px){
   .legend > div{flex-direction:column;gap:5px}
 }
+
+/* ============================================================
+   ESTADOS EN TEXTO, SIN RESALTADO
+   Nada de pastillas con fondo de color. Un estado es una palabra:
+   verde cuando el paso esta hecho, roja mientras siga pendiente, y
+   del color del texto normal cuando solo informa (una etiqueta como
+   LAB o el nombre de un test no es ni bueno ni malo).
+   ============================================================ */
+.pill,.tag{display:inline;padding:0;border:0;border-radius:0;background:none;
+  font-size:inherit;font-weight:700;letter-spacing:0;color:var(--muted);
+  text-transform:none;vertical-align:baseline}
+.pill.ok,.tag.ok{background:none;border:0;color:var(--pass)}
+.pill.bad,.tag.bad,.pill.warn,.tag.warn{background:none;border:0;color:var(--fail)}
+.sheet .pill,.sheet .tag{font-size:12px}
+/* varias etiquetas seguidas (los tests de un cliente) se separan con coma */
+.cust-tests .tag:not(:last-child)::after,.sheet td .tag:not(:last-child)::after{content:', a0'}
+
+/* Interruptores y botones de la hoja: se marcan con el borde y la letra,
+   no pintando el fondo */
+.cell-tog.on{background:none;border-color:var(--pass);color:var(--pass)}
+.sheet-btn.ok{background:none;border-color:var(--pass);color:var(--pass)}
+.run-chk.on{background:var(--bg);border-color:var(--pass);color:var(--pass)}
+
+/* Los avisos de "falta algo" en rojo, no en ambar */
+.lab-warn,.run-warn{color:var(--fail)}

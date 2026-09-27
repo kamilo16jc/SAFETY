@@ -78,9 +78,9 @@ function renderCatalog(){
       var linked = (p.barcodes||[]).length;
       return '<tr data-num="'+esc(p.number)+'" tabindex="0" aria-selected="'+(p.number===catSelected)+'" onclick="selectCatalogRow(this.getAttribute(\'data-num\'))">'+
         '<td class="code">'+esc(p.number)+'</td>'+
-        '<td class="desc">'+esc(p.name||'—')+(p.labSample?' <span class="tag warn">LAB</span>':'')+'</td>'+
+        '<td class="desc">'+esc(p.name||'—')+(p.labSample?' <span class="tag">LAB</span>':'')+'</td>'+
         '<td class="mono">'+esc(p.pkgLabel||'—')+'</td>'+
-        '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">'+unitLabel(pkgUnit({label:p.pkgLabel}))+'</span>' : '<span class="tag warn">not set</span>')+'</td>'+
+        '<td class="mono">'+(t ? t+' <span style="color:var(--dim)">'+unitLabel(pkgUnit({label:p.pkgLabel}))+'</span>' : '<span class="tag bad">not set</span>')+'</td>'+
         '<td class="mono num">'+(p.bagsPerCase||'—')+'</td>'+
         '<td>'+(linked ? '<span class="tag ok">Linked</span>' : '<span class="tag">Not linked</span>')+'</td>'+
         '<td class="soft col-by">'+esc(p.createdBy||'—')+'</td>'+

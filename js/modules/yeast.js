@@ -118,7 +118,7 @@ function renderYeast(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return ymState(a)===k; }).length; };
     kp.innerHTML = [
-      ['ready',   n('ready'),   'ready to read', 'var(--warn)'],
+      ['ready',   n('ready'),   'ready to read', 'var(--fail)'],
       ['waiting', n('waiting'), 'still incubating', 'var(--dim)'],
       ['done',    n('done'),    'read', 'var(--pass)'],
       ['all',     all.length,   'plates in range', '']

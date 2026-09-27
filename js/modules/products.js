@@ -415,7 +415,7 @@ function customerHintHTML(c, number){
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
     '<div class="cust-tests">Required lab tests: '+
-      (c.tests||[]).map(function(t){ return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ')+
+      (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')+
     '</div>'+
     (number ? '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div>' : '')+
   '</div>';

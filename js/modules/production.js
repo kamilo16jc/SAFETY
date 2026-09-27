@@ -388,7 +388,7 @@ function renderProduction(){
       ? k(list.length, 'runs scheduled', '') +
         k(done, 'complete', 'var(--pass)') +
         k(untested, 'not tested', untested?'var(--fail)':'var(--dim)') +
-        k(labsPending+'/'+labs, 'lab samples pending', labsPending?'var(--warn)':'var(--dim)')
+        k(labsPending+'/'+labs, 'lab samples pending', labsPending?'var(--fail)':'var(--dim)')
       : '';
   }
 
