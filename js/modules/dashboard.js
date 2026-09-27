@@ -125,17 +125,41 @@ function dashFill(list){
   return o;
 }
 
+// Se cambio un filtro pero todavia no se aplico. Antes cada cambio llamaba a
+// initDash(), que para un rango viejo se va a Firestore por historial: escribir
+// una fecha disparaba una descarga por cada pedazo tecleado.
+var dashDirty = false;
+function markDashDirty(){
+  if(dashDirty) return;
+  dashDirty = true;
+  renderDashDirty();
+}
+function renderDashDirty(){
+  var el = document.getElementById('dash-dirty');
+  if(el) el.style.display = dashDirty ? 'block' : 'none';
+  var b = document.getElementById('dash-go');
+  if(b) b.classList.toggle('pending', dashDirty);
+}
+// Lo que hace el boton Apply: aqui si se carga y se pinta
+function applyDashFilters(){
+  dashDirty = false;
+  renderDashDirty();
+  initDash();
+}
+
 function initDash(){
   // Primera apertura: aplica el rango por defecto que ya viene marcado
   if(!dashReady){
     dashReady = true;
     dashQuickRange(dashDays, document.querySelector('[data-dashrange].selected'));
+    dashDirty = false; renderDashDirty();
     return;
   }
   readDashFilters();
   // Si el rango pedido es más viejo que la ventana en vivo (90 días), trae ese
   // historial de Firestore una sola vez y luego pinta. Para rangos recientes
   // loadHistory no hace ninguna lectura (ya está en memoria).
+  dashDirty = false; renderDashDirty();
   var need = dashF.from ? dashF.from : (dashDays===0 ? '1970-01-01' : '');
   if(need && window.loadHistory){ window.loadHistory(need, renderDash); return; }
   renderDash();

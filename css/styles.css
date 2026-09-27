@@ -1048,3 +1048,8 @@ body.logged-out .topstack{display:none}
 .sec-head .sec-label{margin:0;flex:1;min-width:0}
 .sec-head .ico-row{display:flex;gap:6px;flex-shrink:0}
 .sec-sub{font-size:11px;font-weight:700;color:var(--muted);margin:0 0 6px}
+
+/* Filtros sin aplicar: el boton avisa y el texto dice que falta pulsarlo.
+   Search, Reports y Dashboard no consultan nada hasta que se pulsa. */
+#search-go.pending,#rpt-go.pending,#dash-go.pending{box-shadow:0 0 0 3px var(--accent-tint)}
+#search-dirty,#rpt-dirty,#dash-dirty{margin-top:10px;color:var(--warn);font-weight:700}

@@ -23,15 +23,38 @@ function anyFilter(){
 function initSearch(){
   var i = document.getElementById('search-input');
   if(i) i.value = searchQuery;
+  // Los filtros NO buscan solos: escribir una fecha dispara un change por cada
+  // pedazo (dd, mm, aaaa) y cada uno se iba a Firestore por historial. Solo
+  // marcan que hay algo pendiente; la busqueda la manda el boton o Enter.
   ['sf-field','sf-from','sf-to','sf-line','sf-shift','sf-type'].forEach(function(id){
     var e = document.getElementById(id);
-    if(e && !e.onchange) e.onchange = runSearch;
+    if(e && !e.oninput) e.oninput = markSearchDirty;
   });
+  var q = document.getElementById('search-input');
+  if(q && !q.oninput) q.oninput = markSearchDirty;
+  searchDirty = false;
+  renderSearchDirty();
   renderSearch();
+}
+
+// Se cambio un filtro pero todavia no se busco
+var searchDirty = false;
+function markSearchDirty(){
+  if(searchDirty) return;
+  searchDirty = true;
+  renderSearchDirty();
+}
+function renderSearchDirty(){
+  var el = document.getElementById('search-dirty');
+  if(el) el.style.display = searchDirty ? 'block' : 'none';
+  var btn = document.getElementById('search-go');
+  if(btn) btn.classList.toggle('pending', searchDirty);
 }
 
 function runSearch(){
   readFilters();
+  searchDirty = false;
+  renderSearchDirty();
   if(!anyFilter()){
     searchDone = false;
     toast('Enter a LOT or product, or pick a date, line or shift');
@@ -62,6 +85,8 @@ function clearSearch(){
   if(i){ i.value=''; i.focus(); }
   ['sf-from','sf-to'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   ['sf-field','sf-line','sf-shift','sf-type'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value='all'; });
+  searchDirty = false;
+  renderSearchDirty();
   renderSearch();
 }
 

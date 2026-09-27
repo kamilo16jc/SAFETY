@@ -400,25 +400,28 @@
     </div>
     <div class="filter-grid">
       <div class="f-field"><label for="dash-from">Date from</label>
-        <input type="date" class="field" id="dash-from" onchange="initDash()"></div>
+        <input type="date" class="field" id="dash-from" oninput="markDashDirty()"></div>
       <div class="f-field"><label for="dash-to">Date to</label>
-        <input type="date" class="field" id="dash-to" onchange="initDash()"></div>
+        <input type="date" class="field" id="dash-to" oninput="markDashDirty()"></div>
       <div class="f-field"><label for="dash-product">Product</label>
-        <div class="select-wrap"><select class="field" id="dash-product" onchange="initDash()">
+        <div class="select-wrap"><select class="field" id="dash-product" onchange="markDashDirty()">
           <option value="all">All products</option>
         </select></div></div>
       <div class="f-field"><label for="dash-line">Line</label>
-        <div class="select-wrap"><select class="field" id="dash-line" onchange="initDash()">
+        <div class="select-wrap"><select class="field" id="dash-line" onchange="markDashDirty()">
           <option value="all">All lines</option>
           <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
           <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
         </select></div></div>
       <div class="f-field"><label for="dash-shift">Shift</label>
-        <div class="select-wrap"><select class="field" id="dash-shift" onchange="initDash()">
+        <div class="select-wrap"><select class="field" id="dash-shift" onchange="markDashDirty()">
           <option value="all">All shifts</option>
           <option value="1">1st shift</option><option value="2">2nd shift</option>
         </select></div></div>
+      <div class="f-field"><label>&nbsp;</label>
+        <button class="btn-solid" id="dash-go" style="justify-content:center" onclick="applyDashFilters()">Apply</button></div>
     </div>
+    <div class="hint" id="dash-dirty" style="display:none">Filters changed — press Apply to load them.</div>
   </div>
 
   <!-- KPIs -->
@@ -891,12 +894,12 @@
 
       <div>
         <div class="sec-label" data-t="date">Date</div>
-        <input type="date" class="time-input" id="rpt-date" style="width:100%">
+        <input type="date" class="time-input" id="rpt-date" style="width:100%" oninput="markRptDirty()">
       </div>
 
       <div>
         <div class="sec-label">Line (optional)</div>
-        <div class="select-wrap"><select class="field" id="rpt-line" style="margin-bottom:0" onchange="rptFilters.line=this.value">
+        <div class="select-wrap"><select class="field" id="rpt-line" style="margin-bottom:0" onchange="rptFilters.line=this.value;markRptDirty()">
           <option value="all">All lines</option>
           <option value="1">Line 1</option>
           <option value="2">Line 2</option>
@@ -918,10 +921,11 @@
 
       <div>
         <div class="sec-label">Product Number (optional)</div>
-        <input type="text" class="time-input" id="rpt-product" placeholder="Filter by product number" style="width:100%">
+        <input type="text" class="time-input" id="rpt-product" placeholder="Filter by product number" style="width:100%" oninput="markRptDirty()">
       </div>
-      <button class="main-btn" style="margin:0" onclick="applyRptFilters()">Apply Filters</button>
+      <button class="main-btn" style="margin:0" id="rpt-go" onclick="applyRptFilters()">Apply Filters</button>
     </div>
+    <div class="hint" id="rpt-dirty" style="display:none;padding:0 14px 14px">Filters changed — press Apply Filters.</div>
   </div>
 
   <!-- DAILY SHIFT REPORT -->
@@ -1070,7 +1074,7 @@
                autocomplete="off" autocapitalize="characters" onkeydown="searchOnKey(event)">
       </div>
       <button class="btn-ghost" onclick="openScanner('search')"><span data-icon="scan"></span>Scan</button>
-      <button class="btn-solid" onclick="runSearch()">Search</button>
+      <button class="btn-solid" id="search-go" onclick="runSearch()">Search</button>
       <button class="btn-ghost" onclick="clearSearch()">Clear</button>
     </div>
     <div class="filter-grid">
@@ -1120,6 +1124,7 @@
         </select></div>
       </div>
     </div>
+    <div class="hint" id="search-dirty" style="display:none">Filters changed — press Search to apply them.</div>
   </div>
 
   <div class="workspace" id="search-results"></div>

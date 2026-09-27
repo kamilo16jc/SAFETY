@@ -23,6 +23,21 @@ function updateRptShiftCount(){
     : 'No events or runs for that day and shift yet.';
 }
 
+// Igual que en Search y en el Dashboard: cambiar un filtro no rehace el
+// reporte, solo avisa que hay algo sin aplicar.
+var rptDirty = false;
+function markRptDirty(){
+  if(rptDirty) return;
+  rptDirty = true;
+  renderRptDirty();
+}
+function renderRptDirty(){
+  var el = document.getElementById('rpt-dirty');
+  if(el) el.style.display = rptDirty ? 'block' : 'none';
+  var b = document.getElementById('rpt-go');
+  if(b) b.classList.toggle('pending', rptDirty);
+}
+
 function initReports() {
   var sd = document.getElementById('rpt-shift-date');
   if(sd && !sd.value) sd.value = localDateStr();
@@ -55,6 +70,8 @@ function setRptFilter(btn) {
 }
 
 function applyRptFilters() {
+  rptDirty = false;
+  renderRptDirty();
   rptFilters.date    = document.getElementById('rpt-date').value;
   rptFilters.product = (document.getElementById('rpt-product').value || '').trim().toLowerCase();
   var db = getDB();
