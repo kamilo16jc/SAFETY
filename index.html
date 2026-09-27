@@ -941,31 +941,38 @@
   <div class="hint" id="rpt-shift-count" style="margin:-6px 0 18px"></div>
 
   <!-- WEIGHT & SEAL RECORDS -->
-  <div class="sec-label">Weight Records</div>
-  <div id="rpt-weight-list" style="margin-bottom:16px"></div>
-
-  <div class="sec-label">Bag Seal Records</div>
-  <div id="rpt-seal-list" style="margin-bottom:16px"></div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptWeightPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
-    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportRptExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
+  <div class="sec-head">
+    <div class="sec-label">Weight &amp; Bag Seal Records</div>
+    <div class="ico-row">
+      <button class="ico-btn" onclick="exportRptWeightPDF()" aria-label="Export to PDF" title="Export weight and bag seal to PDF"><span data-icon="pdf"></span></button>
+      <button class="ico-btn" onclick="exportRptExcel()" aria-label="Export to Excel" title="Export weight and bag seal to Excel"><span data-icon="grid"></span></button>
+      <button class="ico-btn" onclick="sendWeightSealForm()" aria-label="Official form" title="Download the official form (Word)"><span data-icon="seal"></span></button>
+    </div>
   </div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendWeightSealForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Word)</button>
+  <div class="sec-sub">Weight</div>
+  <div id="rpt-weight-list" style="margin-bottom:14px"></div>
+  <div class="sec-sub">Bag seal</div>
+  <div id="rpt-seal-list" style="margin-bottom:20px"></div>
 
   <!-- GMP RECORDS -->
-  <div class="sec-label">GMP Records</div>
-  <div id="rpt-gmp-list" style="margin-bottom:6px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="main-btn" style="margin:0;background:#1a5276" onclick="exportRptGmpPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
-    <button class="main-btn" style="margin:0;background:#1d6f42" onclick="exportGmpExcel()"><span class="btn-ico" data-icon="download"></span>Export Excel</button>
+  <div class="sec-head">
+    <div class="sec-label">GMP Records</div>
+    <div class="ico-row">
+      <button class="ico-btn" onclick="exportRptGmpPDF()" aria-label="Export to PDF" title="Export GMP records to PDF"><span data-icon="pdf"></span></button>
+      <button class="ico-btn" onclick="exportGmpExcel()" aria-label="Export to Excel" title="Export GMP records to Excel"><span data-icon="grid"></span></button>
+      <button class="ico-btn" onclick="sendGmpForm()" aria-label="Official form" title="Download the official form (Excel)"><span data-icon="seal"></span></button>
+    </div>
   </div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendGmpForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Excel)</button>
+  <div id="rpt-gmp-list" style="margin-bottom:20px"></div>
 
   <!-- METAL DETECTOR RECORDS -->
-  <div class="sec-label">Metal Detector Checks</div>
-  <div id="rpt-metal-list" style="margin-bottom:10px"></div>
-  <button class="main-btn" style="margin:0 0 18px;background:#0f6cbd" onclick="sendMetalForm()"><span class="btn-ico" data-icon="download"></span>Download Official Form (Word)</button>
+  <div class="sec-head">
+    <div class="sec-label">Metal Detector Checks</div>
+    <div class="ico-row">
+      <button class="ico-btn" onclick="sendMetalForm()" aria-label="Official form" title="Download the official form (Word)"><span data-icon="seal"></span></button>
+    </div>
+  </div>
+  <div id="rpt-metal-list" style="margin-bottom:20px"></div>
 </div>
 
 

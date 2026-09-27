@@ -26,6 +26,10 @@ var ICONS = {
   calendar:  _IC('<rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16"/><path d="M8.5 3.5v4"/><path d="M15.5 3.5v4"/>'),
   trash:     _IC('<path d="M5 7h14"/><path d="M9.5 7V5.3A1.3 1.3 0 0 1 10.8 4h2.4a1.3 1.3 0 0 1 1.3 1.3V7"/><path d="M6.8 7 7.7 19a1.6 1.6 0 0 0 1.6 1.5h5.4A1.6 1.6 0 0 0 16.3 19L17.2 7"/>'),
   plus:      _IC('<path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/>'),
+  // Exportar: hoja con flecha (PDF), tabla (Excel) y sello (forma oficial)
+  pdf:       _IC('<path d="M7.5 3.5h6.3L18.5 8v11a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1.5-1.5Z"/><path d="M13.5 3.8V8h4.4"/><path d="M12 11.4v5"/><path d="m9.9 14.3 2.1 2.1 2.1-2.1"/>'),
+  grid:      _IC('<rect x="3.5" y="5.5" width="17" height="13" rx="1.8"/><path d="M3.5 10.2h17"/><path d="M10 10.2v8.3"/>'),
+  seal:      _IC('<circle cx="12" cy="9.3" r="4.8"/><path d="m8.7 13.3-1.2 6.2 4.5-2.4 4.5 2.4-1.2-6.2"/>'),
   download:  _IC('<path d="M12 3.8v11"/><path d="m7.8 10.8 4.2 4 4.2-4"/><path d="M4.5 19.5h15"/>'),
   close:     _IC('<path d="m6.5 6.5 11 11"/><path d="m17.5 6.5-11 11"/>'),
   alert:     _IC('<path d="M12 4.6 21 19.4H3Z"/><path d="M12 10v4"/><circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none"/>'),
