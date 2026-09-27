@@ -109,7 +109,7 @@ function buildAnalysisSheet(){
       '<th class="rn">#</th><th>Date</th><th>Product</th><th class="wide">Cheese</th>'+
       '<th>Customer</th><th>Prod. date</th><th>Order</th><th>PO</th>'+
       '<th class="num">Moisture</th><th class="num">Fat</th><th class="num">pH</th>'+
-      '<th>By</th><th></th>'+
+      '<th>By</th><th>Save</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="an-new"><tr class="newrow">'+
       '<td class="rn">new</td>'+
@@ -126,6 +126,7 @@ function buildAnalysisSheet(){
       '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH"></td>'+
       '<td><input class="cell" id="an-by" placeholder="Initials"></td>'+
       '<td><button class="sheet-btn" onclick="saveAnalysis()">Add</button></td>'+
+      '<td></td>'+
     '</tr></tbody>'+
     '<tbody id="an-body"></tbody></table></div>';
   resetAnalysisRow();
@@ -159,7 +160,7 @@ function renderAnalysisRows(){
   }
 
   if(!list.length){
-    body.innerHTML = '<tr><td colspan="13" class="sheet-empty" style="border:0">'+
+    body.innerHTML = '<tr><td colspan="14" class="sheet-empty" style="border:0">'+
       'No analyses for these filters. Fill the top row to add the first one.</td></tr>';
     return;
   }
@@ -169,7 +170,7 @@ function renderAnalysisRows(){
 
 function anRowHTML(a, i){
   var cell = function(field, val, ph){
-    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" '+
+    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" data-f="'+field+'" '+
       'value="'+esc(val==null?'':val)+'" onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
   };
   return '<tr>'+
@@ -184,11 +185,30 @@ function anRowHTML(a, i){
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
     '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
     '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
-    '<td><input class="cell" placeholder="Initials" value="'+esc(a.testedBy||'')+'" '+
+    '<td><input class="cell" placeholder="Initials" data-f="testedBy" value="'+esc(a.testedBy||'')+'" '+
       'onchange="setAnalysisCell('+a.id+',\'testedBy\',this.value)"></td>'+
+    '<td><button class="sheet-btn" onclick="saveAnRow('+a.id+',this)">Save</button></td>'+
     '<td><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
       '<span data-icon="close"></span></button></td>'+
   '</tr>';
+}
+
+// Guarda VARIOS campos de un analisis en un solo ciclo: una escritura local
+// y una sola subida, en vez de una por celda. Lo usan los botones de fila.
+function saveAnalysisFields(id, obj){
+  var db = getDB();
+  var a = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
+  if(!a) return null;
+  Object.keys(obj||{}).forEach(function(f){
+    var nv = String(obj[f]==null?'':obj[f]).trim();
+    if(typeof logAnalysisChange==='function') logAnalysisChange(a, f, a[f], nv);
+    a[f] = nv;
+  });
+  a.editedAt = localISOStr();
+  a.editedBy = currentUser ? currentUser.name : '\u2014';
+  saveDB(db);
+  if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  return a;
 }
 
 // Editar una celda guardada. No repinta la hoja: se perdería el foco al pasar
@@ -222,6 +242,16 @@ function anRefreshCounts(){
 }
 
 // ---- Alta ----
+// Guarda la fila completa, a la vista
+function saveAnRow(id, btn){
+  var vals = readRowFields(btn);
+  if(!vals) return;
+  saveAnalysisFields(id, vals);
+  anRefreshCounts();
+  if(typeof refreshRunViews==='function') refreshRunViews();
+  flashSaved(btn);
+}
+
 function onAnalysisProduct(){
   var num = normNumber(document.getElementById('an-product').value);
   var p = findProduct(num);

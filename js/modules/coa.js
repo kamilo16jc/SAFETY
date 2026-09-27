@@ -163,7 +163,7 @@ function renderLabResults(){
       '<th>By</th><th class="num">Coliform</th><th class="num">E. coli</th>'+
       '<th class="num">Yeast</th><th class="num">Mold</th>'+
       '<th class="num">Matrix Y</th><th class="num">Matrix M</th>'+
-      '<th>Read by</th><th>Result</th><th>Name by</th>'+
+      '<th>Read by</th><th>Result</th><th>Name by</th><th>Save</th>'+
     '</tr></thead><tbody>'+
     list.map(function(a,i){ return lrRowHTML(a,i+1); }).join('')+
     '</tbody></table></div>';
@@ -172,12 +172,13 @@ function renderLabResults(){
 function lrRowHTML(a, i){
   var v = function(x){ return (x==null || x==='') ? '—' : esc(x); };
   var cell = function(field, ph){
-    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" '+
+    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" data-f="'+field+'" '+
       'value="'+esc(a[field]==null?'':a[field])+'" '+
       'onchange="setLrCell('+a.id+',\''+field+'\',this.value)">';
   };
   var txt = function(field, ph){
-    return '<input class="cell" placeholder="'+ph+'" value="'+esc(a[field]==null?'':a[field])+'" '+
+    return '<input class="cell" placeholder="'+ph+'" data-f="'+field+'" '+
+      'value="'+esc(a[field]==null?'':a[field])+'" '+
       'onchange="setLrCell('+a.id+',\''+field+'\',this.value)">';
   };
   return '<tr'+(lrState(a)==='done'?' class="done"':'')+'>'+
@@ -201,6 +202,7 @@ function lrRowHTML(a, i){
     '<td class="soft">'+v(a.ymBy)+'</td>'+
     '<td>'+txt('result','e.g. No Moldy')+'</td>'+
     '<td>'+txt('resultBy','Initials')+'</td>'+
+    '<td><button class="sheet-btn" onclick="saveLrRow('+a.id+',this)">Save</button></td>'+
   '</tr>';
 }
 
@@ -213,6 +215,20 @@ function setLrCell(id, field, value){
   }
   lrRefreshCounts();
 }
+// Guarda toda la fila de resultados, a la vista
+function saveLrRow(id, btn){
+  var vals = readRowFields(btn);
+  if(!vals) return;
+  var a = (typeof saveAnalysisFields==='function') ? saveAnalysisFields(id, vals) : null;
+  if(a && a.result && !a.resultBy && currentUser && typeof getInitials==='function'){
+    saveAnalysisFields(id, {resultBy: getInitials()});
+    var el = btn.closest('tr').querySelector('[data-f="resultBy"]');
+    if(el) el.value = getInitials();
+  }
+  lrRefreshCounts();
+  flashSaved(btn);
+}
+
 function lrRefreshCounts(){
   var kp = document.getElementById('lr-kpis');
   if(!kp) return;

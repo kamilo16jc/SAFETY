@@ -98,3 +98,32 @@ function showDateOrder(root){
   var o = dateFieldOrder();
   (root||document).querySelectorAll('[data-dateorder]').forEach(function(el){ el.textContent = o; });
 }
+
+
+// ===== GUARDAR UNA FILA =====
+// Las celdas de las hojas se guardan al salir del campo, pero eso no se ve.
+// El boton de la fila hace lo mismo a la vista, y se queda un momento en
+// "Saved" para que quede claro que ya esta.
+function flashSaved(btn, label){
+  if(!btn) return;
+  var prev = btn.getAttribute('data-prev') || btn.textContent;
+  btn.setAttribute('data-prev', prev);
+  btn.classList.add('ok');
+  btn.textContent = label || '\u2713 Saved';
+  clearTimeout(btn._flash);
+  btn._flash = setTimeout(function(){
+    btn.classList.remove('ok');
+    btn.textContent = btn.getAttribute('data-prev') || 'Save';
+  }, 1800);
+}
+
+// Lee los campos marcados con data-f dentro de una fila
+function readRowFields(btn){
+  var tr = btn && btn.closest ? btn.closest('tr') : null;
+  if(!tr) return null;
+  var out = {};
+  tr.querySelectorAll('[data-f]').forEach(function(el){
+    out[el.getAttribute('data-f')] = el.value;
+  });
+  return out;
+}

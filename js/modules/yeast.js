@@ -141,7 +141,7 @@ function renderYeast(){
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>ID</th><th>Sampled</th><th>Reads on</th><th>Status</th>'+
       '<th>Product</th><th class="wide">Cheese</th><th>Customer</th><th>Prod. date</th><th>Order</th>'+
-      '<th class="num">Yeast</th><th class="num">Mold</th><th>Read by</th>'+
+      '<th class="num">Yeast</th><th class="num">Mold</th><th>Read by</th><th>Save</th>'+
     '</tr></thead><tbody>'+
     list.map(function(a, i){ return ymRowHTML(a, i+1); }).join('')+
     '</tbody></table></div>';
@@ -149,7 +149,7 @@ function renderYeast(){
 
 function ymRowHTML(a, i){
   var cell = function(field, val){
-    return '<input class="cell num" inputmode="decimal" placeholder="CFU/g" '+
+    return '<input class="cell num" inputmode="decimal" placeholder="CFU/g" data-f="'+field+'" '+
       'value="'+esc(val==null?'':val)+'" '+
       'onchange="setYM('+a.id+',\''+field+'\',this.value)">';
   };
@@ -166,8 +166,9 @@ function ymRowHTML(a, i){
     '<td class="soft">'+esc(a.order||'—')+'</td>'+
     '<td class="num">'+cell('yeast', a.yeast)+'</td>'+
     '<td class="num">'+cell('mold',  a.mold)+'</td>'+
-    '<td><input class="cell" placeholder="Initials" value="'+esc(a.ymBy||'')+'" '+
+    '<td><input class="cell" placeholder="Initials" data-f="ymBy" value="'+esc(a.ymBy||'')+'" '+
       'onchange="setYM('+a.id+',\'ymBy\',this.value)"></td>'+
+    '<td><button class="sheet-btn" onclick="saveYmRow('+a.id+',this)">Save</button></td>'+
   '</tr>';
 }
 
@@ -211,6 +212,39 @@ function setYM(id, field, value){
   var cellEl = document.getElementById('ym-st-'+a.id);
   if(cellEl) cellEl.innerHTML = ymStatusHTML(a);
   ymRefreshCounts();
+}
+
+// Guarda la lectura de la placa completa, a la vista
+function saveYmRow(id, btn){
+  var vals = readRowFields(btn);
+  if(!vals) return;
+  var before = false;
+  var a0 = (getDB().analysis||[]).filter(function(x){ return x.id===id; })[0];
+  if(a0) before = ymDone(a0);
+  var a = (typeof saveAnalysisFields==='function') ? saveAnalysisFields(id, vals) : null;
+  if(a){
+    if(ymDone(a)){
+      var db = getDB();
+      var rec = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
+      if(rec){
+        if(!rec.ymAt) rec.ymAt = localISOStr();
+        if(!rec.ymBy && currentUser && typeof getInitials==='function') rec.ymBy = getInitials();
+        saveDB(db);
+        if(window.saveToFirebase) window.saveToFirebase('analysis', rec);
+        a = rec;
+      }
+    }
+    if(!before && ymDone(a)){
+      logActivity('analysis','Yeast & mold plate read',
+        'Analysis #'+(a.seq||'\u2014')+' \u00b7 Product '+(a.product||'\u2014')+
+        ' \u00b7 Yeast '+(a.yeast||'\u2014')+' \u00b7 Mold '+(a.mold||'\u2014'),
+        a.ymBy || (currentUser?currentUser.name:'\u2014'));
+    }
+    var cellEl = document.getElementById('ym-st-'+id);
+    if(cellEl) cellEl.innerHTML = ymStatusHTML(a);
+  }
+  ymRefreshCounts();
+  flashSaved(btn);
 }
 
 // Repinta solo los conteos del menu, sin tocar la tabla

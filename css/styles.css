@@ -1254,3 +1254,6 @@ body.logged-out .topstack{display:none}
   .date-echo{font-size:13px}
   .rpt-filters{padding:12px}
 }
+
+/* El boton de guardar de la fila, y su acuse */
+.sheet-btn.ok{background:var(--pass-tint);border-color:var(--pass);color:var(--pass)}
