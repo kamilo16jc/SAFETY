@@ -1151,3 +1151,106 @@ body.logged-out .topstack{display:none}
 .picked-bar b{font-size:15px;font-weight:800}
 .sheet td input[type=checkbox]{accent-color:var(--accent);cursor:pointer}
 .sheet sup{font-size:8px;color:var(--muted)}
+
+/* ============================================================
+   TELÉFONO
+   Todo lo de abajo vive dentro de una consulta de ancho máximo:
+   la versión de escritorio no se toca. Las hojas de hasta 25
+   columnas se leen como tarjetas, una por registro, con el título
+   de la columna al lado del dato. js/core/mobile.js copia ese
+   título desde el <thead> en cuanto la hoja se pinta.
+   ============================================================ */
+@media (max-width:760px){
+  /* --- la hoja deja de ser tabla --- */
+  .sheet-wrap,.table-scroll{border:0;background:none;overflow:visible;max-height:none;margin-bottom:12px}
+  .sheet,.cat-table{display:block;font-size:13px;border-spacing:0}
+  .sheet thead,.cat-table thead{display:none}
+  .sheet tbody,.cat-table tbody{display:block}
+  .cat-table tbody tr{display:block;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--surface);margin-bottom:10px;overflow:hidden}
+  .cat-table tbody tr:hover td{background:transparent}
+  .cat-table tbody td{display:flex;align-items:center;gap:10px;border:0;
+    border-bottom:1px solid var(--border);padding:9px 13px;white-space:normal;min-height:42px}
+  .cat-table tbody td:last-child{border-bottom:0}
+  .cat-table tbody td::before{content:attr(data-label);flex:0 0 38%;min-width:0;
+    font-size:9.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--muted);line-height:1.3}
+  .cat-table tbody td[data-nolabel]::before,.cat-table tbody td[colspan]::before{content:none}
+  .cat-table tbody td[data-empty]{display:none}
+  .cat-table tbody td[colspan]{display:block;text-align:center;border:0}
+  .cat-table td.num{text-align:left}
+  .cat-table .view-cell{justify-content:flex-start}
+  .res-panel .res-head{border-radius:var(--radius) var(--radius) 0 0}
+  .res-stats{grid-template-columns:1fr 1fr;gap:8px}
+  .filter-grid{grid-template-columns:1fr 1fr}
+  .filter-row{gap:8px}
+  .filter-row .btn-ghost,.filter-row .btn-solid{flex:1;justify-content:center}
+  #screen-products .cat-detail{width:auto;max-height:none}
+  .sheet tbody tr{display:block;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--surface);margin-bottom:10px;overflow:hidden}
+  .sheet tbody tr:nth-child(even) td,.sheet tbody tr:hover td{background:transparent}
+  .sheet tbody tr.done{border-color:var(--pass)}
+  .sheet tbody tr.newrow{border-color:var(--accent);background:var(--accent-tint)}
+  .sheet tbody tr.newrow td{background:transparent}
+
+  .sheet tbody td{display:flex;align-items:center;gap:10px;width:auto;
+    border:0;border-bottom:1px solid var(--border);padding:9px 13px;white-space:normal;
+    min-height:42px;text-align:left}
+  .sheet tbody td:last-child{border-bottom:0}
+  .sheet tbody td::before{content:attr(data-label);flex:0 0 38%;min-width:0;
+    font-size:9.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--muted);line-height:1.3}
+  .sheet tbody td[data-nolabel]::before,.sheet tbody td[colspan]::before{content:none}
+  .sheet tbody td[data-nolabel]{justify-content:flex-start;gap:8px;flex-wrap:wrap}
+  /* lo que no tiene dato ni nada que tocar, no ocupa sitio */
+  .sheet tbody td[data-empty]{display:none}
+  .sheet tbody td[data-stack],.cat-table tbody td[data-stack]{display:block}
+  .sheet tbody td[data-stack]::before,.cat-table tbody td[data-stack]::before{
+    display:block;margin-bottom:5px}
+  .sheet tbody td[data-stack] .samp{margin-right:14px;line-height:1.9}
+  .sheet tbody td.rn{display:none}
+  .sheet tbody td[colspan]{display:block;text-align:center;border:0}
+  .sheet .num,.sheet .mid{text-align:left}
+  .sheet .wide{min-width:0}
+
+  /* campos y botones dentro de la tarjeta: sitio para el dedo */
+  .sheet input.cell,.sheet select.cell{flex:1;min-width:0;border-color:var(--border);
+    background:var(--surface);padding:9px 10px;font-size:14px;min-height:38px}
+  .sheet input.cell.num{text-align:left}
+  .sheet .cell-tog,.sheet .sheet-btn{padding:9px 14px;font-size:13px;min-height:38px}
+  .sheet td.acts{gap:10px}
+  .sheet td.acts .ico-btn.sm{width:38px;height:38px;margin:0}
+  .sheet td.acts .ico-btn.sm svg{width:16px;height:16px}
+  .sheet td input[type=checkbox]{width:20px;height:20px}
+
+  /* --- barra de herramientas: en columna, sin huecos vacíos --- */
+  .sheet-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+  .sheet-bar .sb-field{min-width:0}
+  .sheet-bar .sb-field > label[data-blank]{display:none}
+  .sheet-bar .sb-gap{display:none}
+  .sheet-bar .search-wrap{min-width:0}
+  .sheet-bar .sb-field:has(input[type=search]){grid-column:1/-1}
+  .sheet-bar select.field,.sheet-bar input.field{width:100%;min-width:0}
+  .sheet-bar .btn-solid,.sheet-bar .btn-ghost{width:100%;justify-content:center}
+  .sheet-bar .ico-btn{width:100%;height:42px}
+
+  /* --- tarjetas de conteo: dos por fila --- */
+  .kpi-row{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:11px 12px}
+  .kpi b{font-size:21px}
+  .kpi span{font-size:9.5px}
+
+  /* --- resto de piezas nuevas --- */
+  .picked-bar{flex-wrap:wrap}
+  .picked-bar .sheet-btn{padding:9px 14px;font-size:13px}
+  .sec-head{flex-wrap:wrap}
+  .sec-head .ico-row{gap:8px}
+  .sec-head .ico-btn{width:40px;height:40px}
+  .new-cust .pair{grid-template-columns:1fr}
+  .cust-picks{max-height:240px}
+  .cust-pick{padding:9px 8px;font-size:13.5px}
+  .cust-pick input{width:19px;height:19px}
+  .lab-block{padding:12px}
+  .date-echo{font-size:13px}
+  .rpt-filters{padding:12px}
+}
