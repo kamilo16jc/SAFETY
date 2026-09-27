@@ -61,7 +61,10 @@ function customerById(id){
 // marcados "all items", que no listan números), si no se deduce del número.
 function productCustomer(p){
   if(!p) return null;
+  if(p.customerMode==='none') return null;        // se dijo que no tiene cliente
   if(p.customerId){ var m = customerById(p.customerId); if(m) return m; }
+  var list = p.customerIds || [];
+  for(var i=0;i<list.length;i++){ var c = customerById(list[i]); if(c) return c; }
   return findCustomerByProduct(p.number);
 }
 // Tests que exige el cliente de ese producto
@@ -82,6 +85,140 @@ function productLabCode(p){
 // El alta de producto vive en dos sitios: el modal (cuando se escanea un
 // codigo desconocido desde Weight o Seal) y la pantalla Add Product. Los dos
 // usan los mismos campos, distinguidos por un prefijo: 'prod-' y 'ap-'.
+// ===== BLOQUE DE LABORATORIO =====
+// Un producto puede no tener cliente, tener uno, o venderse a varios con el
+// mismo numero. De eso dependen los tests que exige la forma y el codigo que
+// va en ella, asi que se pregunta al darlo de alta en vez de adivinarlo.
+// El mismo bloque sirve para Add Product ('ap') y para el catalogo ('cd').
+function productCustomerMode(p){
+  if(!p) return 'one';
+  if(p.customerMode) return p.customerMode;
+  if((p.customerIds||[]).length > 1) return 'many';
+  return (p.customerId || findCustomerByProduct(p.number)) ? 'one' : 'none';
+}
+function productCustomerIds(p){
+  if(!p) return [];
+  if((p.customerIds||[]).length) return p.customerIds.slice();
+  if(p.customerId) return [p.customerId];
+  var auto = findCustomerByProduct(p.number);
+  return auto ? [auto.customerId] : [];
+}
+// Todos los clientes de un producto (el primero manda para la forma)
+function productCustomers(p){
+  return productCustomerIds(p).map(customerById).filter(Boolean);
+}
+
+function labBlockHTML(pre, p){
+  var mode = productCustomerMode(p);
+  var ids  = productCustomerIds(p);
+  var n    = p ? productSampleCount(p) : 1;
+  var plate = !p || p.plate !== false;
+  var chip = function(v, label){
+    return '<button type="button" class="pkg-chip'+(mode===v?' selected':'')+'" '+
+      'data-cmode="'+v+'" onclick="setCustomerMode(\''+pre+'\',\''+v+'\')">'+label+'</button>';
+  };
+  return '<div class="sec-label">Laboratory</div>'+
+    '<div class="lab-block">'+
+      '<div class="sub-label">Who buys this product?</div>'+
+      '<div class="chip-row" id="'+pre+'-cmode">'+
+        chip('none','No customer')+chip('one','One customer')+chip('many','Several customers')+
+      '</div>'+
+      '<div id="'+pre+'-cone" style="display:'+(mode==='one'?'block':'none')+'">'+
+        '<div class="select-wrap"><select class="field" id="'+pre+'-customer" '+
+          'onchange="onProdCustomerChange(\''+pre+'\')"></select></div>'+
+      '</div>'+
+      '<div id="'+pre+'-cmany" style="display:'+(mode==='many'?'block':'none')+'">'+
+        '<input type="search" class="field" id="'+pre+'-csearch" placeholder="Filter customers\u2026" '+
+          'autocomplete="off" oninput="filterCustomerPicks(\''+pre+'\')">'+
+        '<div class="cust-picks" id="'+pre+'-cpicks"></div>'+
+        '<div class="hint">The first one ticked is the one whose form and code the '+
+          'lab sample uses.</div>'+
+      '</div>'+
+      '<div id="'+pre+'-customer-hint"></div>'+
+      '<div class="sub-label">Lab samples per run</div>'+
+      '<input type="text" class="field" id="'+pre+'-lab-n" inputmode="numeric" '+
+        'value="'+n+'" placeholder="e.g. 1" oninput="this.dataset.touched=\'1\'">'+
+      '<div class="hint" id="'+pre+'-lab-hint">0 means this product is never sampled.</div>'+
+      '<label class="lab-check"><input type="checkbox" id="'+pre+'-plate"'+(plate?' checked':'')+'>'+
+        '<span><b>Yeast &amp; mold plate</b> \u00b7 a plate is made and read 5 days later</span></label>'+
+    '</div>';
+}
+
+// Pinta el contenido del bloque (selector y casillas) una vez esta en el DOM
+function fillLabBlock(pre, p){
+  var ids = productCustomerIds(p);
+  fillProdCustomerSelect(ids[0] || '', pre);
+  renderCustomerPicks(pre, ids);
+  onProdCustomerChange(pre);
+}
+
+function renderCustomerPicks(pre, ids){
+  var el = pel(pre,'cpicks');
+  if(!el) return;
+  ids = ids || [];
+  el.innerHTML = getCustomers().map(function(c){
+    var on = ids.indexOf(c.customerId) >= 0;
+    return '<label class="cust-pick" data-name="'+esc((c.company+' '+c.customerId).toLowerCase())+'">'+
+      '<input type="checkbox" value="'+esc(c.customerId)+'"'+(on?' checked':'')+' '+
+        'onchange="onProdCustomerChange(\''+pre+'\')">'+
+      '<span>'+esc(c.company)+' <b class="mono">'+esc(c.customerId)+'</b></span></label>';
+  }).join('') || '<div class="hint">No customers loaded yet.</div>';
+}
+
+function filterCustomerPicks(pre){
+  var q = ((pel(pre,'csearch')||{}).value||'').trim().toLowerCase();
+  var box = pel(pre,'cpicks');
+  if(!box) return;
+  box.querySelectorAll('.cust-pick').forEach(function(l){
+    l.style.display = (!q || l.getAttribute('data-name').indexOf(q)>=0) ? 'flex' : 'none';
+  });
+}
+
+function setCustomerMode(pre, mode){
+  var row = pel(pre,'cmode');
+  if(row) row.querySelectorAll('[data-cmode]').forEach(function(b){
+    b.classList.toggle('selected', b.getAttribute('data-cmode')===mode);
+  });
+  var one = pel(pre,'cone'), many = pel(pre,'cmany');
+  if(one)  one.style.display  = mode==='one'  ? 'block' : 'none';
+  if(many) many.style.display = mode==='many' ? 'block' : 'none';
+  if(mode==='none'){
+    var sel = pel(pre,'customer'); if(sel) sel.value = '';
+    var box = pel(pre,'cpicks');
+    if(box) box.querySelectorAll('input[type=checkbox]').forEach(function(c){ c.checked = false; });
+  }
+  onProdCustomerChange(pre);
+}
+
+function currentCustomerMode(pre){
+  var row = pel(pre,'cmode');
+  var on = row ? row.querySelector('.pkg-chip.selected') : null;
+  return on ? on.getAttribute('data-cmode') : 'one';
+}
+
+// Lo que quedo elegido en el bloque
+function readLabBlock(pre){
+  var mode = currentCustomerMode(pre);
+  var ids = [];
+  if(mode==='one'){
+    var v = (pel(pre,'customer')||{}).value || '';
+    if(v) ids = [v];
+  } else if(mode==='many'){
+    var box = pel(pre,'cpicks');
+    if(box) box.querySelectorAll('input[type=checkbox]:checked').forEach(function(c){ ids.push(c.value); });
+  }
+  var n = parseSampleCount((pel(pre,'lab-n')||{}).value);
+  var pl = pel(pre,'plate');
+  return {
+    customerMode: mode,
+    customerId: ids[0] || '',
+    customerIds: ids,
+    labSamples: n,
+    labSample: n > 0,
+    plate: pl ? !!pl.checked : true
+  };
+}
+
 function pel(pre, f){ return document.getElementById((pre||'prod')+'-'+f); }
 
 // Llena el selector de clientes del formulario de producto
@@ -100,11 +237,14 @@ function onProdNumberInput(pre){
   pre = pre || 'prod';
   var el = pel(pre, 'number');
   if(!el) return;
+  // Con varios clientes elegidos a mano, el numero no manda
+  if(pel(pre,'cmode') && currentCustomerMode(pre)==='many'){ onProdCustomerChange(pre); return; }
   var c = findCustomerByProduct(el.value);
   // Si el número no pertenece a nadie se limpia: nunca debe quedarse pegado
   // el cliente del producto anterior.
   fillProdCustomerSelect(c ? c.customerId : '', pre);
-  onProdCustomerChange(pre);
+  if(pel(pre,'cmode')) setCustomerMode(pre, c ? 'one' : 'none');
+  else onProdCustomerChange(pre);
 }
 
 // Cambio manual de cliente: refresca tests, código de forma y marca Lab sample
@@ -112,7 +252,15 @@ function onProdCustomerChange(pre){
   pre = pre || 'prod';
   var el = pel(pre, 'customer-hint');
   if(!el) return;
-  var id = (pel(pre,'customer')||{}).value || '';
+  var mode = pel(pre,'cmode') ? currentCustomerMode(pre) : 'one';
+  var id = '';
+  if(mode==='one'){
+    id = (pel(pre,'customer')||{}).value || '';
+  } else if(mode==='many'){
+    var first = (pel(pre,'cpicks')||{querySelector:function(){return null;}})
+                  .querySelector('input[type=checkbox]:checked');
+    id = first ? first.value : '';
+  }
   var c  = id ? customerById(id) : null;
   var num = normNumber((pel(pre,'number')||{}).value);
   el.innerHTML = c ? customerHintHTML(c, num) : '';
@@ -322,7 +470,15 @@ function readProductForm(pre){
 
   var bags = parseInt(g('bags'));
   var barcode = normNumber(g('barcode'));
-  var n = parseSampleCount(g('lab-n'));
+  // El bloque de laboratorio: cliente(s), cuantas muestras y si lleva placa
+  var lab = pel(pre,'cmode') ? readLabBlock(pre) : {
+    customerMode: 'one',
+    customerId: g('customer') || (findCustomerByProduct(number)||{}).customerId || '',
+    customerIds: [],
+    labSamples: parseSampleCount(g('lab-n')),
+    labSample: parseSampleCount(g('lab-n')) > 0,
+    plate: true
+  };
   return {
     id: Date.now(),
     number: number,
@@ -331,10 +487,12 @@ function readProductForm(pre){
     pkgLabel: pkgLabel,
     target: target,
     bagsPerCase: isNaN(bags) ? null : bags,
-    labSamples: n,
-    labSample: n > 0,
-    plate: true,
-    customerId: g('customer') || (findCustomerByProduct(number)||{}).customerId || '',
+    labSamples: lab.labSamples,
+    labSample: lab.labSample,
+    plate: lab.plate,
+    customerMode: lab.customerMode,
+    customerId: lab.customerId,
+    customerIds: lab.customerIds,
     barcodes: barcode ? [barcode] : [],
     createdBy: currentUser ? currentUser.name : '\u2014',
     createdAt: localISOStr()
@@ -384,12 +542,12 @@ function resetAddProduct(){
   ['number','name','custom-label','min','max','bags','barcode'].forEach(function(f){
     var e = pel('ap', f); if(e) e.value = '';
   });
-  var n = pel('ap','lab-n');
-  if(n){ n.value = '1'; delete n.dataset.touched; }
-  var h = pel('ap','lab-hint'); if(h) h.textContent = '';
-  var hint = pel('ap','customer-hint'); if(hint) hint.innerHTML = '';
+  var box = document.getElementById('ap-labblock');
+  if(box){
+    box.innerHTML = labBlockHTML('ap', null);
+    fillLabBlock('ap', null);
+  }
   fillProductSizes('ap');
-  fillProdCustomerSelect('', 'ap');
   var num = pel('ap','number'); if(num) num.focus();
 }
 

@@ -165,12 +165,7 @@ function renderCatalogDetail(){
           '<button class="btn-ghost" style="width:100%;justify-content:center" onclick="catalogRescan()">'+
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
-      '<div class="field-group"><div class="sec-label">Lab samples per run</div>'+
-        '<input type="text" class="field" id="cd-lab-n" inputmode="numeric" value="'+productSampleCount(p)+'">'+
-        '<div class="hint">How many samples QA must collect each run. 0 = this product is not sampled.</div></div>'+
-      '<label class="lab-check"><input type="checkbox" id="cd-plate"'+(p.plate===false?'':' checked')+'>'+
-        '<span><b>Yeast &amp; mold plate</b> · a plate is made for this product and read 5 days later</span></label>'+
-      catalogCustomerBlock(p)+
+      labBlockHTML('cd', p)+
       (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
@@ -182,39 +177,13 @@ function renderCatalogDetail(){
       '<button class="btn-solid" onclick="saveCatalogEdits()">Save changes</button>'+
       (canDelete ? '<button class="btn-danger" onclick="deleteCatalogProduct()">Delete</button>' : '')+
     '</div>';
+  // El bloque de laboratorio se rellena una vez esta en el DOM
+  fillLabBlock('cd', p);
 }
+
 
 // Cliente del producto + los tests que exige. El número suele bastar, pero los
 // clientes marcados "all items" (no listan números) hay que asignarlos a mano.
-function catalogCustomerBlock(p){
-  var auto = findCustomerByProduct(p.number);
-  var cur  = p.customerId || (auto ? auto.customerId : '');
-  var opts = '<option value="">— none —</option>' + getCustomers().map(function(c){
-    return '<option value="'+esc(c.customerId)+'"'+(c.customerId===cur?' selected':'')+'>'+
-      esc(c.company)+' ('+esc(c.customerId)+')'+(c.allItems?' · all items':'')+'</option>';
-  }).join('');
-  var sel = cur ? customerById(cur) : null;
-  return '<div class="field-group"><div class="sec-label">Customer '+
-      (auto ? '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· detected from the product number</span>' : '')+
-    '</div>'+
-    '<div class="select-wrap"><select class="field" id="cd-customer" onchange="onCatalogCustomerChange()">'+opts+'</select></div>'+
-    '<div class="cust-tests" id="cd-cust-tests">'+custTestsHTML(sel)+'</div>'+
-    (sel ? '<div class="lab-code">Lab form code: <b class="mono">'+
-             esc((sel.prefix||sel.customerId||'')+normNumber(p.number))+'</b></div>' : '')+
-  '</div>';
-}
-
-function custTestsHTML(c){
-  if(!c || !(c.tests||[]).length) return '';
-  return 'Required lab tests: '+c.tests.map(function(t){
-    return '<span class="tag warn">'+esc(t)+'</span>'; }).join(' ');
-}
-
-function onCatalogCustomerChange(){
-  var id = document.getElementById('cd-customer').value;
-  var el = document.getElementById('cd-cust-tests');
-  if(el) el.innerHTML = custTestsHTML(id ? customerById(id) : null);
-}
 
 // Cuántos registros usan el producto (para saber qué se arrastra al editarlo)
 function countProductUse(number){
@@ -248,10 +217,13 @@ function saveCatalogEdits(){
   }
   p.target = (!isNaN(mn) && !isNaN(mx)) ? {min:mn, max:mx} : null;
   p.bagsPerCase = isNaN(bags) ? null : bags;
-  p.labSamples = parseSampleCount((document.getElementById('cd-lab-n')||{}).value);
-  p.labSample  = p.labSamples > 0;
-  p.plate      = !!(document.getElementById('cd-plate')||{checked:true}).checked;
-  p.customerId = (document.getElementById('cd-customer')||{}).value || '';
+  var lab = readLabBlock('cd');
+  p.labSamples   = lab.labSamples;
+  p.labSample    = lab.labSample;
+  p.plate        = lab.plate;
+  p.customerMode = lab.customerMode;
+  p.customerIds  = lab.customerIds;
+  p.customerId   = lab.customerId;
   if(typeof readLabTestPicker==='function') readLabTestPicker(p);
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
