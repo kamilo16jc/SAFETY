@@ -1133,3 +1133,13 @@ body.logged-out .topstack{display:none}
 .cust-pick:hover{background:var(--accent-tint)}
 .cust-pick input{accent-color:var(--accent);flex-shrink:0}
 .cust-pick b{color:var(--muted);font-weight:700}
+
+/* Alta de cliente dentro del bloque de laboratorio */
+.new-cust{border:1px dashed var(--border);border-radius:var(--radius);padding:12px;
+  margin-bottom:12px;background:var(--bg)}
+.new-cust .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.new-cust .field{margin-bottom:0}
+.new-cust .lt-box{max-height:230px;overflow-y:auto;border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:8px;background:var(--surface)}
+.new-cust .cd-actions{display:flex;gap:8px}
+@media (max-width:520px){ .new-cust .pair{grid-template-columns:1fr} }

@@ -166,7 +166,6 @@ function renderCatalogDetail(){
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
       labBlockHTML('cd', p)+
-      (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
         '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
@@ -224,7 +223,7 @@ function saveCatalogEdits(){
   p.customerMode = lab.customerMode;
   p.customerIds  = lab.customerIds;
   p.customerId   = lab.customerId;
-  if(typeof readLabTestPicker==='function') readLabTestPicker(p);
+  if(typeof readLabTestPicker==='function') readLabTestPicker(p, document.getElementById('cd-lt'));
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
 

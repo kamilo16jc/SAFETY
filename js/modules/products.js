@@ -108,6 +108,137 @@ function productCustomers(p){
   return productCustomerIds(p).map(customerById).filter(Boolean);
 }
 
+// ===== ALTA DE CLIENTE =====
+// Si el cliente no existe todavia se crea aqui mismo, con su codigo, su forma
+// y los tests que exige. La lista es confidencial: se guarda en Firestore
+// (config/customers), nunca en el repositorio.
+function customerFormOptions(sel){
+  var forms = Object.keys(getFormHeaders ? getFormHeaders() : {});
+  if(!forms.length) forms = ['general'];
+  return forms.map(function(f){
+    return '<option value="'+esc(f)+'"'+(f===sel?' selected':'')+'>'+esc(f)+'</option>';
+  }).join('');
+}
+
+function newCustomerHTML(pre){
+  return '<div class="new-cust" id="'+pre+'-newcust" style="display:none">'+
+    '<div class="sub-label">New customer</div>'+
+    '<div class="pair">'+
+      '<input type="text" class="field" id="'+pre+'-nc-company" placeholder="Company name">'+
+      '<input type="text" class="field" id="'+pre+'-nc-id" placeholder="Code (e.g. ABCDEF)" '+
+        'autocapitalize="characters">'+
+    '</div>'+
+    '<div class="pair">'+
+      '<input type="text" class="field" id="'+pre+'-nc-prefix" placeholder="Form prefix (optional)" '+
+        'autocapitalize="characters">'+
+      '<div class="select-wrap"><select class="field" id="'+pre+'-nc-form" '+
+        'onchange="renderNewCustomerTests(\''+pre+'\')">'+customerFormOptions('')+'</select></div>'+
+    '</div>'+
+    '<div class="pair">'+
+      '<input type="text" class="field" id="'+pre+'-nc-per" placeholder="Samples per order" '+
+        'inputmode="numeric" value="1">'+
+      '<label class="lab-check" style="margin:0"><input type="checkbox" id="'+pre+'-nc-numbered">'+
+        '<span>Samples are numbered</span></label>'+
+    '</div>'+
+    '<div class="sub-label">Lab tests this customer requires</div>'+
+    '<div class="lt-box" id="'+pre+'-nc-tests"></div>'+
+    '<div class="cd-actions" style="margin-top:10px">'+
+      '<button type="button" class="btn-solid" onclick="saveNewCustomer(\''+pre+'\')">Save customer</button>'+
+      '<button type="button" class="btn-ghost" onclick="toggleNewCustomer(\''+pre+'\',false)">Cancel</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function toggleNewCustomer(pre, force){
+  var el = pel(pre,'newcust');
+  if(!el) return;
+  var show = (force===undefined) ? el.style.display==='none' : !!force;
+  el.style.display = show ? 'block' : 'none';
+  if(show){
+    renderNewCustomerTests(pre);
+    var c = pel(pre,'nc-company'); if(c) c.focus();
+  }
+}
+
+// Los tests que ofrece la forma elegida
+function renderNewCustomerTests(pre){
+  var box = pel(pre,'nc-tests');
+  if(!box) return;
+  var form = (pel(pre,'nc-form')||{}).value || 'general';
+  var cat = (typeof formTestCatalog==='function') ? formTestCatalog(form) : {micro:[],chem:[],nlea:[]};
+  var group = function(kind, title){
+    if(!cat[kind] || !cat[kind].length) return '';
+    return '<div class="lt-group"><div class="lt-title">'+title+'</div>'+
+      cat[kind].map(function(lbl){
+        return '<label class="lt-item"><input type="checkbox" data-nc-test="'+esc(lbl)+'">'+
+          '<span>'+esc(lbl)+'</span></label>';
+      }).join('')+'</div>';
+  };
+  box.innerHTML = group('micro','Micro')+group('chem','Chemistry')+group('nlea','NLEA') ||
+    '<div class="hint">That form has no columns loaded yet.</div>';
+}
+
+function saveNewCustomer(pre){
+  var g = function(f){ var e = pel(pre,f); return e ? e.value.trim() : ''; };
+  var company = g('nc-company');
+  var id = g('nc-id').toUpperCase();
+  if(!company){ toast('Enter the company name'); return; }
+  if(!id){ toast('Enter the customer code'); return; }
+  if(customerById(id)){ toast('That customer code already exists'); return; }
+
+  var tests = [];
+  var box = pel(pre,'nc-tests');
+  if(box) box.querySelectorAll('[data-nc-test]').forEach(function(c){
+    if(c.checked) tests.push(c.getAttribute('data-nc-test'));
+  });
+
+  var per = parseInt(g('nc-per'), 10);
+  var cust = {
+    company: company,
+    customerId: id,
+    prefix: g('nc-prefix').toUpperCase(),
+    form: (pel(pre,'nc-form')||{}).value || 'general',
+    tests: tests,
+    products: [],
+    allItems: false,
+    numbered: !!(pel(pre,'nc-numbered')||{}).checked,
+    samplesPerOrder: isNaN(per) ? 1 : per,
+    createdBy: currentUser ? currentUser.name : '\u2014',
+    createdAt: localISOStr()
+  };
+
+  var db = getDB();
+  if(!db.customers) db.customers = {list:[], tests:[]};
+  if(!db.customers.list) db.customers.list = [];
+  db.customers.list.push(cust);
+  saveDB(db);
+  if(window.saveCustomersToFirebase) window.saveCustomersToFirebase(db.customers);
+  logActivity('admin','Customer created',
+    company+' ('+id+') \u00b7 form '+cust.form+
+    (tests.length ? ' \u00b7 '+tests.length+' test(s)' : ' \u00b7 no tests'),
+    currentUser?currentUser.name:'\u2014');
+
+  // Queda elegido para el producto que se esta creando
+  toggleNewCustomer(pre, false);
+  setCustomerMode(pre, 'one');
+  fillProdCustomerSelect(id, pre);
+  renderCustomerPicks(pre, [id]);
+  onProdCustomerChange(pre);
+  refreshLabTestPicker(pre);
+  toast(company+' saved');
+}
+
+// El picker de tests del producto se repinta cuando cambia el cliente
+function refreshLabTestPicker(pre){
+  var box = pel(pre,'lt');
+  if(!box || typeof renderLabTestPicker!=='function') return;
+  var lab = readLabBlock(pre);
+  box.innerHTML = renderLabTestPicker({number:(pel(pre,'number')||{}).value||'',
+                                       customerId:lab.customerId,
+                                       customerIds:lab.customerIds,
+                                       customerMode:lab.customerMode});
+}
+
 function labBlockHTML(pre, p){
   var mode = productCustomerMode(p);
   var ids  = productCustomerIds(p);
@@ -134,6 +265,9 @@ function labBlockHTML(pre, p){
         '<div class="hint">The first one ticked is the one whose form and code the '+
           'lab sample uses.</div>'+
       '</div>'+
+      '<button type="button" class="btn-ghost" style="margin-bottom:10px" '+
+        'onclick="toggleNewCustomer(\''+pre+'\')"><span data-icon="plus"></span>New customer</button>'+
+      newCustomerHTML(pre)+
       '<div id="'+pre+'-customer-hint"></div>'+
       '<div class="sub-label">Lab samples per run</div>'+
       '<input type="text" class="field" id="'+pre+'-lab-n" inputmode="numeric" '+
@@ -141,6 +275,8 @@ function labBlockHTML(pre, p){
       '<div class="hint" id="'+pre+'-lab-hint">0 means this product is never sampled.</div>'+
       '<label class="lab-check"><input type="checkbox" id="'+pre+'-plate"'+(plate?' checked':'')+'>'+
         '<span><b>Yeast &amp; mold plate</b> \u00b7 a plate is made and read 5 days later</span></label>'+
+      '<div id="'+pre+'-lt">'+
+        (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+'</div>'+
     '</div>';
 }
 
@@ -149,6 +285,8 @@ function fillLabBlock(pre, p){
   var ids = productCustomerIds(p);
   fillProdCustomerSelect(ids[0] || '', pre);
   renderCustomerPicks(pre, ids);
+  var form = pel(pre,'nc-form');
+  if(form) form.innerHTML = customerFormOptions('');
   onProdCustomerChange(pre);
 }
 
@@ -266,6 +404,7 @@ function onProdCustomerChange(pre){
   el.innerHTML = c ? customerHintHTML(c, num) : '';
   var n = pel(pre,'lab-n');
   if(n && c && !n.dataset.touched) n.value = String(customerSampleCount(c));
+  if(pel(pre,'lt')) refreshLabTestPicker(pre);
   var h = pel(pre,'lab-hint');
   if(h) h.textContent = c ? (c.company+' normally takes '+customerSampleCount(c)+
        ' sample'+(customerSampleCount(c)===1?'':'s')+' per order'+(c.numbered?', numbered':'')+'.') : '';
@@ -554,6 +693,10 @@ function resetAddProduct(){
 function saveNewProduct(){
   var prod = readProductForm('ap');
   if(!prod) return;
+  // Los tests se leen SOLO del bloque de esta pantalla
+  if(typeof readLabTestPicker==='function'){
+    readLabTestPicker(prod, document.getElementById('ap-lt'));
+  }
   persistNewProduct(prod);
   resetAddProduct();
   toast(prod.number+' saved \u2014 edit it in Product Catalog');

@@ -68,9 +68,18 @@ function defaultLabTests(p){
   var hdrs = getFormHeaders()[form] || {};
   var out = [];
   (c.tests||[]).forEach(function(t){
-    var m = map[t]; if(!m) return;
-    var lbl = (hdrs[m.sheet]||{})[m.col];
-    if(lbl) out.push({sheet:m.sheet, label:lbl});
+    var m = map[t];
+    if(m){
+      var lbl = (hdrs[m.sheet]||{})[m.col];
+      if(lbl) out.push({sheet:m.sheet, label:lbl});
+      return;
+    }
+    // Un cliente creado a mano guarda la ETIQUETA EXACTA de su forma, que no
+    // esta en el mapa de nombres genericos: se busca tal cual en la forma.
+    ['micro','chem','nlea'].forEach(function(kind){
+      var col = labTestColumn(form, kind, t);
+      if(col && (hdrs[kind]||{})[col]) out.push({sheet:kind, label:hdrs[kind][col]});
+    });
   });
   // La casilla de composite, si la forma del cliente la usa
   var cc = ((getDB().labTestMap||{}).compositeCol || {})[form];
@@ -81,10 +90,23 @@ function defaultLabTests(p){
   return out;
 }
 
+// Tests que ofrece UNA forma, para elegirlos al crear el cliente
+function formTestCatalog(form){
+  var hdrs = getFormHeaders()[form] || {};
+  var out = {micro:[], chem:[], nlea:[]};
+  Object.keys(out).forEach(function(kind){
+    var cols = hdrs[kind] || {};
+    Object.keys(cols).forEach(function(c){ if(cols[c]) out[kind].push(cols[c]); });
+    out[kind].sort();
+  });
+  return out;
+}
+
 function productTestsVerified(p){ return !!(p && p.labTests && p.labTests.length); }
 
 // ---- Editor (dentro de la ficha del producto en el catálogo) ----
 function renderLabTestPicker(p){
+  p = p || {};
   var cat = labTestCatalog();
   if(!Object.keys(cat).some(function(k){ return cat[k].length; })) return '';
   var cur = productTests(p);
@@ -119,8 +141,8 @@ function renderLabTestPicker(p){
 }
 
 // Lee el picker y guarda en el producto (lo llama saveCatalogEdits)
-function readLabTestPicker(p){
-  var boxes = document.querySelectorAll('[data-lt-kind]');
+function readLabTestPicker(p, root){
+  var boxes = (root || document).querySelectorAll('[data-lt-kind]');
   if(!boxes.length) return false;
   var sel = [];
   Array.prototype.forEach.call(boxes, function(b){

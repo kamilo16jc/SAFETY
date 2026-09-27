@@ -327,6 +327,16 @@
   };
 
   // ---- SAVE LAB SAMPLE COUNTERS to Firestore ----
+  // Alta o cambio de un cliente. La lista es CONFIDENCIAL: vive solo en
+  // Firestore (config/customers), nunca en el repo.
+  window.saveCustomersToFirebase = async function(data) {
+    try {
+      await setDoc(doc(db,'config','customers'),
+        Object.assign({}, data, {updatedAt: new Date().toISOString()}));
+      return true;
+    } catch(e){ console.warn('customers save failed', e); return false; }
+  };
+
   window.saveLabCountersToFirebase = async function(counters) {
     try {
       await setDoc(doc(db,'config','labCounters'), {counters: counters, updatedAt: new Date().toISOString()});
