@@ -13,11 +13,9 @@ var anFrom = '', anTo = '', anQuery = '';
 function getAnalyses(){ var d=getDB(); if(!d.analysis) d.analysis=[]; return d.analysis; }
 
 function initAnalysis(){
+  // Por defecto solo el dia: el historial completo se pide ampliando el rango
   var f=document.getElementById('an-from'), t=document.getElementById('an-to');
-  if(f && !f.value){
-    var d=new Date(); d.setDate(d.getDate()-14);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
+  if(f && !f.value) f.value = localDateStr();
   if(t && !t.value) t.value = localDateStr();
   anDirty = false; renderAnDirty();
   showDateOrder(document.getElementById('screen-analysis'));
@@ -124,7 +122,7 @@ function buildAnalysisSheet(){
       '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%"></td>'+
       '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%"></td>'+
       '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH"></td>'+
-      '<td><input class="cell" id="an-by" placeholder="Initials"></td>'+
+      '<td class="soft" id="an-by">'+esc(typeof getInitials==='function' ? getInitials() : '')+'</td>'+
       '<td><button class="sheet-btn" onclick="saveAnalysis()">Add</button></td>'+
       '<td></td>'+
     '</tr></tbody>'+
@@ -139,7 +137,7 @@ function resetAnalysisRow(){
   ['an-product','an-cheese','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
     .forEach(function(id){ set(id,''); });
   var by=document.getElementById('an-by');
-  if(by && !by.value && typeof getInitials==='function' && currentUser) by.value = getInitials();
+  if(by && typeof getInitials==='function') by.textContent = getInitials();
   var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
 }
 
@@ -185,8 +183,7 @@ function anRowHTML(a, i){
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
     '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
     '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
-    '<td><input class="cell" placeholder="Initials" data-f="testedBy" value="'+esc(a.testedBy||'')+'" '+
-      'onchange="setAnalysisCell('+a.id+',\'testedBy\',this.value)"></td>'+
+    '<td class="soft">'+esc(a.testedBy||'\u2014')+'</td>'+
     '<td><button class="sheet-btn" onclick="saveAnRow('+a.id+',this)">Save</button></td>'+
     '<td><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
       '<span data-icon="close"></span></button></td>'+
@@ -286,7 +283,7 @@ function saveAnalysis(){
     po: g('an-po'),
     moisture: moisture, fat: fat, ph: ph,
     yeast: '', mold: '',                 // los llena Yeast & Mold a los 5 días
-    testedBy: g('an-by') || (currentUser ? getInitials() : ''),
+    testedBy: (typeof getInitials==='function') ? getInitials() : '',
     runId: window._anRunId || null,
     createdAt: localISOStr(),
     createdBy: currentUser ? currentUser.name : '—'

@@ -166,8 +166,7 @@ function ymRowHTML(a, i){
     '<td class="soft">'+esc(a.order||'—')+'</td>'+
     '<td class="num">'+cell('yeast', a.yeast)+'</td>'+
     '<td class="num">'+cell('mold',  a.mold)+'</td>'+
-    '<td><input class="cell" placeholder="Initials" data-f="ymBy" value="'+esc(a.ymBy||'')+'" '+
-      'onchange="setYM('+a.id+',\'ymBy\',this.value)"></td>'+
+    '<td class="soft" id="ym-by-'+a.id+'">'+esc(a.ymBy || '')+'</td>'+
     '<td><button class="sheet-btn" onclick="saveYmRow('+a.id+',this)">Save</button></td>'+
   '</tr>';
 }
@@ -211,6 +210,8 @@ function setYM(id, field, value){
 
   var cellEl = document.getElementById('ym-st-'+a.id);
   if(cellEl) cellEl.innerHTML = ymStatusHTML(a);
+  var byEl = document.getElementById('ym-by-'+a.id);
+  if(byEl) byEl.textContent = a.ymBy || '';
   ymRefreshCounts();
 }
 
@@ -242,6 +243,8 @@ function saveYmRow(id, btn){
     }
     var cellEl = document.getElementById('ym-st-'+id);
     if(cellEl) cellEl.innerHTML = ymStatusHTML(a);
+    var byEl = document.getElementById('ym-by-'+id);
+    if(byEl) byEl.textContent = a.ymBy || '';
   }
   ymRefreshCounts();
   flashSaved(btn);

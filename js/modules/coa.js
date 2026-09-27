@@ -201,7 +201,7 @@ function lrRowHTML(a, i){
     '<td class="num">'+cell('mxYeast','CFU/g')+'</td><td class="num">'+cell('mxMold','CFU/g')+'</td>'+
     '<td class="soft">'+v(a.ymBy)+'</td>'+
     '<td>'+txt('result','e.g. No Moldy')+'</td>'+
-    '<td>'+txt('resultBy','Initials')+'</td>'+
+    '<td class="soft" id="lr-by-'+a.id+'">'+v(a.resultBy)+'</td>'+
     '<td><button class="sheet-btn" onclick="saveLrRow('+a.id+',this)">Save</button></td>'+
   '</tr>';
 }
@@ -211,7 +211,9 @@ function setLrCell(id, field, value){
   var a = setAnalysisValue(id, field, value);
   if(!a) return;
   if(field==='result' && a.result && !a.resultBy && currentUser && typeof getInitials==='function'){
-    setAnalysisValue(id, 'resultBy', getInitials());
+    a = setAnalysisValue(id, 'resultBy', getInitials()) || a;
+    var byEl = document.getElementById('lr-by-'+id);
+    if(byEl) byEl.textContent = a.resultBy || '\u2014';
   }
   lrRefreshCounts();
 }
@@ -221,10 +223,10 @@ function saveLrRow(id, btn){
   if(!vals) return;
   var a = (typeof saveAnalysisFields==='function') ? saveAnalysisFields(id, vals) : null;
   if(a && a.result && !a.resultBy && currentUser && typeof getInitials==='function'){
-    saveAnalysisFields(id, {resultBy: getInitials()});
-    var el = btn.closest('tr').querySelector('[data-f="resultBy"]');
-    if(el) el.value = getInitials();
+    a = saveAnalysisFields(id, {resultBy: getInitials()}) || a;
   }
+  var byEl = document.getElementById('lr-by-'+id);
+  if(byEl && a) byEl.textContent = a.resultBy || '\u2014';
   lrRefreshCounts();
   flashSaved(btn);
 }

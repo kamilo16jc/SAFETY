@@ -98,7 +98,13 @@ function initAdmin() {
 }
 
 // Auto-fill operator initials in forms when user is logged in
-function getInitials() {
-  if(!currentUser) return '';
-  return currentUser.name.split(' ').map(function(n){return n[0]}).join('').toUpperCase();
+// Primera letra del nombre y primera del apellido. Antes se tomaban TODAS
+// las palabras, asi que "Julian Camilo Agudelo" daba JCA en vez de JA.
+function getInitials(name) {
+  var n = name || (currentUser ? currentUser.name : '');
+  var parts = String(n).trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '';
+  var first = parts[0][0];
+  var last  = parts.length > 1 ? parts[parts.length-1][0] : '';
+  return (first + last).toUpperCase();
 }
