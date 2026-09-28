@@ -24,7 +24,7 @@ var MODULES = [
       {screen:'screen-analysis',  name:'Sample Analysis',  icon:'clipboard', color:'#047857'},
       {screen:'screen-yeast',     name:'Yeast & Mold',     icon:'clock', color:'#a16207'},
       {screen:'screen-lab',       name:'Lab Samples',      icon:'droplet', color:'#0369a1'},
-      {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', soon:true, color:'#b45309'},
+      {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', color:'#b45309'},
       {screen:'screen-raw',       name:'Raw Analysis',     icon:'box', color:'#7c3aed'},
       {screen:'screen-dry',       name:'Dry 1935',         icon:'thermo', color:'#a16207'},
       {screen:'screen-formag',    name:'Formag',           icon:'factory', color:'#0e7490'},
@@ -111,7 +111,7 @@ function moduleOfScreen(screen){
 // linea o no, y eso le sirve igual a QA y al laboratorio.
 var MODULE_SCOPE = {
   qa:         ['weights','seals','holds','capa','shifts','runs'],
-  lab:        ['analysis','runs','raw'],
+  lab:        ['analysis','runs','raw','grilling'],
   coa:        ['analysis','runs'],
   production: ['runs','shifts'],
   admin:      null                       // el administrador ve todo

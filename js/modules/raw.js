@@ -195,6 +195,8 @@ function rawScreenHTML(){
         '<input class="field" id="ri-name" placeholder="e.g. Parmesan wheel" autocomplete="off"></div>'+
       '<div class="sb-field"><label for="ri-supplier">Supplier</label>'+
         '<div class="select-wrap"><select class="field" id="ri-supplier"></select></div></div>'+
+      '<div class="sb-field"><label for="ri-grilling">Grilling cheese</label>'+
+        '<label class="chk"><input type="checkbox" id="ri-grilling"> SQF 2.4.D.3.A applies</label></div>'+
       '<div class="sb-field"><label>&nbsp;</label>'+
         '<button class="btn-solid" onclick="saveRawItem()">Add material</button></div>'+
     '</div>'+
@@ -574,7 +576,9 @@ function saveRawItem(){
   if(getRawItems().some(function(x){ return x.name.toLowerCase()===name.toLowerCase(); })){
     toast('That material already exists'); return;
   }
+  var gr = document.getElementById('ri-grilling');
   var rec = {id:newRecordId(), name:name, supplier:g('ri-supplier'),
+             grilling: !!(gr && gr.checked),
              createdBy:(typeof currentUser!=='undefined' && currentUser)?currentUser.name:'—',
              createdAt: localISOStr()};
   var db = getDB();
@@ -585,6 +589,7 @@ function saveRawItem(){
   logActivity('admin','Raw material created', name+(rec.supplier?' · '+rec.supplier:''), rec.createdBy);
   var n = document.getElementById('ri-name');
   if(n){ n.value = ''; n.focus(); }
+  if(gr) gr.checked = false;
   renderRawDatalists();
   toast(name+' saved');
 }

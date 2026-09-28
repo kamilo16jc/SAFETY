@@ -320,6 +320,43 @@
 <!-- Las cuatro hojas de materia prima se pintan desde js/modules/raw.js:
      comparten formulario, asi que solo la pantalla activa lleva contenido. -->
 <div class="screen" id="screen-raw"></div>
+
+<div class="screen" id="screen-grilling">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Grilling Cheese</div>
+  <div class="form-meta">SQF # 2.4.D.3.A &mdash; every grilling cheese lot recorded in Raw Analysis</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="gc-from">Tested from <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="gc-from" oninput="markGcDirty()"></div>
+    <div class="sb-field"><label for="gc-to">Tested to <span class="ord" data-dateorder></span></label>
+      <input type="date" class="field" id="gc-to" oninput="markGcDirty()"></div>
+    <div class="sb-field"><label for="gc-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="gc-search" placeholder="Lot, who received it, who tested…" autocomplete="off"
+               oninput="renderGrilling()">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="gc-go" onclick="applyGcFilters()">Apply</button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="ico-btn" onclick="exportGrillingCSV()" aria-label="Export to Excel"
+              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+  </div>
+  <div class="date-echo" id="gc-date-echo" style="display:none"></div>
+  <div class="hint" id="gc-dirty" style="display:none">Dates changed &mdash; press Apply.</div>
+
+  <div class="kpi-row" id="gc-kpis"></div>
+  <div id="gc-sheet"></div>
+  <div class="legend">
+    <b>Pending Lab</b> the lot is in Raw but pH, Fat or Moisture are still missing.
+    <b>Pending Sensory</b> chemical testing is done; appearance and texture are not.
+    <b>Pending Approval</b> everything is filled and a manager still has to sign it.
+    <b>Completed</b> the form is finished and approved.
+    The form prints at any of the four stages; what is missing prints blank.
+  </div>
+</div>
 <div class="screen" id="screen-dry"></div>
 <div class="screen" id="screen-formag"></div>
 <div class="screen" id="screen-rd"></div>
@@ -1500,6 +1537,7 @@
 <script src="js/modules/lab-form.js"></script>
 <script src="js/modules/coa.js"></script>
 <script src="js/modules/raw.js"></script>
+<script src="js/modules/grilling.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>

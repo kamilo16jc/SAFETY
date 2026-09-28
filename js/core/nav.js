@@ -83,6 +83,7 @@ function goTo(id){
   if(id==='screen-dry') initRawSection('dry');
   if(id==='screen-formag') initRawSection('formag');
   if(id==='screen-rd') initRawSection('rd');
+  if(id==='screen-grilling') initGrilling();
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -153,6 +154,7 @@ var CRUMBS = {
   'screen-dry':      ['Capture', 'Dry 1935'],
   'screen-formag':   ['Capture', 'Formag'],
   'screen-rd':       ['Capture', 'R&D'],
+  'screen-grilling': ['Capture', 'Grilling Cheese'],
   'screen-coa':      ['COA', 'COA Generator'],
   'screen-labresults':['COA', 'Lab Results'],
   'screen-coastatus':['COA', 'Status'],
