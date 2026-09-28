@@ -1040,6 +1040,8 @@ body.logged-out .topstack{display:none}
   color:var(--accent);cursor:pointer;padding:0;transition:background .15s,border-color .15s}
 .ico-btn:hover{background:var(--accent-tint);border-color:var(--accent)}
 .ico-btn:active{transform:translateY(1px)}
+/* boton de icono que queda pulsado: pruebas poco frecuentes de materia prima */
+.ico-btn.on{border-color:var(--accent);color:var(--accent);background:var(--accent-tint)}
 .ico-btn svg{width:17px;height:17px;display:block}
 .ico-btn span{display:flex}
 
@@ -1142,6 +1144,12 @@ body.logged-out .topstack{display:none}
 .new-cust .lt-box{max-height:230px;overflow-y:auto;border:1px solid var(--border);
   border-radius:var(--radius-sm);padding:8px;background:var(--surface)}
 .new-cust .cd-actions{display:flex;gap:8px}
+/* titulillo de cada bloque dentro del recuadro de alta */
+.new-cust > b{display:block;font-size:10px;font-weight:800;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--muted);margin:2px 0 8px}
+.new-cust > b ~ b{margin-top:10px}
+.new-cust .sheet-bar{margin-bottom:0}
+.new-cust .hint{font-size:11px;color:var(--dim);margin-top:10px}
 @media (max-width:520px){ .new-cust .pair{grid-template-columns:1fr} }
 
 /* Barra de seleccion del generador de COA */

@@ -79,6 +79,10 @@ function goTo(id){
   if(id==='screen-coa') initCoa();
   if(id==='screen-labresults') initLabResults();
   if(id==='screen-coastatus') initCoaStatus();
+  if(id==='screen-raw') initRawSection('raw');
+  if(id==='screen-dry') initRawSection('dry');
+  if(id==='screen-formag') initRawSection('formag');
+  if(id==='screen-rd') initRawSection('rd');
   // Mark current screen in the drawer
   document.querySelectorAll('.d-item[data-screen]').forEach(function(b){
     b.classList.toggle('current', b.getAttribute('data-screen')===id);
@@ -145,6 +149,10 @@ var CRUMBS = {
   'screen-lab':      ['Capture', 'Lab Samples'],
   'screen-analysis': ['Capture', 'Sample Analysis'],
   'screen-yeast':    ['Capture', 'Yeast & Mold'],
+  'screen-raw':      ['Capture', 'Raw Analysis'],
+  'screen-dry':      ['Capture', 'Dry 1935'],
+  'screen-formag':   ['Capture', 'Formag'],
+  'screen-rd':       ['Capture', 'R&D'],
   'screen-coa':      ['COA', 'COA Generator'],
   'screen-labresults':['COA', 'Lab Results'],
   'screen-coastatus':['COA', 'Status'],

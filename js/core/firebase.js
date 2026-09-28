@@ -72,8 +72,8 @@
 
   var historyLoadedFrom = null;   // hasta donde atras esta cargado el historial
   var listenersUp = false;
-  var BIG_COLS   = ['weights','seals','gmps','temps','metal','analysis'];  // por fecha (ventana)
-  var SMALL_COLS = ['products','holds','capa','shifts','runs']; // coleccion completa
+  var BIG_COLS   = ['weights','seals','gmps','temps','metal','analysis','raw'];  // por fecha (ventana)
+  var SMALL_COLS = ['products','holds','capa','shifts','runs','suppliers','rawItems']; // coleccion completa
 
   // Reconstruye una coleccion grande: la ventana en vivo + el historial ya
   // cargado (mas viejo que la ventana) + lo creado offline (sin _fbId).

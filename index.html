@@ -317,6 +317,13 @@
   <div id="ym-sheet"></div>
 </div>
 
+<!-- Las cuatro hojas de materia prima se pintan desde js/modules/raw.js:
+     comparten formulario, asi que solo la pantalla activa lleva contenido. -->
+<div class="screen" id="screen-raw"></div>
+<div class="screen" id="screen-dry"></div>
+<div class="screen" id="screen-formag"></div>
+<div class="screen" id="screen-rd"></div>
+
 <div class="screen" id="screen-lab">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Lab Samples</div>
@@ -1492,6 +1499,7 @@
 <script src="js/modules/lab-tests.js"></script>
 <script src="js/modules/lab-form.js"></script>
 <script src="js/modules/coa.js"></script>
+<script src="js/modules/raw.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/dashboard.js"></script>
