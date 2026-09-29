@@ -84,9 +84,109 @@ function fillGrillingDocx(r, g){
         });
         xml = xml.replace(/\{\{[A-Za-z0-9_]+\}\}/g, '');   // por si queda alguno
         zip.file('word/document.xml', xml);
+        _gxSangrias = sangriasDeTablas(xml);
         return zip.generateAsync({type:'blob', compression:'DEFLATE'});
       });
     });
+}
+
+// La sangria de cada tabla, en el orden en que aparecen en el documento.
+// El visor no la lee, y sin ella la tabla de Chemical Testing se pega al
+// margen izquierdo en vez de quedar donde la puso QA.
+var _gxSangrias = [];
+function sangriasDeTablas(xml){
+  var fuera = [];
+  var partes = xml.split('<w:tbl>');
+  for(var i = 1; i < partes.length; i++){
+    var props = partes[i].slice(0, partes[i].indexOf('</w:tblPr>'));
+    var m = /<w:tblInd w:w="(-?\d+)"(?:[^>]*w:type="(\w+)")?/.exec(props);
+    // Word lo guarda en veinteavos de punto
+    fuera.push(m ? (parseInt(m[1], 10) / 20) : 0);
+  }
+  return fuera;
+}
+
+// ===== QUE LAS TABLAS MIDAN LO QUE DICE LA FORMA =====
+// El visor pone el ancho de cada columna en el <col>, pero deja que el
+// navegador le SUME encima el relleno y el borde de cada celda. Con eso la
+// tabla de Chemical Testing salia 707px de ancho cuando en Word mide 660, y
+// como el texto se reacomodaba a un ancho que no era el suyo, los renglones
+// caian en otro sitio y la forma se veia deformada.
+//
+// Con box-sizing el ancho del <col> vuelve a ser el ancho real de la columna
+// —como la rejilla de la tabla en Word— y con table-layout fijo el navegador
+// la respeta en vez de repartir a su gusto.
+var GX_AJUSTE_TABLAS =
+  'section.docx table,section.docx col,section.docx td,section.docx th' +
+    '{box-sizing:border-box}' +
+  'section.docx table{table-layout:fixed}';
+
+function ajustarTablas(caja){
+  var st = document.createElement('style');
+  st.textContent = GX_AJUSTE_TABLAS;
+  caja.insertBefore(st, caja.firstChild);
+  // Y cada tabla vuelve a su sangria, en el mismo orden del documento.
+  // Solo las del cuerpo: las del encabezado y el pie viven en otro archivo
+  // dentro del .docx y no entran en esta cuenta.
+  var tablas = caja.querySelectorAll('section.docx > article > table');
+  for(var i = 0; i < tablas.length && i < _gxSangrias.length; i++){
+    if(_gxSangrias[i]) tablas[i].style.marginLeft = _gxSangrias[i] + 'pt';
+  }
+}
+
+// ===== REPARTIR EL CONTENIDO EN HOJAS =====
+// El visor dibuja el documento entero en una sola hoja, por alta que salga, y
+// deja que el navegador lo parta por donde caiga al imprimir: ahi es donde la
+// forma se deformaba —el corte caia en mitad de una tabla y la segunda hoja
+// salia sin encabezado—.
+//
+// Word no hace eso: llena la hoja, y lo que no cabe arranca en otra con su
+// encabezado y su pie. Eso es lo que se hace aqui: se mide cuanto cabe en la
+// hoja de carta con los margenes de la forma, y lo que se pasa se muda a una
+// hoja nueva con copia del encabezado y del pie.
+function paginarDocumento(caja){
+  var envoltura = caja.querySelector('.docx-wrapper') || caja;
+  var hoja = caja.querySelector('section.docx');
+  if(!hoja) return 0;
+
+  var css = window.getComputedStyle(hoja);
+  var alto = parseFloat(css.minHeight) || parseFloat(css.height) || 0;
+  if(!alto) return 1;                      // sin altura de pagina no hay nada que repartir
+
+  var cabecera = hoja.querySelector(':scope > header');
+  var pie      = hoja.querySelector(':scope > footer');
+  var sobra    = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom) +
+                 (cabecera ? cabecera.getBoundingClientRect().height : 0) +
+                 (pie ? pie.getBoundingClientRect().height : 0);
+  var util = alto - sobra - 2;             // 2px de respeto para no rozar el borde
+  if(util <= 0) return 1;
+
+  var hojas = 1, tope = 60;                // el tope es por si algo midiera 0 y no avanzara
+  while(tope-- > 0){
+    var cuerpo = hoja.querySelector(':scope > article');
+    if(!cuerpo) break;
+    var hijos = Array.prototype.slice.call(cuerpo.children);
+    if(hijos.length < 2) break;
+
+    // Se mide contra el inicio del cuerpo, no contra la ventana
+    var arranque = cuerpo.getBoundingClientRect().top;
+    var corte = -1;
+    for(var i = 0; i < hijos.length; i++){
+      if(hijos[i].getBoundingClientRect().bottom - arranque > util){ corte = i; break; }
+    }
+    if(corte < 0) break;                   // ya cabe todo
+    if(corte === 0) corte = 1;             // un solo bloque mas alto que la hoja: se deja
+
+    var nueva = hoja.cloneNode(false);
+    if(cabecera) nueva.appendChild(cabecera.cloneNode(true));
+    var cuerpoNuevo = cuerpo.cloneNode(false);
+    nueva.appendChild(cuerpoNuevo);
+    if(pie) nueva.appendChild(pie.cloneNode(true));
+    while(cuerpo.children.length > corte) cuerpoNuevo.appendChild(cuerpo.children[corte]);
+    envoltura.appendChild(nueva);
+    hoja = nueva; hojas++;
+  }
+  return hojas;
 }
 
 // Dibuja el .docx relleno y lo manda a imprimir. El navegador guarda en PDF.
@@ -112,7 +212,7 @@ function openGrillingPdf(rawId){
         className: 'docx',
         inWrapper: true,
         ignoreWidth: false,
-        ignoreHeight: true,        // que la hoja crezca con el contenido
+        ignoreHeight: false,       // la hoja mide lo que dice la forma: carta
         breakPages: true,
         renderHeaders: true,
         renderFooters: true,
@@ -120,25 +220,36 @@ function openGrillingPdf(rawId){
       });
     })
     .then(function(){
+      ajustarTablas(caja);        // primero el ancho real, que de el sale la altura
+      paginarDocumento(caja);
       var w = window.open('', '_blank');
       if(!w){ toast('Allow pop-ups to open the form'); return; }
       var titulo = grillingFileName(r);   // el navegador lo usa como nombre del PDF
       w.document.write(
         '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+_gxEsc(titulo)+'</title>'+
+        '</head><body>'+
+        '<button class="savebtn" onclick="window.print()">Save as PDF</button>'+
+        caja.innerHTML +
+        // Este bloque va DESPUES del contenido a proposito: el visor mete sus
+        // propios estilos ahi dentro, y el ultimo que se lee es el que manda.
         '<style>'+
-          'html,body{margin:0;padding:0;background:#f4f4f2}'+
-          '.docx-wrapper{background:transparent;padding:0;display:block}'+
-          '.docx-wrapper>section.docx{box-shadow:none;margin:0 auto 10px;background:#fff;'+'height:auto!important;min-height:0!important;overflow:visible!important}'+
+          'html,body{margin:0;padding:0;background:#8c8c8c}'+
+          '.docx-wrapper{background:transparent!important;padding:14px 0!important;'+
+            'display:block!important}'+
+          '.docx-wrapper>section.docx{box-shadow:none!important;margin:0 auto 14px!important;'+
+            'background:#fff!important;overflow:hidden!important}'+
           '@page{size:letter portrait;margin:0}'+
-          '@media print{html,body{background:#fff}'+
-            '.docx-wrapper>section.docx{margin:0;width:auto;height:auto!important}.savebtn{display:none}}'+
+          '@media print{'+
+            'html,body{background:#fff}'+
+            '.docx-wrapper{padding:0!important}'+
+            '.docx-wrapper>section.docx{margin:0!important;break-after:page;page-break-after:always}'+
+            '.docx-wrapper>section.docx:last-of-type{break-after:auto;page-break-after:auto}'+
+            '.savebtn{display:none}}'+
           '.savebtn{position:fixed;top:14px;right:16px;background:#141a17;color:#fff;border:0;'+
             'border-radius:6px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;'+
             'font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;z-index:9}'+
-        '</style></head><body>'+
-        '<button class="savebtn" onclick="window.print()">Save as PDF</button>'+
-        caja.innerHTML +
-        '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script>'+
+        '</style>'+
+        '<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>'+
         '</body></html>');
       w.document.close();
       caja.innerHTML = '';
