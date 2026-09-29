@@ -14,6 +14,40 @@ function labNorm(s){
     .replace(/[^a-z0-9&().,/ -]/g,'');
 }
 
+// ===== QUE TESTS LE TOCAN A UN PRODUCTO =====
+// Un test se elige al crear el cliente o al crear el producto, y el del
+// producto manda sobre el del cliente. Si no se eligio ninguno en ninguno de
+// los dos lados, ese producto NO va al laboratorio: no lleva forma.
+//
+// Los dos lados no guardan igual —el cliente guarda el nombre y el producto
+// guarda {sheet, label} para saber en que hoja de la forma va la columna—,
+// asi que aqui se dejan como una lista de nombres, que es lo que se enseña.
+function labTestName(t){
+  return (typeof t === 'string') ? t : ((t && t.label) || '');
+}
+
+// "Composite: 2-5 Samples" va guardado junto a los tests del producto, pero no
+// es un test: es la casilla de la forma que dice como se manda la muestra. No
+// cuenta para decidir si hay que pedirle algo al laboratorio, ni sale como punto.
+function labIsComposite(nombre){
+  return labNorm(nombre).indexOf('composite') === 0;
+}
+
+function labTestsOf(p, c){
+  var limpiar = function(lista){
+    return (lista || []).map(labTestName).filter(function(x){
+      return String(x||'').trim() && !labIsComposite(x);
+    });
+  };
+  var propios = limpiar(p && p.labTests);
+  if(propios.length) return propios;
+  if(c === undefined) c = (typeof productCustomer==='function') ? productCustomer(p) : null;
+  return limpiar(c && c.tests);
+}
+
+// Sin esto no hay nada que pedirle al laboratorio
+function hasLabTests(p, c){ return labTestsOf(p, c).length > 0; }
+
 // ===== CADA TEST, UN PUNTO DE COLOR =====
 // Escribir los nombres completos dentro de la hoja la volvia ilegible: una
 // celda con "Listeria Mono, Salmonella, Coliform & E. coli" tapaba el resto de

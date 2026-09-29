@@ -23,13 +23,19 @@ function labFormDate(d){
   return s.length===3 ? s[1]+'/'+s[2]+'/'+s[0] : String(d||'');
 }
 
-// Grupos listos para enviar: mismo cliente + mismo día
+// Grupos listos para enviar: mismo cliente + mismo día.
+// Solo entran los productos que llevan algun test: al cliente al que nunca se
+// le eligio ninguno no se le arma forma, aunque se le haya recogido muestra.
 function labFormGroups(){
   var groups = {};
   getRuns().forEach(function(r){
     if(runSampleCount(r)<=0 || !r.collected) return;
     var c = runCustomer(r);
     if(!c) return;
+    if(typeof hasLabTests === 'function'){
+      var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+      if(!hasLabTests(p, c)) return;
+    }
     var day = String(r.date).slice(0,10);
     var key = c.customerId+'|'+day;
     if(!groups[key]) groups[key] = {customer:c, date:day, runs:[], sent:0};

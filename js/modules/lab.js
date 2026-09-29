@@ -161,7 +161,11 @@ function renderLab(){
     // La leyenda va pegada a la hoja: sin ella los puntos no dicen nada en el
     // telefono, donde no se puede pasar el raton por encima.
     (typeof testsLegendHTML==='function'
-      ? testsLegendHTML(list.map(function(r){ var c=labCustomerOf(r); return c?c.tests:[]; }))
+      ? testsLegendHTML(list.map(function(r){
+          var c = labCustomerOf(r);
+          var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+          return (typeof labTestsOf==='function') ? labTestsOf(p, c) : (c?c.tests:[]);
+        }))
       : '');
   renderIcons(host);
 }
@@ -169,13 +173,18 @@ function renderLab(){
 function labRowHTML(r, i){
   var c = labCustomerOf(r);
   var ready = labReady(r);
-  var status = r.labSent ? '<span class="pill ok">Sent</span>'
+  var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
+  var suyos = (typeof labTestsOf==='function') ? labTestsOf(p, c) : ((c && c.tests) || []);
+  // Sin tests no hay nada que mandar, y el operador tiene que saber por que
+  // esa fila no le saca forma
+  var status = !suyos.length ? '<span class="soft">No lab tests</span>'
+             : r.labSent ? '<span class="pill ok">Sent</span>'
              : !r.lot ? '<span class="pill bad">Pending · LOT missing</span>'
              : !r.collected ? '<span class="pill bad">Pending · not collected</span>'
              : '<span class="pill warn">Pending</span>';
   var tests = (typeof testDotsHTML==='function')
-    ? testDotsHTML(c ? c.tests : [])
-    : (c && (c.tests||[]).length ? esc((c.tests||[]).join(', ')) : '\u2014');
+    ? testDotsHTML(suyos)
+    : (suyos.length ? esc(suyos.join(', ')) : '\u2014');
   return '<tr'+(r.labSent?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+
     '<td class="soft">'+esc(fmtDate(r.date))+'</td>'+
@@ -208,7 +217,9 @@ function exportLabCSV(){
     var c = labCustomerOf(r);
     out.push([String(r.date||'').slice(0,10), r.shift===1?'1st':'2nd', r.line||'',
       r.product||'', r.productName||'', c?c.company:'', labFormCode(r,c),
-      c?(c.tests||[]).join(' / '):'', r.lot||'', labSampleCell(r),
+      (typeof labTestsOf==='function'
+        ? labTestsOf((typeof findProduct==='function')?findProduct(r.product):null, c).join(' / ')
+        : (c?(c.tests||[]).join(' / '):'')), r.lot||'', labSampleCell(r),
       r.collected?hhmm(r.collectedAt):'', r.labSent?hhmm(r.labSentAt):'']);
   });
   downloadCSV('lab-samples-'+localDateStr()+'.csv', out);
