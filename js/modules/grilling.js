@@ -265,8 +265,8 @@ function gcRowHTML(r, i){
     '<td id="gc-ap-'+r.id+'">'+gcApproveHTML(r, g)+'</td>'+
     '<td id="gc-st-'+r.id+'">'+gcStageHTML(r, g)+'</td>'+
     '<td><button class="sheet-btn" onclick="saveGcRow('+r.id+',this)">Save</button></td>'+
-    '<td><button class="ico-btn sm" onclick="openGrillingPdf('+r.id+')" aria-label="Open the form"'+
-      ' title="Open SQF 2.4.D.3.A and save it as PDF"><span data-icon="pdf"></span></button></td>'+
+    '<td><button class="ico-btn sm" onclick="downloadGrillingDoc('+r.id+')" aria-label="Download the form"'+
+      ' title="Fill SQF 2.4.D.3.A and download it in Word"><span data-icon="doc"></span></button></td>'+
   '</tr>';
 }
 
@@ -350,5 +350,5 @@ function exportGrillingCSV(){
   downloadCSV('grilling-cheese-'+localDateStr()+'.csv', out);
 }
 
-// El documento ya no se redibuja aqui: se rellena la forma de Word original
-// y se entrega en PDF. Eso vive en js/integrations/grilling-fill.js.
+// La forma se rellena y se descarga en Word, lista para imprimir. Eso vive
+// en js/integrations/grilling-fill.js.
