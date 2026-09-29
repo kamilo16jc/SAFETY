@@ -1,0 +1,443 @@
+<title>Los hilos de SAFETY</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Lienzo de proceso: el flujo corre de izquierda a derecha, los hilos son
+   los datos que pasan de un módulo al siguiente, y el panel de la derecha
+   cuenta qué información agrega el módulo que se toca. */
+:root{
+  --bg:#f4f6f4; --surface:#ffffff; --surface-2:#eceeeb; --line:#d4dad4;
+  --ink:#141a17; --ink-2:#4a5450; --ink-3:#7c8783;
+  --qa:#047857; --lab:#0369a1; --prod:#b45309; --prd:#7c3aed; --coa:#a21caf;
+  --adm:#be123c; --neutral:#64748b;
+  --thread:#9aa5a0; --glow:#0f172a;
+  --font-sans:"IBM Plex Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+  --font-mono:"IBM Plex Mono",Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0d1210; --surface:#161d1a; --surface-2:#1e2724; --line:#2b3733;
+  --ink:#e8edea; --ink-2:#a3b0ab; --ink-3:#6f7c78;
+  --qa:#34d399; --lab:#60a5fa; --prod:#fbbf24; --prd:#c4b5fd; --coa:#f0abfc;
+  --adm:#fb7185; --neutral:#94a3b8;
+  --thread:#3d4b46; --glow:#e8edea;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1210; --surface:#161d1a; --surface-2:#1e2724; --line:#2b3733;
+  --ink:#e8edea; --ink-2:#a3b0ab; --ink-3:#6f7c78;
+  --qa:#34d399; --lab:#60a5fa; --prod:#fbbf24; --prd:#c4b5fd; --coa:#f0abfc;
+  --adm:#fb7185; --neutral:#94a3b8;
+  --thread:#3d4b46; --glow:#e8edea;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);
+  font-size:14px;line-height:1.55}
+.wrap{padding-block:26px 40px;padding-left:20px;padding-right:20px;max-width:1240px;margin:0 auto}
+
+header h1{font-size:clamp(26px,4.4vw,38px);font-weight:700;letter-spacing:-.025em;
+  margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--ink-2);max-width:62ch}
+.eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 12px;align-items:center}
+.chip{font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:6px 13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--lab);outline-offset:2px}
+.hint{font-size:12px;color:var(--ink-3);margin-left:auto}
+
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  overflow-x:auto;overflow-y:hidden;padding:4px}
+svg.map{display:block;min-width:940px;width:100%;height:auto}
+
+.node rect{transition:opacity .18s}
+.node text{pointer-events:none}
+.node{cursor:pointer}
+.thread{fill:none;transition:opacity .18s,stroke-width .18s}
+.tlabel{font-family:var(--font-mono);font-size:8.5px;fill:var(--ink-3);pointer-events:none;
+  opacity:0;transition:opacity .18s}
+.dim{opacity:.13}
+.lit .tlabel{opacity:1}
+
+.panel{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;margin-top:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card h2{font-size:17px;font-weight:700;margin:0 0 2px;letter-spacing:-.01em}
+.card .who{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-bottom:12px}
+.card h3{font-size:11px;font-weight:600;font-family:var(--font-mono);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin:15px 0 5px}
+.card p{margin:0 0 6px;color:var(--ink-2)}
+.fields{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.fields span{font-family:var(--font-mono);font-size:11px;background:var(--surface-2);
+  color:var(--ink-2);border-radius:5px;padding:2px 7px}
+.io{list-style:none;margin:0;padding:0}
+.io li{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.io li:last-child{border-bottom:0}
+.io .arrow{font-family:var(--font-mono);color:var(--ink-3);flex-shrink:0}
+.io b{font-weight:600;color:var(--ink)}
+.io small{display:block;color:var(--ink-3);font-size:11.5px}
+.stripe{height:3px;border-radius:99px;margin-bottom:13px}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.key{display:inline-block;width:22px;height:0;border-top-width:2px;flex-shrink:0}
+
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-3)}
+@media (max-width:760px){ .panel{grid-template-columns:1fr} .hint{margin-left:0;width:100%} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Caputo Foods · sistema SAFETY</div>
+  <h1>Los hilos de SAFETY</h1>
+  <p>Cada caja es una parte del sistema; cada hilo, un dato que pasa de una a otra.
+  Pasa el ratón por encima para seguir un hilo, o toca una caja para ver qué
+  información agrega ahí y de dónde le llega.</p>
+</header>
+
+<div class="controls" role="group" aria-label="Qué hilos mostrar">
+  <button class="chip" data-filter="todo" aria-pressed="true">Todo</button>
+  <button class="chip" data-filter="dato" aria-pressed="false">Solo los datos</button>
+  <button class="chip" data-filter="doc" aria-pressed="false">Lo que sale impreso</button>
+  <button class="chip" data-filter="permiso" aria-pressed="false">Permisos y registro</button>
+  <span class="hint" id="hint">18 hilos · 16 partes</span>
+</div>
+
+<div class="stage">
+  <svg class="map" id="map" viewBox="0 0 1000 620" role="img"
+       aria-label="Mapa de conexiones entre los módulos de SAFETY"></svg>
+</div>
+
+<div class="legend">
+  <span><i class="dot" style="background:var(--prd)"></i>Catálogo</span>
+  <span><i class="dot" style="background:var(--prod)"></i>Producción</span>
+  <span><i class="dot" style="background:var(--qa)"></i>QA Inspection</span>
+  <span><i class="dot" style="background:var(--lab)"></i>Laboratorio</span>
+  <span><i class="dot" style="background:var(--coa)"></i>COA</span>
+  <span><i class="dot" style="background:var(--adm)"></i>Administrador</span>
+  <span><i class="key" style="border-top:2px solid var(--thread)"></i>dato que viaja</span>
+  <span><i class="key" style="border-top:2px dashed var(--thread)"></i>permiso o registro</span>
+</div>
+
+<div class="panel">
+  <div class="card" id="detail"></div>
+  <div class="card" id="links"></div>
+</div>
+
+<footer id="foot"></footer>
+</div>
+
+<script>
+/* ── Los datos del mapa ───────────────────────────────────────────────
+   Todo esto sale de leer el código: qué escribe cada pantalla, qué campos
+   agrega y de dónde los saca. Las coordenadas son del lienzo de 1000×620. */
+var C = {prd:'--prd', prod:'--prod', qa:'--qa', lab:'--lab', coa:'--coa', adm:'--adm', n:'--neutral'};
+
+var NODOS = [
+  {id:'products', x:24,  y:250, w:150, h:62, c:C.prd, t:'Catálogo de producto',
+   sub:'Products · products.js',
+   que:'El punto de partida de casi todo. Aquí vive qué es cada producto, a qué cliente pertenece, en qué rango de peso debe salir y qué le pide el laboratorio.',
+   agrega:['número','nombre','rango de peso','bolsas por caja','cliente','tests del lab','muestras por corrida'],
+   guarda:'products · config/customers'},
+
+  {id:'schedule', x:230, y:60,  w:150, h:58, c:C.prod, t:'Schedule',
+   sub:'Production · production.js',
+   que:'Se apunta qué producto corre en qué línea. De cada renglón nace la muestra que el laboratorio va a esperar.',
+   agrega:['fecha','turno','línea','producto','cuántas muestras'],
+   guarda:'runs'},
+
+  {id:'listsamples', x:230, y:150, w:150, h:58, c:C.qa, t:'List Samples',
+   sub:'QA · samplelist.js',
+   que:'QA ve lo que tiene que recoger hoy y lo marca cuando lo hace. No crea nada nuevo: le agrega vida a la corrida que ya existe.',
+   agrega:['recogida','hora de recolección','rango de muestras numeradas'],
+   guarda:'runs (el mismo registro)'},
+
+  {id:'captura', x:230, y:250, w:150, h:72, c:C.qa, t:'Captura en línea',
+   sub:'QA · weight · seal · temp · GMP · metal',
+   que:'Las cinco pantallas de planta. Cada una guarda lo suyo y compara contra el rango que dice el catálogo; si algo se sale, lo marca en rojo y ofrece el paso siguiente.',
+   agrega:['5 pesos, promedio y cumplimiento','visual, dunk tank, impresión','temperatura y humedad','checklist de GMP','prueba del detector'],
+   guarda:'weights · seals · temps · gmps · metal'},
+
+  {id:'hold', x:230, y:372, w:150, h:58, c:C.qa, t:'Hold Cases',
+   sub:'QA · holds.js',
+   que:'Cuando algo no cumple, el producto se retiene. El caso queda abierto con su historia hasta que alguien lo libera.',
+   agrega:['número de caso','lote y cantidad','motivo','historia de cada paso'],
+   guarda:'holds'},
+
+  {id:'capa', x:230, y:454, w:150, h:58, c:C.qa, t:'CAPA',
+   sub:'QA · capa.js',
+   que:'El incidente formal: qué pasó, qué se investigó y qué se hizo. Lleva severidad y plazo.',
+   agrega:['severidad','problema','investigación','estado'],
+   guarda:'capa'},
+
+  {id:'shift', x:230, y:536, w:150, h:58, c:C.qa, t:'Shift Report',
+   sub:'QA · shift.js',
+   que:'El parte del turno. Una vez guardado, solo lo cambian manager o administrador.',
+   agrega:['área','categoría','qué pasó','acción','seguimiento'],
+   guarda:'shifts'},
+
+  {id:'labsamples', x:430, y:150, w:158, h:58, c:C.lab, t:'Lab Samples',
+   sub:'Laboratorio · lab.js · lab-form.js',
+   que:'Reúne las muestras recogidas que sí llevan algún test. Se escribe el LOT y, al generar la forma del cliente, quedan enviadas con su hora.',
+   agrega:['LOT','enviada + hora'],
+   guarda:'runs (el mismo registro)'},
+
+  {id:'analysis', x:430, y:250, w:158, h:58, c:C.lab, t:'Sample Analysis',
+   sub:'Laboratorio · analysis.js',
+   que:'El análisis del día. Nace numerado y guarda de qué corrida viene, así que el lote se puede seguir hacia atrás.',
+   agrega:['moisture','fat','pH','quién testeó','número del año'],
+   guarda:'analysis'},
+
+  {id:'yeast', x:430, y:336, w:158, h:58, c:C.lab, t:'Yeast & Mold',
+   sub:'Laboratorio · yeast.js',
+   que:'Cinco días después se lee la placa — y el domingo no cuenta. Vuelve sobre el mismo análisis; no crea otro.',
+   agrega:['yeast','mold','fecha de lectura'],
+   guarda:'analysis (el mismo registro)'},
+
+  {id:'raw', x:430, y:440, w:158, h:58, c:C.lab, t:'Raw · Dry · Formag · R&D',
+   sub:'Laboratorio · raw.js',
+   que:'Cuatro hojas con un solo motor para lo que entra por recepción. La muestra del día se enumera con letra y la placa sigue la misma regla de los cinco días.',
+   agrega:['proveedor y material','pH, moisture, fat','yeast y mold de la placa'],
+   guarda:'raw · suppliers · rawItems'},
+
+  {id:'grilling', x:430, y:526, w:158, h:58, c:C.lab, t:'Grilling Cheese',
+   sub:'Laboratorio · grilling.js',
+   que:'La forma SQF pasa por tres manos: quien recibe, quien testea y quien grilla. El laboratorio no se reescribe, se toma de Raw.',
+   agrega:['recepción y quién recibió','appearance y texture','correctivas','firma del manager'],
+   guarda:'grilling'},
+
+  {id:'labresults', x:646, y:250, w:150, h:58, c:C.coa, t:'Lab Results',
+   sub:'COA · coa.js',
+   que:'Lo que devuelve el laboratorio externo. Ese valor manda sobre el de la casa cuando se emite el certificado.',
+   agrega:['resultados del laboratorio externo'],
+   guarda:'analysis (el mismo registro)'},
+
+  {id:'coa', x:646, y:336, w:150, h:58, c:C.coa, t:'COA · Status y certificado',
+   sub:'COA · coa.js',
+   que:'El estado se calcula solo: falta la placa, falta el externo, o está completo. El certificado sale uno por cliente, y si algo cambia después sale como revisión.',
+   agrega:['número de COA','revisión','fecha y quién emitió'],
+   guarda:'analysis (el mismo registro)'},
+
+  {id:'admin', x:646, y:60, w:150, h:58, c:C.adm, t:'Users & Roles',
+   sub:'Administrador · admin.js',
+   que:'Los roles se crean aquí con casillas: qué pantallas ve y qué puede hacer. La persona solo guarda la llave de su rol.',
+   agrega:['roles con sus pantallas','permisos de editar, borrar y firmar'],
+   guarda:'config/roles · config/operators'},
+
+  {id:'consulta', x:646, y:440, w:150, h:72, c:C.n, t:'Reports · Search · Dashboard',
+   sub:'reports.js · search.js · dashboard.js',
+   que:'No escriben nada: leen todo lo anterior y lo presentan por fechas, por lote o como indicadores del día. Solo el manager puede corregir un registro guardado desde aquí.',
+   agrega:['— nada, solo consulta'],
+   guarda:'—'},
+
+  {id:'actividad', x:852, y:336, w:124, h:58, c:C.n, t:'Registro de actividad',
+   sub:'activity.js',
+   que:'Toda pantalla que guarda algo deja aquí una línea con quién, qué y cuándo. Se queda con las últimas 500 en el equipo.',
+   agrega:['quién · qué · cuándo'],
+   guarda:'activityLog'},
+
+  {id:'documentos', x:852, y:150, w:124, h:100, c:C.n, t:'Documentos que salen',
+   sub:'integrations · export',
+   que:'Las plantillas de la casa se rellenan con JSZip y se entregan: la forma del cliente en Excel, la SQF 2.4.D.3.A en Word, el certificado y los reportes en PDF, y cualquier lista en Excel.',
+   agrega:['forma del laboratorio','SQF 2.4.D.3.A','certificado de análisis','listas y reportes'],
+   guarda:'— nada; produce archivos'}
+];
+
+var HILOS = [
+  {a:'products', b:'schedule',    t:'qué producto · cuántas muestras', k:'dato'},
+  {a:'products', b:'captura',     t:'rango de peso del paquete',        k:'dato'},
+  {a:'products', b:'labsamples',  t:'cliente · forma · tests',          k:'dato'},
+  {a:'products', b:'analysis',    t:'cliente y descripción',            k:'dato'},
+  {a:'schedule', b:'listsamples', t:'la corrida del día',               k:'dato'},
+  {a:'listsamples', b:'labsamples', t:'muestra recogida + hora',        k:'dato'},
+  {a:'labsamples', b:'analysis',  t:'el LOT',                           k:'dato'},
+  {a:'labsamples', b:'documentos',t:'forma del cliente (Excel)',        k:'doc'},
+  {a:'analysis', b:'yeast',       t:'la placa espera 5 días',           k:'dato'},
+  {a:'yeast', b:'coa',            t:'placa leída',                      k:'dato'},
+  {a:'labresults', b:'coa',       t:'resultado externo',                k:'dato'},
+  {a:'analysis', b:'labresults',  t:'el análisis a certificar',         k:'dato'},
+  {a:'coa', b:'documentos',       t:'certificado (PDF)',                k:'doc'},
+  {a:'raw', b:'grilling',         t:'lo que sea grilling cheese',       k:'dato'},
+  {a:'grilling', b:'documentos',  t:'SQF 2.4.D.3.A (Word)',             k:'doc'},
+  {a:'captura', b:'hold',         t:'resultado fuera de rango',         k:'dato'},
+  {a:'hold', b:'capa',            t:'el caso escala',                   k:'dato'},
+  {a:'capa', b:'shift',           t:'lo del turno',                     k:'dato'},
+  {a:'captura', b:'consulta',     t:'todo lo capturado',                k:'dato'},
+  {a:'admin', b:'consulta',       t:'quién puede ver y corregir',       k:'permiso'},
+  {a:'admin', b:'captura',        t:'a qué pantallas entra',            k:'permiso'},
+  {a:'admin', b:'grilling',       t:'quién puede firmar',               k:'permiso'},
+  {a:'captura', b:'actividad',    t:'queda anotado',                    k:'permiso'},
+  {a:'coa', b:'actividad',        t:'queda anotado',                    k:'permiso'},
+  {a:'grilling', b:'actividad',   t:'queda anotado',                    k:'permiso'}
+];
+
+/* ── Dibujo ─────────────────────────────────────────────────────────── */
+var map = document.getElementById('map');
+var NS = 'http://www.w3.org/2000/svg';
+var porId = {}; NODOS.forEach(function(n){ porId[n.id] = n; });
+var el = function(tag, attrs){ var e = document.createElementNS(NS, tag);
+  for(var k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+// El hilo sale por el lado que mira al destino
+function anclas(a, b){
+  var ax, ay = a.y + a.h/2, bx, by = b.y + b.h/2;
+  if(b.x >= a.x + a.w){ ax = a.x + a.w; bx = b.x; }
+  else if(b.x + b.w <= a.x){ ax = a.x; bx = b.x + b.w; }
+  else { ax = a.x + a.w/2; bx = b.x + b.w/2;
+         ay = (b.y > a.y) ? a.y + a.h : a.y;
+         by = (b.y > a.y) ? b.y : b.y + b.h; }
+  return {ax:ax, ay:ay, bx:bx, by:by};
+}
+function curva(p){
+  var dx = Math.abs(p.bx - p.ax), t = Math.max(38, Math.min(120, dx * .55));
+  if(Math.abs(p.ay - p.by) < 2 && dx < 4)
+    return 'M'+p.ax+','+p.ay+' L'+p.bx+','+p.by;
+  return 'M'+p.ax+','+p.ay+' C'+(p.ax + (p.bx>p.ax?t:-t))+','+p.ay+' '+
+         (p.bx + (p.bx>p.ax?-t:t))+','+p.by+' '+p.bx+','+p.by;
+}
+
+var capaHilos = el('g', {}), capaNodos = el('g', {}), capaTextos = el('g', {});
+map.appendChild(capaHilos); map.appendChild(capaNodos); map.appendChild(capaTextos);
+
+var hilosDom = [];
+HILOS.forEach(function(h, i){
+  var a = porId[h.a], b = porId[h.b];
+  var p = anclas(a, b), d = curva(p);
+  var color = 'var(' + a.c + ')';
+  var path = el('path', {d:d, class:'thread', stroke:color, 'stroke-width':1.5,
+    'stroke-opacity':.5, 'stroke-linecap':'round'});
+  if(h.k === 'permiso') path.setAttribute('stroke-dasharray','5 4');
+  capaHilos.appendChild(path);
+
+  var mid = {x:(p.ax + p.bx)/2, y:(p.ay + p.by)/2 - 6};
+  var g = el('g', {class:'tlabel'});
+  var fondo = el('rect', {x:mid.x - (h.t.length*2.5) - 4, y:mid.y - 9,
+    width:h.t.length*5 + 8, height:13, rx:3, fill:'var(--surface)', 'fill-opacity':.92});
+  var txt = el('text', {x:mid.x, y:mid.y, 'text-anchor':'middle', class:'tlabel-t'});
+  txt.setAttribute('font-family','IBM Plex Mono, monospace');
+  txt.setAttribute('font-size','8.5'); txt.setAttribute('fill','var(--ink-2)');
+  txt.textContent = h.t;
+  g.appendChild(fondo); g.appendChild(txt);
+  capaTextos.appendChild(g);
+  hilosDom.push({path:path, label:g, h:h});
+});
+
+var nodosDom = {};
+NODOS.forEach(function(n){
+  var g = el('g', {class:'node', tabindex:'0', role:'button',
+    'aria-label':n.t + '. ' + n.que.slice(0,70)});
+  var color = 'var(' + n.c + ')';
+  g.appendChild(el('rect', {x:n.x, y:n.y, width:n.w, height:n.h, rx:9,
+    fill:'var(--surface)', stroke:color, 'stroke-width':1.5}));
+  g.appendChild(el('rect', {x:n.x, y:n.y, width:4, height:n.h, rx:2, fill:color}));
+
+  // título, partido en dos líneas si hace falta
+  var palabras = n.t.split(' '), lineas = [''], max = Math.floor(n.w/6.1);
+  palabras.forEach(function(p){
+    if((lineas[lineas.length-1] + ' ' + p).trim().length > max) lineas.push(p);
+    else lineas[lineas.length-1] = (lineas[lineas.length-1] + ' ' + p).trim();
+  });
+  var y0 = n.y + (n.h/2) - (lineas.length-1)*6 - (n.h>66 ? 4 : 0);
+  lineas.forEach(function(l, i){
+    var t = el('text', {x:n.x + 14, y:y0 + i*13, 'font-size':'11.5',
+      'font-weight':'600', fill:'var(--ink)'});
+    t.setAttribute('font-family','IBM Plex Sans, sans-serif');
+    t.textContent = l; g.appendChild(t);
+  });
+  var s = el('text', {x:n.x + 14, y:y0 + lineas.length*13 + 1, 'font-size':'8',
+    fill:'var(--ink-3)'});
+  s.setAttribute('font-family','IBM Plex Mono, monospace');
+  s.textContent = n.guarda.length > 30 ? n.guarda.slice(0,29)+'…' : n.guarda;
+  g.appendChild(s);
+
+  capaNodos.appendChild(g);
+  nodosDom[n.id] = g;
+
+  var abrir = function(){ seleccionar(n.id); };
+  g.addEventListener('click', abrir);
+  g.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); abrir(); }});
+  g.addEventListener('mouseenter', function(){ resaltar(n.id); });
+  g.addEventListener('focus', function(){ resaltar(n.id); });
+  g.addEventListener('mouseleave', function(){ resaltar(seleccion); });
+  g.addEventListener('blur', function(){ resaltar(seleccion); });
+});
+
+/* ── Resaltado ──────────────────────────────────────────────────────── */
+var filtro = 'todo', seleccion = 'products';
+
+function visible(h){ return filtro === 'todo' || h.k === filtro; }
+
+function resaltar(id){
+  hilosDom.forEach(function(x){
+    var v = visible(x.h);
+    var tocado = id && (x.h.a === id || x.h.b === id);
+    x.path.style.display = v ? '' : 'none';
+    x.label.style.display = v ? '' : 'none';
+    x.path.classList.toggle('dim', !!id && !tocado);
+    x.path.setAttribute('stroke-width', tocado ? 2.6 : 1.5);
+    x.path.setAttribute('stroke-opacity', tocado ? 1 : .5);
+    x.label.classList.toggle('lit', !!tocado);
+  });
+  NODOS.forEach(function(n){
+    var vecino = !id || n.id === id || HILOS.some(function(h){
+      return visible(h) && ((h.a===id && h.b===n.id) || (h.b===id && h.a===n.id)); });
+    nodosDom[n.id].classList.toggle('dim', !vecino);
+  });
+}
+
+function seleccionar(id){
+  seleccion = id;
+  resaltar(id);
+  var n = porId[id];
+  var color = 'var(' + n.c + ')';
+  document.getElementById('detail').innerHTML =
+    '<div class="stripe" style="background:'+color+'"></div>'+
+    '<h2>'+n.t+'</h2>'+
+    '<div class="who">'+n.sub+'</div>'+
+    '<p>'+n.que+'</p>'+
+    '<h3>Qué información agrega</h3>'+
+    '<div class="fields">'+n.agrega.map(function(f){ return '<span>'+f+'</span>'; }).join('')+'</div>'+
+    '<h3>Dónde queda guardado</h3>'+
+    '<div class="fields"><span>'+n.guarda+'</span></div>';
+
+  var entra = HILOS.filter(function(h){ return h.b===id && visible(h); });
+  var sale  = HILOS.filter(function(h){ return h.a===id && visible(h); });
+  var fila = function(h, dir){
+    var otro = porId[dir==='in' ? h.a : h.b];
+    return '<li><span class="arrow">'+(dir==='in'?'←':'→')+'</span><div>'+
+      '<b>'+otro.t+'</b><small>'+h.t+'</small></div></li>';
+  };
+  document.getElementById('links').innerHTML =
+    '<h2>Sus hilos</h2>'+
+    '<div class="who">'+(entra.length+sale.length)+' conexiones</div>'+
+    '<h3>Le llega de</h3>'+
+    (entra.length ? '<ul class="io">'+entra.map(function(h){ return fila(h,'in'); }).join('')+'</ul>'
+                  : '<p>De ningún sitio: aquí empieza el dato.</p>')+
+    '<h3>Manda a</h3>'+
+    (sale.length ? '<ul class="io">'+sale.map(function(h){ return fila(h,'out'); }).join('')+'</ul>'
+                 : '<p>A ningún sitio: aquí termina.</p>');
+}
+
+document.querySelectorAll('.chip').forEach(function(b){
+  b.addEventListener('click', function(){
+    filtro = b.getAttribute('data-filter');
+    document.querySelectorAll('.chip').forEach(function(o){
+      o.setAttribute('aria-pressed', String(o === b)); });
+    var n = HILOS.filter(visible).length;
+    document.getElementById('hint').textContent = n+' hilos · '+NODOS.length+' partes';
+    seleccionar(seleccion);
+  });
+});
+
+document.getElementById('hint').textContent = HILOS.length+' hilos · '+NODOS.length+' partes';
+document.getElementById('foot').textContent =
+  'Sacado de leer el código: 50 archivos, 773 funciones, 15 colecciones. '+
+  'Versión safety-qc-v64 · 28 de septiembre de 2026.';
+seleccionar('products');
+</script>
