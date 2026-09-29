@@ -41,7 +41,6 @@
 <div class="screen" id="screen-production">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Production Schedule</div>
-  <div class="form-meta">Run order and QC checklist</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="pr-date">Date <span class="ord" data-dateorder></span></label>
@@ -68,7 +67,6 @@
 <div class="screen" id="screen-samplelist">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">List Samples</div>
-  <div class="form-meta">What to collect from the line, and how many</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="sl-date">Date</label>
@@ -90,7 +88,6 @@
 <div class="screen" id="screen-coa">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">COA Generator</div>
-  <div class="form-meta">Certificate of analysis — built from what is already captured</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="coa-from">From <span class="ord" data-dateorder></span></label>
@@ -104,7 +101,7 @@
                autocomplete="off" oninput="renderCoa()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="coa-go" onclick="applyCoaFilters()">Apply</button></div>
+      <button class="btn-solid" id="coa-go" aria-label="Buscar" title="Buscar" onclick="applyCoaFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="ico-btn" onclick="exportCoaCSV()" aria-label="Export to Excel"
@@ -121,7 +118,6 @@
 <div class="screen" id="screen-labresults">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Lab Results</div>
-  <div class="form-meta">Results that come back from the external laboratory, and the final verdict</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="lr-from">From <span class="ord" data-dateorder></span></label>
@@ -135,7 +131,7 @@
                autocomplete="off" oninput="renderLabResults()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="lr-go" onclick="applyLrFilters()">Apply</button></div>
+      <button class="btn-solid" id="lr-go" aria-label="Buscar" title="Buscar" onclick="applyLrFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="ico-btn" onclick="exportLabResultsCSV()" aria-label="Export to Excel"
@@ -152,7 +148,6 @@
 <div class="screen" id="screen-coastatus">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Status</div>
-  <div class="form-meta">Where every sample stands, by LOT</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="st-from">From <span class="ord" data-dateorder></span></label>
@@ -166,7 +161,7 @@
                autocomplete="off" oninput="renderCoaStatus()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="st-go" onclick="applyStFilters()">Apply</button></div>
+      <button class="btn-solid" id="st-go" aria-label="Buscar" title="Buscar" onclick="applyStFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="ico-btn" onclick="exportCoaStatusCSV()" aria-label="Export to Excel"
@@ -215,7 +210,6 @@
 <div class="screen" id="screen-admin">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Users &amp; Roles</div>
-  <div class="form-meta">Who gets in, and what each role sees and can do</div>
 
   <div class="fgrid narrow-left">
     <div class="fcol">
@@ -273,7 +267,6 @@
 <div class="screen" id="screen-analysis">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Sample Analysis</div>
-  <div class="form-meta">Moisture, Fat and pH — this is what marks a product as tested</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="an-from">Date from <span class="ord" data-dateorder></span></label>
@@ -287,7 +280,7 @@
                oninput="renderAnalysisRows()" onkeydown="anOnKey(event)">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="an-go" onclick="applyAnFilters()">Apply</button></div>
+      <button class="btn-solid" id="an-go" aria-label="Buscar" title="Buscar" onclick="applyAnFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-ghost" onclick="exportAnalysisCSV()"><span data-icon="download"></span>Export</button></div>
@@ -304,7 +297,6 @@
 <div class="screen" id="screen-yeast">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Yeast &amp; Mold</div>
-  <div class="form-meta">Plates from Sample Analysis — read 5 days after the sample</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="ym-from">Sampled from <span class="ord" data-dateorder></span></label>
@@ -318,7 +310,7 @@
                oninput="renderYeast()" onkeydown="ymOnKey(event)">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="ym-go" onclick="applyYmFilters()">Apply</button></div>
+      <button class="btn-solid" id="ym-go" aria-label="Buscar" title="Buscar" onclick="applyYmFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-ghost" onclick="exportYeastCSV()"><span data-icon="download"></span>Export</button></div>
@@ -337,7 +329,7 @@
 <div class="screen" id="screen-grilling">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Grilling Cheese</div>
-  <div class="form-meta">SQF # 2.4.D.3.A &mdash; every grilling cheese lot recorded in Raw Analysis</div>
+  <div class="form-meta">SQF # 2.4.D.3.A</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="gc-from">Tested from <span class="ord" data-dateorder></span></label>
@@ -351,7 +343,7 @@
                oninput="renderGrilling()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="gc-go" onclick="applyGcFilters()">Apply</button></div>
+      <button class="btn-solid" id="gc-go" aria-label="Buscar" title="Buscar" onclick="applyGcFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="ico-btn" onclick="exportGrillingCSV()" aria-label="Export to Excel"
@@ -377,7 +369,6 @@
 <div class="screen" id="screen-lab">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Lab Samples</div>
-  <div class="form-meta">Samples due to the lab, from the production schedule</div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="lab-from">From <span class="ord" data-dateorder></span></label>
@@ -391,7 +382,7 @@
         <option value="all">All</option>
       </select></div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="lab-go" onclick="applyLabFilters()">Apply</button></div>
+      <button class="btn-solid" id="lab-go" aria-label="Buscar" title="Buscar" onclick="applyLabFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="ico-btn" onclick="exportLabPDF()" aria-label="Export to PDF"
@@ -559,7 +550,6 @@
   <div class="page-head">
     <div>
       <div class="form-title">Dashboard</div>
-      <div class="form-meta">Quality performance across weight, seal, GMP, temperature and metal detection</div>
     </div>
   </div>
 
@@ -592,7 +582,7 @@
           <option value="1">1st shift</option><option value="2">2nd shift</option>
         </select></div></div>
       <div class="f-field"><label>&nbsp;</label>
-        <button class="btn-solid" id="dash-go" style="justify-content:center" onclick="applyDashFilters()">Apply</button></div>
+        <button class="btn-solid" id="dash-go" aria-label="Buscar" title="Buscar" style="justify-content:center" onclick="applyDashFilters()"><span data-icon="search"></span></button></div>
     </div>
     <div class="date-echo" id="dash-date-echo" style="display:none"></div>
     <div class="hint" id="dash-dirty" style="display:none">Filters changed — press Apply to load them.</div>
@@ -681,7 +671,7 @@
 <div class="screen" id="screen-gmp">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">GMP Audit</div>
-  <div class="form-meta">SQF # 2.5.D.A · Daily GMP Facility Audit</div>
+  <div class="form-meta">SQF # 2.5.D.A</div>
   <div class="fgrid narrow-right">
   <div class="fcol">
   <div class="sec-label">Location</div>
@@ -728,7 +718,7 @@
 <div class="screen" id="screen-temp">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Temp & Humidity</div>
-  <div class="form-meta">Building 1945 · SQF # 2.5.D.A</div>
+  <div class="form-meta">SQF # 2.5.D.A</div>
   <div class="fgrid">
   <div class="fcol">
 
@@ -803,7 +793,6 @@
 <div class="screen" id="screen-addproduct">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Add Product</div>
-  <div class="form-meta">New products only — to change one that already exists, use Product Catalog</div>
 
   <div class="fgrid">
   <div class="fcol">
@@ -850,7 +839,7 @@
   <div class="page-head">
     <div>
       <div class="form-title">Products</div>
-      <div class="form-meta"><b id="cat-count">0</b> products in the catalog · search one to edit it</div>
+      <div class="form-meta"><b id="cat-count">0</b> products</div>
     </div>
     <div class="ph-tools">
       <div class="search-wrap">
@@ -890,7 +879,6 @@
 <div class="screen" id="screen-metal">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Metal Detector Check</div>
-  <div class="form-meta">Routine metal detector verification</div>
   <div class="fgrid narrow-right">
   <div class="fcol">
 
@@ -945,7 +933,7 @@
   <div class="page-head">
     <div>
       <div class="form-title">Incident &amp; CAPA</div>
-      <div class="form-meta">SQF #2.5.C.2 · Incident report and corrective/preventative action</div>
+      <div class="form-meta">SQF #2.5.C.2</div>
     </div>
   </div>
 
@@ -1024,7 +1012,6 @@
   <div class="page-head">
     <div>
       <div class="form-title">Shift Reports</div>
-      <div class="form-meta">Notes of shift events that don't require a CAPA</div>
     </div>
   </div>
 
@@ -1104,7 +1091,6 @@
 <div class="screen" id="screen-reports">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title" id="title-reports">Reports</div>
-  <div class="form-meta" id="meta-reports">Filter and export records to PDF</div>
 
   <!-- FILTERS -->
   <div class="gmp-section" style="margin-bottom:18px">
@@ -1223,7 +1209,6 @@
 <div class="screen" id="screen-hold">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Hold Cases</div>
-  <div class="form-meta">Product on hold, under review, released or destroyed</div>
 
   <!-- El menu son los estados: cada tarjeta dice cuantos casos hay y filtra la hoja -->
   <div class="kpi-row" id="hold-kpis"></div>
@@ -1301,7 +1286,6 @@
   <div class="page-head">
     <div>
       <div class="form-title">Search</div>
-      <div class="form-meta">Full traceability by LOT, product number, barcode or description</div>
     </div>
   </div>
 
@@ -1313,7 +1297,7 @@
                autocomplete="off" autocapitalize="characters" onkeydown="searchOnKey(event)">
       </div>
       <button class="btn-ghost" onclick="openScanner('search')"><span data-icon="scan"></span>Scan</button>
-      <button class="btn-solid" id="search-go" onclick="runSearch()">Search</button>
+      <button class="btn-solid" id="search-go" aria-label="Buscar" title="Buscar" onclick="runSearch()"><span data-icon="search"></span></button>
       <button class="btn-ghost" onclick="clearSearch()">Clear</button>
     </div>
     <div class="filter-grid">
@@ -1374,7 +1358,6 @@
 <div class="screen" id="screen-activity">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Activity Log</div>
-  <div class="form-meta">Last 24 hours · Tap calendar to search by date</div>
 
   <!-- Type filters -->
   <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">

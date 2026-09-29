@@ -152,7 +152,6 @@ function rawScreenHTML(){
   return '' +
   '<button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>'+
   '<div class="form-title">'+esc(cfg.titulo)+'</div>'+
-  '<div class="form-meta">'+esc(cfg.sub)+' — yeast and mold plates are read 5 days later</div>'+
 
   '<div class="sheet-bar">'+
     '<div class="sb-field"><label for="rw-from">From <span class="ord" data-dateorder></span></label>'+
@@ -166,7 +165,7 @@ function rawScreenHTML(){
       '<input type="search" id="rw-search" placeholder="Sample, code, cheese, supplier…" autocomplete="off"'+
       ' oninput="renderRawRows()"></div></div>'+
     '<div class="sb-field"><label>&nbsp;</label>'+
-      '<button class="btn-solid" id="rw-go" onclick="applyRwFilters()">Apply</button></div>'+
+      '<button class="btn-solid" id="rw-go" onclick="applyRwFilters()" aria-label="Buscar" title="Buscar"><span data-icon="search"></span></button></div>'+
     '<span class="sb-gap"></span>'+
     '<div class="sb-field"><label>&nbsp;</label>'+
       '<button class="ico-btn" id="rw-extra-btn" onclick="toggleRawExtra()" aria-label="Extra tests"'+

@@ -1480,3 +1480,20 @@ body.logged-out .topstack{display:none}
   .hs-recent .hs-ico{display:flex;width:16px;height:16px}
   .hs-recent .hs-ico svg{width:16px;height:16px}
 }
+
+/* ============================================================
+   MENOS LETRA EN LOS FILTROS
+   El rotulo de cada campo repetia lo que ya dice el propio campo.
+   Se queda en el HTML para los lectores de pantalla, pero a la vista
+   solo sobrevive el dd/mm/yyyy, que avisa del orden de la fecha.
+   ============================================================ */
+.sheet-bar .sb-field > label{font-size:0;line-height:0;margin:0 0 3px;min-height:12px}
+.sheet-bar .sb-field > label .ord{font-size:10px;line-height:1.2;font-weight:600;
+  letter-spacing:.04em;color:var(--dim);text-transform:none}
+.sheet-bar .btn-solid{display:inline-flex;align-items:center;justify-content:center;
+  gap:0;padding:9px 12px}
+.sheet-bar .btn-solid svg{width:17px;height:17px}
+/* Salvo donde el rotulo es lo unico que dice que campo es: en el alta de
+   proveedor y material no hay valor a la vista que lo delate. */
+.new-cust .sheet-bar .sb-field > label{font-size:10px;line-height:1.3;font-weight:800;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
