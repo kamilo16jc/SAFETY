@@ -733,8 +733,27 @@ function viewWeightRecord(id){
   var t = recTarget(w);
   var cls = w.compliance==null ? '' : w.compliance>=80 ? 'ok' : 'bad';
 
+  // Un registro de línea parada (Line down, On break, Labeling) no lleva pesos:
+  // se hizo justamente porque no se pudo pesar. Al corregirle la hora no se le
+  // pueden pedir samples ni paquete, que no los tiene ni los va a tener.
+  var issue = w.issue ? (WEIGHT_ISSUES[w.issue] || {label:cap1(w.issue)}) : null;
+
   var body;
-  if(edit){
+  if(edit && issue){
+    body =
+      '<div class="rec-grid">'+
+        recRow('Line status', '<span class="pill bad">'+esc(issue.label)+'</span>')+
+        recEdit('Date','<input type="date" class="field" id="ew-date" value="'+(String(w.date).slice(0,10))+'">')+
+        recEdit('Time','<input type="time" class="field" id="ew-time" value="'+(w.time||'')+'">')+
+        recEdit('Line','<select class="field" id="ew-line">'+lineOpts(w.line)+'</select>')+
+        recEdit('Shift','<select class="field" id="ew-shift">'+shiftOpts(w.shift)+'</select>')+
+        recEdit('Initials','<input type="text" class="field" id="ew-initials" value="'+esc(w.initials||'')+'">')+
+      '</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
+        '<textarea class="field" id="ew-comments" rows="2">'+esc(w.comments||'')+'</textarea>'+
+        '<div class="rec-hint">No weights were taken on this record, so there is nothing to '+
+        'recalculate.</div></div>';
+  } else if(edit){
     var pkgSel = PKGS.map(function(p,i){ return '<option value="'+i+'"'+(w.pkg===i?' selected':'')+'>'+p.label+'</option>'; }).join('');
     if(w.pkg==null && w.pkgLabel) pkgSel += '<option value="keep" selected>'+esc(w.pkgLabel)+' (keep)</option>';
     var samps = '';
@@ -758,6 +777,15 @@ function viewWeightRecord(id){
         '<div class="rec-hint">Compliance is recalculated from these against the target range.</div></div>'+
       '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
         '<textarea class="field" id="ew-comments" rows="2">'+esc(w.comments||'')+'</textarea></div>';
+  } else if(issue){
+    body =
+      '<div class="rec-grid">'+
+        recRow('Line status', '<span class="pill bad">'+esc(issue.label)+'</span>')+
+        recRow('Date', fmtDate(w.date))+ recRow('Time', w.time||'—')+
+        recRow('Line', 'Line '+w.line)+ recRow('Shift', w.shift===1?'1st':'2nd')+
+        recRow('By', esc(w.initials||'—'))+
+      '</div>'+
+      recBlock('Comments', w.comments);
   } else {
     var sampTxt = (w.vals||[]).map(function(v){ return parseFloat(v).toFixed(3); }).join(' · ');
     body =
@@ -779,7 +807,8 @@ function viewWeightRecord(id){
       '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
     : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
-  openRecordModal('Weight record'+(w.lot?' · LOT '+esc(w.lot):''), body, actions);
+  openRecordModal((issue ? 'Line status record' : 'Weight record')+
+    (w.lot?' · LOT '+esc(w.lot):''), body, actions);
 }
 
 function recEdit(label, control){
@@ -792,6 +821,26 @@ function saveWeightEdit(id){
   var w = (db.weights||[]).filter(function(x){ return x.id===id; })[0];
   if(!w) return;
   var g = function(k){ var e=document.getElementById(k); return e?e.value.trim():''; };
+
+  // Línea parada: no hay pesos que pedir ni compliance que recalcular. Se
+  // corrige la hora, la línea, el turno, las iniciales o el comentario y ya.
+  if(w.issue){
+    w.date     = isoFromDateTime(g('ew-date'), g('ew-time'));
+    w.time     = g('ew-time');
+    w.line     = parseInt(g('ew-line'))||w.line;
+    w.shift    = parseInt(g('ew-shift'))||w.shift;
+    w.initials = g('ew-initials');
+    w.comments = g('ew-comments');
+    persistRecordEdit('weights', w, db);
+    var info = WEIGHT_ISSUES[w.issue] || {label:w.issue};
+    logActivity('weight','Line status record edited',
+      'Line '+w.line+' · '+info.label+' · '+(w.time||'—'),
+      currentUser?currentUser.name:'—');
+    closeRecordModal();
+    runSearch();
+    toast('Record updated');
+    return;
+  }
 
   var vals = [];
   document.querySelectorAll('#rec-modal-body [data-sample]').forEach(function(inp){
