@@ -168,6 +168,7 @@ function ribbonOpen(modId){
 function ribbonGo(modId, screen){
   activeModule = modId;
   ribbonTab = modId;
+  ribbonRemember(screen, modId);
   goTo(screen);
 }
 
@@ -227,4 +228,84 @@ if(typeof document !== 'undefined'){
   document.addEventListener('DOMContentLoaded', function(){
     document.body.classList.toggle('ui-ribbon', ribbonOn());
   });
+}
+
+// ===== LA PANTALLA DE INICIO CON LA CINTA =====
+// Con la cinta, las seis tarjetas del inicio sobran: ya no son el camino a
+// ningun sitio, solo ocupan la pantalla. En su lugar va lo que de verdad sirve
+// al abrir la aplicacion — que falta hoy y donde estabas —, con todo a un
+// clic. En el telefono no cambia nada: alli las tarjetas siguen siendo el menu.
+
+// Lo ultimo que se abrio, para volver sin buscar
+function ribbonRemember(screenId, modId){
+  if(!screenId || screenId === 'screen-home' || screenId === 'screen-module') return;
+  try {
+    var l = JSON.parse(localStorage.getItem('safety_recent') || '[]');
+    l = l.filter(function(x){ return x.s !== screenId; });
+    l.unshift({s:screenId, m:modId || activeModule || ''});
+    localStorage.setItem('safety_recent', JSON.stringify(l.slice(0, 6)));
+  } catch(e){}
+}
+function ribbonRecent(){
+  try { return JSON.parse(localStorage.getItem('safety_recent') || '[]'); } catch(e){ return []; }
+}
+
+// Lo que quedo a medias, contado sobre lo que ya hay en el equipo
+function ribbonPendientes(){
+  var hoy = (typeof localDateStr === 'function') ? localDateStr() : '';
+  var out = [];
+
+  if(typeof getRuns === 'function' && typeof runSampleCount === 'function'){
+    var porRecoger = getRuns().filter(function(r){
+      return String(r.date||'').slice(0,10) === hoy && runSampleCount(r) > 0 && !r.collected;
+    }).length;
+    out.push({n:porRecoger, t:'muestras por recoger', s:'screen-samplelist', m:'qa'});
+  }
+  if(typeof labFormGroups === 'function'){
+    var formas = labFormGroups().filter(function(g){ return g.sent < g.runs.length; }).length;
+    out.push({n:formas, t:'formas del laboratorio por enviar', s:'screen-lab', m:'lab'});
+  }
+  if(typeof ymDone === 'function' && typeof ymDueDate === 'function'){
+    var placas = (getDB().analysis || []).filter(function(a){
+      return !ymDone(a) && ymDueDate(a) && ymDueDate(a) <= hoy;
+    }).length;
+    out.push({n:placas, t:'placas listas para leer', s:'screen-yeast', m:'lab'});
+  }
+  if(typeof getHolds === 'function'){
+    var holds = getHolds().filter(function(h){ return h.status === 'hold'; }).length;
+    out.push({n:holds, t:holds === 1 ? 'producto retenido' : 'productos retenidos', s:'screen-hold', m:'qa'});
+  }
+  // Solo lo que este usuario puede abrir
+  return out.filter(function(p){
+    return (typeof canSeeScreen !== 'function') || canSeeScreen(p.s);
+  });
+}
+
+function renderRibbonStart(){
+  var host = document.getElementById('home-start');
+  if(!host) return false;
+  if(!ribbonOn() || window.innerWidth < RIBBON_MIN){ host.innerHTML = ''; return false; }
+
+  var pend = ribbonPendientes();
+  var tarjetas = pend.map(function(p){
+    return '<button class="hs-card'+(p.n ? ' hs-live' : '')+'" type="button" '+
+      'onclick="ribbonGo(\''+p.m+'\',\''+p.s+'\')">'+
+      '<b>'+p.n+'</b><span>'+esc(p.t)+'</span></button>';
+  }).join('');
+
+  var rec = ribbonRecent().map(function(x){
+    var m = moduleById(x.m), item = null;
+    MODULES.forEach(function(mm){ mm.items.forEach(function(i){
+      if(i.screen === x.s && (!item || mm.id === x.m)) item = i; }); });
+    if(!item || (typeof canSeeScreen === 'function' && !canSeeScreen(x.s))) return '';
+    return '<button class="hs-recent" type="button" onclick="ribbonGo(\''+(x.m||'')+'\',\''+x.s+'\')">'+
+      '<span class="hs-ico" data-icon="'+item.icon+'" style="color:'+(item.color || (m?m.ink:''))+'"></span>'+
+      esc(item.name)+'</button>';
+  }).join('');
+
+  host.innerHTML =
+    (tarjetas ? '<div class="hs-label">Hoy</div><div class="hs-grid">'+tarjetas+'</div>' : '')+
+    (rec ? '<div class="hs-label">Donde estabas</div><div class="hs-recents">'+rec+'</div>' : '');
+  renderIcons(host);
+  return true;
 }

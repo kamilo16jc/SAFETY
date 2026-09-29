@@ -249,8 +249,11 @@ function initHome(){
   first = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   document.getElementById('home-name').textContent = first || 'Welcome';
 
-  // Home = sólo los módulos a los que el usuario tiene acceso
+  // Con la cinta el inicio no es un menu: las funciones ya estan arriba, asi
+  // que aqui va lo que falta hoy y donde estabas. Sin cinta, las tarjetas.
+  var conCinta = (typeof renderRibbonStart === 'function') && renderRibbonStart();
   var ml = document.getElementById('home-modules');
+  if(conCinta){ if(ml) ml.innerHTML = ''; return; }
   if(ml && typeof myModules==='function'){
     ml.innerHTML = myModules().map(function(m){
       var n = ((typeof moduleItemsFor==='function') ? moduleItemsFor(m) : m.items)

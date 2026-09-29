@@ -1443,3 +1443,40 @@ body.logged-out .topstack{display:none}
   body.ui-ribbon .screen > .back-btn{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .rb-body,.rb-cmd{transition:none} }
+
+/* ============================================================
+   INICIO CON CINTA (solo escritorio)
+   Las tarjetas de modulo sobran cuando todo esta en la cinta:
+   este espacio cuenta lo que falta hoy y a que se vuelve.
+   ============================================================ */
+.home-start{display:none}
+@media (min-width:1024px){
+  body.ui-ribbon .home-start{display:block;max-width:none}
+  body.ui-ribbon #home-modules{display:none}
+
+  .hs-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--dim);margin:0 0 9px}
+  .hs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;
+    margin-bottom:26px;max-width:960px}
+  .hs-card{appearance:none;text-align:left;font:inherit;cursor:pointer;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;transition:border-color .14s ease,transform .14s ease}
+  .hs-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .hs-card:active{transform:none}
+  .hs-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .hs-card b{display:block;font-size:30px;font-weight:700;line-height:1;color:var(--dim);
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .hs-card span{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.35}
+  .hs-card.hs-live b{color:var(--fail)}
+  .hs-card.hs-live{border-left:3px solid var(--fail)}
+
+  .hs-recents{display:flex;flex-wrap:wrap;gap:8px}
+  .hs-recent{appearance:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--text);
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:7px 13px 7px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    transition:border-color .14s ease}
+  .hs-recent:hover{border-color:var(--accent)}
+  .hs-recent:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .hs-recent .hs-ico{display:flex;width:16px;height:16px}
+  .hs-recent .hs-ico svg{width:16px;height:16px}
+}
