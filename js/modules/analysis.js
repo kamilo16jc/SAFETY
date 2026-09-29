@@ -358,11 +358,20 @@ function csvCell(v){
   v = String(v==null?'':v);
   return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
 }
+// Lo que bajan todas las listas del sistema. Se sigue llamando CSV por
+// historia, pero entrega un .xlsx: el CSV separado por comas se abria corrido
+// en los equipos con Windows en español, que separan por punto y coma, y la
+// fila entera caia en la primera celda. El CSV crudo queda de repuesto.
 function downloadCSV(name, rows){
+  if(typeof downloadSheet === 'function'){ downloadSheet(name, rows); return; }
+  downloadCSVRaw(name, rows);
+}
+
+function downloadCSVRaw(name, rows){
   var csv = rows.map(function(r){ return r.map(csvCell).join(','); }).join('\r\n');
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'}));
-  a.download = name;
+  a.download = String(name||'export').replace(/\.xlsx$/i, '.csv');
   a.click();
   URL.revokeObjectURL(a.href);
 }
