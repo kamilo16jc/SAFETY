@@ -1363,3 +1363,83 @@ body.logged-out .topstack{display:none}
   .acc-grid{grid-template-columns:1fr}
   .acc-panel{padding:14px}
 }
+
+
+/* ============================================================
+   LA CINTA (solo escritorio, >=1024px)
+   Marco en Segoe UI —la letra de Office— y hojas en Aptos Narrow,
+   que es lo que Excel pone en las celdas; si el equipo no la tiene,
+   cae en Calibri. Por debajo de 1024px no aplica nada de esto: el
+   telefono del operador queda exactamente igual.
+   ============================================================ */
+.ribbon{display:none}
+
+@media (min-width:1024px){
+  body.ui-ribbon{
+    --font-ui:'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,sans-serif;
+    --font-sheet:'Aptos Narrow','Aptos',Calibri,'Segoe UI',system-ui,sans-serif;
+    font-family:var(--font-ui);
+  }
+  body.ui-ribbon .topbar,body.ui-ribbon button,body.ui-ribbon input,
+  body.ui-ribbon select,body.ui-ribbon textarea{font-family:var(--font-ui)}
+  /* los datos, con la letra de las celdas y cifras de ancho fijo */
+  body.ui-ribbon .sheet,body.ui-ribbon .cat-table,
+  body.ui-ribbon .sheet input.cell,body.ui-ribbon .sheet select.cell{
+    font-family:var(--font-sheet);font-variant-numeric:tabular-nums}
+
+  body.ui-ribbon .ribbon{display:block;background:var(--surface2);
+    border-bottom:1px solid var(--border)}
+  body.logged-out .ribbon{display:none!important}
+
+  /* pestañas */
+  .rb-tabs{display:flex;align-items:stretch;background:var(--surface);
+    border-bottom:1px solid var(--border);padding:0 18px}
+  .rb-tab{appearance:none;border:0;background:transparent;font:inherit;font-size:12.5px;
+    color:var(--muted);padding:7px 14px 6px;cursor:pointer;position:relative;
+    border-radius:var(--radius-sm) var(--radius-sm) 0 0;white-space:nowrap}
+  .rb-tab:hover{background:var(--surface2);color:var(--text)}
+  .rb-tab[aria-selected="true"]{color:var(--tabcolor);font-weight:700}
+  .rb-tab[aria-selected="true"]::after{content:"";position:absolute;left:11px;right:11px;
+    bottom:-1px;height:2px;background:var(--tabcolor);border-radius:2px 2px 0 0}
+  .rb-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .rb-kt{display:none;position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+    background:var(--text);color:var(--surface);font-size:9px;font-weight:700;
+    padding:0 4px;border-radius:2px;line-height:1.5}
+  body.rb-keytips .rb-kt{display:block}
+  .rb-collapse{margin-left:auto;align-self:center;border:0;background:transparent;
+    color:var(--dim);cursor:pointer;padding:5px 9px;border-radius:var(--radius-sm);font-size:11px}
+  .rb-collapse:hover{background:var(--surface2);color:var(--text)}
+
+  /* cuerpo */
+  .rb-body{overflow:hidden;transition:height .18s cubic-bezier(.33,0,.1,1)}
+  .ribbon[data-collapsed="true"] .rb-body{height:0}
+  .rb-groups{display:flex;align-items:stretch;padding:4px 14px 0;overflow-x:auto}
+  .rb-group{display:flex;flex-direction:column;padding:0 10px 3px;position:relative;flex-shrink:0}
+  .rb-group + .rb-group::before{content:"";position:absolute;left:0;top:7px;bottom:19px;
+    width:1px;background:var(--border)}
+  .rb-cmds{display:flex;align-items:flex-start;gap:2px;flex:1}
+  .rb-gname{font-size:10px;color:var(--dim);text-align:center;padding-top:3px}
+
+  .rb-cmd{appearance:none;border:0;background:transparent;font:inherit;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;
+    padding:5px 3px 4px;border-radius:var(--radius-sm);cursor:pointer;line-height:1.15;
+    transition:background .12s ease,transform .12s ease}
+  .rb-cmd:hover{background:var(--surface)}
+  .rb-cmd:active{transform:scale(.97)}
+  .rb-cmd[aria-current="true"]{background:var(--surface);
+    box-shadow:inset 0 0 0 1px var(--border)}
+  .rb-cmd:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .rb-cmd .rb-ico{width:20px;height:20px;display:grid;place-items:center;color:var(--accent)}
+  .rb-cmd .rb-ico svg{width:18px;height:18px}
+  .rb-cmd > span:last-child{font-size:10.5px;color:var(--muted);text-align:center;max-width:60px}
+  .rb-cmd[aria-current="true"] > span:last-child{color:var(--text);font-weight:700}
+  .rb-cmd.soon{opacity:.45;cursor:default}
+
+  /* con cinta, la barra superior se achica: el sitio lo necesita la cinta */
+  body.ui-ribbon .topbar{height:46px}
+  body.ui-ribbon .topbar .tb-crumb b{font-size:13px}
+  body.ui-ribbon .screen{min-height:calc(100vh - 190px)}
+  /* el boton de volver sobra cuando todo esta a un clic */
+  body.ui-ribbon .screen > .back-btn{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .rb-body,.rb-cmd{transition:none} }

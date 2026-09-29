@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'safety-qc-v64';
+const CACHE = 'safety-qc-v65';
 
 const SHELL = [
   './',
@@ -11,7 +11,7 @@ const SHELL = [
   './css/styles.css',
   './apple-touch-icon.png',
   './js/main.js',
-  './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/utils.js',
+  './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/utils.js',
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
   './js/modules/weight.js','./js/modules/seal.js','./js/modules/dashboard.js',

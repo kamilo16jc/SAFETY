@@ -101,6 +101,11 @@ function goTo(id){
     if(m) activeModule = m;
   }
   if(typeof renderModuleBar==='function') renderModuleBar(id);
+  // La cinta (solo escritorio) marca la funcion abierta y su pestaña
+  if(typeof renderRibbon==='function'){
+    var _rb = document.getElementById('ribbon');
+    if(_rb && !_rb.firstChild) renderRibbon(); else if(typeof ribbonMark==='function') ribbonMark(id);
+  }
   applyScreenAccent(id);
   updateTopbar(id);
 }

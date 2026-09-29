@@ -28,9 +28,11 @@
   <div class="user-menu" id="user-menu">
     <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
     <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
+    <button class="um-item" onclick="toggleRibbonUI()"><span data-icon="grid"></span>Cinta / vista clásica</button>
     <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
   </div>
 </header>
+  <div class="ribbon" id="ribbon"></div>
 </div>
 
 <!-- DRAWER -->
@@ -1534,6 +1536,7 @@
 <script src="js/core/icons.js"></script>
 <script src="js/core/modules.js"></script>
 <script src="js/core/nav.js"></script>
+<script src="js/core/ribbon.js"></script>
 <script src="js/core/dup-guard.js"></script>
 <script src="js/modules/products.js"></script>
 <script src="js/modules/catalog.js"></script>
