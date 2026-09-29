@@ -2,3 +2,8 @@ index_original_backup.html
 GMP.xlsm
 Metal detector Check.docx
 serve.tmp.py
+
+# Herramientas de diseño del agente: viven solo en este equipo
+.agents/
+.claude/
+skills-lock.json
