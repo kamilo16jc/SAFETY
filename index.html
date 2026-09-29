@@ -213,7 +213,7 @@
 <div class="screen" id="screen-admin">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Users &amp; Roles</div>
-  <div class="form-meta">Who gets in, and what each one can do</div>
+  <div class="form-meta">Who gets in, and what each role sees and can do</div>
 
   <div class="fgrid narrow-left">
     <div class="fcol">
@@ -221,17 +221,12 @@
       <input type="text" class="field" id="admin-name" placeholder="Full name" style="margin-bottom:8px">
       <input type="text" class="field" id="admin-username" placeholder="Username" autocapitalize="none" style="margin-bottom:8px">
       <input type="email" class="field" id="admin-email" placeholder="Email (optional)" autocapitalize="none" style="margin-bottom:8px">
-      <input type="password" class="field" id="admin-pass" placeholder="Password &mdash; minimum 4 characters" style="margin-bottom:14px">
+      <input type="password" class="field" id="admin-pass" placeholder="Password &mdash; minimum 4 characters" style="margin-bottom:12px">
       <div class="sec-label">Role</div>
-      <div class="role-row" id="admin-roles">
-        <button class="rpt-filter-btn active" id="role-operator" data-role="operator" onclick="setRole(this)">Operator</button>
-        <button class="rpt-filter-btn" id="role-supervisor" data-role="supervisor" onclick="setRole(this)">Supervisor</button>
-        <button class="rpt-filter-btn" id="role-admin" data-role="admin" onclick="setRole(this)">Admin</button>
-      </div>
-      <div class="hint" id="admin-role-hint"></div>
+      <div class="select-wrap"><select class="field" id="admin-role"></select></div>
       <button class="main-btn" onclick="addOperator()">Add user</button>
-      <div class="hint">The role decides what the person sees from day one. To give or take
-        something away one by one, use <b>Access</b> next to their name.</div>
+      <div class="hint">The role carries the access. To change what someone sees,
+        change their role below &mdash; or give them a different one.</div>
     </div>
 
     <div class="fcol">
@@ -240,7 +235,12 @@
     </div>
   </div>
 
-  <div id="admin-access"></div>
+  <div class="sec-head">
+    <div class="sec-label">Roles</div>
+    <button class="btn-ghost" onclick="newRole()"><span data-icon="plus"></span>New role</button>
+  </div>
+  <div id="roles-list"></div>
+  <div id="role-editor"></div>
 </div>
 
 <!-- HOME -->

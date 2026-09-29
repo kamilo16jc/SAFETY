@@ -156,6 +156,9 @@
     onSnapshot(doc(db,'config','labCounters'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.labCounters=d.data().counters||{}; saveDB(ldb); }
     }, function(){});
+    onSnapshot(doc(db,'config','roles'), function(d){
+      if(d.exists()){ var l=d.data().list||[]; if(l.length){ var rdb=getDB(); rdb.roles=l; saveDB(rdb,'roles'); } }
+    }, function(){});
     onSnapshot(doc(db,'config','operators'), function(d){
       if(d.exists()){ var list=d.data().list||[]; if(list.length){ var ldb=getDB(); ldb.operators=list; saveDB(ldb); } }
       if(window.initLogin) window.initLogin();
@@ -437,6 +440,17 @@
       await setDoc(doc(db,'config','labCounters'), {counters: counters, updatedAt: new Date().toISOString()});
     } catch(e) {
       console.error('Save lab counters error:', e);
+    }
+  };
+
+  // ---- SAVE ROLES to Firestore ----
+  // Los roles los hace el administrador y los ve todo el mundo: van en su
+  // propio documento, como los usuarios.
+  window.saveRolesToFirebase = async function(list) {
+    try {
+      await setDoc(doc(db,'config','roles'), {list: list, updatedAt: new Date().toISOString()});
+    } catch(e) {
+      console.error('Save roles error:', e);
     }
   };
 

@@ -57,20 +57,101 @@ var MODULES = [
   ]}
 ];
 
-// Acceso por defecto según el rol. El administrador podrá asignar módulos por
-// usuario (user.modules) y eso manda sobre este default.
-var ROLE_MODULES = {
-  admin:      ['qa','lab','production','products','coa','admin'],
-  supervisor: ['qa','lab','production','products','coa'],
-  operator:   ['qa']
-};
+// ===== LOS ROLES LOS HACE EL ADMINISTRADOR =====
+// No hay tres roles fijos: el administrador crea los que necesite —"Supervisor
+// Production", "QA Night", lo que sea— y a cada uno le marca con casillas que
+// pantallas ve y que puede hacer. El usuario solo lleva la llave de su rol.
+//
+// Cada rol guarda:
+//   key     como lo referencia el usuario (u.role)
+//   name    como se lee en pantalla
+//   screens ["qa:screen-weight", ...] las funciones marcadas, con su modulo
+//           delante porque Search y Reports salen en varios
+//   perms   {edit, remove, approve}
+//
+// Estos tres vienen de fabrica para que el sistema arranque con algo; se
+// pueden cambiar como cualquier otro. El de administrador no se borra: si se
+// va, nadie vuelve a entrar al panel.
+function defaultRoles(){
+  var todas = function(filtro){
+    var out = [];
+    MODULES.forEach(function(m){
+      if(filtro && !filtro(m)) return;
+      m.items.forEach(function(i){ if(!i.soon) out.push(m.id+':'+i.screen); });
+    });
+    return out;
+  };
+  return [
+    {key:'admin', name:'Administrator', protected:true,
+     screens: todas(null), perms:{edit:true, remove:true, approve:true}},
+    {key:'supervisor', name:'Supervisor',
+     screens: todas(function(m){ return m.id!=='admin'; }),
+     perms:{edit:true, remove:true, approve:true}},
+    {key:'operator', name:'Operator',
+     screens: todas(function(m){ return m.id==='qa'; }),
+     perms:{edit:false, remove:false, approve:false}}
+  ];
+}
 
+function getRoles(){
+  var d = getDB();
+  if(!d.roles || !d.roles.length){
+    d.roles = defaultRoles();
+    saveDB(d, 'roles');
+  }
+  return d.roles;
+}
+function saveRoles(list){
+  var d = getDB();
+  d.roles = list;
+  saveDB(d, 'roles');
+  if(window.saveRolesToFirebase) window.saveRolesToFirebase(list);
+}
+function roleByKey(k){
+  return getRoles().filter(function(r){ return r.key===k; })[0] || null;
+}
+function roleOf(u){
+  u = u || currentUser;
+  return u ? roleByKey(u.role) : null;
+}
+function roleName(k){
+  var r = roleByKey(k);
+  return r ? r.name : (k || '\u2014');
+}
+// Una llave corta a partir del nombre, sin repetir
+function roleKeyFrom(nombre){
+  var base = String(nombre||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')
+             .replace(/^-|-$/g,'').slice(0,24) || 'role';
+  var k = base, n = 2;
+  while(roleByKey(k)) k = base+'-'+(n++);
+  return k;
+}
+
+// Las funciones marcadas para este usuario: las suyas si el administrador se
+// las toco una por una, y si no las de su rol.
+function userScreenList(u){
+  u = u || currentUser;
+  if(!u) return [];
+  if(u.screens && u.screens.length) return u.screens;
+  var r = roleOf(u);
+  return (r && r.screens) ? r.screens : [];
+}
+
+// Los modulos salen de las funciones: si tiene alguna del modulo, lo ve.
 function userModules(u){
   u = u || currentUser;
   if(!u) return [];
   if(u.modules && u.modules.length) return u.modules;
-  return ROLE_MODULES[u.role] || ROLE_MODULES.operator;
+  var lista = userScreenList(u), out = [];
+  MODULES.forEach(function(m){
+    var suyo = m.items.some(function(i){
+      return lista.indexOf(m.id+':'+i.screen) >= 0 || lista.indexOf(i.screen) >= 0;
+    });
+    if(suyo) out.push(m.id);
+  });
+  return out;
 }
+
 function moduleById(id){
   return MODULES.filter(function(m){ return m.id===id; })[0] || null;
 }
@@ -90,18 +171,12 @@ function canSeeModule(id){ return userModules().indexOf(id)>=0; }
 //
 // Un reporte guardado no lo cambia cualquiera: es un documento de calidad, no
 // una nota suelta, y por eso el operador lo crea y lo consulta pero no lo toca.
-var ROLE_PERMS = {
-  admin:      {edit:true,  remove:true,  approve:true},
-  supervisor: {edit:true,  remove:true,  approve:true},
-  operator:   {edit:false, remove:false, approve:false}
-};
-
 function hasPerm(key, u){
   u = u || currentUser;
   if(!u) return false;
   if(u.perms && Object.prototype.hasOwnProperty.call(u.perms, key)) return !!u.perms[key];
-  var d = ROLE_PERMS[u.role] || ROLE_PERMS.operator;
-  return !!d[key];
+  var r = roleOf(u);
+  return !!(r && r.perms && r.perms[key]);
 }
 
 function canEditReports(){ return hasPerm('edit'); }
@@ -126,7 +201,8 @@ function canSeeScreen(screen, u, modId){
   if(!u) return false;
   if(!screenBelongsToModule(screen)) return true;
   var mods = userModules(u);
-  var lista = (u.screens && u.screens.length) ? u.screens : null;
+  var lista = userScreenList(u);
+  if(!lista.length) lista = null;
 
   var permitida = function(m){
     if(mods.indexOf(m.id) < 0) return false;
