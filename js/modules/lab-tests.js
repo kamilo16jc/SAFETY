@@ -14,6 +14,79 @@ function labNorm(s){
     .replace(/[^a-z0-9&().,/ -]/g,'');
 }
 
+// ===== CADA TEST, UN PUNTO DE COLOR =====
+// Escribir los nombres completos dentro de la hoja la volvia ilegible: una
+// celda con "Listeria Mono, Salmonella, Coliform & E. coli" tapaba el resto de
+// la fila. Cada test pasa a ser un punto con su color; el nombre sale al pasar
+// el raton por encima, y debajo de la hoja queda la leyenda de los que salen
+// en pantalla, que es lo que sirve en el telefono, donde no hay raton.
+//
+// El color es SIEMPRE el mismo para el mismo test, para que la vista se
+// aprenda de memoria. Los que no estan en la lista sacan su color del propio
+// nombre, asi que tampoco cambian de un dia para otro.
+var LAB_TEST_COLORS = {
+  'listeria mono':      '#7c3aed',
+  'salmonella':         '#0369a1',
+  'coliform & e. coli': '#0e7490',
+  'coliform':           '#0e7490',
+  'e. coli':            '#0891b2',
+  'staph':              '#a16207',
+  'apc':                '#4d7c0f',
+  'yeast & mold rapid': '#b45309',
+  'rapid yeast & mold': '#b45309',
+  'yeast & mold':       '#b45309',
+  'salt':               '#64748b',
+  'sodium':             '#475569',
+  'sorbic':             '#9d174d',
+  'moisture':           '#0d9488',
+  'fat':                '#c2410c',
+  'ph':                 '#6d28d9'
+};
+
+function labTestColor(nombre){
+  var k = labNorm(nombre);
+  if(LAB_TEST_COLORS[k]) return LAB_TEST_COLORS[k];
+  // Por familia: "listeria mono 25g" sigue siendo listeria
+  for(var fam in LAB_TEST_COLORS){
+    if(k.indexOf(fam) === 0) return LAB_TEST_COLORS[fam];
+  }
+  // Y si no, un tono sacado del nombre: distinto para cada test, igual siempre
+  var h = 0;
+  for(var i = 0; i < k.length; i++) h = ((h * 31) + k.charCodeAt(i)) >>> 0;
+  return 'hsl(' + (h % 360) + ' 45% 38%)';
+}
+
+// Los puntos de una fila
+function testDotsHTML(tests){
+  tests = (tests || []).filter(function(t){ return String(t||'').trim(); });
+  if(!tests.length) return '<span class="soft">\u2014</span>';
+  return '<span class="tdots">' + tests.map(function(t){
+    return '<i class="tdot" style="background:' + labTestColor(t) + '" title="' + esc(t) +
+           '" role="img" aria-label="' + esc(t) + '" onclick="labDotTap(this)"></i>';
+  }).join('') + '</span>';
+}
+
+// En el telefono no hay raton: al tocar el punto se dice cual es
+function labDotTap(el){
+  if(typeof toast === 'function') toast(el.getAttribute('title') || '');
+}
+
+// La leyenda de los tests que salen en pantalla, sin repetir
+function testsLegendHTML(listas){
+  var vistos = {}, orden = [];
+  (listas || []).forEach(function(tests){
+    (tests || []).forEach(function(t){
+      var k = labNorm(t);
+      if(!k || vistos[k]) return;
+      vistos[k] = 1; orden.push(t);
+    });
+  });
+  if(!orden.length) return '';
+  return '<div class="tlegend">' + orden.map(function(t){
+    return '<span><i class="tdot" style="background:' + labTestColor(t) + '"></i>' + esc(t) + '</span>';
+  }).join('') + '</div>';
+}
+
 // Catálogo de tests disponibles: unión de todas las formas, por hoja
 function labTestCatalog(){
   var forms = getFormHeaders(), seen = {}, out = {micro:[], chem:[], nlea:[]};

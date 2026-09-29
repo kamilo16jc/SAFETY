@@ -96,8 +96,9 @@ function labCustomerLine(r){
   var code = (c.prefix || c.customerId || '') + String(r.product||'').trim().toUpperCase();
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
-    '<div class="cust-tests">'+(c.tests||[]).map(function(t){
-      return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')+'</div>'+
+    '<div class="cust-tests">'+((typeof testsLegendHTML==='function')
+      ? testsLegendHTML([c.tests])
+      : (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' '))+'</div>'+
     '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div></div>';
 }
 
@@ -156,7 +157,12 @@ function renderLab(){
       '<th>LOT</th><th class="num">Samples</th><th>Collected</th><th>Sent</th><th>Status</th><th></th>'+
     '</tr></thead><tbody>'+
     list.map(function(r,i){ return labRowHTML(r,i+1); }).join('')+
-    '</tbody></table></div>';
+    '</tbody></table></div>'+
+    // La leyenda va pegada a la hoja: sin ella los puntos no dicen nada en el
+    // telefono, donde no se puede pasar el raton por encima.
+    (typeof testsLegendHTML==='function'
+      ? testsLegendHTML(list.map(function(r){ var c=labCustomerOf(r); return c?c.tests:[]; }))
+      : '');
   renderIcons(host);
 }
 
@@ -167,9 +173,9 @@ function labRowHTML(r, i){
              : !r.lot ? '<span class="pill bad">Pending · LOT missing</span>'
              : !r.collected ? '<span class="pill bad">Pending · not collected</span>'
              : '<span class="pill warn">Pending</span>';
-  var tests = c && (c.tests||[]).length
-    ? (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' ')
-    : '<span class="soft">\u2014</span>';
+  var tests = (typeof testDotsHTML==='function')
+    ? testDotsHTML(c ? c.tests : [])
+    : (c && (c.tests||[]).length ? esc((c.tests||[]).join(', ')) : '\u2014');
   return '<tr'+(r.labSent?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+
     '<td class="soft">'+esc(fmtDate(r.date))+'</td>'+
