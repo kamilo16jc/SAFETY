@@ -163,13 +163,44 @@ function generateLabForm(customerId, date){
         logActivity('lab','Lab form generated',
           group.customer.company+' · '+group.date+' · '+rows.length+' product(s)',
           currentUser?currentUser.name:'—');
-        toast('Form ready ✓');
+        // La forma ES el envío: lo que va en ella queda marcado como enviado.
+        // Antes había que acordarse de tocar Send uno por uno, y la lista
+        // seguía diciendo "0 of 1 sent" con la forma ya hecha en la mano.
+        var n = markGroupSent(group);
+        toast(n ? 'Form ready ✓ · '+n+' marked as sent' : 'Form ready ✓');
       }).catch(function(e){
         console.error('generateLabForm:', e);
         toast('Could not build the form: '+e.message);
       });
     });
   });
+}
+
+// Lo que acaba de salir en la forma queda enviado. Se marca solo lo que
+// todavía no lo estaba, asi que volver a generar la forma no altera la hora
+// del envio original.
+function markGroupSent(group){
+  var db = getDB();
+  var n = 0;
+  (group.runs||[]).forEach(function(r){
+    var run = (db.runs||[]).filter(function(x){ return x.id===r.id; })[0];
+    if(!run || run.labSent) return;
+    run.labSent = true;
+    run.labSentAt = localISOStr();
+    n++;
+  });
+  if(!n) return 0;
+  saveDB(db, 'runs');
+  (group.runs||[]).forEach(function(r){
+    var run = (db.runs||[]).filter(function(x){ return x.id===r.id; })[0];
+    if(run && window.saveToFirebase) window.saveToFirebase('runs', run);
+  });
+  logActivity('lab','Lab samples sent with the form',
+    group.customer.company+' · '+group.date+' · '+n+' sample(s)',
+    currentUser?currentUser.name:'—');
+  if(typeof refreshRunViews==='function') refreshRunViews();
+  else if(typeof renderLab==='function') renderLab();
+  return n;
 }
 
 // Entrega el archivo (iPhone/PWA no admite <a download>: se usa compartir)
