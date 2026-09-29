@@ -50,6 +50,13 @@ function applyScreenAccent(id){
 }
 
 function goTo(id){
+  // Una funcion que no le toca a este usuario no se abre, ni aunque se llegue
+  // por un enlace viejo o por el historial
+  if(typeof canSeeScreen==='function' && typeof currentUser!=='undefined' && currentUser &&
+     id!=='screen-login' && !canSeeScreen(id)){
+    toast('You do not have access to that function');
+    id = 'screen-home';
+  }
   // Redirect to login if not authenticated
   if(id !== 'screen-login' && !currentUser) { id = 'screen-login'; }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
@@ -113,16 +120,18 @@ function renderModuleScreen(){
   var hero = document.getElementById('mod-hero');
   var grid = document.getElementById('mod-cards');
   if(!m || !grid) return;
+  // Solo las funciones que este usuario tiene permitidas EN ESTE modulo
+  var items = (typeof moduleItemsFor==='function') ? moduleItemsFor(m) : m.items;
   if(hero){
     hero.innerHTML = '<button class="back-btn" onclick="goTo(\'screen-home\')">'+
       '<span class="btn-ico" data-icon="back"></span></button>'+
       '<span class="mod-hero-ico" data-icon="'+m.icon+'"></span>'+
       '<div><b>'+esc(m.name)+'</b><span>'+
-      m.items.filter(function(i){return !i.soon;}).length+' functions</span></div>';
+      items.filter(function(i){ return !i.soon; }).length+' functions</span></div>';
     hero.style.setProperty('--mod', m.ink);
     renderIcons(hero);
   }
-  grid.innerHTML = m.items.map(function(i){
+  grid.innerHTML = items.map(function(i){
     if(i.soon) return '<span class="mcard solid soon" style="--mod:'+(i.color||m.ink)+'">'+
       '<span class="mcard-ico" data-icon="'+i.icon+'"></span><b>'+esc(i.name)+'</b>'+
       '<span class="mcard-n">coming soon</span></span>';
@@ -239,7 +248,8 @@ function initHome(){
   var ml = document.getElementById('home-modules');
   if(ml && typeof myModules==='function'){
     ml.innerHTML = myModules().map(function(m){
-      var n = m.items.filter(function(i){ return !i.soon; }).length;
+      var n = ((typeof moduleItemsFor==='function') ? moduleItemsFor(m) : m.items)
+                .filter(function(i){ return !i.soon; }).length;
       return '<button class="mcard solid" style="--mod:'+m.ink+'" onclick="selectModule(\''+m.id+'\')">'+
         '<span class="mcard-ico" data-icon="'+m.icon+'"></span>'+
         '<b>'+esc(m.name)+'</b><span class="mcard-n">'+n+' functions</span></button>';

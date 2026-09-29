@@ -80,11 +80,71 @@ function myModules(){
 }
 function canSeeModule(id){ return userModules().indexOf(id)>=0; }
 
-// Un reporte guardado solo lo cambia el manager (supervisor) o el
-// administrador. El operador lo crea y lo consulta, pero no lo modifica:
-// es un documento de calidad, no una nota suelta.
-function canEditReports(){
-  return !!currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+// ===== LO QUE PUEDE HACER CADA UNO =====
+// El rol es el punto de partida. Encima de el, el administrador le marca a una
+// persona lo que puede en el panel de usuarios (user.perms), y eso manda.
+//
+//   edit    cambiar un registro ya guardado (pesos, horas, reportes)
+//   remove  borrarlo, que lo quita para todos
+//   approve firmar y aprobar una forma
+//
+// Un reporte guardado no lo cambia cualquiera: es un documento de calidad, no
+// una nota suelta, y por eso el operador lo crea y lo consulta pero no lo toca.
+var ROLE_PERMS = {
+  admin:      {edit:true,  remove:true,  approve:true},
+  supervisor: {edit:true,  remove:true,  approve:true},
+  operator:   {edit:false, remove:false, approve:false}
+};
+
+function hasPerm(key, u){
+  u = u || currentUser;
+  if(!u) return false;
+  if(u.perms && Object.prototype.hasOwnProperty.call(u.perms, key)) return !!u.perms[key];
+  var d = ROLE_PERMS[u.role] || ROLE_PERMS.operator;
+  return !!d[key];
+}
+
+function canEditReports(){ return hasPerm('edit'); }
+function canDeleteRecords(){ return hasPerm('remove'); }
+function canApprove(){ return hasPerm('approve'); }
+
+// ===== LAS FUNCIONES DENTRO DEL MODULO =====
+// Sin lista guardada, quien tiene el modulo tiene todas sus funciones. Con
+// lista, solo las marcadas. Una pantalla que no esta en ningun modulo —el
+// inicio, el menu, el login— no se le niega a nadie.
+function screenBelongsToModule(screen){
+  return MODULES.some(function(m){
+    return m.items.some(function(i){ return i.screen===screen; });
+  });
+}
+
+// La lista se guarda como "modulo:pantalla", porque Search y Reports salen en
+// varios modulos y no es lo mismo dejar ver los de QA que los del laboratorio.
+// Sin modulo, se pregunta si la funcion le esta permitida en alguno de los suyos.
+function canSeeScreen(screen, u, modId){
+  u = u || currentUser;
+  if(!u) return false;
+  if(!screenBelongsToModule(screen)) return true;
+  var mods = userModules(u);
+  var lista = (u.screens && u.screens.length) ? u.screens : null;
+
+  var permitida = function(m){
+    if(mods.indexOf(m.id) < 0) return false;
+    if(!m.items.some(function(i){ return i.screen===screen; })) return false;
+    if(!lista) return true;
+    return lista.indexOf(m.id+':'+screen) >= 0 || lista.indexOf(screen) >= 0;  // lo viejo sigue valiendo
+  };
+
+  if(modId){
+    var m = moduleById(modId);
+    return !!m && permitida(m);
+  }
+  return MODULES.some(permitida);
+}
+
+// Las funciones de un modulo que este usuario puede abrir
+function moduleItemsFor(m, u){
+  return m.items.filter(function(i){ return canSeeScreen(i.screen, u, m.id); });
 }
 
 // Módulo activo: define el ALCANCE de Search / Reports / Shift Report

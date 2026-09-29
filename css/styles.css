@@ -495,7 +495,9 @@ canvas{width:100%!important}
   .home-greet{margin-top:0}
 
   /* Los formularios de captura no se estiran a lo ancho del monitor */
-  #screen-admin > *,#screen-activity > *{max-width:720px}
+  /* El panel de usuarios lleva la lista a lo ancho: se queda sin tope */
+  #screen-activity > *{max-width:720px}
+  #screen-admin > *{max-width:none}
   #screen-products > *{max-width:none}
 
   /* --- search a lo ancho --- */
@@ -923,6 +925,8 @@ body.logged-out .topstack{display:none}
     gap:0 52px;align-items:start;width:100%}
   .fgrid.narrow-right{grid-template-columns:minmax(0,960px) minmax(0,520px);
     justify-content:space-between}
+  /* al reves: a la izquierda el formulario, a la derecha la lista larga */
+  .fgrid.narrow-left{grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:0 44px}
   .fcol{display:block;min-width:0}
   #screen-weight > *,#screen-seal > *,#screen-metal > *,
   #screen-temp > *,#screen-gmp > *{max-width:none}
@@ -1318,3 +1322,39 @@ body.logged-out .topstack{display:none}
 
 /* Los avisos de "falta algo" en rojo, no en ambar */
 .lab-warn,.run-warn{color:var(--fail)}
+
+/* ============================================================
+   USUARIOS Y ACCESOS
+   El panel de abajo abre el usuario elegido: su rol, que modulos
+   y funciones ve, y que puede hacer con lo ya guardado.
+   ============================================================ */
+.role-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+#screen-admin .hint{font-size:11.5px;color:var(--muted);margin:0 0 16px;line-height:1.5}
+#screen-admin .main-btn{margin-bottom:12px}
+
+.acc-panel{border:1px solid var(--accent);border-radius:var(--radius);background:var(--surface);
+  padding:16px 18px;margin-top:18px}
+.acc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:14px}
+.acc-head b{font-size:16px;font-weight:800;color:var(--text)}
+.acc-head .soft{font-size:11.5px;color:var(--muted);font-weight:500}
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;
+  margin-bottom:18px}
+.acc-mod{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;
+  background:var(--bg)}
+.acc-mod[data-off]{opacity:.5}
+.acc-mod-head{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;
+  color:var(--text);cursor:pointer;margin-bottom:8px}
+.acc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.acc-items{display:flex;flex-direction:column;gap:5px;padding-left:2px}
+.acc-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+  color:var(--muted);cursor:pointer}
+.acc-item b{font-weight:700;color:var(--text)}
+.acc-item .soft{font-weight:500;color:var(--dim)}
+.acc-item input,.acc-mod-head input{width:15px;height:15px;accent-color:var(--accent);
+  flex-shrink:0;cursor:pointer}
+.acc-perms{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+@media (max-width:760px){
+  .acc-grid{grid-template-columns:1fr}
+  .acc-panel{padding:14px}
+}

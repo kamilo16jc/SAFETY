@@ -714,7 +714,11 @@ function sealPanel(list){
 }
 
 // ===== VISOR/EDITOR DE PESO Y SELLO (admin/supervisor editan; el resto solo ve) =====
-function canEditRecords(){ return currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor'); }
+// Lo que el administrador le haya marcado a la persona manda sobre el rol
+function canEditRecords(){
+  return (typeof canEditReports==='function') ? canEditReports()
+       : !!currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+}
 
 function shiftOpts(sel){
   return '<option value="1"'+(sel===1?' selected':'')+'>1st shift</option>'+
@@ -880,7 +884,8 @@ function saveWeightEdit(id){
 }
 
 function deleteWeightRecord(id){
-  if(!canEditRecords()){ toast('Only admins and supervisors can delete'); return; }
+  if(typeof canDeleteRecords==='function' && !canDeleteRecords()){
+    toast('You are not allowed to delete records'); return; }
   var w = (getDB().weights||[]).filter(function(x){ return x.id===id; })[0];
   if(!w) return;
   if(!confirm('Delete this weight record? Line '+w.line+' · '+(w.lot?'LOT '+w.lot:'no LOT')+'. This cannot be undone.')) return;

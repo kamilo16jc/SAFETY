@@ -278,7 +278,7 @@ function gcApproveHTML(r, g){
            (g.approvedAt ? ' · '+esc(fmtDate(g.approvedAt)) : '')+'</span>';
   }
   if(!gcSensoryDone(g)) return '<span class="pill bad">Pending</span>';
-  if(typeof canEditReports==='function' && !canEditReports())
+  if(typeof canApprove==='function' && !canApprove())
     return '<span class="pill bad">Pending manager</span>';
   return '<button class="sheet-btn" onclick="approveGrilling('+r.id+')">Approve</button>';
 }
@@ -313,8 +313,8 @@ function saveGcRow(rawId, btn){
 }
 
 function approveGrilling(rawId){
-  if(typeof canEditReports==='function' && !canEditReports()){
-    toast('Only a manager or the administrator can approve'); return;
+  if(typeof canApprove==='function' && !canApprove()){
+    toast('You are not allowed to approve forms'); return;
   }
   var db = getDB();
   var g = gcEnsure(db, rawId);
