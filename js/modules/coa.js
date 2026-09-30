@@ -266,10 +266,24 @@ function nextCoaNo(year){
   return 'COA-'+y+'-'+String(max+1).padStart(3,'0');
 }
 
-// Un registro se puede certificar cuando tiene las tres medidas y un dictamen
+// ¿Este producto va al laboratorio de fuera? Si va, el certificado espera su
+// dictamen; si no va, no hay dictamen que esperar y nunca llegaria.
+function coaNeedsLab(a){
+  var p = (typeof findProduct==='function') ? findProduct(a.product) : null;
+  if(!p) return false;
+  if(p.externalLab === true) return true;
+  if(p.externalLab === false) return false;
+  return (typeof hasLabTests==='function') ? hasLabTests(p) : ((p.labTests||[]).length > 0);
+}
+
+// Un registro se puede certificar cuando tiene las tres medidas y, SOLO si el
+// producto va al laboratorio de fuera, su dictamen. La placa de yeast & mold no
+// lo detiene: se lee a los cinco dias y la forma la imprime como "Pending",
+// que es justo lo que dice la del cliente.
 function coaReady(a){
-  return (typeof analysisComplete==='function' ? analysisComplete(a) : true) &&
-         !!(a.result && String(a.result).trim());
+  if(typeof analysisComplete==='function' && !analysisComplete(a)) return false;
+  if(a.result && String(a.result).trim()) return true;
+  return !coaNeedsLab(a);
 }
 function coaState(a){
   if(a.coaNo) return 'issued';
@@ -303,7 +317,12 @@ function coaRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('coa-from'), to=g('coa-to'), q=(g('coa-search')||'').trim().toLowerCase();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
-    if(!inScope(a.date, from, to, coaReady(a) && !a.coaNo)) return false;
+    // Pendiente aqui es "medido y sin certificar", aunque el dictamen no haya
+    // llegado: si solo se salvara lo que ya esta listo, la cola de espera
+    // desapareceria de la pantalla en cuanto pasara el dia.
+    var pendiente = !a.coaNo &&
+      (typeof analysisComplete!=='function' || analysisComplete(a));
+    if(!inScope(a.date, from, to, pendiente)) return false;
     if(q){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' '+String(a.coaNo||'')+

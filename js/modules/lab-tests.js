@@ -39,8 +39,10 @@ function labTestsOf(p, c){
       return String(x||'').trim() && !labIsComposite(x);
     });
   };
-  var propios = limpiar(p && p.labTests);
-  if(propios.length) return propios;
+  // Si el producto ya paso por el editor, manda lo que quedo marcado AUNQUE NO
+  // SEA NADA: desmarcarlo todo es una decision, no un descuido. Antes una lista
+  // vacia se tomaba por "sin decidir" y volvian a salir los del cliente.
+  if(p && p.labTests) return limpiar(p.labTests);
   if(c === undefined) c = (typeof productCustomer==='function') ? productCustomer(p) : null;
   return limpiar(c && c.tests);
 }
@@ -160,13 +162,18 @@ function labTestColumn(form, kind, label){
 }
 
 // ---- Tests de un producto ----
-// Si nunca se han definido, se proponen por defecto desde los tests genéricos
-// del cliente traducidos a la etiqueta de SU forma (provisional, hay que revisar).
+// Solo lo que alguien marco. Nada se deduce: antes, si el producto no tenia
+// tests propios, se proponian los de la forma del cliente traducidos, y en la
+// pantalla aparecian tests que nadie habia pedido —Salmonella, Listeria— sin
+// que se viera de donde salian. Si no se marco nada, no hay nada.
 function productTests(p){
-  if(p && p.labTests && p.labTests.length) return p.labTests;
-  return defaultLabTests(p);
+  if(p && p.labTests) return p.labTests;
+  return [];
 }
 
+// Ya no la llama nadie: traducia los tests del cliente a las etiquetas de su
+// forma y eso hacia aparecer tests que nadie marco. Se deja como referencia de
+// como se mapea un nombre generico a la columna de una forma.
 function defaultLabTests(p){
   var c = (typeof productCustomer==='function') ? productCustomer(p) : null;
   if(!c) return [];
@@ -310,7 +317,7 @@ function readLabTestPicker(p, root){
     if(b.checked) sel.push({sheet:b.getAttribute('data-lt-kind'), label:b.getAttribute('data-lt-label')});
   });
   var before = JSON.stringify(productTests(p));
-  if(JSON.stringify(sel)===before && productTestsVerified(p)) return false;   // sin cambios
+  if(JSON.stringify(sel)===before && p.labTests) return false;   // sin cambios
   p.labTests   = sel;
   p.externalLab = sel.length > 0;
   p.labTestsAt = localISOStr();
