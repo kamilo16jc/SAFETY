@@ -344,6 +344,7 @@ function renderCoa(){
     bar.innerHTML = picked.length
       ? '<b>'+picked.length+'</b> record'+(picked.length===1?'':'s')+' selected'+
         ' <button class="sheet-btn" onclick="generateCoa()">Generate COA</button>'+
+        ' <button class="sheet-btn" onclick="downloadCoaForms()">Excel form</button>'+
         ' <button class="sheet-btn" onclick="clearCoaPicks()">Clear</button>'
       : '';
     bar.style.display = picked.length ? 'flex' : 'none';
