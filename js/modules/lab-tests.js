@@ -254,7 +254,16 @@ function renderLabTestPicker(p, pre){
       '<span><i class="lt-dot '+punto+'"></i>'+texto+'</span></label>';
   };
 
+  // De donde salen los tests que se ven. Si el producto no tiene propios pero
+  // su cliente si, se dice con todas las letras y se ofrece quitarlos: antes
+  // aparecian sin explicacion y parecian inventados.
+  var delCliente = (!p.labTests && c && (c.tests||[]).length)
+    ? (c.tests.length+' test(s) from '+esc(c.company||c.customerId||'the customer'))
+    : '';
+
   return '<div class="field-group" id="'+pre+'-ltwrap">'+
+    (delCliente ? '<div class="lt-from">'+delCliente+
+      ' <button type="button" class="lt-clear" onclick="ltNone(\'' + pre + '\')">Use none</button></div>' : '')+
     '<div class="lt-ask-row">'+
       casilla('lt-no',  'false', 'bad', 'No lab')+
       casilla('lt-yes', 'true',  'ok',  'External lab')+
@@ -300,6 +309,16 @@ function ltCloseModal(pre){
   if(m) m.hidden = true;
   ltCount(pre);
 }
+// "Ninguno" explicito: el producto deja de heredar los del cliente
+function ltNone(pre){
+  var caja = document.getElementById(pre+'-ltwrap');
+  if(caja) caja.querySelectorAll('[data-lt-kind]').forEach(function(c){ c.checked = false; });
+  var aviso = caja ? caja.querySelector('.lt-from') : null;
+  if(aviso) aviso.remove();
+  ltExternal(pre, false);
+  if(typeof toast === 'function') toast('No tests for this product');
+}
+
 function ltCount(pre){
   var caja = document.getElementById(pre+'-ltwrap');
   var el = document.getElementById(pre+'-lt-count');
