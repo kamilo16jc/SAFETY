@@ -129,7 +129,9 @@ function buildAnalysisSheet(){
       '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%"></td>'+
       '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH"></td>'+
       '<td class="soft" id="an-by">'+esc(typeof getInitials==='function' ? getInitials() : '')+'</td>'+
-      '<td><button class="sheet-btn" onclick="saveAnalysis()">Add</button></td>'+
+      '<td><button class="add-btn" onclick="saveAnalysis()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
+        'stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button></td>'+
       '<td></td>'+
     '</tr></tbody>'+
     '<tbody id="an-body"></tbody></table></div>';
