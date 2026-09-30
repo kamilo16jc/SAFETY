@@ -482,78 +482,128 @@ function reprintCoa(id){
 }
 
 // ---- El documento ----
+// Misma cara que la forma de Excel del cliente: titulo, la ficha en dos
+// columnas, y los resultados contra su objetivo. Una hoja por registro, que es
+// como se manda: un LOT, un producto, un certificado.
+var COA_METODO = {
+  moisture: 'AOAC: PVM1:2004',
+  fat:      'AOAC: PVM1:2005',
+  ph:       'pH Meter',
+  yeast:    'AOAC 997.02',
+  mold:     'AOAC 997.02'
+};
+
+function coaCustomerOf(a){
+  if(typeof customerById === 'function' && a.customerId){
+    var c = customerById(a.customerId);
+    if(c) return c;
+  }
+  var lista = (typeof getCustomers === 'function') ? getCustomers() : [];
+  return lista.filter(function(c){ return c.company === a.customer; })[0] || {};
+}
+
+// dd/mm/aaaa del pais, como en la forma
+function coaFecha(iso){
+  var d = new Date(String(iso||'').slice(0,10)+'T12:00:00');
+  return isNaN(d) ? (iso||'') : (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
+}
+
 function openCoaDocument(g){
-  var ink='#141a17', body='#2f3833', soft='#6b756f', line='#c9cfc9', head='#eceee9';
+  var ink='#141a17', soft='#6b756f', line='#b9c0b9';
   var e = function(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); };
-  var generated = new Date().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'});
-  var th='style="border:1px solid '+line+';padding:5px 7px;background:'+head+';font-size:8.5px;text-align:left;font-weight:800"';
-  var td='style="border:1px solid '+line+';padding:5px 7px;font-size:9.5px"';
+  var dash = '\u2014';
   // El valor del laboratorio externo manda; si no hay, el de la casa
   var val = function(a, own, mx){
     var m = a[mx], o = a[own];
-    if(m!=null && String(m).trim()!=='') return e(m)+'<sup>M</sup>';
-    return (o!=null && String(o).trim()!=='') ? e(o) : '—';
+    if(m!=null && String(m).trim()!=='') return e(m);
+    return (o!=null && String(o).trim()!=='') ? e(o) : 'Pending';
   };
-  var rows = g.list.map(function(a){
-    return '<tr>'+
-      '<td '+td+'>'+e(a.product||'—')+'</td>'+
-      '<td '+td+'>'+e(a.cheese||'—')+'</td>'+
-      '<td '+td+'>'+e(a.prodDate||'—')+'</td>'+
-      '<td '+td+'>'+e(a.order||'—')+'</td>'+
-      '<td '+td+'>'+e(a.po||'—')+'</td>'+
-      '<td '+td+' align="right">'+val(a,'moisture','mxMoisture')+'</td>'+
-      '<td '+td+' align="right">'+val(a,'fat','mxFat')+'</td>'+
-      '<td '+td+' align="right">'+val(a,'ph','mxPh')+'</td>'+
-      '<td '+td+' align="right">'+(a.coliform?e(a.coliform):'—')+'</td>'+
-      '<td '+td+' align="right">'+(a.ecoli?e(a.ecoli):'—')+'</td>'+
-      '<td '+td+' align="right">'+val(a,'yeast','mxYeast')+'</td>'+
-      '<td '+td+' align="right">'+val(a,'mold','mxMold')+'</td>'+
-      '<td '+td+'>'+e(a.result||'—')+'</td>'+
-    '</tr>';
+
+  var hojas = g.list.map(function(a, i){
+    var c = coaCustomerOf(a);
+    var t = c.targets || {};
+    var prod = (typeof findProduct === 'function') ? findProduct(a.product) : null;
+    var pack = c.packaging || (prod ? (prod.pkgLabel || prod.size || '') : '');
+
+    var ficha = function(rot, v){
+      return '<tr><th>'+rot+'</th><td>'+(v ? e(v) : '')+'</td></tr>';
+    };
+    var izq = ficha('Customer ID:', c.customerId || a.customerId)+
+              ficha('Customer Part #:', a.product)+
+              ficha('Customer Code:', c.code)+
+              ficha('Customer Phone:', c.phone)+
+              ficha('Customer Fax:', c.fax)+
+              ficha('Customer Contact:', c.contact)+
+              ficha('Customer Email:', c.email);
+    var der = ficha('Customer PO:', a.po)+
+              ficha('Caputo Order #:', a.order)+
+              ficha('Product Lot #:', (typeof analysisLot === 'function' ? analysisLot(a) : a.lot))+
+              ficha('Date of Manufacture:', coaFecha(a.prodDate || a.date))+
+              ficha('Product Packaging:', pack);
+
+    var fila = function(nombre, metodo, valor, unidad, objetivo){
+      return '<tr><td class="n">'+nombre+'</td><td class="m">'+metodo+'</td>'+
+        '<td class="r">'+valor+'</td><td class="u">'+(unidad||'')+'</td>'+
+        '<td class="t">'+(objetivo ? e(objetivo) : '')+'</td>'+
+        '<td class="u">'+(objetivo && unidad ? unidad : '')+'</td></tr>';
+    };
+
+    return '<section class="coa"'+(i ? ' style="page-break-before:always"' : '')+'>'+
+      '<h1>Certificate of Analysis</h1>'+
+      '<table class="ficha">'+
+        '<tr><th>Product Description:</th><td colspan="3">'+e(a.cheese || c.productName || dash)+'</td></tr>'+
+        '<tr><th>Customer Name:</th><td colspan="3">'+e(a.customer || c.company || dash)+'</td></tr>'+
+      '</table>'+
+      '<div class="dos">'+
+        '<table class="ficha">'+izq+'</table>'+
+        '<table class="ficha">'+der+'</table>'+
+      '</div>'+
+      '<div class="titulo">Analytical Results</div>'+
+      '<table class="res">'+
+        '<tr class="cab"><th>Physical</th><th>Method</th><th colspan="2">Results</th>'+
+          '<th colspan="2">Target</th></tr>'+
+        fila('Moisture', COA_METODO.moisture, val(a,'moisture','mxMoisture'), '%', t.moisture)+
+        fila('Fat (dry basis)', COA_METODO.fat, val(a,'fat','mxFat'), '%', t.fat)+
+        fila('pH', COA_METODO.ph, val(a,'ph','mxPh'), '', t.ph)+
+        '<tr class="cab"><th>Microbiological</th><th>Method</th><th colspan="2">Results</th>'+
+          '<th colspan="2">Target</th></tr>'+
+        fila('Yeast', COA_METODO.yeast, val(a,'yeast','mxYeast'), 'CFU/g', t.yeast)+
+        fila('Mold', COA_METODO.mold, val(a,'mold','mxMold'), 'CFU/g', t.mold)+
+      '</table>'+
+      '<div class="firma">COA Accuracy, CCP Documentation, Weight &amp; Lot Coding '+
+        'Documentation verified by: ______________________________</div>'+
+      '<div class="pie">'+e(g.no)+(g.rev>1 ? ' R'+g.rev : '')+
+        ' \u00b7 Caputo Foods \u00b7 Building 1945</div>'+
+    '</section>';
   }).join('');
 
   var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+e(g.no)+'</title><style>'+
     '*{box-sizing:border-box}'+
-    'body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:'+body+';font-size:10px;margin:0;padding:24px 28px}'+
-    '@page{size:portrait;margin:0}'+
-    '@media print{body{padding:14mm}.savebtn{display:none}}'+
-    'h1{font-size:17px;color:'+ink+';margin:0;font-weight:800;letter-spacing:-.02em}'+
-    'table{width:100%;border-collapse:collapse}'+
-    'sup{font-size:7px;color:'+soft+'}'+
-    '.savebtn{position:fixed;top:14px;right:16px;background:'+ink+';color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}'+
-    '.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 18px;margin:14px 0 16px}'+
-    '.meta div span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:'+soft+';font-weight:700}'+
-    '.meta div b{font-size:11px;color:'+ink+'}'+
+    'body{font-family:Calibri,Segoe UI,Arial,sans-serif;color:'+ink+';font-size:11px;margin:0;padding:22px 26px}'+
+    '@page{size:portrait;margin:14mm}'+
+    '@media print{body{padding:0}.savebtn{display:none}}'+
+    '.savebtn{position:fixed;top:14px;right:16px;background:'+ink+';color:#fff;border:0;'+
+      'border-radius:6px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}'+
+    '.coa{max-width:760px;margin:0 auto}'+
+    'h1{font-size:19px;font-weight:700;text-align:center;margin:0 0 16px}'+
+    'table{border-collapse:collapse;width:100%}'+
+    '.ficha th{text-align:left;font-weight:700;white-space:nowrap;padding:2px 10px 2px 0;'+
+      'font-size:11px;vertical-align:top;width:1%}'+
+    '.ficha td{padding:2px 0;font-size:11px}'+
+    '.dos{display:flex;gap:26px;margin-top:2px}'+
+    '.dos > table{width:50%}'+
+    '.titulo{font-weight:700;font-size:12px;margin:18px 0 6px;border-bottom:1px solid '+line+';'+
+      'padding-bottom:3px}'+
+    '.res td,.res th{border:1px solid '+line+';padding:4px 7px;font-size:11px}'+
+    '.res .cab th{font-weight:700;text-align:left;background:#f1f3f0}'+
+    '.res .n{width:26%}.res .m{width:26%}.res .r{width:14%;text-align:right}'+
+    '.res .u{width:8%;color:'+soft+'}.res .t{width:14%;text-align:right}'+
+    '.firma{margin-top:34px;font-size:10.5px}'+
+    '.pie{margin-top:8px;font-size:9px;color:'+soft+'}'+
   '</style></head><body>'+
   '<button class="savebtn" onclick="window.print()">Save as PDF</button>'+
-  '<header style="border-bottom:2px solid '+ink+';padding-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px">'+
-    '<div><h1>Certificate of Analysis</h1>'+
-      '<div style="font-size:10px;color:'+soft+';margin-top:3px">Caputo Foods · Building 1945</div></div>'+
-    '<div style="text-align:right;font-size:9px;color:'+soft+';line-height:1.7">'+
-      '<div><b style="color:'+ink+';font-size:12px">'+e(g.no)+'</b>'+(g.rev>1?' <span>Revision '+g.rev+'</span>':'')+'</div>'+
-      '<div>Issued '+generated+'</div></div>'+
-  '</header>'+
-  '<div class="meta">'+
-    '<div><span>Customer</span><b>'+e(g.customer)+'</b></div>'+
-    '<div><span>Products</span><b>'+g.list.length+'</b></div>'+
-    '<div><span>Sampled</span><b>'+fmtDate(g.list[0].date)+'</b></div>'+
-    '<div><span>Issued by</span><b>'+e(g.list[0].coaBy||(currentUser?currentUser.name:'—'))+'</b></div>'+
-  '</div>'+
-  '<table><tr>'+
-    '<th '+th+'>Product #</th><th '+th+'>Description</th><th '+th+'>Prod. date</th>'+
-    '<th '+th+'>Order #</th><th '+th+'>PO #</th>'+
-    '<th '+th+' align="right">Moisture</th><th '+th+' align="right">Fat</th><th '+th+' align="right">pH</th>'+
-    '<th '+th+' align="right">Coliform</th><th '+th+' align="right">E. coli</th>'+
-    '<th '+th+' align="right">Yeast</th><th '+th+' align="right">Mold</th><th '+th+'>Result</th>'+
-  '</tr>'+rows+'</table>'+
-  '<div style="font-size:8.5px;color:'+soft+';margin-top:8px">'+
-    '<sup>M</sup> Result from the external laboratory. Values without the mark were run in house. '+
-    'Micro counts in CFU/g.</div>'+
-  '<div style="border-top:1px solid '+line+';margin-top:26px;padding-top:10px;display:flex;gap:40px;font-size:9px;color:'+soft+'">'+
-    '<div style="flex:1">Quality Assurance: ____________________________</div>'+
-    '<div style="flex:1">Date: ______________</div>'+
-  '</div>'+
+  hojas+
   '</body></html>';
 
   var blob=new Blob([doc],{type:'text/html'});

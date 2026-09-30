@@ -236,15 +236,10 @@ function renderLabTestPicker(p){
       }).join('')+'</div>';
   };
 
-  var upd = p.labTestsAt
-    ? 'Updated '+fmtDate(p.labTestsAt)+(p.labTestsBy?' by '+esc(p.labTestsBy):'')
-    : 'Not verified yet — these are the defaults from the customer';
-
-  return '<div class="field-group"><div class="sec-label">Lab tests '+
-      '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· exact test on the form</span></div>'+
-    '<div class="lt-status'+(productTestsVerified(p)?' ok':'')+'">'+upd+'</div>'+
-    '<div class="lt-box">'+block('micro','Micro')+block('chem','Chemistry')+block('nlea','NLEA')+'</div>'+
-  '</div>';
+  // Solo las casillas: el rotulo y el aviso decian lo que la propia lista ya
+  // ensena, y esta pantalla se lee de un vistazo.
+  return '<div class="field-group"><div class="lt-box">'+
+    block('micro','Micro')+block('chem','Chemistry')+block('nlea','NLEA')+'</div></div>';
 }
 
 // Lee el picker y guarda en el producto (lo llama saveCatalogEdits)

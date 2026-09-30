@@ -121,26 +121,55 @@ function customerFormOptions(sel){
 }
 
 function newCustomerHTML(pre){
+  // Todo lo que el certificado necesita se pide aqui una vez: lo de la
+  // cabecera del COA (quien es, como se le escribe) y los objetivos contra
+  // los que se compara cada resultado.
+  var campo = function(f, ph, extra){
+    return '<input type="text" class="field" id="'+pre+'-nc-'+f+'" placeholder="'+ph+'"'+
+      (extra||'')+'>';
+  };
   return '<div class="new-cust" id="'+pre+'-newcust" style="display:none">'+
     '<div class="sub-label">New customer</div>'+
     '<div class="pair">'+
-      '<input type="text" class="field" id="'+pre+'-nc-company" placeholder="Company name">'+
-      '<input type="text" class="field" id="'+pre+'-nc-id" placeholder="Code (e.g. ABCDEF)" '+
-        'autocapitalize="characters">'+
+      campo('company','Customer name')+
+      campo('id','Customer ID (e.g. ALLSTA)',' autocapitalize="characters"')+
     '</div>'+
     '<div class="pair">'+
-      '<input type="text" class="field" id="'+pre+'-nc-prefix" placeholder="Form prefix (optional)" '+
-        'autocapitalize="characters">'+
+      campo('prod','Product name')+
+      campo('pack','Product packaging (e.g. 4/5lb Bags)')+
+    '</div>'+
+    '<div class="pair">'+
+      campo('contact','Customer contact')+
+      campo('email','Customer email',' inputmode="email"')+
+    '</div>'+
+    '<div class="pair">'+
+      campo('phone','Customer phone',' inputmode="tel"')+
+      campo('fax','Customer fax',' inputmode="tel"')+
+    '</div>'+
+    '<div class="sub-label">Targets on the certificate</div>'+
+    '<div class="pair">'+
+      campo('tmoist','Target moisture (e.g. \u2264 34)')+
+      campo('tfat','Target fat (e.g. \u2265 38)')+
+    '</div>'+
+    '<div class="pair">'+
+      campo('tph','Target pH (e.g. 4.9 \u2013 5.5)')+
+      campo('tyeast','Target yeast (e.g. \u2264 2000)')+
+    '</div>'+
+    '<div class="pair">'+
+      campo('tmold','Target mold (e.g. \u2264 1000)')+
+      campo('code','Customer code (optional)',' autocapitalize="characters"')+
+    '</div>'+
+    '<div class="sub-label">Lab form</div>'+
+    '<div class="pair">'+
+      campo('prefix','Form prefix (optional)',' autocapitalize="characters"')+
       '<div class="select-wrap"><select class="field" id="'+pre+'-nc-form" '+
         'onchange="renderNewCustomerTests(\''+pre+'\')">'+customerFormOptions('')+'</select></div>'+
     '</div>'+
     '<div class="pair">'+
-      '<input type="text" class="field" id="'+pre+'-nc-per" placeholder="Samples per order" '+
-        'inputmode="numeric" value="1">'+
+      campo('per','Samples per order',' inputmode="numeric" value="1"')+
       '<label class="lab-check" style="margin:0"><input type="checkbox" id="'+pre+'-nc-numbered">'+
         '<span>Samples are numbered</span></label>'+
     '</div>'+
-    '<div class="sub-label">Lab tests this customer requires</div>'+
     '<div class="lt-box" id="'+pre+'-nc-tests"></div>'+
     '<div class="cd-actions" style="margin-top:10px">'+
       '<button type="button" class="btn-solid" onclick="saveNewCustomer(\''+pre+'\')">Save customer</button>'+
@@ -196,6 +225,17 @@ function saveNewCustomer(pre){
   var cust = {
     company: company,
     customerId: id,
+    // los datos con los que se arma la cabecera del certificado
+    productName: g('nc-prod'),
+    packaging: g('nc-pack'),
+    contact: g('nc-contact'),
+    email: g('nc-email'),
+    phone: g('nc-phone'),
+    fax: g('nc-fax'),
+    code: g('nc-code').toUpperCase(),
+    // y los objetivos contra los que se compara cada resultado
+    targets: {moisture:g('nc-tmoist'), fat:g('nc-tfat'), ph:g('nc-tph'),
+              yeast:g('nc-tyeast'), mold:g('nc-tmold')},
     prefix: g('nc-prefix').toUpperCase(),
     form: (pel(pre,'nc-form')||{}).value || 'general',
     tests: tests,

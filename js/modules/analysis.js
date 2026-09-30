@@ -117,7 +117,7 @@ function buildAnalysisSheet(){
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Date</th><th>Product</th><th class="wide">Cheese</th>'+
-      '<th>Customer</th><th>LOT</th><th>Prod. date</th><th>Order</th><th>PO</th>'+
+      '<th>Customer</th><th>LOT</th><th>Order</th><th>PO</th>'+
       '<th class="num">Moisture</th><th class="num">Fat</th><th class="num">pH</th>'+
       '<th>By</th><th>Save</th><th></th>'+
     '</tr></thead>'+
@@ -129,7 +129,7 @@ function buildAnalysisSheet(){
       '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
       '<td class="soft" id="an-customer-cell">—</td>'+
       '<td><input class="cell" id="an-lot" placeholder="LOT"></td>'+
-      '<td><input class="cell" id="an-proddate" placeholder="e.g. 26002"></td>'+
+
       '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
       '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
       '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%"></td>'+
@@ -149,7 +149,7 @@ function buildAnalysisSheet(){
 function resetAnalysisRow(){
   var set=function(id,v){ var e=document.getElementById(id); if(e) e.value=v; };
   set('an-date', localDateStr());
-  ['an-product','an-cheese','an-lot','an-proddate','an-order','an-po','an-moisture','an-fat','an-ph']
+  ['an-product','an-cheese','an-lot','an-order','an-po','an-moisture','an-fat','an-ph']
     .forEach(function(id){ set(id,''); });
   var by=document.getElementById('an-by');
   if(by && typeof getInitials==='function') by.textContent = getInitials();
@@ -209,7 +209,6 @@ function anRowHTML(a, i){
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
     '<td class="soft">'+esc(a.customer||'—')+'</td>'+
     '<td class="code">'+esc(analysisLot(a)||'—')+'</td>'+
-    '<td class="soft">'+esc(a.prodDate||'—')+'</td>'+
     '<td class="soft">'+esc(a.order||'—')+'</td>'+
     '<td class="soft">'+esc(a.po||'—')+'</td>'+
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
@@ -311,7 +310,7 @@ function saveAnalysis(){
     customerId: c ? c.customerId : '',
     customer: c ? c.company : '',
     lot: g('an-lot'),
-    prodDate: g('an-proddate'),
+    prodDate: date,          // la fecha de la hoja ES la de produccion
     order: g('an-order'),
     po: g('an-po'),
     moisture: moisture, fat: fat, ph: ph,

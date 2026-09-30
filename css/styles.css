@@ -1868,7 +1868,7 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
    Todo en una columna, de arriba abajo, con el ancho de una
    hoja de papel: partirlo en dos obligaba a leer en zigzag.
    ============================================================ */
-.form-sheet{max-width:640px}
+.form-sheet{max-width:none}
 .form-sheet .lab-block{margin-top:4px}
 .sheet-actions{display:flex;align-items:center;gap:12px;margin-top:22px}
 .sheet-actions .btn-ghost{margin:0}
