@@ -162,15 +162,14 @@ function newCustomerHTML(pre){
     '<div class="sub-label">Lab form</div>'+
     '<div class="pair">'+
       campo('prefix','Form prefix (optional)',' autocapitalize="characters"')+
-      '<div class="select-wrap"><select class="field" id="'+pre+'-nc-form" '+
-        'onchange="renderNewCustomerTests(\''+pre+'\')">'+customerFormOptions('')+'</select></div>'+
+      '<div class="select-wrap"><select class="field" id="'+pre+'-nc-form">'+
+        customerFormOptions('')+'</select></div>'+
     '</div>'+
     '<div class="pair">'+
       campo('per','Samples per order',' inputmode="numeric" value="1"')+
       '<label class="lab-check" style="margin:0"><input type="checkbox" id="'+pre+'-nc-numbered">'+
         '<span>Samples are numbered</span></label>'+
     '</div>'+
-    '<div class="lt-box" id="'+pre+'-nc-tests"></div>'+
     '<div class="cd-actions" style="margin-top:10px">'+
       '<button type="button" class="btn-solid" onclick="saveNewCustomer(\''+pre+'\')">Save customer</button>'+
       '<button type="button" class="btn-ghost" onclick="toggleNewCustomer(\''+pre+'\',false)">Cancel</button>'+
@@ -184,7 +183,6 @@ function toggleNewCustomer(pre, force){
   var show = (force===undefined) ? el.style.display==='none' : !!force;
   el.style.display = show ? 'block' : 'none';
   if(show){
-    renderNewCustomerTests(pre);
     var c = pel(pre,'nc-company'); if(c) c.focus();
   }
 }
@@ -215,11 +213,9 @@ function saveNewCustomer(pre){
   if(!id){ toast('Enter the customer code'); return; }
   if(customerById(id)){ toast('That customer code already exists'); return; }
 
+  // El cliente ya no lleva tests: se eligen en el producto, una sola vez y a
+  // la vista. Asi ningun producto hereda nada que nadie recuerde haber marcado.
   var tests = [];
-  var box = pel(pre,'nc-tests');
-  if(box) box.querySelectorAll('[data-nc-test]').forEach(function(c){
-    if(c.checked) tests.push(c.getAttribute('data-nc-test'));
-  });
 
   var per = parseInt(g('nc-per'), 10);
   var cust = {
