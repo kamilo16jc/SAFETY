@@ -244,15 +244,21 @@ function labBlockHTML(pre, p){
   var ids  = productCustomerIds(p);
   var n    = p ? productSampleCount(p) : 1;
   var plate = !p || p.plate !== false;
-  var chip = function(v, label){
-    return '<button type="button" class="pkg-chip'+(mode===v?' selected':'')+'" '+
-      'data-cmode="'+v+'" onclick="setCustomerMode(\''+pre+'\',\''+v+'\')">'+label+'</button>';
+  // El cliente se elige en el mismo boton desplegable que usan las hojas: una
+  // sola cosa que abrir, y el rotulo dice en que quedo.
+  var MODOS = {none:'No customer', one:'One customer', many:'Several customers'};
+  var opcion = function(v, icono){
+    return {fn:"function(){setCustomerMode('"+pre+"','"+v+"')}", icon:icono, text:MODOS[v],
+            on:mode===v, attrs:'data-cmode="'+v+'"'};
   };
   return '<div class="sec-label">Laboratory</div>'+
     '<div class="lab-block">'+
       '<div class="sub-label">Who buys this product?</div>'+
-      '<div class="chip-row" id="'+pre+'-cmode">'+
-        chip('none','No customer')+chip('one','One customer')+chip('many','Several customers')+
+      '<div class="cmode-row" id="'+pre+'-cmode">'+
+        moreHTML([opcion('none','close'), opcion('one','user'), opcion('many','grid'),
+                  {fn:"function(){toggleNewCustomer('"+pre+"')}", icon:'plus', text:'New customer'}],
+                 'Who buys this product?',
+                 {label:MODOS[mode], faceId:pre+'-cface'})+
       '</div>'+
       '<div id="'+pre+'-cone" style="display:'+(mode==='one'?'block':'none')+'">'+
         '<div class="select-wrap"><select class="field" id="'+pre+'-customer" '+
@@ -265,8 +271,6 @@ function labBlockHTML(pre, p){
         '<div class="hint">The first one ticked is the one whose form and code the '+
           'lab sample uses.</div>'+
       '</div>'+
-      '<button type="button" class="btn-ghost" style="margin-bottom:10px" '+
-        'onclick="toggleNewCustomer(\''+pre+'\')"><span data-icon="plus"></span>New customer</button>'+
       newCustomerHTML(pre)+
       '<div id="'+pre+'-customer-hint"></div>'+
       '<div class="sub-label">Lab samples per run</div>'+
@@ -274,7 +278,7 @@ function labBlockHTML(pre, p){
         'value="'+n+'" placeholder="e.g. 1" oninput="this.dataset.touched=\'1\'">'+
       '<div class="hint" id="'+pre+'-lab-hint">0 means this product is never sampled.</div>'+
       '<label class="lab-check"><input type="checkbox" id="'+pre+'-plate"'+(plate?' checked':'')+'>'+
-        '<span><b>Yeast &amp; mold plate</b> \u00b7 a plate is made and read 5 days later</span></label>'+
+        '<span><b>Y&amp;M</b></span></label>'+
       '<div id="'+pre+'-lt">'+
         (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+'</div>'+
     '</div>';
@@ -317,6 +321,9 @@ function setCustomerMode(pre, mode){
   if(row) row.querySelectorAll('[data-cmode]').forEach(function(b){
     b.classList.toggle('selected', b.getAttribute('data-cmode')===mode);
   });
+  var cara = pel(pre,'cface');
+  if(cara) cara.textContent = {none:'No customer', one:'One customer',
+                               many:'Several customers'}[mode] || 'One customer';
   var one = pel(pre,'cone'), many = pel(pre,'cmany');
   if(one)  one.style.display  = mode==='one'  ? 'block' : 'none';
   if(many) many.style.display = mode==='many' ? 'block' : 'none';
@@ -330,7 +337,7 @@ function setCustomerMode(pre, mode){
 
 function currentCustomerMode(pre){
   var row = pel(pre,'cmode');
-  var on = row ? row.querySelector('.pkg-chip.selected') : null;
+  var on = row ? row.querySelector('[data-cmode].selected') : null;
   return on ? on.getAttribute('data-cmode') : 'one';
 }
 

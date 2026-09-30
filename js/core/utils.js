@@ -72,16 +72,24 @@ function hideSyncStatus() {
 // generar la forma, copiar otro dia—, que antes ocupaba su sitio en la barra
 // aunque casi nunca se use. Con raton se abre al pasar por encima (lo hace el
 // CSS); con el dedo, al tocarlo, que es lo que hace esto.
-function moreHTML(items, etiqueta){
+function moreHTML(items, etiqueta, opts){
+  opts = opts || {};
   var rotulo = etiqueta || 'More options';
-  return '<div class="more-box" data-open="false">'+
-    '<button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false" '+
-      'title="'+rotulo+'" aria-label="'+rotulo+'" onclick="moreToggle(this)">'+
-      '<span data-icon="more"></span></button>'+
-    '<div class="more-menu" role="menu">'+
+  // Cuando ademas de abrir hay que enseñar lo elegido, el boton se alarga y
+  // lleva el rotulo delante de los tres puntos.
+  var cara = (opts.label != null)
+    ? '<span class="more-face"'+(opts.faceId ? ' id="'+opts.faceId+'"' : '')+'>'+opts.label+'</span>'+
+      '<span data-icon="more"></span>'
+    : '<span data-icon="more"></span>';
+  return '<div class="more-box'+(opts.wrapId ? '" id="'+opts.wrapId : '')+'" data-open="false">'+
+    '<button class="more-btn'+(opts.label != null ? ' more-btn-wide' : '')+'" type="button" '+
+      'aria-haspopup="true" aria-expanded="false" title="'+rotulo+'" aria-label="'+rotulo+'" '+
+      'onclick="moreToggle(this)">'+cara+'</button>'+
+    '<div class="more-menu" role="menu"'+(opts.menuId ? ' id="'+opts.menuId+'"' : '')+'>'+
       items.map(function(i){
-        return '<button class="more-item" type="button" role="menuitem" '+
-          'onclick="moreRun(this,'+i.fn+')"><span data-icon="'+i.icon+'"></span>'+i.text+'</button>';
+        return '<button class="more-item'+(i.on ? ' selected' : '')+'" type="button" role="menuitem"'+
+          (i.attrs ? ' '+i.attrs : '')+' onclick="moreRun(this,'+i.fn+')">'+
+          '<span data-icon="'+i.icon+'"></span>'+i.text+'</button>';
       }).join('')+
     '</div></div>';
 }

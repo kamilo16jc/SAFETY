@@ -318,7 +318,7 @@ canvas{width:100%!important}
 
 /* ===== PRODUCTION SCHEDULE ===== */
 .lab-check{display:flex;align-items:flex-start;gap:9px;margin:12px 0 4px;padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;font-size:12.5px;line-height:1.45;color:var(--muted)}
-.lab-check input{margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:var(--accent)}
+.lab-check input{margin-top:1px;flex-shrink:0}
 .lab-check b{color:var(--text)}
 .pr-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
 .pr-stat{border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;background:var(--surface)}
@@ -931,7 +931,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .lt-group:last-child{border-bottom:0}
 .lt-title{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:800;margin-bottom:5px}
 .lt-item{display:flex;align-items:flex-start;gap:8px;padding:4px 2px;font-size:12px;color:var(--text);cursor:pointer;line-height:1.35}
-.lt-item input{margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+.lt-item input{margin-top:1px;flex-shrink:0}
 .lt-item.off{color:var(--dim)}
 .lt-item em{font-style:normal;color:var(--warn);font-size:10px}
 .an-vals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
@@ -1317,7 +1317,7 @@ body.logged-out .topstack{display:none}
 .cust-pick{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:4px;
   font-size:12.5px;cursor:pointer;color:var(--text)}
 .cust-pick:hover{background:var(--accent-tint)}
-.cust-pick input{accent-color:var(--accent);flex-shrink:0}
+.cust-pick input{flex-shrink:0}
 .cust-pick b{color:var(--muted);font-weight:700}
 
 /* Alta de cliente dentro del bloque de laboratorio */
@@ -1348,7 +1348,7 @@ body.logged-out .topstack{display:none}
   border:1px solid var(--accent);border-radius:var(--radius);background:var(--accent-tint);
   font-size:12.5px;font-weight:600;color:var(--accent-deep)}
 .picked-bar b{font-size:15px;font-weight:800}
-.sheet td input[type=checkbox]{accent-color:var(--accent);cursor:pointer}
+.sheet td input[type=checkbox]{font-size:15px}
 .sheet sup{font-size:8px;color:var(--muted)}
 
 /* ============================================================
@@ -1421,7 +1421,7 @@ body.logged-out .topstack{display:none}
   .sheet td.acts{gap:10px}
   .sheet td.acts .ico-btn.sm{width:38px;height:38px;margin:0}
   .sheet td.acts .ico-btn.sm svg{width:16px;height:16px}
-  .sheet td input[type=checkbox]{width:20px;height:20px}
+  .sheet td input[type=checkbox]{font-size:16px}
 
   /* --- barra de herramientas: en columna, sin huecos vacíos --- */
   .sheet-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
@@ -1836,3 +1836,67 @@ body.logged-out .topstack{display:none}
   .sheet-bar .more-box{justify-self:end}
   .more-item{font-size:13px;padding:11px 17px 11px 14px}
 }
+
+/* ============================================================
+   CASILLAS  (la de Uiverse.io, de adamgiebl)
+   Una sola regla para todo el sistema: la casilla es el propio
+   <input>, sin envoltorios nuevos. Vacia es un cuadro de linea
+   fina; marcada, el cuadro se llena del color de la ventana y
+   el borde se encoge hasta volverse el palomeo. Se mide en em,
+   asi que crece con la letra de donde este.
+   ============================================================ */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;
+  width:1.3em;height:1.3em;margin:0;flex-shrink:0;vertical-align:-.28em;
+  border:0;border-radius:.25em;background:transparent;cursor:pointer;
+  transition:background .25s}
+input[type=checkbox]::after{content:"";position:absolute;left:0;top:0;
+  width:1.05em;height:1.05em;border:.1em solid var(--dim);border-radius:.25em;
+  transition:all .25s,border-width .1s}
+input[type=checkbox]:hover::after{border-color:var(--accent)}
+input[type=checkbox]:checked{background:var(--accent)}
+input[type=checkbox]:checked::after{left:.45em;top:.25em;width:.25em;height:.5em;
+  border-color:transparent var(--accent-fg) var(--accent-fg) transparent;
+  border-width:0 .15em .15em 0;border-radius:0;transform:rotate(45deg)}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=checkbox]:disabled{opacity:.45;cursor:default}
+@media (prefers-reduced-motion:reduce){
+  input[type=checkbox],input[type=checkbox]::after{transition:none}
+}
+
+/* ============================================================
+   HOJA DE UN PRODUCTO
+   Todo en una columna, de arriba abajo, con el ancho de una
+   hoja de papel: partirlo en dos obligaba a leer en zigzag.
+   ============================================================ */
+.form-sheet{max-width:640px}
+.form-sheet .lab-block{margin-top:4px}
+.sheet-actions{display:flex;align-items:center;gap:12px;margin-top:22px}
+.sheet-actions .btn-ghost{margin:0}
+@media (min-width:1024px){
+  .form-sheet{background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:22px 24px 24px}
+  .form-sheet > .sec-label:first-child{margin-top:0}
+}
+
+/* El boton de guardar: la misma pastilla del de anadir, pero con el color de
+   la pantalla en la que esta, que es lo que la identifica. */
+.save-btn{display:inline-flex;align-items:center;font-family:inherit;cursor:pointer;
+  font-weight:500;font-size:13.5px;padding:.6em 1.3em .6em 1em;color:var(--accent-fg);
+  border:none;border-radius:20em;letter-spacing:.04em;white-space:nowrap;
+  background:var(--accent);
+  background:linear-gradient(0deg,var(--accent) 0%,var(--accent-deep) 100%);
+  box-shadow:0 .7em 1.5em -.5em var(--accent);
+  transition:box-shadow .18s ease,transform .14s ease}
+.save-btn svg{width:1.05em;height:1.05em;margin-right:7px;flex-shrink:0}
+.save-btn:hover{box-shadow:0 .5em 1.5em -.5em var(--accent);transform:translateY(-1px)}
+.save-btn:active{box-shadow:0 .3em 1em -.5em var(--accent);transform:translateY(1px)}
+.save-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){ .save-btn{transition:none} }
+
+/* El desplegable cuando ademas tiene que enseñar lo elegido */
+.cmode-row{margin-bottom:12px}
+.more-btn-wide{width:auto;height:36px;border-radius:50px;padding:0 13px 0 16px;gap:10px}
+.more-face{font-size:12.5px;font-weight:600;letter-spacing:.01em}
+.more-item.selected{border-color:var(--accent);color:var(--accent)}
+.more-item.selected svg{color:var(--accent)}
+.more-item.selected:hover{color:var(--accent-fg)}

@@ -835,8 +835,8 @@
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
   <div class="form-title">Add Product</div>
 
-  <div class="fgrid">
-  <div class="fcol">
+  <!-- Todo en una sola hoja: se lee de arriba abajo y se guarda al final -->
+  <div class="form-sheet">
     <div class="sec-label">Product Number</div>
     <div class="prod-row">
       <input type="text" class="field" id="ap-number" placeholder="e.g. 880" autocapitalize="characters"
@@ -856,21 +856,19 @@
         <input type="text" class="field" id="ap-max" placeholder="Max" inputmode="decimal">
       </div>
     </div>
-  </div>
-  <div class="fcol">
     <div class="sec-label">Bags per case</div>
     <input type="text" class="field" id="ap-bags" placeholder="e.g. 4" inputmode="numeric">
     <div class="sec-label">Barcode <span class="opt">· optional</span></div>
     <input type="text" class="field" id="ap-barcode" placeholder="Scan it or type it">
+
     <div id="ap-labblock"></div>
-    <div class="capa-form-actions">
-      <button class="main-btn" onclick="saveNewProduct()">Save product</button>
+
+    <div class="sheet-actions">
+      <button class="save-btn" onclick="saveNewProduct()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>Save product</button>
       <button class="btn-ghost" onclick="resetAddProduct()">Clear</button>
     </div>
-    <div class="hint" style="margin-top:10px">Saved products go straight to the catalog and to the
-      product list of every screen. The yeast &amp; mold plate is on by default — turn it off in the
-      catalog for the product that is not plated.</div>
-  </div>
   </div>
 </div>
 
