@@ -85,9 +85,9 @@ function initReports() {
   var ss = document.getElementById('rpt-shift-sel');
   if(ss && !ss.value) ss.value = String(expectedShift());
   updateRptShiftCount();
-  // Sin fecha: la lista arranca con todo lo que hay y el dia lo elige quien mira
+  // La casilla abre vacia, pero lo que se enseña es el dia de hoy
   document.getElementById('rpt-date').value = '';
-  rptFilters.date = '';
+  rptFilters.date = localDateStr();
   rptFilters.line = 'all';
   rptFilters.shift = 'all';
   rptFilters.product = '';
@@ -114,7 +114,7 @@ function applyRptFilters() {
   rptDirty = false;
   renderRptDirty();
   renderRptLab();
-  rptFilters.date    = document.getElementById('rpt-date').value;
+  rptFilters.date    = document.getElementById('rpt-date').value || localDateStr();
   rptFilters.product = (document.getElementById('rpt-product').value || '').trim().toLowerCase();
   var db = getDB();
 

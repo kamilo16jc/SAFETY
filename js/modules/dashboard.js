@@ -31,6 +31,8 @@ function readDashFilters(){
 function dashInRange(iso){
   var d = String(iso||'').slice(0,10);
   if(!d) return false;
+  // Sin fechas escritas se mira el dia de hoy; solo "All time" abre el grifo
+  if(!dashF.from && !dashF.to) return dashDays===0 || d === localDateStr();
   if(dashF.from && d < dashF.from) return false;
   if(dashF.to   && d > dashF.to)   return false;
   return true;

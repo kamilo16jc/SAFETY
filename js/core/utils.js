@@ -86,6 +86,21 @@ function echoDateRange(outId, fromId, toId){
 }
 
 
+// ===== LO QUE SE MIRA CUANDO NADIE HA FILTRADO =====
+// Las casillas de fecha abren vacias, y vacio NO significa "traelo todo":
+// significa HOY. Sacar semanas de historial que nadie pidio llena la pantalla
+// de ruido y, si hay que ir a buscarlo, cuesta lecturas.
+// Lo unico que se salva del corte es lo que sigue pendiente: una placa sin
+// leer o una muestra sin enviar no pueden desaparecer por ser de antier.
+function inScope(fecha, from, to, pendiente){
+  var d = String(fecha||'').slice(0,10);
+  if(!d) return false;
+  if(!from && !to) return d === localDateStr() || !!pendiente;
+  if(from && d < from) return false;
+  if(to   && d > to)   return false;
+  return true;
+}
+
 // ===== GUARDAR UNA FILA =====
 // Las celdas de las hojas se guardan al salir del campo, pero eso no se ve.
 // El boton de la fila hace lo mismo a la vista, y se queda un momento en

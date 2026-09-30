@@ -44,9 +44,7 @@ function labSamples(statusOverride){
   var status = statusOverride || labStatus;
   return getRuns().filter(function(r){
     if(runSampleCount(r)<=0) return false;
-    var d = String(r.date).slice(0,10);
-    if(labFrom && d < labFrom) return false;
-    if(labTo   && d > labTo)   return false;
+    if(!inScope(r.date, labFrom, labTo, !r.labSent)) return false;
     if(status==='pending' && r.labSent) return false;
     if(status==='sent'    && !r.labSent) return false;
     return true;

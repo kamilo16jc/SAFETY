@@ -96,9 +96,7 @@ function lrRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('lr-from'), to=g('lr-to'), q=(g('lr-search')||'').trim().toLowerCase();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
-    var d=String(a.date||'').slice(0,10);
-    if(from && d<from) return false;
-    if(to   && d>to)   return false;
+    if(!inScope(a.date, from, to, lrState(a)!=='done')) return false;
     if(q){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' #'+String(a.seq||'')).toLowerCase();
@@ -309,9 +307,7 @@ function coaRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('coa-from'), to=g('coa-to'), q=(g('coa-search')||'').trim().toLowerCase();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
-    var d=String(a.date||'').slice(0,10);
-    if(from && d<from) return false;
-    if(to   && d>to)   return false;
+    if(!inScope(a.date, from, to, coaReady(a) && !a.coaNo)) return false;
     if(q){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' '+String(a.coaNo||'')+
@@ -620,9 +616,7 @@ function stRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('st-from'), to=g('st-to'), q=(g('st-search')||'').trim().toLowerCase();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
-    var d=String(a.date||'').slice(0,10);
-    if(from && d<from) return false;
-    if(to   && d>to)   return false;
+    if(!inScope(a.date, from, to, stState(a)!=='done')) return false;
     if(q){
       var hay=(String(analysisLot(a)||'')+' '+String(a.customer||'')+' '+String(a.po||'')+' '+
                String(a.order||'')+' '+String(a.product||'')).toLowerCase();

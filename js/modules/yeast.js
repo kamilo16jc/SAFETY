@@ -82,9 +82,8 @@ function ymRows(){
 
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
     if(!ymPlate(a.product)) return false;
-    var d = String(a.date||'').slice(0,10);
-    if(ymFrom && d < ymFrom) return false;
-    if(ymTo   && d > ymTo)   return false;
+    var abierta = !ymDone(a) || String(a.ymAt||'').slice(0,10) === localDateStr();
+    if(!inScope(a.date, ymFrom, ymTo, abierta)) return false;
     if(ymQuery){
       var hay = (String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                  String(a.order||'')+' '+String(a.po||'')+' '+String(a.prodDate||'')+' '+

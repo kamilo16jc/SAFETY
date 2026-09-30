@@ -91,9 +91,7 @@ function anFilters(){
 function analysisResults(){
   anFilters();
   return getAnalyses().filter(function(a){
-    var d=String(a.date||'').slice(0,10);
-    if(anFrom && d<anFrom) return false;
-    if(anTo   && d>anTo)   return false;
+    if(!inScope(a.date, anFrom, anTo, !analysisComplete(a))) return false;
     if(anQuery){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' #'+String(a.seq||'')).toLowerCase();

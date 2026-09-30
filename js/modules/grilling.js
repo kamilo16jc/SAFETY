@@ -145,9 +145,7 @@ function gcRows(){
   var from=g('gc-from'), to=g('gc-to'), q=(g('gc-search')||'').trim().toLowerCase();
   return (typeof getRawRecords==='function' ? getRawRecords() : []).filter(function(r){
     if(!isGrillingMaterial(r.material)) return false;
-    var d = String(r.date||'').slice(0,10);
-    if(from && d < from) return false;
-    if(to   && d > to)   return false;
+    if(!inScope(r.date, from, to, gcStage(r, gcExtraOrEmpty(r.id))!=='done')) return false;
     if(q){
       var ex = gcExtraOrEmpty(r.id);
       var hay = [r.code,r.sample,r.material,r.testedBy,ex.receivedBy,ex.sensoryBy,ex.approvedBy]

@@ -255,9 +255,7 @@ function rawRows(){
   var f = rawFilters();
   return getRawRecords().filter(function(r){
     if(r.section !== rawSection) return false;
-    var d = String(r.date||'').slice(0,10);
-    if(f.from && d < f.from) return false;
-    if(f.to   && d > f.to)   return false;
+    if(!inScope(r.date, f.from, f.to, rawState(r)==='pending')) return false;
     if(f.q){
       var hay = [r.sample,r.code,r.material,r.supplier,r.batch,r.notes,r.testedBy]
                 .join(' ').toLowerCase();
