@@ -132,9 +132,9 @@ function buildAnalysisSheet(){
 
       '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
       '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
-      '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%"></td>'+
-      '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%"></td>'+
-      '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH"></td>'+
+      '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
+      '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
+      '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH" oninput="anMarkNewRow()"></td>'+
       '<td class="soft" id="an-by">'+esc(typeof getInitials==='function' ? getInitials() : '')+'</td>'+
       '<td><button class="add-btn" onclick="saveAnalysis()">'+
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
@@ -197,10 +197,39 @@ function renderAnalysisRows(){
   renderIcons(body);
 }
 
+// Pinta o despinta una celda segun el objetivo del producto de esa fila
+function anMarkTarget(el, id, field){
+  var a = (getDB().analysis||[]).filter(function(x){ return x.id===id; })[0];
+  var p = (typeof findProduct==='function') ? findProduct(a ? a.product : '') : null;
+  var fuera = (typeof outOfTarget==='function') && outOfTarget(p, field, el.value);
+  el.classList.toggle('out', !!fuera);
+  el.title = fuera ? 'Out of the product target' : '';
+}
+
+// Lo mismo en la fila de alta, donde el producto es el que se acaba de teclear
+function anMarkNewRow(){
+  var num = (document.getElementById('an-product')||{}).value || '';
+  var p = (typeof findProduct==='function') ? findProduct(num) : null;
+  ['moisture','fat','ph'].forEach(function(f){
+    var el = document.getElementById('an-'+f);
+    if(!el) return;
+    var fuera = (typeof outOfTarget==='function') && outOfTarget(p, f, el.value);
+    el.classList.toggle('out', !!fuera);
+    el.title = fuera ? 'Out of the product target' : '';
+  });
+}
+
 function anRowHTML(a, i){
+  // Lo que se sale del objetivo del producto se pinta al escribirlo, no al
+  // guardarlo: quien teclea 6.0 en un pH de 4.9 a 5.5 lo ve en ese momento.
+  var prod = (typeof findProduct==='function') ? findProduct(a.product) : null;
   var cell = function(field, val, ph){
-    return '<input class="cell num" inputmode="decimal" placeholder="'+ph+'" data-f="'+field+'" '+
-      'value="'+esc(val==null?'':val)+'" onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
+    var fuera = (typeof outOfTarget==='function') && outOfTarget(prod, field, val);
+    return '<input class="cell num'+(fuera?' out':'')+'" inputmode="decimal" placeholder="'+ph+'" '+
+      'data-f="'+field+'" value="'+esc(val==null?'':val)+'" '+
+      (fuera ? 'title="Out of the product target" ' : '')+
+      'oninput="anMarkTarget(this,'+a.id+',\''+field+'\')" '+
+      'onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
   };
   return '<tr>'+
     '<td class="rn">'+i+'</td>'+

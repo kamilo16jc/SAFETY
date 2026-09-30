@@ -39,6 +39,15 @@ function buildCoaTokens(a){
   var c = _coaCliente(a);
   var t = c.targets || {};
   var prod = (typeof findProduct === 'function') ? findProduct(a.product) : null;
+  // Los objetivos viven en el producto. Lo que quedara escrito en un cliente
+  // de antes se sigue respetando mientras no se pase al producto.
+  var objetivo = function(campo){
+    if(typeof labTargetOf === 'function'){
+      var n = labTargetOf(prod, campo);
+      if(n) return labTargetText(n);
+    }
+    return t[campo] || '';
+  };
   return {
     DESC:     a.cheese || (prod && prod.name) || c.productName || '',
     CUSTNAME: a.customer || c.company || '',
@@ -60,11 +69,11 @@ function buildCoaTokens(a){
     PH2:      '',
     YEAST:    _coaVal(a,'yeast','mxYeast'),
     MOLD:     _coaVal(a,'mold','mxMold'),
-    TMOIST:   t.moisture || '',
-    TFAT:     t.fat || '',
-    TPH:      t.ph || '',
-    TYEAST:   t.yeast || '',
-    TMOLD:    t.mold || ''
+    TMOIST:   objetivo('moisture'),
+    TFAT:     objetivo('fat'),
+    TPH:      objetivo('ph'),
+    TYEAST:   objetivo('yeast'),
+    TMOLD:    objetivo('mold')
   };
 }
 

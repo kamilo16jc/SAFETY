@@ -124,14 +124,10 @@ function custEditorHTML(c){
       campo('fax','Fax', c.fax)+
       campo('code','Customer code', c.code)+
     '</div>'+
-    '<div class="sub-label">Targets on the certificate</div>'+
-    '<div class="sheet-bar">'+
-      campo('tmoist','Moisture', t.moisture)+
-      campo('tfat','Fat', t.fat)+
-      campo('tph','pH', t.ph)+
-      campo('tyeast','Yeast', t.yeast)+
-      campo('tmold','Mold', t.mold)+
-    '</div>'+
+    // Los objetivos son del producto, no del cliente: dos productos del mismo
+    // cliente tienen humedades distintas. Se ponen en Add Product y en el
+    // catalogo, y desde ahi los toma el certificado.
+    
     ((c.tests||[]).length
       ? '<div class="lt-from">'+(c.tests||[]).length+' lab test(s) on this customer · '+
           esc((c.tests||[]).join(' · '))+

@@ -1970,3 +1970,24 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 .cu-edit .sub-label{margin:12px 0 6px}
 .cu-edit .lt-from{margin:10px 0 0}
 .cu-edit .sheet-actions{margin-top:16px}
+
+/* ============================================================
+   OBJETIVOS DEL PRODUCTO
+   Numeros con sus flechas, minimo y maximo. Lo que el
+   certificado escribe como "4.9 - 5.5" se teclea aqui como dos
+   cifras, y por eso el analisis puede compararlo.
+   ============================================================ */
+.tgt-grid{display:grid;gap:8px;margin-bottom:14px;max-width:520px}
+.tgt-row{display:grid;grid-template-columns:120px 1fr 1fr;align-items:center;gap:10px}
+.tgt-n{font-size:12.5px;font-weight:700;color:var(--text)}
+.tgt-n i{font-style:normal;font-weight:500;color:var(--dim);font-size:11px}
+.tgt-hueco{display:block}
+input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:640px){
+  .tgt-row{grid-template-columns:1fr 1fr;gap:6px}
+  .tgt-n{grid-column:1/-1}
+}
+
+/* Lo que se sale del objetivo, en la hoja de analisis */
+.sheet input.cell.out{color:var(--fail);font-weight:800;
+  background:var(--fail-tint);box-shadow:inset 0 0 0 1px var(--fail)}

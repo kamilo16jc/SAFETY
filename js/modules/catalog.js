@@ -165,6 +165,7 @@ function renderCatalogDetail(){
           '<button class="btn-ghost" style="width:100%;justify-content:center" onclick="catalogRescan()">'+
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
       '</div>'+
+      (typeof labTargetsHTML==='function' ? labTargetsHTML('cd', p) : '')+
       labBlockHTML('cd', p)+
       '<div class="cd-meta">'+
         '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
@@ -216,6 +217,7 @@ function saveCatalogEdits(){
   }
   p.target = (!isNaN(mn) && !isNaN(mx)) ? {min:mn, max:mx} : null;
   p.bagsPerCase = isNaN(bags) ? null : bags;
+  if(typeof readLabTargets==='function') p.labTargets = readLabTargets('cd');
   var lab = readLabBlock('cd');
   p.labSamples   = lab.labSamples;
   p.labSample    = lab.labSample;

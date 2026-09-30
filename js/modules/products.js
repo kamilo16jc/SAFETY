@@ -618,6 +618,76 @@ function fillProductSizes(pre){
 
 // Lee el formulario y devuelve el producto listo para guardar, o null si
 // falta algo. Lo comparten el modal y la pantalla Add Product.
+// ===== LOS OBJETIVOS DEL PRODUCTO =====
+// Se guardan como numeros —minimo y maximo—, no como texto. Con texto
+// ("<= 34") no se puede comparar nada; con numeros, Sample Analysis pinta en
+// rojo lo que se sale y el certificado sigue escribiendolo como siempre.
+// Viven en el PRODUCTO: dos productos del mismo cliente tienen humedades
+// distintas.
+var LAB_TARGETS = [
+  {f:'moisture', n:'Moisture', u:'%',     paso:'0.01', dos:true},
+  {f:'fat',      n:'Fat',      u:'%',     paso:'0.01', dos:true},
+  {f:'ph',       n:'pH',       u:'',      paso:'0.01', dos:true},
+  {f:'yeast',    n:'Yeast',    u:'CFU/g', paso:'10',   dos:false},
+  {f:'mold',     n:'Mold',     u:'CFU/g', paso:'10',   dos:false}
+];
+
+function labTargetOf(p, campo){
+  var t = (p && p.labTargets) ? p.labTargets[campo] : null;
+  return (t && (t.min != null || t.max != null)) ? t : null;
+}
+
+// Como lo escribe la forma del cliente: 4.9 – 5.5 · ≤ 34 · ≥ 38
+function labTargetText(t){
+  if(!t) return '';
+  if(t.min != null && t.max != null) return t.min + ' \u2013 ' + t.max;
+  if(t.max != null) return '\u2264 ' + t.max;
+  if(t.min != null) return '\u2265 ' + t.min;
+  return '';
+}
+
+// ¿Este valor se sale? Un "<10" cuenta como 10, que es lo que mide el lab.
+function outOfTarget(p, campo, valor){
+  var t = labTargetOf(p, campo);
+  if(!t) return false;
+  var v = parseFloat(String(valor == null ? '' : valor).replace(/[^0-9.\-]/g, ''));
+  if(isNaN(v)) return false;
+  if(t.min != null && v < t.min) return true;
+  if(t.max != null && v > t.max) return true;
+  return false;
+}
+
+function labTargetsHTML(pre, p){
+  var t = (p && p.labTargets) || {};
+  var num = function(id, val, paso, ph){
+    return '<input type="number" step="'+paso+'" class="field tgt" id="'+pre+'-t-'+id+'" '+
+      'placeholder="'+ph+'" value="'+(val == null ? '' : val)+'">';
+  };
+  return '<div class="sec-label">Targets <span class="opt">\u00b7 what the certificate promises</span></div>'+
+    '<div class="tgt-grid">'+
+      LAB_TARGETS.map(function(x){
+        var v = t[x.f] || {};
+        return '<div class="tgt-row"><span class="tgt-n">'+x.n+
+          (x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+
+          (x.dos ? num(x.f+'-min', v.min, x.paso, 'Min') : '<span class="tgt-hueco"></span>')+
+          num(x.f+'-max', v.max, x.paso, 'Max')+'</div>';
+      }).join('')+
+    '</div>';
+}
+
+function readLabTargets(pre){
+  var out = {};
+  LAB_TARGETS.forEach(function(x){
+    var t = {};
+    var mn = parseFloat((pel(pre, 't-'+x.f+'-min') || {}).value);
+    var mx = parseFloat((pel(pre, 't-'+x.f+'-max') || {}).value);
+    if(!isNaN(mn)) t.min = mn;
+    if(!isNaN(mx)) t.max = mx;
+    if(t.min != null || t.max != null) out[x.f] = t;
+  });
+  return out;
+}
+
 function readProductForm(pre){
   pre = pre || 'prod';
   var g = function(f){ var e = pel(pre,f); return e ? e.value : ''; };
@@ -661,6 +731,7 @@ function readProductForm(pre){
     pkg: pkg,
     pkgLabel: pkgLabel,
     target: target,
+    labTargets: readLabTargets(pre),
     bagsPerCase: isNaN(bags) ? null : bags,
     labSamples: lab.labSamples,
     labSample: lab.labSample,
@@ -717,6 +788,8 @@ function resetAddProduct(){
   ['number','name','custom-label','min','max','bags','barcode'].forEach(function(f){
     var e = pel('ap', f); if(e) e.value = '';
   });
+  var tg = document.getElementById('ap-targets');
+  if(tg) tg.innerHTML = labTargetsHTML('ap', null);
   var box = document.getElementById('ap-labblock');
   if(box){
     box.innerHTML = labBlockHTML('ap', null);
