@@ -74,6 +74,7 @@ function goTo(id){
   if(id==='screen-hold') initHold();
   if(id==='screen-activity') initActivity();
   if(id==='screen-products') initCatalog();
+  if(id==='screen-customers') initCustomers();
   if(id==='screen-addproduct') initAddProduct();
   if(id==='screen-lotsearch') initSearch();
   if(id==='screen-capa') initCapa();
@@ -185,6 +186,7 @@ var CRUMBS = {
   'screen-hold':     ['Review', 'Hold Cases'],
   'screen-activity': ['Review', 'Activity Log'],
   'screen-products': ['Setup', 'Product Catalog'],
+  'screen-customers': ['Setup', 'Customers'],
   'screen-addproduct':['Setup', 'Add Product'],
   'screen-admin':    ['Setup', 'Admin']
 };

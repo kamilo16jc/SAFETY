@@ -1957,3 +1957,16 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
   color:var(--text);border-radius:50px;padding:4px 11px;font-family:inherit;
   font-size:11px;font-weight:700;cursor:pointer}
 .lt-clear:hover{border-color:var(--accent);color:var(--accent)}
+
+/* La ficha de un cliente, abierta debajo de su fila.
+   Aqui los rotulos SI se ven: en una barra de filtros el campo se explica
+   solo, pero catorce casillas en blanco no dicen cual es cual. */
+.cu-edit .sheet-bar .sb-field > label{font-size:9.5px;line-height:1.2;min-height:0;
+  margin:0 0 4px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted)}
+.cu-edit{padding:14px 4px 6px}
+.cu-edit .sheet-bar{margin-bottom:10px}
+.cu-edit .sb-field{min-width:150px;flex:1}
+.cu-edit .sub-label{margin:12px 0 6px}
+.cu-edit .lt-from{margin:10px 0 0}
+.cu-edit .sheet-actions{margin-top:16px}

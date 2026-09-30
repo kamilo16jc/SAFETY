@@ -1,0 +1,257 @@
+// ===== CLIENTES =====
+// Hasta ahora un cliente solo se podia crear —desde la ficha de un producto— y
+// nunca mas se le podia mirar ni corregir. Con el certificado de por medio eso
+// dejo de valer: de aqui salen el telefono, el fax, el contacto, el correo, el
+// empaque y los cinco objetivos que imprime el COA, y tambien los tests que un
+// producto hereda cuando no eligio los suyos.
+//
+// Esta pantalla es ese sitio: ver, corregir y borrar.
+
+var custQuery = '', custOpen = null;
+
+function initCustomers(){
+  custOpen = null;
+  var q = document.getElementById('cu-search');
+  if(q) q.value = custQuery;
+  renderCustomers();
+}
+
+function saveCustomerList(list){
+  var db = getDB();
+  if(!db.customers) db.customers = {list:[], tests:[]};
+  db.customers.list = list;
+  saveDB(db);
+  if(window.saveCustomersToFirebase) window.saveCustomersToFirebase(db.customers);
+}
+
+// Cuantos productos apuntan a este cliente, contando los dos caminos: el que
+// se le asigno a mano y el que se deduce de su lista de numeros.
+function custProductCount(c){
+  var n = 0;
+  (getProducts()||[]).forEach(function(p){
+    if(p.customerId === c.customerId) { n++; return; }
+    if((p.customerIds||[]).indexOf(c.customerId) >= 0) { n++; return; }
+    if((c.products||[]).some(function(x){ return normNumber(x) === normNumber(p.number); })) n++;
+  });
+  return n;
+}
+
+function custMatches(c){
+  if(!custQuery) return true;
+  var hay = (String(c.company||'')+' '+String(c.customerId||'')+' '+
+             String(c.contact||'')+' '+String(c.email||'')).toLowerCase();
+  return hay.indexOf(custQuery) >= 0;
+}
+
+function onCustSearch(v){
+  custQuery = String(v||'').trim().toLowerCase();
+  renderCustomers();
+}
+
+function renderCustomers(){
+  var host = document.getElementById('cu-sheet');
+  if(!host) return;
+  var todos = getCustomers().slice().sort(function(a,b){
+    return String(a.company||'').localeCompare(String(b.company||''));
+  });
+  var list = todos.filter(custMatches);
+
+  var kp = document.getElementById('cu-kpis');
+  if(kp){
+    var conTests = todos.filter(function(c){ return (c.tests||[]).length; }).length;
+    var sinDatos = todos.filter(function(c){ return !c.phone && !c.email && !c.contact; }).length;
+    kp.innerHTML =
+      kpiCard(todos.length, 'customers', {icono:'user'}) +
+      kpiCard(conTests, 'carry lab tests', {tono:conTests?'warn':'', icono:'droplet'}) +
+      kpiCard(sinDatos, 'without contact', {tono:sinDatos?'bad':'', icono:'alert'});
+    renderIcons(kp);
+  }
+
+  if(!list.length){
+    host.innerHTML = '<div class="sheet-empty">'+
+      (todos.length ? 'No customer matches that search.'
+                    : 'No customers yet. They are created from a product’s Laboratory block.')+
+      '</div>';
+    return;
+  }
+
+  host.innerHTML =
+    '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
+      '<th class="rn">#</th><th>Customer</th><th>ID</th><th>Contact</th><th>Phone</th>'+
+      '<th class="num">Products</th><th>Lab tests</th><th></th><th></th>'+
+    '</tr></thead><tbody>'+
+    list.map(function(c, i){
+      var tests = (c.tests||[]).length;
+      return '<tr'+(custOpen===c.customerId?' class="done"':'')+'>'+
+        '<td class="rn">'+(i+1)+'</td>'+
+        '<td class="wide"><b>'+esc(c.company||'—')+'</b></td>'+
+        '<td class="code">'+esc(c.customerId||'—')+'</td>'+
+        '<td class="soft">'+esc(c.contact||'—')+'</td>'+
+        '<td class="soft">'+esc(c.phone||'—')+'</td>'+
+        '<td class="num">'+custProductCount(c)+'</td>'+
+        '<td>'+(tests
+          ? '<span class="pill warn" title="'+esc((c.tests||[]).join(' · '))+'">'+tests+'</span>'
+          : '<span class="soft">—</span>')+'</td>'+
+        '<td><button class="sheet-btn" onclick="editCustomer(\''+esc(c.customerId)+'\')">Edit</button></td>'+
+        '<td><button class="run-del" title="Delete customer" '+
+          'onclick="deleteCustomer(\''+esc(c.customerId)+'\')">×</button></td>'+
+      '</tr>'+
+      (custOpen===c.customerId ? '<tr><td colspan="9">'+custEditorHTML(c)+'</td></tr>' : '');
+    }).join('')+
+    '</tbody></table></div>';
+  renderIcons(host);
+}
+
+// ---- El editor: los mismos campos que pide el certificado ----
+function custEditorHTML(c){
+  var v = function(x){ return esc(x==null?'':x); };
+  var t = c.targets || {};
+  var campo = function(f, rot, val){
+    return '<div class="sb-field"><label for="cu-'+f+'">'+rot+'</label>'+
+      '<input type="text" class="field" id="cu-'+f+'" value="'+v(val)+'"></div>';
+  };
+  return '<div class="cu-edit">'+
+    '<div class="sheet-bar">'+
+      campo('company','Customer name', c.company)+
+      campo('id','Customer ID', c.customerId)+
+      campo('prod','Product name', c.productName)+
+      campo('pack','Product packaging', c.packaging)+
+    '</div>'+
+    '<div class="sheet-bar">'+
+      campo('contact','Contact', c.contact)+
+      campo('email','Email', c.email)+
+      campo('phone','Phone', c.phone)+
+      campo('fax','Fax', c.fax)+
+      campo('code','Customer code', c.code)+
+    '</div>'+
+    '<div class="sub-label">Targets on the certificate</div>'+
+    '<div class="sheet-bar">'+
+      campo('tmoist','Moisture', t.moisture)+
+      campo('tfat','Fat', t.fat)+
+      campo('tph','pH', t.ph)+
+      campo('tyeast','Yeast', t.yeast)+
+      campo('tmold','Mold', t.mold)+
+    '</div>'+
+    ((c.tests||[]).length
+      ? '<div class="lt-from">'+(c.tests||[]).length+' lab test(s) on this customer · '+
+          esc((c.tests||[]).join(' · '))+
+          ' <button type="button" class="lt-clear" onclick="clearCustomerTests(\''+esc(c.customerId)+'\')">'+
+          'Remove them</button></div>'
+      : '')+
+    '<div class="sheet-actions">'+
+      '<button class="save-btn" onclick="saveCustomerEdit(\''+esc(c.customerId)+'\')">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+        '<path d="m5 12.5 4.5 4.5L19 7"/></svg>Save</button>'+
+      '<button class="btn-ghost" onclick="closeCustomer()">Cancel</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function editCustomer(id){
+  custOpen = (custOpen === id) ? null : id;
+  renderCustomers();
+}
+function closeCustomer(){ custOpen = null; renderCustomers(); }
+
+function saveCustomerEdit(id){
+  var list = getCustomers();
+  var c = list.filter(function(x){ return x.customerId === id; })[0];
+  if(!c) return;
+  var g = function(f){ var e = document.getElementById('cu-'+f); return e ? e.value.trim() : ''; };
+
+  var nuevoId = g('id').toUpperCase();
+  if(!g('company')){ toast('Enter the customer name'); return; }
+  if(!nuevoId){ toast('Enter the customer ID'); return; }
+  if(nuevoId !== id && list.some(function(x){ return x.customerId === nuevoId; })){
+    toast('That customer ID already exists'); return;
+  }
+
+  c.company     = g('company');
+  c.customerId  = nuevoId;
+  c.productName = g('prod');
+  c.packaging   = g('pack');
+  c.contact     = g('contact');
+  c.email       = g('email');
+  c.phone       = g('phone');
+  c.fax         = g('fax');
+  c.code        = g('code').toUpperCase();
+  c.targets     = {moisture:g('tmoist'), fat:g('tfat'), ph:g('tph'),
+                   yeast:g('tyeast'), mold:g('tmold')};
+  c.updatedBy   = currentUser ? currentUser.name : '—';
+  c.updatedAt   = localISOStr();
+
+  // Si cambio el codigo, los productos que apuntaban al viejo se quedarian
+  // huerfanos: se reapuntan aqui mismo.
+  if(nuevoId !== id){
+    var prods = getProducts();
+    var tocados = 0;
+    prods.forEach(function(p){
+      if(p.customerId === id){ p.customerId = nuevoId; tocados++; }
+      var ids = p.customerIds || [];
+      var k = ids.indexOf(id);
+      if(k >= 0){ ids[k] = nuevoId; tocados++; }
+    });
+    if(tocados) saveProducts(prods);
+  }
+
+  saveCustomerList(list);
+  logActivity('admin','Customer updated', c.company+' ('+c.customerId+')',
+              currentUser?currentUser.name:'—');
+  custOpen = null;
+  renderCustomers();
+  toast('Customer saved');
+}
+
+// Los tests del cliente son los que un producto hereda si no eligio los suyos.
+// Quitarlos de aqui corta la herencia de todos sus productos de una vez.
+function clearCustomerTests(id){
+  var list = getCustomers();
+  var c = list.filter(function(x){ return x.customerId === id; })[0];
+  if(!c) return;
+  var n = (c.tests||[]).length;
+  if(!confirm('Remove the '+n+' lab test(s) on '+(c.company||id)+'?\n\n'+
+              'Products that did not pick their own tests will stop inheriting them.')) return;
+  c.tests = [];
+  saveCustomerList(list);
+  logActivity('admin','Customer lab tests removed', (c.company||id)+' · '+n+' test(s)',
+              currentUser?currentUser.name:'—');
+  renderCustomers();
+  toast('Tests removed');
+}
+
+function deleteCustomer(id){
+  var list = getCustomers();
+  var c = list.filter(function(x){ return x.customerId === id; })[0];
+  if(!c) return;
+  if(typeof canDeleteRecords === 'function' && !canDeleteRecords()){
+    toast('Your role cannot delete'); return;
+  }
+  var n = custProductCount(c);
+  var aviso = 'Delete '+(c.company||id)+'?';
+  if(n) aviso += '\n\n'+n+' product(s) point to this customer and will be left without one.';
+  aviso += '\n\nThis cannot be undone.';
+  if(!confirm(aviso)) return;
+
+  var resto = list.filter(function(x){ return x.customerId !== id; });
+  saveCustomerList(resto);
+  logActivity('admin','Customer deleted', (c.company||id)+(n?' · '+n+' product(s) affected':''),
+              currentUser?currentUser.name:'—');
+  custOpen = null;
+  renderCustomers();
+  toast('Customer deleted');
+}
+
+function exportCustomersCSV(){
+  var out = [['Customer','ID','Code','Contact','Email','Phone','Fax','Product','Packaging',
+              'Target moisture','Target fat','Target pH','Target yeast','Target mold',
+              'Lab tests','Products']];
+  getCustomers().forEach(function(c){
+    var t = c.targets || {};
+    out.push([c.company||'', c.customerId||'', c.code||'', c.contact||'', c.email||'',
+              c.phone||'', c.fax||'', c.productName||'', c.packaging||'',
+              t.moisture||'', t.fat||'', t.ph||'', t.yeast||'', t.mold||'',
+              (c.tests||[]).join(' | '), custProductCount(c)]);
+  });
+  downloadCSV('customers-'+localDateStr()+'.csv', out);
+}

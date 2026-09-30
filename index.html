@@ -872,6 +872,32 @@
   </div>
 </div>
 
+<!-- CUSTOMERS -->
+<div class="screen" id="screen-customers">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
+  <div class="form-title">Customers</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="cu-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="cu-search" placeholder="Name, ID, contact or email"
+               autocomplete="off" oninput="onCustSearch(this.value)">
+      </div></div>
+    <span class="sb-gap"></span>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportCustomersCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="cu-kpis"></div>
+  <div id="cu-sheet"></div>
+</div>
+
 <!-- PRODUCTS -->
 <div class="screen" id="screen-products">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
@@ -1562,6 +1588,7 @@
 <script src="js/core/ribbon.js"></script>
 <script src="js/core/dup-guard.js"></script>
 <script src="js/modules/products.js"></script>
+<script src="js/modules/customers.js"></script>
 <script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>

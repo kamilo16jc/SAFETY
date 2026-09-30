@@ -40,7 +40,8 @@ var MODULES = [
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
       {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'},
-      {screen:'screen-addproduct',name:'Add Product',      icon:'plus', color:'#0369a1'}
+      {screen:'screen-addproduct',name:'Add Product',      icon:'plus', color:'#0369a1'},
+      {screen:'screen-customers', name:'Customers',       icon:'user', color:'#b45309'}
   ]},
   { id:'coa', color:'#e879f9', ink:'#a21caf', name:'COA', icon:'doc', items:[
       {screen:'screen-coa',        name:'COA Generator',   icon:'doc', color:'#047857'},

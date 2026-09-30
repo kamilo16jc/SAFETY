@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v91';
+const CACHE = 'nexora-qc-v92';
 
 const SHELL = [
   './',
@@ -20,6 +20,7 @@ const SHELL = [
   './js/modules/admin.js','./js/modules/reports.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
   './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',
+  './js/modules/customers.js',
   './js/modules/catalog.js','./js/modules/scanner.js','./js/modules/production.js','./js/modules/samplelist.js','./js/modules/lab.js','./js/modules/analysis.js','./js/modules/yeast.js','./js/modules/lab-tests.js','./js/modules/lab-form.js','./js/modules/coa.js','./js/modules/raw.js','./js/modules/grilling.js','./js/integrations/grilling-fill.js','./js/export/xlsx-write.js','./assets/grilling_form_template.docx','./js/modules/capa.js','./js/modules/shift.js',
   './js/export/pdf-reports.js','./js/export/excel.js','./js/export/dash-pdf.js',
   './js/export/capa-pdf.js','./js/export/shift-pdf.js',

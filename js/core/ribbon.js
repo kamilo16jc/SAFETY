@@ -35,7 +35,8 @@ var RIBBON_GROUPS = {
     {n:'Consulta',     s:['screen-reports','screen-lotsearch']}
   ],
   products: [
-    {n:'Catálogo', s:['screen-products','screen-addproduct']}
+    {n:'Catálogo', s:['screen-products','screen-addproduct']},
+    {n:'Clientes', s:['screen-customers']}
   ],
   coa: [
     {n:'Certificados',        s:['screen-coa','screen-coastatus']},
