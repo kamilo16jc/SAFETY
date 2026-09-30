@@ -212,7 +212,8 @@ function updateTopbar(id){
   var am = (typeof moduleById==='function' && activeModule) ? moduleById(activeModule) : null;
   if(am) c = [am.name, c[1]];
   var el = document.getElementById('tb-crumb');
-  if(el) el.innerHTML = '<span class="tb-eyebrow">'+(c[0]||'NEXORA')+'</span><b>'+c[1]+'</b>';
+  if(el) el.innerHTML = (c[0] ? '<span class="tb-eyebrow">'+c[0]+'</span>' : '')+
+                        '<b>'+c[1]+'</b>';
   var st = document.getElementById('tb-stamp');
   if(st){
     var now = new Date();
