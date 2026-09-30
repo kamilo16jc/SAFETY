@@ -162,14 +162,12 @@ function rawScreenHTML(){
       '<button class="btn-solid" id="rw-go" onclick="applyRwFilters()" aria-label="Buscar" title="Buscar"><span data-icon="search"></span></button></div>'+
     '<span class="sb-gap"></span>'+
     '<div class="sb-field"><label>&nbsp;</label>'+
-      '<button class="ico-btn" id="rw-extra-btn" onclick="toggleRawExtra()" aria-label="Extra tests"'+
-      ' title="Show Pseudomonas, Coliform, aw and Vat"><span data-icon="scan"></span></button></div>'+
-    '<div class="sb-field"><label>&nbsp;</label>'+
-      '<button class="ico-btn" onclick="toggleRawForm()" aria-label="New supplier or material"'+
-      ' title="Create a supplier or a received material"><span data-icon="plus"></span></button></div>'+
-    '<div class="sb-field"><label>&nbsp;</label>'+
-      '<button class="ico-btn" onclick="exportRawCSV()" aria-label="Export to Excel"'+
-      ' title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>'+
+      moreHTML([
+        {fn:'toggleRawExtra',  icon:'sliders',  text:'Extra tests'},
+        {fn:'toggleRawForm',   icon:'plus',     text:'New supplier or material'},
+        {fn:'exportRawCSV',    icon:'grid',     text:'Export to Excel'}
+      ])+
+    '</div>'+
   '</div>'+
 
   '<div class="new-cust" id="rw-new-item" style="display:none">'+

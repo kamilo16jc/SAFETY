@@ -83,10 +83,14 @@
         <option value="2">2nd Shift</option>
       </select></div></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="copySchedule()"><span data-icon="calendar"></span>Copy from another day</button></div>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="exportScheduleCSV()"><span data-icon="download"></span>Export</button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,copySchedule)"><span data-icon="calendar"></span>Copy from another day</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportScheduleCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="pr-summary"></div>
@@ -108,7 +112,13 @@
         <option value="2">2nd Shift</option>
       </select></div></div>
     <span class="sb-gap"></span>
-    <button class="btn-ghost" onclick="exportSampleListCSV()"><span data-icon="download"></span>Export</button>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportSampleListCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="sl-kpis"></div>
@@ -134,9 +144,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="coa-go" aria-label="Buscar" title="Buscar" onclick="applyCoaFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportCoaCSV()" aria-label="Export to Excel"
-              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportCoaCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="coa-kpis"></div>
@@ -162,9 +176,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="lr-go" aria-label="Buscar" title="Buscar" onclick="applyLrFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportLabResultsCSV()" aria-label="Export to Excel"
-              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportLabResultsCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="lr-kpis"></div>
@@ -190,9 +208,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="st-go" aria-label="Buscar" title="Buscar" onclick="applyStFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportCoaStatusCSV()" aria-label="Export to Excel"
-              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportCoaStatusCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="st-kpis"></div>
@@ -305,8 +327,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="an-go" aria-label="Buscar" title="Buscar" onclick="applyAnFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="exportAnalysisCSV()"><span data-icon="download"></span>Export</button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportAnalysisCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="an-summary"></div>
@@ -333,8 +360,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="ym-go" aria-label="Buscar" title="Buscar" onclick="applyYmFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="exportYeastCSV()"><span data-icon="download"></span>Export</button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportYeastCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="ym-kpis"></div>
@@ -364,9 +396,13 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="gc-go" aria-label="Buscar" title="Buscar" onclick="applyGcFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportGrillingCSV()" aria-label="Export to Excel"
-              title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportGrillingCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="gc-kpis"></div>
@@ -401,12 +437,14 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" id="lab-go" aria-label="Buscar" title="Buscar" onclick="applyLabFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportLabPDF()" aria-label="Export to PDF"
-              title="Export the lab sample list to PDF"><span data-icon="pdf"></span></button></div>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="ico-btn" onclick="exportLabCSV()" aria-label="Export to Excel"
-              title="Export the lab sample list to Excel"><span data-icon="grid"></span></button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportLabPDF)"><span data-icon="pdf"></span>Export to PDF</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportLabCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="lab-summary"></div>
@@ -1235,10 +1273,14 @@
     <span class="sb-gap"></span>
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-solid" onclick="toggleHoldForm()"><span data-icon="plus"></span>New hold case</button></div>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="exportHoldExcel()"><span data-icon="download"></span>Excel</button></div>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-ghost" onclick="exportHoldPDF()"><span data-icon="doc"></span>PDF</button></div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportHoldExcel)"><span data-icon="grid"></span>Export to Excel</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportHoldPDF)"><span data-icon="pdf"></span>Export to PDF</button>
+      </div>
+    </div>
   </div>
 
   <!-- NEW CASE FORM -->

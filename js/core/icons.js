@@ -4,6 +4,9 @@ var _IC = function(inner){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+inner+'</svg>';
 };
 var ICONS = {
+  more:      _IC('<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/>'+
+                 '<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>'+
+                 '<circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>'),
   home:      _IC('<path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V19a1.5 1.5 0 0 0 1.5 1.5h3.5V15h3v5.5H17A1.5 1.5 0 0 0 18.5 19V9.5"/>'),
   scale:     _IC('<path d="M9.5 6.5a2.5 2.5 0 0 1 5 0"/><path d="M8.2 6.5h7.6l2 11.2a1.6 1.6 0 0 1-1.6 1.8H7.8a1.6 1.6 0 0 1-1.6-1.8Z"/>'),
   droplet:   _IC('<path d="M12 3.5s6 6.4 6 10.2a6 6 0 1 1-12 0C6 9.9 12 3.5 12 3.5Z"/>'),

@@ -67,6 +67,55 @@ function hideSyncStatus() {
 // elegida en letras, para que nadie confunda 09/10 con el 10 de septiembre.
 
 
+// ===== MAS OPCIONES =====
+// Un solo boton redondo por hoja. Dentro va lo de segunda fila —exportar,
+// generar la forma, copiar otro dia—, que antes ocupaba su sitio en la barra
+// aunque casi nunca se use. Con raton se abre al pasar por encima (lo hace el
+// CSS); con el dedo, al tocarlo, que es lo que hace esto.
+function moreHTML(items, etiqueta){
+  var rotulo = etiqueta || 'More options';
+  return '<div class="more-box" data-open="false">'+
+    '<button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false" '+
+      'title="'+rotulo+'" aria-label="'+rotulo+'" onclick="moreToggle(this)">'+
+      '<span data-icon="more"></span></button>'+
+    '<div class="more-menu" role="menu">'+
+      items.map(function(i){
+        return '<button class="more-item" type="button" role="menuitem" '+
+          'onclick="moreRun(this,'+i.fn+')"><span data-icon="'+i.icon+'"></span>'+i.text+'</button>';
+      }).join('')+
+    '</div></div>';
+}
+function moreCloseAll(){
+  var abiertos = document.querySelectorAll('.more-box[data-open="true"]');
+  Array.prototype.forEach.call(abiertos, function(b){
+    b.setAttribute('data-open','false');
+    var t = b.querySelector('.more-btn');
+    if(t) t.setAttribute('aria-expanded','false');
+  });
+}
+function moreToggle(btn){
+  var caja = btn.parentNode;
+  var abierto = caja.getAttribute('data-open') === 'true';
+  moreCloseAll();
+  if(!abierto){
+    caja.setAttribute('data-open','true');
+    btn.setAttribute('aria-expanded','true');
+  }
+}
+function moreRun(el, fn){
+  moreCloseAll();
+  if(typeof fn === 'function') fn();
+}
+document.addEventListener('click', function(e){
+  var d = e.target;
+  while(d && d !== document){
+    if(d.classList && d.classList.contains('more-box')) return;
+    d = d.parentNode;
+  }
+  moreCloseAll();
+});
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') moreCloseAll(); });
+
 // ===== TARJETA DE CONTEO =====
 // La misma en todas las pantallas: el rotulo arriba, la cifra abajo, el dibujo
 // de fondo y el color solo cuando hay algo que contar — una tarjeta roja con un
