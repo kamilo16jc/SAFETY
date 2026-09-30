@@ -624,12 +624,16 @@ function fillProductSizes(pre){
 // rojo lo que se sale y el certificado sigue escribiendolo como siempre.
 // Viven en el PRODUCTO: dos productos del mismo cliente tienen humedades
 // distintas.
+// El paso es lo que mueve cada flecha, y "casa" lo que ya viene puesto al dar
+// de alta un producto: pH, levadura y moho son iguales en casi todas las
+// formas, asi que se ponen solos y normalmente solo hay que mirarlos. La
+// humedad y la grasa cambian con cada queso, asi que nacen vacias.
 var LAB_TARGETS = [
-  {f:'moisture', n:'Moisture', u:'%',     paso:'0.01', dos:true},
-  {f:'fat',      n:'Fat',      u:'%',     paso:'0.01', dos:true},
-  {f:'ph',       n:'pH',       u:'',      paso:'0.01', dos:true},
-  {f:'yeast',    n:'Yeast',    u:'CFU/g', paso:'10',   dos:false},
-  {f:'mold',     n:'Mold',     u:'CFU/g', paso:'10',   dos:false}
+  {f:'moisture', n:'Moisture', u:'%',     paso:'0.1', dos:true},
+  {f:'fat',      n:'Fat',      u:'%',     paso:'0.1', dos:true},
+  {f:'ph',       n:'pH',       u:'',      paso:'0.1', dos:true, casa:{min:4.9, max:5.5}},
+  {f:'yeast',    n:'Yeast',    u:'CFU/g', paso:'100', dos:false, casa:{max:2000}},
+  {f:'mold',     n:'Mold',     u:'CFU/g', paso:'100', dos:false, casa:{max:1000}}
 ];
 
 function labTargetOf(p, campo){
@@ -658,6 +662,7 @@ function outOfTarget(p, campo, valor){
 }
 
 function labTargetsHTML(pre, p){
+  var nuevo = !p;                       // dando de alta: se proponen los de casa
   var t = (p && p.labTargets) || {};
   var num = function(id, val, paso, ph){
     return '<input type="number" step="'+paso+'" class="field tgt" id="'+pre+'-t-'+id+'" '+
@@ -666,7 +671,7 @@ function labTargetsHTML(pre, p){
   return '<div class="sec-label">Targets <span class="opt">\u00b7 what the certificate promises</span></div>'+
     '<div class="tgt-grid">'+
       LAB_TARGETS.map(function(x){
-        var v = t[x.f] || {};
+        var v = t[x.f] || (nuevo && x.casa ? x.casa : {});
         return '<div class="tgt-row"><span class="tgt-n">'+x.n+
           (x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+
           (x.dos ? num(x.f+'-min', v.min, x.paso, 'Min') : '<span class="tgt-hueco"></span>')+
