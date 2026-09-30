@@ -132,12 +132,7 @@ function initRawSection(sec){
   host.innerHTML = rawScreenHTML();
   renderIcons(host);
 
-  var d = new Date(); d.setDate(d.getDate()-30);
-  document.getElementById('rw-from').value =
-    d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  document.getElementById('rw-to').value = localDateStr();
   rawDirty = false; renderRwDirty();
-  showDateOrder(host);
   echoDateRange('rw-date-echo','rw-from','rw-to');
   buildRawSheet(true);
   renderRawRows();
@@ -154,9 +149,9 @@ function rawScreenHTML(){
   '<div class="form-title">'+esc(cfg.titulo)+'</div>'+
 
   '<div class="sheet-bar">'+
-    '<div class="sb-field"><label for="rw-from">From <span class="ord" data-dateorder></span></label>'+
+    '<div class="sb-field"><label for="rw-from">From</label>'+
       '<input type="date" class="field" id="rw-from" oninput="markRwDirty()"></div>'+
-    '<div class="sb-field"><label for="rw-to">To <span class="ord" data-dateorder></span></label>'+
+    '<div class="sb-field"><label for="rw-to">To</label>'+
       '<input type="date" class="field" id="rw-to" oninput="markRwDirty()"></div>'+
     '<div class="sb-field"><label for="rw-search">Search</label>'+
       '<div class="search-wrap">'+

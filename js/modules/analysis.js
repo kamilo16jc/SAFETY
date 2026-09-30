@@ -13,12 +13,7 @@ var anFrom = '', anTo = '', anQuery = '';
 function getAnalyses(){ var d=getDB(); if(!d.analysis) d.analysis=[]; return d.analysis; }
 
 function initAnalysis(){
-  // Por defecto solo el dia: el historial completo se pide ampliando el rango
-  var f=document.getElementById('an-from'), t=document.getElementById('an-to');
-  if(f && !f.value) f.value = localDateStr();
-  if(t && !t.value) t.value = localDateStr();
   anDirty = false; renderAnDirty();
-  showDateOrder(document.getElementById('screen-analysis'));
   echoDateRange('an-date-echo','an-from','an-to');
   buildAnalysisSheet();
   renderProductOptions('an-product-list');

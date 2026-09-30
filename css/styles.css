@@ -1180,8 +1180,6 @@ body.logged-out .topstack{display:none}
    navegador (dd/mm/aaaa aqui) y el resto del sistema habla en ingles. */
 .date-echo{margin-top:8px;font-size:12.5px;font-weight:700;color:var(--accent-deep);
   font-variant-numeric:tabular-nums}
-.ord{font-weight:600;letter-spacing:0;text-transform:none;color:var(--dim)}
-.sec-label .ord{font-size:10px}
 
 /* ============================================================
    CIFRAS
@@ -1603,12 +1601,8 @@ body.logged-out .topstack{display:none}
    Se queda en el HTML para los lectores de pantalla, pero a la vista
    solo sobrevive el dd/mm/yyyy, que avisa del orden de la fecha.
    ============================================================ */
-.f-field > label{font-size:0;line-height:0;margin:0;min-height:12px}
-.f-field > label .ord{font-size:10px;line-height:1.2;font-weight:600;letter-spacing:.04em;
-  color:var(--dim);text-transform:none}
-.sheet-bar .sb-field > label{font-size:0;line-height:0;margin:0 0 3px;min-height:12px}
-.sheet-bar .sb-field > label .ord{font-size:10px;line-height:1.2;font-weight:600;
-  letter-spacing:.04em;color:var(--dim);text-transform:none}
+.f-field > label{font-size:0;line-height:0;margin:0;min-height:0}
+.sheet-bar .sb-field > label{font-size:0;line-height:0;margin:0;min-height:0}
 .sheet-bar .btn-solid{display:inline-flex;align-items:center;justify-content:center;
   gap:0;padding:9px 12px}
 .sheet-bar .btn-solid svg{width:17px;height:17px}

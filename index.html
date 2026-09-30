@@ -43,7 +43,7 @@
   <div class="form-title">Production Schedule</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="pr-date">Date <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="pr-date">Date</label>
       <input type="date" class="field" id="pr-date" onchange="renderProduction()"></div>
     <div class="sb-field"><label for="pr-shift">Shift</label>
       <div class="select-wrap"><select class="field" id="pr-shift" onchange="renderProduction()">
@@ -90,9 +90,9 @@
   <div class="form-title">COA Generator</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="coa-from">From <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="coa-from">From</label>
       <input type="date" class="field" id="coa-from" oninput="markCoaDirty()"></div>
-    <div class="sb-field"><label for="coa-to">To <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="coa-to">To</label>
       <input type="date" class="field" id="coa-to" oninput="markCoaDirty()"></div>
     <div class="sb-field"><label for="coa-search">Search</label>
       <div class="search-wrap">
@@ -120,9 +120,9 @@
   <div class="form-title">Lab Results</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="lr-from">From <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="lr-from">From</label>
       <input type="date" class="field" id="lr-from" oninput="markLrDirty()"></div>
-    <div class="sb-field"><label for="lr-to">To <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="lr-to">To</label>
       <input type="date" class="field" id="lr-to" oninput="markLrDirty()"></div>
     <div class="sb-field"><label for="lr-search">Search</label>
       <div class="search-wrap">
@@ -150,9 +150,9 @@
   <div class="form-title">Status</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="st-from">From <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="st-from">From</label>
       <input type="date" class="field" id="st-from" oninput="markStDirty()"></div>
-    <div class="sb-field"><label for="st-to">To <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="st-to">To</label>
       <input type="date" class="field" id="st-to" oninput="markStDirty()"></div>
     <div class="sb-field"><label for="st-search">Search</label>
       <div class="search-wrap">
@@ -269,9 +269,9 @@
   <div class="form-title">Sample Analysis</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="an-from">Date from <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="an-from">Date from</label>
       <input type="date" class="field" id="an-from" oninput="markAnDirty()"></div>
-    <div class="sb-field"><label for="an-to">Date to <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="an-to">Date to</label>
       <input type="date" class="field" id="an-to" oninput="markAnDirty()"></div>
     <div class="sb-field"><label for="an-search">Search</label>
       <div class="search-wrap">
@@ -299,9 +299,9 @@
   <div class="form-title">Yeast &amp; Mold</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="ym-from">Sampled from <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="ym-from">Sampled from</label>
       <input type="date" class="field" id="ym-from" oninput="markYmDirty()"></div>
-    <div class="sb-field"><label for="ym-to">Sampled to <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="ym-to">Sampled to</label>
       <input type="date" class="field" id="ym-to" oninput="markYmDirty()"></div>
     <div class="sb-field"><label for="ym-search">Search</label>
       <div class="search-wrap">
@@ -332,9 +332,9 @@
   <div class="form-meta">SQF # 2.4.D.3.A</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="gc-from">Tested from <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="gc-from">Tested from</label>
       <input type="date" class="field" id="gc-from" oninput="markGcDirty()"></div>
-    <div class="sb-field"><label for="gc-to">Tested to <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="gc-to">Tested to</label>
       <input type="date" class="field" id="gc-to" oninput="markGcDirty()"></div>
     <div class="sb-field"><label for="gc-search">Search</label>
       <div class="search-wrap">
@@ -371,9 +371,9 @@
   <div class="form-title">Lab Samples</div>
 
   <div class="sheet-bar">
-    <div class="sb-field"><label for="lab-from">From <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="lab-from">From</label>
       <input type="date" class="field" id="lab-from" oninput="markLabDirty()"></div>
-    <div class="sb-field"><label for="lab-to">To <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="lab-to">To</label>
       <input type="date" class="field" id="lab-to" oninput="markLabDirty()"></div>
     <div class="sb-field"><label for="lab-status">Status</label>
       <div class="select-wrap"><select class="field" id="lab-status" onchange="renderLab()">
@@ -557,14 +557,14 @@
   <div class="panel filter-panel">
     <div class="filter-row">
       <button class="pkg-chip" data-dashrange onclick="dashQuickRange(7,this)">7 days</button>
-      <button class="pkg-chip selected" data-dashrange onclick="dashQuickRange(30,this)">30 days</button>
+      <button class="pkg-chip" data-dashrange onclick="dashQuickRange(30,this)">30 days</button>
       <button class="pkg-chip" data-dashrange onclick="dashQuickRange(90,this)">90 days</button>
       <button class="pkg-chip" data-dashrange onclick="dashQuickRange(0,this)">All time</button>
     </div>
     <div class="filter-grid">
-      <div class="f-field"><label for="dash-from">Date from <span class="ord" data-dateorder></span></label>
+      <div class="f-field"><label for="dash-from">Date from</label>
         <input type="date" class="field" id="dash-from" oninput="markDashDirty()"></div>
-      <div class="f-field"><label for="dash-to">Date to <span class="ord" data-dateorder></span></label>
+      <div class="f-field"><label for="dash-to">Date to</label>
         <input type="date" class="field" id="dash-to" oninput="markDashDirty()"></div>
       <div class="f-field"><label for="dash-product">Product</label>
         <div class="select-wrap"><select class="field" id="dash-product" onchange="markDashDirty()">
@@ -1088,7 +1088,7 @@
     <div class="rpt-filters">
 
       <div>
-        <div class="sec-label" data-t="date">Date <span class="ord" data-dateorder></span></div>
+        <div class="sec-label" data-t="date">Date</div>
         <input type="date" class="time-input" id="rpt-date" style="width:100%" oninput="markRptDirty()">
         <div class="date-echo" id="rpt-date-echo" style="display:none"></div>
       </div>
@@ -1128,7 +1128,7 @@
   <div class="rpt-sec" data-scope="shifts">
   <div class="sec-label">Daily Shift Report</div>
   <div class="sheet-bar">
-    <div class="sb-field"><label for="rpt-shift-date">Date <span class="ord" data-dateorder></span></label>
+    <div class="sb-field"><label for="rpt-shift-date">Date</label>
       <input type="date" class="field" id="rpt-shift-date" onchange="updateRptShiftCount()"></div>
     <div class="sb-field"><label for="rpt-shift-sel">Shift</label>
       <div class="select-wrap"><select class="field" id="rpt-shift-sel" onchange="updateRptShiftCount()">
@@ -1301,11 +1301,11 @@
         </select></div>
       </div>
       <div class="f-field">
-        <label for="sf-from">Date from <span class="ord" data-dateorder></span></label>
+        <label for="sf-from">Date from</label>
         <input type="date" class="field" id="sf-from">
       </div>
       <div class="f-field">
-        <label for="sf-to">Date to <span class="ord" data-dateorder></span></label>
+        <label for="sf-to">Date to</label>
         <input type="date" class="field" id="sf-to">
       </div>
       <div class="f-field">

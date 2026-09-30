@@ -12,7 +12,6 @@ function initProduction(){
   if(d && !d.value) d.value = localDateStr();
   var s=document.getElementById('pr-shift');
   if(s && !s.value) s.value = String(expectedShift());
-  showDateOrder(document.getElementById('screen-production'));
   echoDateRange('pr-date-echo','pr-date','');
   buildProductionSheet();
   renderProductOptions('pr-product-list');

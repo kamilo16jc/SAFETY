@@ -5,14 +5,7 @@
 var labFrom = '', labTo = '', labStatus = 'pending';
 
 function initLab(){
-  var f=document.getElementById('lab-from'), t=document.getElementById('lab-to');
-  if(f && !f.value){
-    var d=new Date(); d.setDate(d.getDate()-7);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  if(t && !t.value) t.value = localDateStr();
   labDirty = false; renderLabDirty();
-  showDateOrder(document.getElementById('screen-lab'));
   echoDateRange('lab-date-echo','lab-from','lab-to');
   renderLab();
 }

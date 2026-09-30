@@ -140,13 +140,14 @@ function applyDashFilters(){
 }
 
 function initDash(){
-  // Primera apertura: aplica el rango por defecto que ya viene marcado
+  // Primera apertura: sin fecha puesta. Se pinta lo que ya esta en memoria y
+  // el rango lo elige quien mira, con los botones o escribiendo las fechas.
   if(!dashReady){
     dashReady = true;
-    dashQuickRange(dashDays, document.querySelector('[data-dashrange].selected'));
-    showDateOrder(document.getElementById('screen-dashboard'));
     echoDateRange('dash-date-echo','dash-from','dash-to');
     dashDirty = false; renderDashDirty();
+    readDashFilters();
+    renderDash();
     return;
   }
   readDashFilters();

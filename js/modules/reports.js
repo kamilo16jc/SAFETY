@@ -85,11 +85,9 @@ function initReports() {
   var ss = document.getElementById('rpt-shift-sel');
   if(ss && !ss.value) ss.value = String(expectedShift());
   updateRptShiftCount();
-  showDateOrder(document.getElementById('screen-reports'));
-  // Set today as default date
-  var today = localDateStr();
-  document.getElementById('rpt-date').value = today;
-  rptFilters.date = today;
+  // Sin fecha: la lista arranca con todo lo que hay y el dia lo elige quien mira
+  document.getElementById('rpt-date').value = '';
+  rptFilters.date = '';
   rptFilters.line = 'all';
   rptFilters.shift = 'all';
   rptFilters.product = '';

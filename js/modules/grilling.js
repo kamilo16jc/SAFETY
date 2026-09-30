@@ -114,15 +114,7 @@ function gcStageHTML(r, g){
 // ============================================================
 function initGrilling(){
   gcView = 'all';
-  var f = document.getElementById('gc-from');
-  if(f && !f.value){
-    var d = new Date(); d.setDate(d.getDate()-60);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  var t = document.getElementById('gc-to');
-  if(t && !t.value) t.value = localDateStr();
   gcDirty = false; renderGcDirty();
-  showDateOrder(document.getElementById('screen-grilling'));
   echoDateRange('gc-date-echo','gc-from','gc-to');
   buildGrillingSheet();
   renderGrilling();

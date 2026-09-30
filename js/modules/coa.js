@@ -66,14 +66,7 @@ function labResultsComplete(a){
 
 var lrDirty = false;
 function initLabResults(){
-  var f=document.getElementById('lr-from'), t=document.getElementById('lr-to');
-  if(f && !f.value){
-    var d=new Date(); d.setDate(d.getDate()-30);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  if(t && !t.value) t.value = localDateStr();
   lrDirty = false; renderLrDirty();
-  showDateOrder(document.getElementById('screen-labresults'));
   echoDateRange('lr-date-echo','lr-from','lr-to');
   renderLabResults();
 }
@@ -288,14 +281,7 @@ function coaState(a){
 }
 
 function initCoa(){
-  var f=document.getElementById('coa-from'), t=document.getElementById('coa-to');
-  if(f && !f.value){
-    var d=new Date(); d.setDate(d.getDate()-30);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  if(t && !t.value) t.value = localDateStr();
   coaPicks = {}; coaDirty = false; renderCoaDirty();
-  showDateOrder(document.getElementById('screen-coa'));
   echoDateRange('coa-date-echo','coa-from','coa-to');
   renderCoa();
 }
@@ -597,14 +583,7 @@ var stView = 'all';   // all | qa | lab | done
 var stDirty = false;
 
 function initCoaStatus(){
-  var f=document.getElementById('st-from'), t=document.getElementById('st-to');
-  if(f && !f.value){
-    var d=new Date(); d.setDate(d.getDate()-30);
-    f.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  if(t && !t.value) t.value = localDateStr();
   stDirty = false; renderStDirty();
-  showDateOrder(document.getElementById('screen-coastatus'));
   echoDateRange('st-date-echo','st-from','st-to');
   renderCoaStatus();
 }

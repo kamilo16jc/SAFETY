@@ -60,7 +60,6 @@ function initSearch(){
   if(q && !q.oninput) q.oninput = markSearchDirty;
   searchDirty = false;
   renderSearchDirty();
-  showDateOrder(document.getElementById('screen-lotsearch'));
   echoDateRange('search-date-echo','sf-from','sf-to');
   renderSearch();
 }
