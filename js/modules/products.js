@@ -628,12 +628,18 @@ function fillProductSizes(pre){
 // de alta un producto: pH, levadura y moho son iguales en casi todas las
 // formas, asi que se ponen solos y normalmente solo hay que mirarlos. La
 // humedad y la grasa cambian con cada queso, asi que nacen vacias.
+// Cada medida promete UN lado, que es lo que dice la forma del cliente:
+//   humedad  "≤ 34"      -> solo techo
+//   grasa    "≥ 38"      -> solo suelo
+//   pH       "4.9 – 5.5" -> los dos
+//   levadura y moho          -> techo
+// Pedir el lado que la forma no promete solo servia para equivocarse.
 var LAB_TARGETS = [
-  {f:'moisture', n:'Moisture', u:'%',     paso:'0.1', dos:true},
-  {f:'fat',      n:'Fat',      u:'%',     paso:'0.1', dos:true},
-  {f:'ph',       n:'pH',       u:'',      paso:'0.1', dos:true, casa:{min:4.9, max:5.5}},
-  {f:'yeast',    n:'Yeast',    u:'CFU/g', paso:'100', dos:false, casa:{max:2000}},
-  {f:'mold',     n:'Mold',     u:'CFU/g', paso:'100', dos:false, casa:{max:1000}}
+  {f:'moisture', n:'Moisture', u:'%',     paso:'0.1', lado:'max'},
+  {f:'fat',      n:'Fat',      u:'%',     paso:'0.1', lado:'min'},
+  {f:'ph',       n:'pH',       u:'',      paso:'0.1', lado:'dos', casa:{min:4.9, max:5.5}},
+  {f:'yeast',    n:'Yeast',    u:'CFU/g', paso:'100', lado:'max', casa:{max:2000}},
+  {f:'mold',     n:'Mold',     u:'CFU/g', paso:'100', lado:'max', casa:{max:1000}}
 ];
 
 function labTargetOf(p, campo){
@@ -672,10 +678,14 @@ function labTargetsHTML(pre, p){
     '<div class="tgt-grid">'+
       LAB_TARGETS.map(function(x){
         var v = t[x.f] || (nuevo && x.casa ? x.casa : {});
+        var min = (x.lado==='min' || x.lado==='dos')
+          ? num(x.f+'-min', v.min, x.paso, x.lado==='min' ? 'At least' : 'Min')
+          : '<span class="tgt-hueco"></span>';
+        var max = (x.lado==='max' || x.lado==='dos')
+          ? num(x.f+'-max', v.max, x.paso, x.lado==='max' ? 'No more than' : 'Max')
+          : '<span class="tgt-hueco"></span>';
         return '<div class="tgt-row"><span class="tgt-n">'+x.n+
-          (x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+
-          (x.dos ? num(x.f+'-min', v.min, x.paso, 'Min') : '<span class="tgt-hueco"></span>')+
-          num(x.f+'-max', v.max, x.paso, 'Max')+'</div>';
+          (x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+min+max+'</div>';
       }).join('')+
     '</div>';
 }
@@ -684,8 +694,10 @@ function readLabTargets(pre){
   var out = {};
   LAB_TARGETS.forEach(function(x){
     var t = {};
-    var mn = parseFloat((pel(pre, 't-'+x.f+'-min') || {}).value);
-    var mx = parseFloat((pel(pre, 't-'+x.f+'-max') || {}).value);
+    var cmn = (x.lado==='min' || x.lado==='dos') ? pel(pre, 't-'+x.f+'-min') : null;
+    var cmx = (x.lado==='max' || x.lado==='dos') ? pel(pre, 't-'+x.f+'-max') : null;
+    var mn = parseFloat((cmn || {}).value);
+    var mx = parseFloat((cmx || {}).value);
     if(!isNaN(mn)) t.min = mn;
     if(!isNaN(mx)) t.max = mx;
     if(t.min != null || t.max != null) out[x.f] = t;
