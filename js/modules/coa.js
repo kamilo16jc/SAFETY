@@ -67,11 +67,9 @@ function labResultsComplete(a){
 var lrDirty = false;
 function initLabResults(){
   lrDirty = false; renderLrDirty();
-  echoDateRange('lr-date-echo','lr-from','lr-to');
   renderLabResults();
 }
 function markLrDirty(){
-  echoDateRange('lr-date-echo','lr-from','lr-to');
   if(lrDirty) return;
   lrDirty = true; renderLrDirty();
 }
@@ -280,11 +278,9 @@ function coaState(a){
 
 function initCoa(){
   coaPicks = {}; coaDirty = false; renderCoaDirty();
-  echoDateRange('coa-date-echo','coa-from','coa-to');
   renderCoa();
 }
 function markCoaDirty(){
-  echoDateRange('coa-date-echo','coa-from','coa-to');
   if(coaDirty) return;
   coaDirty = true; renderCoaDirty();
 }
@@ -580,11 +576,9 @@ var stDirty = false;
 
 function initCoaStatus(){
   stDirty = false; renderStDirty();
-  echoDateRange('st-date-echo','st-from','st-to');
   renderCoaStatus();
 }
 function markStDirty(){
-  echoDateRange('st-date-echo','st-from','st-to');
   if(stDirty) return;
   stDirty = true; renderStDirty();
 }

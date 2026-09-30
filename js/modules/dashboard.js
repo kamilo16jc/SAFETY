@@ -123,7 +123,6 @@ function dashFill(list){
 // una fecha disparaba una descarga por cada pedazo tecleado.
 var dashDirty = false;
 function markDashDirty(){
-  echoDateRange('dash-date-echo','dash-from','dash-to');
   if(dashDirty) return;
   dashDirty = true;
   renderDashDirty();
@@ -146,7 +145,6 @@ function initDash(){
   // el rango lo elige quien mira, con los botones o escribiendo las fechas.
   if(!dashReady){
     dashReady = true;
-    echoDateRange('dash-date-echo','dash-from','dash-to');
     dashDirty = false; renderDashDirty();
     readDashFilters();
     renderDash();

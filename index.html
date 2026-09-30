@@ -56,7 +56,6 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-ghost" onclick="exportScheduleCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
-  <div class="date-echo" id="pr-date-echo" style="display:none"></div>
 
   <div class="kpi-row" id="pr-summary"></div>
   <div id="pr-sheet"></div>
@@ -107,8 +106,6 @@
       <button class="ico-btn" onclick="exportCoaCSV()" aria-label="Export to Excel"
               title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="coa-date-echo" style="display:none"></div>
-  <div class="hint" id="coa-dirty" style="display:none">Dates changed — press Apply.</div>
 
   <div class="kpi-row" id="coa-kpis"></div>
   <div class="picked-bar" id="coa-picked" style="display:none"></div>
@@ -137,8 +134,6 @@
       <button class="ico-btn" onclick="exportLabResultsCSV()" aria-label="Export to Excel"
               title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="lr-date-echo" style="display:none"></div>
-  <div class="hint" id="lr-dirty" style="display:none">Dates changed — press Apply.</div>
 
   <div class="kpi-row" id="lr-kpis"></div>
   
@@ -167,8 +162,6 @@
       <button class="ico-btn" onclick="exportCoaStatusCSV()" aria-label="Export to Excel"
               title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="st-date-echo" style="display:none"></div>
-  <div class="hint" id="st-dirty" style="display:none">Dates changed \u2014 press Apply.</div>
 
   <div class="kpi-row" id="st-kpis"></div>
 
@@ -285,8 +278,6 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-ghost" onclick="exportAnalysisCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
-  <div class="date-echo" id="an-date-echo" style="display:none"></div>
-  <div class="hint" id="an-dirty" style="display:none">Filters changed — press Apply.</div>
 
   <div class="kpi-row" id="an-summary"></div>
   <div id="an-sheet"></div>
@@ -315,8 +306,6 @@
     <div class="sb-field"><label>&nbsp;</label>
       <button class="btn-ghost" onclick="exportYeastCSV()"><span data-icon="download"></span>Export</button></div>
   </div>
-  <div class="date-echo" id="ym-date-echo" style="display:none"></div>
-  <div class="hint" id="ym-dirty" style="display:none">Dates changed — press Apply.</div>
 
   <div class="kpi-row" id="ym-kpis"></div>
   <div id="ym-sheet"></div>
@@ -349,8 +338,6 @@
       <button class="ico-btn" onclick="exportGrillingCSV()" aria-label="Export to Excel"
               title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="gc-date-echo" style="display:none"></div>
-  <div class="hint" id="gc-dirty" style="display:none">Dates changed &mdash; press Apply.</div>
 
   <div class="kpi-row" id="gc-kpis"></div>
   <div id="gc-sheet"></div>
@@ -391,8 +378,6 @@
       <button class="ico-btn" onclick="exportLabCSV()" aria-label="Export to Excel"
               title="Export the lab sample list to Excel"><span data-icon="grid"></span></button></div>
   </div>
-  <div class="date-echo" id="lab-date-echo" style="display:none"></div>
-  <div class="hint" id="lab-dirty" style="display:none">Dates changed — press Apply.</div>
 
   <div class="kpi-row" id="lab-summary"></div>
   <div id="lab-forms"></div>
@@ -584,8 +569,6 @@
       <div class="f-field"><label>&nbsp;</label>
         <button class="btn-solid" id="dash-go" aria-label="Buscar" title="Buscar" style="justify-content:center" onclick="applyDashFilters()"><span data-icon="search"></span></button></div>
     </div>
-    <div class="date-echo" id="dash-date-echo" style="display:none"></div>
-    <div class="hint" id="dash-dirty" style="display:none">Filters changed — press Apply to load them.</div>
   </div>
 
   <!-- KPIs -->
@@ -1090,7 +1073,6 @@
       <div>
         <div class="sec-label" data-t="date">Date</div>
         <input type="date" class="time-input" id="rpt-date" style="width:100%" oninput="markRptDirty()">
-        <div class="date-echo" id="rpt-date-echo" style="display:none"></div>
       </div>
 
       <div>
@@ -1121,7 +1103,6 @@
       </div>
       <button class="main-btn" style="margin:0" id="rpt-go" onclick="applyRptFilters()">Apply Filters</button>
     </div>
-    <div class="hint" id="rpt-dirty" style="display:none;padding:0 14px 14px">Filters changed — press Apply Filters.</div>
   </div>
 
   <!-- DAILY SHIFT REPORT -->
@@ -1337,8 +1318,6 @@
         </select></div>
       </div>
     </div>
-    <div class="date-echo" id="search-date-echo" style="display:none"></div>
-    <div class="hint" id="search-dirty" style="display:none">Filters changed — press Search to apply them.</div>
   </div>
 
   <div class="workspace" id="search-results"></div>

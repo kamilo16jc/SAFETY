@@ -27,7 +27,6 @@ function updateRptShiftCount(){
 // reporte, solo avisa que hay algo sin aplicar.
 var rptDirty = false;
 function markRptDirty(){
-  echoDateRange('rpt-date-echo','rpt-date','');
   if(rptDirty) return;
   rptDirty = true;
   renderRptDirty();
@@ -95,7 +94,6 @@ function initReports() {
 
   document.getElementById('rpt-line').value = 'all';
   document.getElementById('rpt-shift').value = 'all';
-  echoDateRange('rpt-date-echo','rpt-date','');
 
   applyRptFilters();
 }

@@ -54,13 +54,12 @@ function initSearch(){
   // marcan que hay algo pendiente; la busqueda la manda el boton o Enter.
   ['sf-field','sf-from','sf-to','sf-line','sf-shift','sf-type'].forEach(function(id){
     var e = document.getElementById(id);
-    if(e && !e.oninput) e.oninput = function(){ markSearchDirty(); echoDateRange('search-date-echo','sf-from','sf-to'); };
+    if(e && !e.oninput) e.oninput = markSearchDirty;
   });
   var q = document.getElementById('search-input');
   if(q && !q.oninput) q.oninput = markSearchDirty;
   searchDirty = false;
   renderSearchDirty();
-  echoDateRange('search-date-echo','sf-from','sf-to');
   renderSearch();
 }
 
@@ -114,7 +113,6 @@ function clearSearch(){
   ['sf-field','sf-line','sf-shift','sf-type'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value='all'; });
   searchDirty = false;
   renderSearchDirty();
-  echoDateRange('search-date-echo','sf-from','sf-to');
   renderSearch();
 }
 

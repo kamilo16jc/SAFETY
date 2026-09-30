@@ -65,25 +65,6 @@ function hideSyncStatus() {
 // Ponerle lang="en-US" no sirve: el navegador manda. Asi que se hacen dos
 // cosas: se dice en la etiqueta en que orden va, y debajo se repite la fecha
 // elegida en letras, para que nadie confunda 09/10 con el 10 de septiembre.
-function fmtLongDate(iso){
-  if(!iso) return '';
-  var d = new Date(String(iso).slice(0,10)+'T12:00:00');
-  return isNaN(d) ? '' : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
-// Repite en letras lo que quedo escrito en los campos de fecha
-function echoDateRange(outId, fromId, toId){
-  var el = document.getElementById(outId);
-  if(!el) return;
-  var a = fmtLongDate((document.getElementById(fromId)||{}).value);
-  var b = toId ? fmtLongDate((document.getElementById(toId)||{}).value) : '';
-  var txt = '';
-  if(!toId)        txt = a;                       // un solo dia: se repite y ya
-  else if(a && b)  txt = a + '  →  ' + b;
-  else if(a)       txt = 'From ' + a;
-  else if(b)       txt = 'Up to ' + b;
-  el.textContent = txt;
-  el.style.display = txt ? 'block' : 'none';
-}
 
 
 // ===== LO QUE SE MIRA CUANDO NADIE HA FILTRADO =====

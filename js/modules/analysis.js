@@ -14,7 +14,6 @@ function getAnalyses(){ var d=getDB(); if(!d.analysis) d.analysis=[]; return d.a
 
 function initAnalysis(){
   anDirty = false; renderAnDirty();
-  echoDateRange('an-date-echo','an-from','an-to');
   buildAnalysisSheet();
   renderProductOptions('an-product-list');
   renderAnalysisRows();
@@ -63,7 +62,6 @@ function analysisComplete(a){
 // de fechas espera al botón, porque puede tener que pedir historial.
 var anDirty = false;
 function markAnDirty(){
-  echoDateRange('an-date-echo','an-from','an-to');
   if(anDirty) return;
   anDirty = true;
   renderAnDirty();

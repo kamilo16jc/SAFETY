@@ -115,13 +115,11 @@ function gcStageHTML(r, g){
 function initGrilling(){
   gcView = 'all';
   gcDirty = false; renderGcDirty();
-  echoDateRange('gc-date-echo','gc-from','gc-to');
   buildGrillingSheet();
   renderGrilling();
 }
 
 function markGcDirty(){
-  echoDateRange('gc-date-echo','gc-from','gc-to');
   if(gcDirty) return;
   gcDirty = true; renderGcDirty();
 }

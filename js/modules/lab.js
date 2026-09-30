@@ -6,14 +6,12 @@ var labFrom = '', labTo = '', labStatus = 'pending';
 
 function initLab(){
   labDirty = false; renderLabDirty();
-  echoDateRange('lab-date-echo','lab-from','lab-to');
   renderLab();
 }
 
 // Las fechas esperan al boton: pueden tener que pedir historial
 var labDirty = false;
 function markLabDirty(){
-  echoDateRange('lab-date-echo','lab-from','lab-to');
   if(labDirty) return;
   labDirty = true; renderLabDirty();
 }

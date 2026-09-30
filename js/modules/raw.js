@@ -133,7 +133,6 @@ function initRawSection(sec){
   renderIcons(host);
 
   rawDirty = false; renderRwDirty();
-  echoDateRange('rw-date-echo','rw-from','rw-to');
   buildRawSheet(true);
   renderRawRows();
 }
@@ -172,8 +171,6 @@ function rawScreenHTML(){
       '<button class="ico-btn" onclick="exportRawCSV()" aria-label="Export to Excel"'+
       ' title="Export what is on screen to Excel"><span data-icon="grid"></span></button></div>'+
   '</div>'+
-  '<div class="date-echo" id="rw-date-echo" style="display:none"></div>'+
-  '<div class="hint" id="rw-dirty" style="display:none">Dates changed — press Apply.</div>'+
 
   '<div class="new-cust" id="rw-new-item" style="display:none">'+
     '<b>New supplier</b>'+
@@ -206,7 +203,6 @@ function rawScreenHTML(){
 
 // ---- Filtros: no buscan hasta que se pulsa Apply ----
 function markRwDirty(){
-  echoDateRange('rw-date-echo','rw-from','rw-to');
   if(rawDirty) return;
   rawDirty = true; renderRwDirty();
 }

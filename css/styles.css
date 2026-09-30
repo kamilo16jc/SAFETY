@@ -1178,8 +1178,6 @@ body.logged-out .topstack{display:none}
 
 /* La fecha elegida, repetida en letras: el campo nativo usa el formato del
    navegador (dd/mm/aaaa aqui) y el resto del sistema habla en ingles. */
-.date-echo{margin-top:8px;font-size:12.5px;font-weight:700;color:var(--accent-deep);
-  font-variant-numeric:tabular-nums}
 
 /* ============================================================
    CIFRAS
@@ -1384,7 +1382,6 @@ body.logged-out .topstack{display:none}
   .cust-pick{padding:9px 8px;font-size:13.5px}
   .cust-pick input{width:19px;height:19px}
   .lab-block{padding:12px}
-  .date-echo{font-size:13px}
   .rpt-filters{padding:12px}
 }
 

@@ -14,7 +14,6 @@ var ymFrom = '', ymTo = '', ymQuery = '';
 function initYeast(){
   ymView = 'ready';
   ymDirty = false; renderYmDirty();
-  echoDateRange('ym-date-echo','ym-from','ym-to');
   renderYeast();
 }
 
@@ -53,7 +52,6 @@ function ymPlate(number){
 // ---- Filtros ----
 var ymDirty = false;
 function markYmDirty(){
-  echoDateRange('ym-date-echo','ym-from','ym-to');
   if(ymDirty) return;
   ymDirty = true;
   renderYmDirty();
