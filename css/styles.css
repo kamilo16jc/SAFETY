@@ -1788,7 +1788,9 @@ body.logged-out .topstack{display:none}
    ============================================================ */
 /* el z-index va aqui: el menu tiene que pasar por encima de las tarjetas
    de conteo, que vienen despues en el documento */
-.more-box{position:relative;z-index:70;flex-shrink:0;align-self:flex-end}
+/* inline-flex: si fuera bloque ocuparia toda la fila y el menu, que se
+   pega a su derecha, se abriria a un palmo del boton */
+.more-box{position:relative;z-index:70;display:inline-flex;flex-shrink:0;align-self:flex-end}
 .more-btn{width:38px;height:38px;border-radius:50%;border:0;padding:0;cursor:pointer;
   display:flex;align-items:center;justify-content:center;color:var(--rail-hi);
   background:linear-gradient(138deg,var(--rail) 15%,var(--rail-2) 65%);
@@ -1900,3 +1902,49 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 .more-item.selected{border-color:var(--accent);color:var(--accent)}
 .more-item.selected svg{color:var(--accent)}
 .more-item.selected:hover{color:var(--accent-fg)}
+
+/* ============================================================
+   CLIENTE Y TESTS DEL PRODUCTO
+   El cliente se elige en su lista; quien no este, se anade con
+   el boton de al lado. Los tests no se ensenan hasta que se
+   dice que el producto va al laboratorio de fuera: si no va, no
+   hay nada que elegir.
+   ============================================================ */
+.cmode-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.cmode-row > div:first-child{flex:1;min-width:0}
+.cmode-row .select-wrap{margin-bottom:0}
+.add-mini{display:inline-flex;align-items:center;font-family:inherit;font-size:12.5px;
+  font-weight:600;letter-spacing:.03em;white-space:nowrap;cursor:pointer;border:none;
+  border-radius:20em;padding:.65em 1.15em .65em .9em;color:var(--accent-fg);
+  background:linear-gradient(0deg,var(--accent) 0%,var(--accent-deep) 100%);
+  box-shadow:0 .6em 1.2em -.5em var(--accent);
+  transition:transform .14s ease,box-shadow .18s ease}
+.add-mini svg{width:1.05em;height:1.05em;margin-right:6px}
+.add-mini:hover{transform:translateY(-1px)}
+.add-mini:active{transform:translateY(1px)}
+.add-mini:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* la pregunta: dos casillas que se excluyen */
+.lt-ask-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
+.lt-ask{margin:0;flex:0 0 auto}
+.lt-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;
+  vertical-align:middle}
+.lt-dot.bad{background:var(--fail)}
+.lt-dot.ok{background:var(--pass)}
+.lt-count{font-size:11.5px;font-weight:700;color:var(--accent)}
+
+/* la ventana de tests, encima de la hoja */
+.lt-modal{position:fixed;inset:0;z-index:200;background:rgba(10,20,16,.45);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.lt-modal[hidden]{display:none}
+.lt-sheet{background:var(--surface);border-radius:var(--radius-lg);width:min(560px,100%);
+  max-height:min(76vh,700px);display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.lt-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border)}
+.lt-head b{font-size:14px;font-weight:700}
+.lt-sheet .lt-box{flex:1;overflow-y:auto;border:0;border-radius:0;max-height:none;
+  padding:12px 16px}
+.lt-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;
+  justify-content:flex-end}
+[data-theme="dark"] .lt-modal{background:rgba(0,0,0,.6)}

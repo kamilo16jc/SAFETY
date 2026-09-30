@@ -211,9 +211,13 @@ function formTestCatalog(form){
 
 function productTestsVerified(p){ return !!(p && p.labTests && p.labTests.length); }
 
-// ---- Editor (dentro de la ficha del producto en el catálogo) ----
-function renderLabTestPicker(p){
+// ---- Editor (dentro de la ficha del producto) ----
+// Primero lo que decide todo: ¿esto va al laboratorio de fuera? Si no va, no
+// hay nada que elegir y el producto se guarda tal cual. Si va, se abre la
+// ventana con los tests encima de la hoja.
+function renderLabTestPicker(p, pre){
   p = p || {};
+  pre = pre || 'ap';
   var cat = labTestCatalog();
   if(!Object.keys(cat).some(function(k){ return cat[k].length; })) return '';
   var cur = productTests(p);
@@ -236,10 +240,65 @@ function renderLabTestPicker(p){
       }).join('')+'</div>';
   };
 
-  // Solo las casillas: el rotulo y el aviso decian lo que la propia lista ya
-  // ensena, y esta pantalla se lee de un vistazo.
-  return '<div class="field-group"><div class="lt-box">'+
-    block('micro','Micro')+block('chem','Chemistry')+block('nlea','NLEA')+'</div></div>';
+  var fuera = cur.length > 0 || p.externalLab === true;
+  var casilla = function(id, si, punto, texto){
+    return '<label class="lab-check lt-ask"><input type="checkbox" id="'+pre+'-'+id+'"'+
+      (si===fuera ? ' checked' : '')+' onchange="ltExternal(\''+pre+'\','+si+')">'+
+      '<span><i class="lt-dot '+punto+'"></i>'+texto+'</span></label>';
+  };
+
+  return '<div class="field-group" id="'+pre+'-ltwrap">'+
+    '<div class="lt-ask-row">'+
+      casilla('lt-no',  'false', 'bad', 'No lab')+
+      casilla('lt-yes', 'true',  'ok',  'External lab')+
+      '<span class="lt-count" id="'+pre+'-lt-count">'+(cur.length ? cur.length+' tests' : '')+'</span>'+
+    '</div>'+
+    '<div class="lt-modal" id="'+pre+'-ltmodal" hidden>'+
+      '<div class="lt-sheet">'+
+        '<div class="lt-head"><b>Lab tests</b>'+
+          '<button type="button" class="ico-btn" aria-label="Close" '+
+            'onclick="ltCloseModal(\''+pre+'\')"><span data-icon="close"></span></button></div>'+
+        '<div class="lt-box">'+
+          block('micro','Micro')+block('chem','Chemistry')+block('nlea','NLEA')+
+        '</div>'+
+        '<div class="lt-foot"><button type="button" class="save-btn" '+
+          'onclick="ltCloseModal(\''+pre+'\')">Done</button></div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ---- La pregunta de arriba ----
+// Dos casillas que se excluyen: o no va al laboratorio de fuera, o va y hay
+// que decir con que tests. Decir que no borra lo que hubiera elegido, porque
+// eso es justo lo que significa.
+function ltExternal(pre, si){
+  var no = document.getElementById(pre+'-lt-no');
+  var yes = document.getElementById(pre+'-lt-yes');
+  if(no)  no.checked  = !si;
+  if(yes) yes.checked = !!si;
+  if(si) ltOpenModal(pre);
+  else {
+    var caja = document.getElementById(pre+'-ltwrap');
+    if(caja) caja.querySelectorAll('[data-lt-kind]').forEach(function(c){ c.checked = false; });
+    ltCount(pre);
+  }
+}
+function ltOpenModal(pre){
+  var m = document.getElementById(pre+'-ltmodal');
+  if(m){ m.hidden = false; renderIcons(m); }
+}
+function ltCloseModal(pre){
+  var m = document.getElementById(pre+'-ltmodal');
+  if(m) m.hidden = true;
+  ltCount(pre);
+}
+function ltCount(pre){
+  var caja = document.getElementById(pre+'-ltwrap');
+  var el = document.getElementById(pre+'-lt-count');
+  if(!caja || !el) return;
+  var n = caja.querySelectorAll('[data-lt-kind]:checked').length;
+  el.textContent = n ? n+' tests' : '';
 }
 
 // Lee el picker y guarda en el producto (lo llama saveCatalogEdits)
@@ -253,6 +312,7 @@ function readLabTestPicker(p, root){
   var before = JSON.stringify(productTests(p));
   if(JSON.stringify(sel)===before && productTestsVerified(p)) return false;   // sin cambios
   p.labTests   = sel;
+  p.externalLab = sel.length > 0;
   p.labTestsAt = localISOStr();
   p.labTestsBy = currentUser ? currentUser.name : '—';
   return true;

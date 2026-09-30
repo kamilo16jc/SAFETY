@@ -284,25 +284,19 @@ function labBlockHTML(pre, p){
   var ids  = productCustomerIds(p);
   var n    = p ? productSampleCount(p) : 1;
   var plate = !p || p.plate !== false;
-  // El cliente se elige en el mismo boton desplegable que usan las hojas: una
-  // sola cosa que abrir, y el rotulo dice en que quedo.
-  var MODOS = {none:'No customer', one:'One customer', many:'Several customers'};
-  var opcion = function(v, icono){
-    return {fn:"function(){setCustomerMode('"+pre+"','"+v+"')}", icon:icono, text:MODOS[v],
-            on:mode===v, attrs:'data-cmode="'+v+'"'};
-  };
+  // El cliente se elige en su lista y punto: quien no esta, se anade con el
+  // boton de al lado. El rotulo sobraba —el selector ya dice lo que es— y los
+  // tres modos se deducen solos de lo que quede elegido.
   return '<div class="sec-label">Laboratory</div>'+
     '<div class="lab-block">'+
-      '<div class="sub-label">Who buys this product?</div>'+
       '<div class="cmode-row" id="'+pre+'-cmode">'+
-        moreHTML([opcion('none','close'), opcion('one','user'), opcion('many','grid'),
-                  {fn:"function(){toggleNewCustomer('"+pre+"')}", icon:'plus', text:'New customer'}],
-                 'Who buys this product?',
-                 {label:MODOS[mode], faceId:pre+'-cface'})+
-      '</div>'+
-      '<div id="'+pre+'-cone" style="display:'+(mode==='one'?'block':'none')+'">'+
-        '<div class="select-wrap"><select class="field" id="'+pre+'-customer" '+
-          'onchange="onProdCustomerChange(\''+pre+'\')"></select></div>'+
+        '<div id="'+pre+'-cone" style="display:'+(mode==='many'?'none':'block')+'">'+
+          '<div class="select-wrap"><select class="field" id="'+pre+'-customer" '+
+            'onchange="onProdCustomerChange(\''+pre+'\')"></select></div>'+
+        '</div>'+
+        '<button type="button" class="add-mini" onclick="toggleNewCustomer(\''+pre+'\')">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
+          'stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add</button>'+
       '</div>'+
       '<div id="'+pre+'-cmany" style="display:'+(mode==='many'?'block':'none')+'">'+
         '<input type="search" class="field" id="'+pre+'-csearch" placeholder="Filter customers\u2026" '+
@@ -320,7 +314,7 @@ function labBlockHTML(pre, p){
       '<label class="lab-check"><input type="checkbox" id="'+pre+'-plate"'+(plate?' checked':'')+'>'+
         '<span><b>Y&amp;M</b></span></label>'+
       '<div id="'+pre+'-lt">'+
-        (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p) : '')+'</div>'+
+        (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p, pre) : '')+'</div>'+
     '</div>';
 }
 
@@ -357,13 +351,6 @@ function filterCustomerPicks(pre){
 }
 
 function setCustomerMode(pre, mode){
-  var row = pel(pre,'cmode');
-  if(row) row.querySelectorAll('[data-cmode]').forEach(function(b){
-    b.classList.toggle('selected', b.getAttribute('data-cmode')===mode);
-  });
-  var cara = pel(pre,'cface');
-  if(cara) cara.textContent = {none:'No customer', one:'One customer',
-                               many:'Several customers'}[mode] || 'One customer';
   var one = pel(pre,'cone'), many = pel(pre,'cmany');
   if(one)  one.style.display  = mode==='one'  ? 'block' : 'none';
   if(many) many.style.display = mode==='many' ? 'block' : 'none';
@@ -375,10 +362,14 @@ function setCustomerMode(pre, mode){
   onProdCustomerChange(pre);
 }
 
+// Sin botones de modo, el modo es lo que se vea: si la lista de varios esta
+// abierta y con alguien marcado, son varios; si no, manda el selector.
 function currentCustomerMode(pre){
-  var row = pel(pre,'cmode');
-  var on = row ? row.querySelector('[data-cmode].selected') : null;
-  return on ? on.getAttribute('data-cmode') : 'one';
+  var many = pel(pre,'cmany');
+  if(many && many.style.display !== 'none' &&
+     many.querySelectorAll('input[type=checkbox]:checked').length) return 'many';
+  var sel = pel(pre,'customer');
+  return (sel && sel.value) ? 'one' : 'none';
 }
 
 // Lo que quedo elegido en el bloque
