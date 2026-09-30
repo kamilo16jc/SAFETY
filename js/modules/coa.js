@@ -392,9 +392,10 @@ function renderCoa(){
 function coaRowHTML(a, i){
   var v = function(x){ return (x==null || x==='') ? '—' : esc(x); };
   var st = coaState(a);
+  // "Pending" decia lo mismo para el que ya se puede emitir y para el que no.
   var pill = st==='issued' ? '<span class="pill ok">Certified</span>'
-           : st==='ready'  ? '<span class="pill warn">Pending</span>'
-           : '<span class="pill bad">Pending · '+(coaMissing(a))+'</span>';
+           : st==='ready'  ? '<span class="pill ok">Ready</span>'
+           : '<span class="pill bad">'+(coaMissing(a))+'</span>';
   var dirty = a.coaNo && coaChangedAfterIssue(a)
     ? ' <span class="pill bad" title="Edited after the COA was issued">changed</span>' : '';
   return '<tr'+(st==='issued'?' class="done"':'')+'>'+
@@ -416,20 +417,36 @@ function coaRowHTML(a, i){
     '<td>'+(a.coaNo
       ? '<button class="ico-btn sm" title="Open the certificate again" '+
         'aria-label="Open certificate" onclick="reprintCoa('+a.id+')"><span data-icon="doc"></span></button>'
-      : '<span class="soft">—</span>')+'</td>'+
+      : st==='ready'
+        ? '<button class="sheet-btn" title="Issue the certificate for this record" '+
+          'onclick="issueOne('+a.id+')">COA</button>'
+        : '<span class="soft">—</span>')+'</td>'+
   '</tr>';
 }
 
 // Qué le falta a un registro para poder certificarse
+// Que le falta, dicho de forma que se pueda actuar
 function coaMissing(a){
-  var m = [];
-  if(!(a.moisture && a.fat && a.ph)) m.push('analysis');
-  if(!(a.result && String(a.result).trim())) m.push('verdict');
-  return m.length ? 'missing '+m.join(' + ') : 'incomplete';
+  if(!(a.moisture && a.fat && a.ph)) return 'needs analysis';
+  if(coaNeedsLab(a) && !(a.result && String(a.result).trim())){
+    var p = (typeof findProduct==='function') ? findProduct(a.product) : null;
+    var porTests = p && p.externalLab !== true &&
+                   (typeof hasLabTests==='function') && hasLabTests(p);
+    // Si espera por tests heredados del cliente, se dice: es lo que sorprende
+    return porTests ? 'waiting for lab · tests from customer' : 'waiting for lab';
+  }
+  return 'incomplete';
 }
 // ¿Se tocó algo después de emitir el certificado?
 function coaChangedAfterIssue(a){
   return (a.changes||[]).some(function(c){ return c.afterCoa; });
+}
+
+// Emitir el certificado de UN registro, desde su propia fila
+function issueOne(id){
+  coaPicks = {};
+  coaPicks[id] = true;
+  generateCoa();
 }
 
 function toggleCoaPick(id, on){
