@@ -50,26 +50,17 @@ function filterByDays(records){          // lo usan los export
   return (records||[]).filter(function(r){ return dashInRange(r.date); });
 }
 
-function mkBar(pct, color){
-  return '<div class="dbar"><div class="dbar-fill" style="width:'+Math.min(pct,100)+'%;background:'+(color||'var(--accent)')+'"></div></div>';
-}
-
 function pctOf(n,d){ return d ? Math.round((n/d)*100) : 0; }
 function compClass(p){ return p>=90?'ok':p>=80?'warn':'bad'; }
 
-// Lista de barras: [{label, value, sub, pct, cls, color}]
-function barList(items, empty){
-  if(!items.length) return '<div class="cd-empty" style="padding:18px">'+(empty||'No data')+'</div>';
-  return items.map(function(i){
-    return '<div class="drow">'+
-      '<div class="drow-top"><span class="drow-lbl">'+i.label+'</span>'+
-        '<span class="drow-val '+(i.cls||'')+'">'+i.value+'</span></div>'+
-      mkBar(i.pct, i.color)+
-      (i.sub ? '<div class="drow-sub">'+i.sub+'</div>' : '')+
-    '</div>';
-  }).join('');
+// Las listas de barras las dibuja dash-charts.js: una tinta, cifra al lado y
+// la nota en su columna. Aqui solo queda el nombre de siempre para no tocar
+// los ocho sitios que la llaman.  [{label, value, sub, pct, cls}]
+function barList(items, empty, opts){
+  opts = opts || {};
+  opts.empty = empty || 'No data';
+  return dcBarsHTML(items, opts);
 }
-
 
 // ---------- Agregados compartidos por la pantalla y el PDF ----------
 // Desglose por clave con bolsas, compliance, desviacion y sobrellenado.
@@ -203,17 +194,37 @@ function renderDash(){
   var over = fill.over, under = fill.under, overSum = fill.overSum, avgDev = fill.avgDev;
   var openHolds = holds.filter(function(h){ return h.status!=='released' && h.status!=='destroyed'; }).length;
 
+  // La cifra que manda va sola y grande; lo demas la acompaña en fichas
+  // pequeñas. Un numero por si solo no necesita una grafica de una barra.
+  var cabecera = document.getElementById('dash-head');
+  if(cabecera){
+    var estado  = comp>=90 ? 'ok' : comp>=80 ? 'warn' : 'bad';
+    var palabra = comp>=90 ? 'In target' : comp>=80 ? 'Near limit' : 'Below target';
+    cabecera.innerHTML = tBags
+      ? '<div class="dh-hero">'+
+          '<div class="dh-lbl">Weight compliance</div>'+
+          '<div class="dh-fig dc-'+estado+'">'+comp+'<small>%</small></div>'+
+          '<div class="dh-meter"><i class="dc-'+estado+'" style="width:'+comp+'%"></i>'+
+            '<u style="left:90%"></u></div>'+
+          '<div class="dh-note"><b class="dc-'+estado+'">'+palabra+'</b> · '+
+            tPass.toLocaleString()+' of '+tBags.toLocaleString()+' bags inside the range'+
+            ' · target 90%</div>'+
+        '</div>'
+      : '<div class="dh-hero"><div class="dh-lbl">Weight compliance</div>'+
+        '<div class="dh-fig dc-none">—</div>'+
+        '<div class="dh-note">No weights with a target range in this period</div></div>';
+  }
+
   var kpi = function(label, value, note, cls){
     return '<div class="tile"><div class="t-top"><span class="t-lbl">'+label+'</span></div>'+
       '<div class="t-val'+(cls?' '+cls:'')+'">'+value+'</div>'+
       '<div class="t-note">'+note+'</div></div>';
   };
   document.getElementById('dash-kpis').innerHTML =
-    kpi('Compliance', tBags?comp+'<small>%</small>':'—', tPass+' of '+tBags+' bags in target', compClass(comp)) +
     kpi('Weight checks', w.length, scored.length+' scored · '+(w.length-scored.length)+' without target') +
     kpi('Out of target', tFail, under+' under · '+over+' over', tFail?'bad':'') +
-    kpi('Avg deviation', avgDev==null?'—':(avgDev>0?'+':'')+avgDev.toFixed(3), 'lbs from target centre') +
-    kpi('Overfill', overSum?overSum.toFixed(1):'0', 'lbs above the max limit') +
+    kpi('Average deviation', avgDev==null?'—':(avgDev>0?'+':'')+avgDev.toFixed(3), 'lbs from the center of the range') +
+    kpi('Overfill', overSum?overSum.toFixed(1):'0', 'lbs above the maximum') +
     kpi('Open holds', openHolds, holds.length+' case(s) in the period', openHolds?'bad':'');
 
   // ---------- Tendencia diaria ----------
@@ -224,7 +235,18 @@ function renderDash(){
     byDay[d].pass += r.pass; byDay[d].total += r.total;
   });
   var days = Object.keys(byDay).sort();
-  drawTrend(days, days.map(function(d){ return pctOf(byDay[d].pass, byDay[d].total); }));
+  var serie = days.map(function(d){
+    var p = pctOf(byDay[d].pass, byDay[d].total);
+    return {label:fmtDate(d), value:p, note:byDay[d].pass+' of '+byDay[d].total+' bags'};
+  });
+  // Estos porcentajes viven arriba del 80%: con el eje desde cero la linea se
+  // aplasta contra el techo y no se ve nada. El suelo baja hasta la decena del
+  // peor dia (nunca por encima de 50) para que ningun punto quede cortado.
+  var peor = serie.length ? Math.min.apply(null, serie.map(function(p){ return p.value; })) : 0;
+  var piso = Math.max(0, Math.min(50, Math.floor(peor/10)*10));
+  dcTrend('chart-trend', serie, {suffix:'%', min:piso, max:100, target:90,
+    guides:[piso, Math.round((piso+100)/2), 100], xName:'Day', yName:'Compliance',
+    aria:'Weight compliance by day', empty:'No weight checks in this range'});
 
   // ---------- Cortes por línea, producto, formato y turno ----------
   var group = function(list, keyFn, labelFn){
@@ -243,20 +265,23 @@ function renderDash(){
     }).sort(function(a,b){ return a.pct-b.pct; });
   };
 
+  var OBJ = {target:90};     // la rayita del 90% en las barras de cumplimiento
+
   document.getElementById('dash-by-line').innerHTML =
-    barList(group(scored, function(r){ return r.line; }, function(k){ return 'Line '+k; }), 'No weight records');
+    barList(group(scored, function(r){ return r.line; }, function(k){ return 'Line '+k; }),
+            'No weight records', OBJ);
 
   document.getElementById('dash-by-product').innerHTML =
     barList(group(scored, function(r){ return r.product||''; }, function(k){
       var p = findProduct(k);
       return esc(k) + (p&&p.name ? ' · '+esc(p.name) : '');
-    }).slice(0,8), 'No product numbers on these records');
+    }).slice(0,8), 'No product numbers on these records', OBJ);
 
   document.getElementById('dash-by-pkg').innerHTML =
-    barList(group(scored, function(r){ return r.pkgLabel||''; }), 'No package sizes');
+    barList(group(scored, function(r){ return r.pkgLabel||''; }), 'No package sizes', OBJ);
 
   document.getElementById('dash-by-shift').innerHTML =
-    barList(group(scored, function(r){ return r.shift; }, function(k){ return (k==='1'?'1st':'2nd')+' shift'; }), 'No shifts');
+    barList(group(scored, function(r){ return r.shift; }, function(k){ return (k==='1'?'1st':'2nd')+' shift'; }), 'No shifts', OBJ);
 
   // ---------- Bag seal ----------
   var sealRows = SEAL_CHECKS.map(function(chk){
@@ -360,7 +385,10 @@ function renderDash(){
       }).join('')
     : '<div class="cd-empty" style="padding:18px">No weight records for these filters</div>';
 
-  drawDonut(tPass, tFail);
+  dcSplit('chart-split', [
+    {label:'in target', value:tPass, tone:'ok'},
+    {label:'out of target', value:tFail, tone:'bad'}
+  ]);
 }
 
 // ---------- Gráficas ----------
