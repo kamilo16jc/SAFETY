@@ -14,7 +14,8 @@
   --border:#d7dcd7; --accent:#005339; --accent-tint:#d0e9d7;
   --accent-fg:#fbfaf6; --accent-deep:#003a28;
   --text:#0b1210; --muted:#3b4842; --dim:#6b7873;
-  --pass:#1a8656; --pass-tint:#dfece3; --fail:#e7000b; --warn:#d49824; --warn-tint:#faf0d8;
+  --pass:#1a8656; --pass-tint:#dfece3; --fail:#e7000b; --fail-tint:#fbe4e2;
+  --warn:#d49824; --warn-tint:#faf0d8;
   --rail:#132b22; --rail-2:#1d3d31; --rail-txt:#e2eae4; --rail-hi:#f6f9f7;
   --rail-dim:#8fa79a; --rail-mark:#60bb83;
   --shadow:none;
@@ -24,7 +25,8 @@
   --border:rgba(255,255,255,0.10); --accent:#60bb83; --accent-tint:rgba(96,187,131,0.14);
   --accent-fg:#0b1f18; --accent-deep:#8fd3ab;
   --text:#f8fafc; --muted:#90a1b9; --dim:#64748b;
-  --pass:#3fb950; --pass-tint:rgba(63,185,80,0.14); --fail:#ff6467;
+  --pass:#3fb950; --pass-tint:rgba(63,185,80,0.14);
+  --fail:#ff6467; --fail-tint:rgba(255,100,103,0.15);
   --warn:#d29922; --warn-tint:rgba(210,153,34,0.16);
   --rail:#0f172b; --rail-2:#1d293d; --rail-txt:#cbd5e1; --rail-hi:#f8fafc;
   --rail-dim:#64748b; --rail-mark:#60bb83;
@@ -1153,16 +1155,53 @@ body.logged-out .topstack{display:none}
 .sheet-bar .search-wrap{min-width:220px}
 
 /* tarjetas de conteo que hacen de menu: se pulsan y filtran la hoja */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);
-  padding:12px 14px;text-align:left;font-family:inherit;cursor:pointer;transition:border-color .15s}
-.kpi b{display:block;font-size:25px;font-weight:800;line-height:1;color:var(--text);
-  font-variant-numeric:tabular-nums}
-.kpi span{display:block;font-size:10px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;
-  color:var(--muted);margin-top:7px}
+/* ============================================================
+   TARJETAS DE CONTEO  (forma de Uiverse.io, de Samalander0)
+   Se queda lo suyo: el redondeo grande, el rotulo arriba y la
+   cifra abajo, el dibujo de fondo y el encogerse al pulsar. Los
+   colores son los de la casa —los mismos tintes de siempre— y
+   solo aparecen cuando hay algo que contar: una tarjeta en rojo
+   con un cero no avisa de nada.
+   ============================================================ */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;
+  margin-bottom:16px}
+.kpi{position:relative;overflow:hidden;display:flex;flex-direction:column;
+  justify-content:space-between;gap:20px;min-height:96px;
+  border:1px solid var(--border);background:var(--surface);border-radius:20px;
+  padding:15px 17px 14px;text-align:left;font-family:inherit;color:inherit;
+  transition:transform .4s ease,border-color .2s ease,background .2s ease}
+.kpi > b,.kpi > span{position:relative;z-index:1}
+.kpi span{order:1;display:flex;align-items:center;font-size:10px;font-weight:800;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.kpi b{order:2;display:block;font-size:30px;font-weight:800;line-height:1;letter-spacing:-.02em;
+  color:var(--text);font-variant-numeric:tabular-nums}
+.kpi .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;flex-shrink:0}
+.kpi .kpi-ico{position:absolute;right:-8px;bottom:-12px;width:78px;height:78px;z-index:0;
+  color:var(--dim);opacity:.09;pointer-events:none;transition:transform .4s ease}
+.kpi .kpi-ico svg{width:100%;height:100%}
+
+/* solo se encoge lo que de verdad se puede pulsar */
+.kpi[onclick]{cursor:pointer}
+.kpi:not([onclick]){cursor:default}
+.kpi[onclick]:hover{transform:scale(.975)}
+.kpi[onclick]:hover .kpi-ico{transform:scale(1.06)}
+.kpi[onclick]:active{transform:scale(.94)}
+.kpi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.kpi.kpi-ok{background:var(--pass-tint);border-color:transparent}
+.kpi.kpi-ok b{color:var(--pass)}
+.kpi.kpi-ok .kpi-ico{color:var(--pass);opacity:.16}
+.kpi.kpi-bad{background:var(--fail-tint);border-color:transparent}
+.kpi.kpi-bad b{color:var(--fail)}
+.kpi.kpi-bad .kpi-ico{color:var(--fail);opacity:.16}
+.kpi.kpi-warn{background:var(--warn-tint);border-color:transparent}
+.kpi.kpi-warn b{color:var(--warn)}
+.kpi.kpi-warn .kpi-ico{color:var(--warn);opacity:.16}
+
 .kpi.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .kpi.on b{color:var(--accent)}
-.kpi .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.kpi.on .kpi-ico{color:var(--accent);opacity:.16}
+@media (prefers-reduced-motion:reduce){ .kpi,.kpi .kpi-ico{transition:none} }
 
 @media (min-width:1024px){
   .sheet-wrap{max-height:calc(100vh - 330px)}
@@ -1395,10 +1434,11 @@ body.logged-out .topstack{display:none}
   .sheet-bar .ico-btn{width:100%;height:42px}
 
   /* --- tarjetas de conteo: dos por fila --- */
-  .kpi-row{grid-template-columns:1fr 1fr;gap:8px}
-  .kpi{padding:11px 12px}
-  .kpi b{font-size:21px}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:9px}
+  .kpi{padding:13px 14px 12px;min-height:84px;gap:14px;border-radius:17px}
+  .kpi b{font-size:25px}
   .kpi span{font-size:9.5px}
+  .kpi .kpi-ico{width:62px;height:62px;right:-8px;bottom:-10px}
 
   /* --- resto de piezas nuevas --- */
   .picked-bar{flex-wrap:wrap}

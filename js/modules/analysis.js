@@ -9,6 +9,13 @@
 // segundo paso del laboratorio (la placa) vive en Yeast & Mold y arrastra
 // estos mismos registros.
 var anFrom = '', anTo = '', anQuery = '';
+// Las tarjetas de arriba filtran la hoja: pulsando una se ve solo eso, y
+// pulsandola otra vez se vuelve a verlo todo.
+var anView = 'all';   // all | complete | partial | plates
+function setAnView(v){
+  anView = (anView === v || v === 'all') ? 'all' : v;
+  renderAnalysisRows();
+}
 
 function getAnalyses(){ var d=getDB(); if(!d.analysis) d.analysis=[]; return d.analysis; }
 
@@ -158,11 +165,21 @@ function renderAnalysisRows(){
   if(sum){
     var full = list.filter(analysisComplete).length;
     var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
+    var k = function(v, n, rot, tono, icono){
+      var pinta = tono && n ? ' kpi-'+tono : '';        // sin nada que contar, sin color
+      var punto = pinta ? '<i class="dot" style="background:var(--'+
+                          (tono==='ok'?'pass':'fail')+')"></i>' : '';
+      return '<button type="button" class="kpi'+pinta+(anView===v?' on':'')+'" '+
+        'onclick="setAnView(\''+v+'\')">'+
+        '<b>'+n+'</b><span>'+punto+rot+'</span>'+
+        '<span class="kpi-ico" data-icon="'+icono+'"></span></button>';
+    };
     sum.innerHTML =
-      '<div class="kpi"><b>'+list.length+'</b><span>analyses</span></div>'+
-      '<div class="kpi"><b>'+full+'</b><span><i class="dot" style="background:var(--pass)"></i>complete</span></div>'+
-      '<div class="kpi"><b>'+(list.length-full)+'</b><span><i class="dot" style="background:var(--fail)"></i>partial</span></div>'+
-      '<div class="kpi"><b>'+plate+'</b><span>plates read</span></div>';
+      k('all',      list.length,      'analyses',    '',    'clipboard') +
+      k('complete', full,             'complete',    'ok',  'check') +
+      k('partial',  list.length-full, 'partial',     'bad', 'alert') +
+      k('plates',   plate,            'plates read', '',    'droplet');
+    renderIcons(sum);
   }
 
   if(!list.length){
@@ -170,7 +187,18 @@ function renderAnalysisRows(){
       'No analyses for these filters. Fill the top row to add the first one.</td></tr>';
     return;
   }
-  body.innerHTML = list.slice(0,300).map(function(a,i){ return anRowHTML(a,i+1); }).join('');
+  var vista = list.filter(function(a){
+    if(anView === 'complete') return analysisComplete(a);
+    if(anView === 'partial')  return !analysisComplete(a);
+    if(anView === 'plates')   return typeof ymDone === 'function' && ymDone(a);
+    return true;
+  });
+  if(!vista.length){
+    body.innerHTML = '<tr><td colspan="15" class="sheet-empty" style="border:0">'+
+      'Nothing in this view. Tap the card again to see them all.</td></tr>';
+    return;
+  }
+  body.innerHTML = vista.slice(0,300).map(function(a,i){ return anRowHTML(a,i+1); }).join('');
   renderIcons(body);
 }
 
