@@ -9,7 +9,10 @@
 // libro de Excel. El PDF sale de la vista de impresion (el mismo diseno en
 // HTML) o del propio Excel al guardar como PDF.
 
+// La misma resolucion que la vista de impresion, para que las dos salidas
+// digan lo mismo: analisis -> nombre -> producto.
 function _coaCliente(a){
+  if(typeof coaCustomerOf === 'function') return coaCustomerOf(a) || {};
   if(typeof customerById === 'function' && a.customerId){
     var c = customerById(a.customerId);
     if(c) return c;
@@ -37,7 +40,7 @@ function buildCoaTokens(a){
   var t = c.targets || {};
   var prod = (typeof findProduct === 'function') ? findProduct(a.product) : null;
   return {
-    DESC:     a.cheese || c.productName || '',
+    DESC:     a.cheese || (prod && prod.name) || c.productName || '',
     CUSTNAME: a.customer || c.company || '',
     CUSTID:   c.customerId || a.customerId || '',
     CUSTCODE: c.code || '',

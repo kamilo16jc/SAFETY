@@ -513,13 +513,27 @@ var COA_METODO = {
   mold:     'AOAC 997.02'
 };
 
+// Tres caminos hasta el cliente, en este orden: lo que quedo grabado en el
+// analisis, su nombre, y —si el analisis se capturo sin cliente, que es lo
+// normal en los viejos— el propio producto, que si sabe de quien es.
 function coaCustomerOf(a){
   if(typeof customerById === 'function' && a.customerId){
     var c = customerById(a.customerId);
     if(c) return c;
   }
   var lista = (typeof getCustomers === 'function') ? getCustomers() : [];
-  return lista.filter(function(c){ return c.company === a.customer; })[0] || {};
+  if(a.customer){
+    var porNombre = lista.filter(function(c){ return c.company === a.customer; })[0];
+    if(porNombre) return porNombre;
+  }
+  var p = (typeof findProduct === 'function') ? findProduct(a.product) : null;
+  var delProducto = (p && typeof productCustomer === 'function') ? productCustomer(p) : null;
+  return delProducto || {};
+}
+
+// Lo que el certificado necesita del producto cuando el analisis no lo trae
+function coaProductOf(a){
+  return (typeof findProduct === 'function') ? (findProduct(a.product) || {}) : {};
 }
 
 // dd/mm/aaaa del pais, como en la forma
@@ -543,8 +557,8 @@ function openCoaDocument(g){
   var hojas = g.list.map(function(a, i){
     var c = coaCustomerOf(a);
     var t = c.targets || {};
-    var prod = (typeof findProduct === 'function') ? findProduct(a.product) : null;
-    var pack = c.packaging || (prod ? (prod.pkgLabel || prod.size || '') : '');
+    var prod = coaProductOf(a);
+    var pack = c.packaging || prod.pkgLabel || prod.size || '';
 
     var ficha = function(rot, v){
       return '<tr><th>'+rot+'</th><td>'+(v ? e(v) : '')+'</td></tr>';
@@ -572,7 +586,8 @@ function openCoaDocument(g){
     return '<section class="coa"'+(i ? ' style="page-break-before:always"' : '')+'>'+
       '<h1>Certificate of Analysis</h1>'+
       '<table class="ficha">'+
-        '<tr><th>Product Description:</th><td colspan="3">'+e(a.cheese || c.productName || dash)+'</td></tr>'+
+        '<tr><th>Product Description:</th><td colspan="3">'+
+          e(a.cheese || prod.name || c.productName || dash)+'</td></tr>'+
         '<tr><th>Customer Name:</th><td colspan="3">'+e(a.customer || c.company || dash)+'</td></tr>'+
       '</table>'+
       '<div class="dos">'+
