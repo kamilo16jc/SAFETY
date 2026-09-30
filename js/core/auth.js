@@ -165,6 +165,7 @@ function loginSuccess() {
   if(typeof renderModuleBar==='function') renderModuleBar(null);
 
   goTo('screen-home');
+  if(typeof playSplash==='function') playSplash();
 }
 
 function logoutUser() {

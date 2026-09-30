@@ -1625,17 +1625,31 @@ body.logged-out .topstack{display:none}
    la casa, y dura lo que tarda el logo en terminar.
    ============================================================ */
 .splash{position:fixed;inset:0;z-index:999;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:30px;
   transition:opacity .45s ease}
+.splash.on{display:flex}
 .splash.gone{opacity:0;pointer-events:none}
+
+/* Las animaciones cuelgan de .on: mientras el saludo esta apagado no existen,
+   y al encenderlo empiezan de cero. Dentro del SVG solo corrian una vez, al
+   cargar la pagina, que es justo cuando ya no queremos que corran. */
+.splash.on #sp-left-stem { animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) both }
+.splash.on #sp-right-stem{ animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) 160ms both }
+.splash.on #sp-connection{ animation:sp-in 800ms cubic-bezier(.2,.7,.2,1) 300ms both }
+.splash.on #sp-wordmark  { animation:sp-in 1000ms cubic-bezier(.2,.7,.2,1) 500ms both }
+@keyframes sp-in{from{opacity:0}to{opacity:1}}
 .sp-mark{width:min(340px,62vw);height:auto;display:block;color:var(--text)}
 .sp-bar{width:min(210px,42vw);height:3px;border-radius:999px;background:var(--surface2);
   overflow:hidden}
 .sp-bar i{display:block;height:100%;border-radius:999px;transform-origin:left;
-  background:linear-gradient(90deg,#2463EB,#1689D4,#10AAA7);
-  animation:sp-load 1.9s cubic-bezier(.35,.1,.2,1) both}
+  background:linear-gradient(90deg,#2463EB,#1689D4,#10AAA7);transform:scaleX(.02)}
+.splash.on .sp-bar i{animation:sp-load 1.9s cubic-bezier(.35,.1,.2,1) both}
 @keyframes sp-load{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:reduce){
   .splash{transition:none}
-  .sp-bar i{animation:none;transform:scaleX(1)}
+  .splash.on *{animation:none !important}
+  .sp-bar i{transform:scaleX(1)}
 }
+
+/* El boton de entrar, centrado bajo los campos */
+.login-btn{display:block;margin:24px auto 0}

@@ -188,6 +188,21 @@ var CRUMBS = {
   'screen-addproduct':['Setup', 'Add Product'],
   'screen-admin':    ['Setup', 'Admin']
 };
+// ===== EL SALUDO DE LA MARCA =====
+// Se enciende al entrar: tapa la pantalla mientras el inicio se arma detras,
+// y se retira solo. Si el equipo pidio menos movimiento, apenas se asoma.
+function playSplash(){
+  var sp = document.getElementById('splash');
+  if(!sp) return;
+  var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sp.classList.remove('gone');
+  sp.classList.add('on');
+  setTimeout(function(){
+    sp.classList.add('gone');
+    setTimeout(function(){ sp.classList.remove('on'); sp.classList.remove('gone'); }, 460);
+  }, quieto ? 260 : 1900);
+}
+
 function updateTopbar(id){
   // Sin sesión no hay barra lateral ni barra superior: el login ocupa la ventana
   document.body.classList.toggle('logged-out', id==='screen-login');

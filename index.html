@@ -18,8 +18,9 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
-<!-- ARRANQUE: la marca se dibuja sola y la barra la acompaña. No carga nada
-     (la app ya esta lista); es el saludo de la casa al abrir. -->
+<!-- EL SALUDO: la marca se dibuja sola y una barra fina la acompaña. Sale al
+     entrar, cuando la sesion ya esta abierta, y no carga nada — la app ya
+     esta lista detras. Nace apagado: lo enciende playSplash(). -->
 <div class="splash" id="splash">
   <svg class="sp-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1025 320" role="img" aria-labelledby="sp-title sp-desc">
     <title id="sp-title">NEXORA</title>
@@ -31,16 +32,6 @@
         <stop offset="1" stop-color="#10AAA7"/>
       </linearGradient>
     </defs>
-    <style>
-      #sp-left-stem { animation: sp-in 700ms cubic-bezier(.2,.7,.2,1) both; }
-      #sp-right-stem { animation: sp-in 700ms cubic-bezier(.2,.7,.2,1) 160ms both; }
-      #sp-connection { animation: sp-in 800ms cubic-bezier(.2,.7,.2,1) 300ms both; }
-      #sp-wordmark { animation: sp-in 1000ms cubic-bezier(.2,.7,.2,1) 500ms both; }
-      @keyframes sp-in { from { opacity: 0; } to { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        #sp-left-stem, #sp-right-stem, #sp-connection, #sp-wordmark { animation: none; }
-      }
-    </style>
     <g id="sp-symbol" transform="translate(64 76)">
       <path id="sp-left-stem" fill="#2463EB" d="M 16 0 H 42 V 168 H 0 V 16 Q 0 0 16 0 Z"/>
       <path id="sp-right-stem" fill="#10AAA7" d="M 126 0 H 152 Q 168 0 168 16 V 152 Q 168 168 152 168 H 126 Z"/>
@@ -224,10 +215,8 @@
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px">
-    <img id="login-logo" data-brand="static" src="assets/nexora.svg" alt="NEXORA" style="height:74px;object-fit:contain;margin-bottom:10px">
-    <div style="font-size:11px;color:var(--muted);letter-spacing:0.35em;font-weight:700;text-transform:uppercase;margin-bottom:36px">Quality Control</div>
-    <div style="font-size:28px;font-weight:800;margin-bottom:6px;text-align:center">Welcome back</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center">Sign in to continue</div>
+    <img id="login-logo" data-brand="static" src="assets/nexora.svg" alt="NEXORA"
+         style="height:78px;object-fit:contain;margin:0 0 44px">
 
     <div style="width:100%;max-width:360px">
       <div class="sec-label">Username or Email</div>
@@ -235,7 +224,7 @@
       <div class="sec-label">Password</div>
       <input type="password" class="field" id="login-pass" placeholder="••••••••" autocomplete="current-password">
       <div id="login-error" style="display:none;color:var(--fail);font-size:12px;font-weight:700;margin-top:10px;text-align:center"></div>
-      <button class="main-btn" style="margin-top:20px" onclick="doLogin()">Sign In</button>
+      <button class="main-btn login-btn" onclick="doLogin()">Sign In</button>
     </div>
   </div>
 </div>

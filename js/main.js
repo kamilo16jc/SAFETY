@@ -27,17 +27,5 @@ if('serviceWorker' in navigator){
   else window.addEventListener('load', registerSW);
 }
 
-// El arranque se retira cuando la marca termina de dibujarse. Si el equipo
-// pidio menos movimiento, se va casi de inmediato.
-(function(){
-  var sp = document.getElementById('splash');
-  if(!sp) return;
-  var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  setTimeout(function(){
-    sp.classList.add('gone');
-    setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 450);
-  }, quieto ? 250 : 1900);
-})();
-
 // Start with login
 initLogin();
