@@ -587,108 +587,53 @@ function coaFecha(iso){
 }
 
 function openCoaDocument(g){
-  var ink='#141a17', soft='#6b756f', line='#b9c0b9';
-  var e = function(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); };
-  var dash = '\u2014';
-  // El valor del laboratorio externo manda; si no hay, el de la casa
-  var val = function(a, own, mx){
-    var m = a[mx], o = a[own];
-    if(m!=null && String(m).trim()!=='') return e(m);
-    return (o!=null && String(o).trim()!=='') ? e(o) : 'Pending';
-  };
+  // La hoja no se dibuja "parecida": se reconstruyo desde el propio Excel
+  // —su rejilla de 37 columnas, sus altos de fila, sus combinadas, su Times
+  // New Roman, sus bordes y su logo— y se guarda en assets/coa_view.html con
+  // las mismas marcas que la plantilla. Aqui solo se rellenan y se imprime,
+  // asi que el PDF que salga es la forma, no una version nuestra.
+  var lista = g.list || [];
+  fetch('assets/coa_view.html')
+    .then(function(r){ if(!r.ok) throw new Error('falta assets/coa_view.html'); return r.text(); })
+    .then(function(plantilla){
+      var hojas = lista.map(function(a, i){
+        var cuerpo = plantilla;
+        var map = (typeof buildCoaTokens === 'function') ? buildCoaTokens(a) : {};
+        Object.keys(map).forEach(function(k){
+          cuerpo = cuerpo.split('{{'+k+'}}').join(
+            String(map[k]==null?'':map[k]).replace(/[&<>]/g, function(c){
+              return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }));
+        });
+        cuerpo = cuerpo.replace(/\{\{[A-Z0-9]+\}\}/g, '');
+        return '<div class="coa-pagina"'+(i ? ' style="page-break-before:always"' : '')+'>'+
+               cuerpo+'</div>';
+      }).join('');
 
-  var hojas = g.list.map(function(a, i){
-    var c = coaCustomerOf(a);
-    var t = c.targets || {};
-    var prod = coaProductOf(a);
-    var pack = c.packaging || prod.pkgLabel || prod.size || '';
+      var doc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+
+        String(g.no||'COA')+'</title><style>'+
+        'body{margin:0;background:#f4f4f2;padding:26px 0;font-family:Arial,sans-serif}'+
+        '.coa-pagina{background:#fff;margin:0 auto 26px;padding:26px 30px;width:946px;'+
+          'box-shadow:0 2px 10px rgba(0,0,0,.18)}'+
+        '.coa-hoja{position:relative;margin:0 auto}'+
+        '.coa-logo{position:absolute;z-index:2}'+
+        '.coa-rejilla{border-collapse:collapse;table-layout:fixed;width:100%}'+
+        '.coa-rejilla td{padding:0 2px;overflow:hidden;white-space:nowrap}'+
+        '.savebtn{position:fixed;top:14px;right:16px;background:#141a17;color:#fff;border:0;'+
+          'border-radius:6px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;'+
+          'font-family:inherit;z-index:9}'+
+        '@page{size:letter portrait;margin:11mm}'+
+        '@media print{body{background:#fff;padding:0}.savebtn{display:none}'+
+          '.coa-pagina{box-shadow:none;margin:0;padding:0;width:auto}}'+
+      '</style></head><body>'+
+      '<button class="savebtn" onclick="window.print()">Save as PDF</button>'+
+      hojas+'</body></html>';
 
-    var ficha = function(rot, v){
-      return '<tr><th>'+rot+'</th><td>'+(v ? e(v) : '')+'</td></tr>';
-    };
-    var izq = ficha('Customer ID:', c.customerId || a.customerId)+
-              ficha('Customer Part #:', a.product)+
-              ficha('Customer Code:', c.code)+
-              ficha('Customer Phone:', c.phone)+
-              ficha('Customer Fax:', c.fax)+
-              ficha('Customer Contact:', c.contact)+
-              ficha('Customer Email:', c.email);
-    var der = ficha('Customer PO:', a.po)+
-              ficha('Caputo Order #:', a.order)+
-              ficha('Product Lot #:', (typeof analysisLot === 'function' ? analysisLot(a) : a.lot))+
-              ficha('Date of Manufacture:', coaFecha(a.prodDate || a.date))+
-              ficha('Product Packaging:', pack);
-
-    var fila = function(nombre, metodo, valor, unidad, objetivo){
-      return '<tr><td class="n">'+nombre+'</td><td class="m">'+metodo+'</td>'+
-        '<td class="r">'+valor+'</td><td class="u">'+(unidad||'')+'</td>'+
-        '<td class="t">'+(objetivo ? e(objetivo) : '')+'</td>'+
-        '<td class="u">'+(objetivo && unidad ? unidad : '')+'</td></tr>';
-    };
-
-    return '<section class="coa"'+(i ? ' style="page-break-before:always"' : '')+'>'+
-      '<h1>Certificate of Analysis</h1>'+
-      '<table class="ficha">'+
-        '<tr><th>Product Description:</th><td colspan="3">'+
-          e(a.cheese || prod.name || c.productName || dash)+'</td></tr>'+
-        '<tr><th>Customer Name:</th><td colspan="3">'+e(a.customer || c.company || dash)+'</td></tr>'+
-      '</table>'+
-      '<div class="dos">'+
-        '<table class="ficha">'+izq+'</table>'+
-        '<table class="ficha">'+der+'</table>'+
-      '</div>'+
-      '<div class="titulo">Analytical Results</div>'+
-      '<table class="res">'+
-        '<tr class="cab"><th>Physical</th><th>Method</th><th colspan="2">Results</th>'+
-          '<th colspan="2">Target</th></tr>'+
-        fila('Moisture', COA_METODO.moisture, val(a,'moisture','mxMoisture'), '%', t.moisture)+
-        fila('Fat (dry basis)', COA_METODO.fat, val(a,'fat','mxFat'), '%', t.fat)+
-        fila('pH', COA_METODO.ph, val(a,'ph','mxPh'), '', t.ph)+
-        '<tr class="cab"><th>Microbiological</th><th>Method</th><th colspan="2">Results</th>'+
-          '<th colspan="2">Target</th></tr>'+
-        fila('Yeast', COA_METODO.yeast, val(a,'yeast','mxYeast'), 'CFU/g', t.yeast)+
-        fila('Mold', COA_METODO.mold, val(a,'mold','mxMold'), 'CFU/g', t.mold)+
-      '</table>'+
-      '<div class="firma">COA Accuracy, CCP Documentation, Weight &amp; Lot Coding '+
-        'Documentation verified by: ______________________________</div>'+
-      '<div class="pie">'+e(g.no)+(g.rev>1 ? ' R'+g.rev : '')+
-        ' \u00b7 Caputo Foods \u00b7 Building 1945</div>'+
-    '</section>';
-  }).join('');
-
-  var doc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+e(g.no)+'</title><style>'+
-    '*{box-sizing:border-box}'+
-    'body{font-family:Calibri,Segoe UI,Arial,sans-serif;color:'+ink+';font-size:11px;margin:0;padding:22px 26px}'+
-    '@page{size:portrait;margin:14mm}'+
-    '@media print{body{padding:0}.savebtn{display:none}}'+
-    '.savebtn{position:fixed;top:14px;right:16px;background:'+ink+';color:#fff;border:0;'+
-      'border-radius:6px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}'+
-    '.coa{max-width:760px;margin:0 auto}'+
-    'h1{font-size:19px;font-weight:700;text-align:center;margin:0 0 16px}'+
-    'table{border-collapse:collapse;width:100%}'+
-    '.ficha th{text-align:left;font-weight:700;white-space:nowrap;padding:2px 10px 2px 0;'+
-      'font-size:11px;vertical-align:top;width:1%}'+
-    '.ficha td{padding:2px 0;font-size:11px}'+
-    '.dos{display:flex;gap:26px;margin-top:2px}'+
-    '.dos > table{width:50%}'+
-    '.titulo{font-weight:700;font-size:12px;margin:18px 0 6px;border-bottom:1px solid '+line+';'+
-      'padding-bottom:3px}'+
-    '.res td,.res th{border:1px solid '+line+';padding:4px 7px;font-size:11px}'+
-    '.res .cab th{font-weight:700;text-align:left;background:#f1f3f0}'+
-    '.res .n{width:26%}.res .m{width:26%}.res .r{width:14%;text-align:right}'+
-    '.res .u{width:8%;color:'+soft+'}.res .t{width:14%;text-align:right}'+
-    '.firma{margin-top:34px;font-size:10.5px}'+
-    '.pie{margin-top:8px;font-size:9px;color:'+soft+'}'+
-  '</style></head><body>'+
-  '<button class="savebtn" onclick="window.print()">Save as PDF</button>'+
-  hojas+
-  '</body></html>';
-
-  var blob=new Blob([doc],{type:'text/html'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a'); a.href=url; a.target='_blank'; a.click();
-  setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+      var blob = new Blob([doc], {type:'text/html'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    })
+    .catch(function(e){ toast('Could not open the certificate: '+(e.message||e)); });
 }
 
 // ============================================================

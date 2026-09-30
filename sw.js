@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v90';
+const CACHE = 'nexora-qc-v91';
 
 const SHELL = [
   './',
@@ -25,7 +25,8 @@ const SHELL = [
   './js/export/capa-pdf.js','./js/export/shift-pdf.js',
   './js/integrations/word-fill.js','./js/integrations/excel-fill.js',
   './js/integrations/coa-fill.js',
-  './assets/coa_form_template.xlsx','./js/integrations/metal-fill.js',
+  './assets/coa_form_template.xlsx',
+  './assets/coa_view.html','./js/integrations/metal-fill.js',
   './js/vendor/jszip.min.js','./js/vendor/zxing.min.js'
 ];
 
