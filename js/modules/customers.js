@@ -242,6 +242,50 @@ function deleteCustomer(id){
   toast('Customer deleted');
 }
 
+// ---- Limpieza: borrar TODOS, o todos menos los que se quieran conservar ----
+// Los clientes que llegaron con la importacion arrastran tests que nadie
+// marco, y eso enreda cada producto suyo. Esto los quita de una vez; lo que se
+// escriba se conserva, separado por comas (nombre o ID, da igual).
+function deleteAllCustomers(){
+  if(typeof canDeleteRecords === 'function' && !canDeleteRecords()){
+    toast('Your role cannot delete'); return;
+  }
+  var list = getCustomers();
+  if(!list.length){ toast('There are no customers'); return; }
+
+  var salvar = prompt(
+    'Delete every customer.' + '\n\n' +
+    'Type the ones to KEEP, separated by commas (name or ID).' + '\n' +
+    'Leave it empty to delete all ' + list.length + '.', '');
+  if(salvar === null) return;                       // se arrepintio
+
+  var quedan = String(salvar).split(',').map(function(s){ return s.trim().toLowerCase(); })
+    .filter(Boolean);
+  var conservar = list.filter(function(c){
+    return quedan.some(function(q){
+      return String(c.company||'').toLowerCase().indexOf(q) >= 0 ||
+             String(c.customerId||'').toLowerCase() === q;
+    });
+  });
+  var fuera = list.length - conservar.length;
+  if(!fuera){ toast('Nothing matched — no customer was deleted'); return; }
+
+  var aviso = 'Delete ' + fuera + ' customer(s)?';
+  if(conservar.length){
+    aviso += '\n\n' + 'Keeping: ' + conservar.map(function(c){ return c.company||c.customerId; }).join(', ');
+  }
+  aviso += '\n\n' + 'This cannot be undone.';
+  if(!confirm(aviso)) return;
+
+  saveCustomerList(conservar);
+  logActivity('admin','Customers deleted',
+    fuera+' deleted'+(conservar.length ? ' · kept '+conservar.length : '')+' of '+list.length,
+    currentUser?currentUser.name:'—');
+  custOpen = null;
+  renderCustomers();
+  toast(fuera+' customer(s) deleted');
+}
+
 function exportCustomersCSV(){
   var out = [['Customer','ID','Code','Contact','Email','Phone','Fax','Product','Packaging',
               'Target moisture','Target fat','Target pH','Target yeast','Target mold',

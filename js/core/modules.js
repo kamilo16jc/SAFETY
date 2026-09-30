@@ -201,6 +201,11 @@ function canSeeScreen(screen, u, modId){
   u = u || currentUser;
   if(!u) return false;
   if(!screenBelongsToModule(screen)) return true;
+  // El rol protegido —el administrador— lo ve todo. Su lista de pantallas se
+  // guardo el dia que se creo: una pantalla añadida despues quedaba fuera y no
+  // aparecia ni en la cinta ni en el inicio, sin que nada lo explicara.
+  var rol = (typeof roleOf === 'function') ? roleOf(u) : null;
+  if(rol && rol.protected) return true;
   var mods = userModules(u);
   var lista = userScreenList(u);
   if(!lista.length) lista = null;
