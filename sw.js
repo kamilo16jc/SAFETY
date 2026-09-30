@@ -12,8 +12,6 @@ const SHELL = [
   './apple-touch-icon.png',
   './assets/nexora.svg',
   './assets/nexora-dark.svg',
-  './assets/nexora-anim.svg',
-  './assets/nexora-anim-dark.svg',
   './js/main.js',
   './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/utils.js',
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
