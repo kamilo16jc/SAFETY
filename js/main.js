@@ -1,12 +1,6 @@
 // ===== INIT =====
 updateDate();
 setInterval(updateDate,60000);
-// Set login logo
-var loginLogo = document.getElementById('login-logo');
-if(loginLogo) loginLogo.src = LOGO;
-// La barra lateral es verde oscuro en todos los tamaños: el logo va en claro
-var headerLogo = document.getElementById('header-logo');
-if(headerLogo) headerLogo.src = LOGO_LIGHT;
 renderIcons(document);
 
 // PWA: manifest, iconos y service worker en cada carga (antes solo corría al
@@ -32,6 +26,18 @@ if('serviceWorker' in navigator){
   if(document.readyState === 'complete') registerSW();
   else window.addEventListener('load', registerSW);
 }
+
+// El arranque se retira cuando la marca termina de dibujarse. Si el equipo
+// pidio menos movimiento, se va casi de inmediato.
+(function(){
+  var sp = document.getElementById('splash');
+  if(!sp) return;
+  var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(function(){
+    sp.classList.add('gone');
+    setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 450);
+  }, quieto ? 250 : 1900);
+})();
 
 // Start with login
 initLogin();

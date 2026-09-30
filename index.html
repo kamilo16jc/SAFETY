@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SAFETY">
+  <meta name="apple-mobile-web-app-title" content="NEXORA">
   <meta name="theme-color" content="#f2f2f7">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
-<title>SAFETY | Quality Control</title>
+<title>NEXORA | Quality Control</title>
 <!-- Tipografía del sistema visual: Manrope para la interfaz e IBM Plex Mono
      para las cifras. Si no cargan, cae a la fuente del sistema. -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,9 +18,50 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="logged-out">
+<!-- ARRANQUE: la marca se dibuja sola y la barra la acompaña. No carga nada
+     (la app ya esta lista); es el saludo de la casa al abrir. -->
+<div class="splash" id="splash">
+  <svg class="sp-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1025 320" role="img" aria-labelledby="sp-title sp-desc">
+    <title id="sp-title">NEXORA</title>
+    <desc id="sp-desc">Logo de NEXORA: monograma N azul y turquesa junto al nombre en azul marino. Fondo transparente.</desc>
+    <defs>
+      <linearGradient id="sp-bridge" x1="40" y1="0" x2="132" y2="168" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#2463EB"/>
+        <stop offset="0.5" stop-color="#1689D4"/>
+        <stop offset="1" stop-color="#10AAA7"/>
+      </linearGradient>
+    </defs>
+    <style>
+      #sp-left-stem { animation: sp-in 700ms cubic-bezier(.2,.7,.2,1) both; }
+      #sp-right-stem { animation: sp-in 700ms cubic-bezier(.2,.7,.2,1) 160ms both; }
+      #sp-connection { animation: sp-in 800ms cubic-bezier(.2,.7,.2,1) 300ms both; }
+      #sp-wordmark { animation: sp-in 1000ms cubic-bezier(.2,.7,.2,1) 500ms both; }
+      @keyframes sp-in { from { opacity: 0; } to { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        #sp-left-stem, #sp-right-stem, #sp-connection, #sp-wordmark { animation: none; }
+      }
+    </style>
+    <g id="sp-symbol" transform="translate(64 76)">
+      <path id="sp-left-stem" fill="#2463EB" d="M 16 0 H 42 V 168 H 0 V 16 Q 0 0 16 0 Z"/>
+      <path id="sp-right-stem" fill="#10AAA7" d="M 126 0 H 152 Q 168 0 168 16 V 152 Q 168 168 152 168 H 126 Z"/>
+      <path id="sp-connection" fill="url(#sp-bridge)" d="M 36 0 H 66 L 132 108 V 168 H 102 L 36 60 Z"/>
+    </g>
+    <g id="sp-wordmark" fill="currentColor">
+      <path d="M 302.4023 214 L 302.4023 106 L 319.2295 106 L 326.4193 127.5694 L 326.4193 214 Z M 376.9008 214 L 313.2635 132.4646 L 319.2295 106 L 382.8669 187.5354 Z M 376.9008 214 L 370.4759 192.4306 L 370.4759 106 L 394.4929 106 L 394.4929 214 Z"/>
+      <path d="M 418.8975 214 L 418.8975 106 L 442.9144 106 L 442.9144 214 Z M 437.2544 214 L 437.2544 193.1955 L 496.4555 193.1955 L 496.4555 214 Z M 437.2544 168.8725 L 437.2544 148.8329 L 491.1014 148.8329 L 491.1014 168.8725 Z M 437.2544 126.6516 L 437.2544 106 L 495.6907 106 L 495.6907 126.6516 Z"/>
+      <path d="M 585.1093 214 L 554.9734 165.813 L 552.0669 165.813 L 510.4578 106 L 539.064 106 L 568.7411 151.2805 L 571.6476 151.2805 L 613.2567 214 Z M 508.4691 214 L 548.3955 156.1756 L 566.9054 166.5779 L 535.8516 214 Z M 572.5654 163.0595 L 554.0555 152.6572 L 584.0385 106 L 611.421 106 Z"/>
+      <path d="M 681.1059 215.8357 Q 668.868 215.8357 658.5422 211.5524 Q 648.2164 207.2691 640.4147 199.6204 Q 632.613 191.9717 628.3297 181.7989 Q 624.0465 171.6261 624.0465 159.847 Q 624.0465 147.915 628.3297 137.8187 Q 632.613 127.7224 640.2618 120.1501 Q 647.9105 112.5779 658.2363 108.3711 Q 668.562 104.1643 680.8 104.1643 Q 692.885 104.1643 703.2108 108.3711 Q 713.5365 112.5779 721.2618 120.1501 Q 728.987 127.7224 733.2703 137.8952 Q 737.5535 148.068 737.5535 160 Q 737.5535 171.779 733.2703 181.9518 Q 728.987 192.1246 721.3382 199.6969 Q 713.6895 207.2691 703.3637 211.5524 Q 693.038 215.8357 681.1059 215.8357 Z M 680.8 193.9603 Q 690.4374 193.9603 697.7037 189.6771 Q 704.97 185.3938 708.9473 177.6686 Q 712.9246 169.9433 712.9246 159.847 Q 712.9246 152.1983 710.63 146.0028 Q 708.3354 139.8074 704.0521 135.2946 Q 699.7688 130.7819 693.8793 128.4108 Q 687.9898 126.0397 680.8 126.0397 Q 671.1626 126.0397 663.8963 130.2465 Q 656.63 134.4533 652.6527 142.0255 Q 648.6754 149.5977 648.6754 159.847 Q 648.6754 167.4958 650.97 173.7677 Q 653.2646 180.0397 657.4714 184.5524 Q 661.6782 189.0652 667.6442 191.5127 Q 673.6102 193.9603 680.8 193.9603 Z"/>
+      <path d="M 774.8079 169.4844 L 774.8079 151.7394 L 797.6011 151.7394 Q 804.7909 151.7394 808.6918 148.068 Q 812.5926 144.3966 812.5926 138.1246 Q 812.5926 132.3116 808.7683 128.4873 Q 804.9439 124.6629 797.7541 124.6629 L 774.8079 124.6629 L 774.8079 106 L 800.5076 106 Q 811.2159 106 819.3235 110.0538 Q 827.4312 114.1076 832.0204 121.2975 Q 836.6096 128.4873 836.6096 137.8187 Q 836.6096 147.3031 832.0204 154.4164 Q 827.4312 161.5297 819.1705 165.5071 Q 810.9099 169.4844 799.7428 169.4844 Z M 756.451 214 L 756.451 106 L 780.468 106 L 780.468 214 Z M 815.1932 214 L 781.5388 167.4958 L 803.5671 161.5297 L 843.6465 214 Z"/>
+      <path d="M 851.6827 214 L 894.5156 106 L 916.238 106 L 958.6119 214 L 933.2181 214 L 900.7875 124.3569 L 909.5071 124.3569 L 876.6176 214 Z M 876.0057 194.4193 L 876.0057 174.8385 L 934.9008 174.8385 L 934.9008 194.4193 Z"/>
+    </g>
+  </svg>
+  <div class="sp-bar"><i></i></div>
+</div>
 <!-- TOPBAR (escritorio) -->
 <div class="topstack" id="topstack">
 <header class="topbar" id="topbar">
+  <button class="tb-brand" onclick="goTo('screen-home')" aria-label="NEXORA — inicio">
+    <img data-brand="static" src="assets/nexora.svg" alt="NEXORA"></button>
   <div class="tb-crumb" id="tb-crumb"></div>
   <div class="tb-spacer"></div>
   <span class="tb-stamp" id="tb-stamp"></span>
@@ -183,7 +224,7 @@
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px">
-    <img id="login-logo" style="height:70px;object-fit:contain;margin-bottom:8px">
+    <img id="login-logo" data-brand="static" src="assets/nexora.svg" alt="NEXORA" style="height:74px;object-fit:contain;margin-bottom:10px">
     <div style="font-size:11px;color:var(--muted);letter-spacing:0.35em;font-weight:700;text-transform:uppercase;margin-bottom:36px">Quality Control</div>
     <div style="font-size:28px;font-weight:800;margin-bottom:6px;text-align:center">Welcome back</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center">Sign in to continue</div>

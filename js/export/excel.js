@@ -61,7 +61,7 @@ function exportRptExcel() {
   var noTargetBags = rptWeightResults.reduce(function(a,r){return a+r.total},0) - tBags;
 
   var summaryData = [
-    ['SAFETY QUALITY CONTROL - REPORT SUMMARY'],['Client: Caputo Foods'],
+    ['NEXORA QUALITY CONTROL - REPORT SUMMARY'],['Client: Caputo Foods'],
     ['Generated:', new Date().toLocaleDateString('en-US')],
     ['Filter Date:', rptFilters.date || 'All'],
     ['Line:', rptFilters.line === 'all' ? 'All Lines' : 'Line '+rptFilters.line],
@@ -228,7 +228,7 @@ function exportDashExcel() {
   });
 
   var summaryData = [
-    ['SAFETY QUALITY CONTROL - DASHBOARD SUMMARY'],['Client: Caputo Foods'],
+    ['NEXORA QUALITY CONTROL - DASHBOARD SUMMARY'],['Client: Caputo Foods'],
     ['Generated:', new Date().toLocaleDateString('en-US')],
     ['Period:', periodLabel],
     [],

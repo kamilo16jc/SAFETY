@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="nexora-bridge" x1="40" y1="0" x2="132" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2463EB"/>
+      <stop offset="0.5" stop-color="#1689D4"/>
+      <stop offset="1" stop-color="#10AAA7"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="104" fill="#FFFFFF"/>
+  <g transform="translate(106 106) scale(1.786)">
+    <path id="left-stem" fill="#2463EB" d="M 16 0 H 42 V 168 H 0 V 16 Q 0 0 16 0 Z"/>
+        <path id="right-stem" fill="#10AAA7" d="M 126 0 H 152 Q 168 0 168 16 V 152 Q 168 168 152 168 H 126 Z"/>
+        <path id="connection" fill="url(#nexora-bridge)" d="M 36 0 H 66 L 132 108 V 168 H 102 L 36 60 Z"/>
+  </g>
+</svg>

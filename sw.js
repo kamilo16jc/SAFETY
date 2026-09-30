@@ -1,15 +1,19 @@
-// ===== SERVICE WORKER — SAFETY Quality Control =====
+// ===== SERVICE WORKER — NEXORA Quality Control =====
 // Precachea la app completa para que abra y funcione sin señal. Las librerías
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'safety-qc-v71';
+const CACHE = 'nexora-qc-v72';
 
 const SHELL = [
   './',
   './index.html',
   './css/styles.css',
   './apple-touch-icon.png',
+  './assets/nexora.svg',
+  './assets/nexora-dark.svg',
+  './assets/nexora-anim.svg',
+  './assets/nexora-anim-dark.svg',
   './js/main.js',
   './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/utils.js',
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
