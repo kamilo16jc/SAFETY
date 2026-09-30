@@ -42,6 +42,7 @@ function labTestsOf(p, c){
   // Si el producto ya paso por el editor, manda lo que quedo marcado AUNQUE NO
   // SEA NADA: desmarcarlo todo es una decision, no un descuido. Antes una lista
   // vacia se tomaba por "sin decidir" y volvian a salir los del cliente.
+  if(p && p.externalLab === false) return [];   // se dijo que no va: no hereda nada
   if(p && p.labTests) return limpiar(p.labTests);
   if(c === undefined) c = (typeof productCustomer==='function') ? productCustomer(p) : null;
   return limpiar(c && c.tests);
@@ -249,7 +250,7 @@ function renderLabTestPicker(p, pre){
 
   var fuera = cur.length > 0 || p.externalLab === true;
   var casilla = function(id, si, punto, texto){
-    return '<label class="lab-check lt-ask"><input type="checkbox" id="'+pre+'-'+id+'"'+
+    return '<label class="lab-check lt-ask"><input type="checkbox" class="'+id+'" id="'+pre+'-'+id+'"'+
       (si===fuera ? ' checked' : '')+' onchange="ltExternal(\''+pre+'\','+si+')">'+
       '<span><i class="lt-dot '+punto+'"></i>'+texto+'</span></label>';
   };
@@ -329,8 +330,22 @@ function ltCount(pre){
 
 // Lee el picker y guarda en el producto (lo llama saveCatalogEdits)
 function readLabTestPicker(p, root){
-  var boxes = (root || document).querySelectorAll('[data-lt-kind]');
-  if(!boxes.length) return false;
+  root = root || document;
+  // La decision de "No lab / External lab" se guarda SIEMPRE. Antes vivia
+  // despues del return de abajo, asi que si la lista de tests no se habia
+  // dibujado —porque la forma del cliente no tiene columnas cargadas— marcar
+  // "No lab" no dejaba ningun rastro y el producto seguia heredando los tests
+  // del cliente. Ese era el motivo de que se quedara "pending" para siempre
+  // por mas veces que se desmarcara.
+  var si = root.querySelector('.lt-yes');
+  if(si){
+    p.externalLab = !!si.checked;
+    p.labTestsAt  = localISOStr();
+    p.labTestsBy  = currentUser ? currentUser.name : '—';
+    if(!si.checked) p.labTests = [];          // sin laboratorio, sin tests
+  }
+  var boxes = root.querySelectorAll('[data-lt-kind]');
+  if(!boxes.length) return !!si;
   var sel = [];
   Array.prototype.forEach.call(boxes, function(b){
     if(b.checked) sel.push({sheet:b.getAttribute('data-lt-kind'), label:b.getAttribute('data-lt-label')});

@@ -363,7 +363,7 @@ function renderCoa(){
     bar.innerHTML = picked.length
       ? '<b>'+picked.length+'</b> record'+(picked.length===1?'':'s')+' selected'+
         ' <button class="sheet-btn" onclick="generateCoa()">Generate COA</button>'+
-        ' <button class="sheet-btn" onclick="downloadCoaForms()">Excel form</button>'+
+        ' <button class="sheet-btn" onclick="printCoaView()">Print view</button>'+
         ' <button class="sheet-btn" onclick="clearCoaPicks()">Clear</button>'
       : '';
     bar.style.display = picked.length ? 'flex' : 'none';
@@ -503,11 +503,38 @@ function generateCoa(){
     logActivity('analysis','Certificate of analysis issued',
       g.no+' R'+g.rev+' · '+g.customer+' · '+g.list.length+' product(s)',
       currentUser?currentUser.name:'—');
-    openCoaDocument(g);
   });
+
+  // Lo que se entrega es la forma del cliente rellenada —su archivo, con su
+  // logo y sus bordes—, no una replica nuestra. La vista de impresion sigue
+  // ahi, en su boton, para imprimir de prisa.
+  var todos = [];
+  issued.forEach(function(g){ g.list.forEach(function(a){ todos.push(a); }); });
+  if(typeof downloadCoaXlsx === 'function'){
+    var i = 0;
+    var siguiente = function(){
+      if(i >= todos.length) return;
+      downloadCoaXlsx(todos[i++]).then(function(){ setTimeout(siguiente, 400); })
+        .catch(function(e){
+          toast('Could not fill the form: '+(e.message||e));
+          openCoaDocument(issued[0]);          // si la plantilla falla, al menos la vista
+        });
+    };
+    siguiente();
+  } else {
+    issued.forEach(openCoaDocument);
+  }
   coaPicks = {};
   renderCoa();
   toast(issued.length===1 ? issued[0].no+' issued' : issued.length+' certificates issued');
+}
+
+// La vista de impresion de lo que este marcado, sin emitir ni numerar nada
+function printCoaView(){
+  var lista = (getDB().analysis||[]).filter(function(a){ return coaPicks[a.id]; });
+  if(!lista.length){ toast('Select at least one record'); return; }
+  openCoaDocument({no:lista[0].coaNo||'—', rev:lista[0].coaRev||1,
+                   customer:lista[0].customer||'—', list:lista});
 }
 
 // Vuelve a abrir el certificado de un registro ya emitido, sin cambiar nada
