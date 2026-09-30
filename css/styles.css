@@ -6,6 +6,9 @@
 :root {
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* La del reloj de la barra: la misma del marco de Office. Se guarda aparte
+     porque hay sitios —el login— que la piden por nombre. */
+  --font-stamp: 'Segoe UI','Segoe UI Variable Text',system-ui,-apple-system,sans-serif;
   --radius:7px; --radius-sm:5px; --radius-lg:11px;
   --bg:#f7f6f3; --surface:#fefdfc; --surface2:#eeede8;
   --border:#d7dcd7; --accent:#005339; --accent-tint:#d0e9d7;
@@ -1022,8 +1025,8 @@ body.logged-out .topstack{display:none}
 /* ===== RELOJ Y FECHA EN LA BARRA SUPERIOR ===== */
 .tb-stamp{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;
   margin-right:4px;text-align:right}
-.tb-stamp b{font-size:15px;font-weight:800;letter-spacing:-.03em;color:var(--text);
-  font-variant-numeric:tabular-nums}
+.tb-stamp b{font-family:var(--font-stamp);font-size:15px;font-weight:800;
+  letter-spacing:-.03em;color:var(--text);font-variant-numeric:tabular-nums}
 .tb-stamp span{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
   color:var(--dim)}
 
@@ -1653,3 +1656,39 @@ body.logged-out .topstack{display:none}
 
 /* El boton de entrar, centrado bajo los campos */
 .login-btn{display:block;margin:24px auto 0}
+
+/* ============================================================
+   LOGIN
+   Los dos campos van centrados y con la letra del reloj de la
+   barra, que es la del marco. El boton deja de ser un bloque
+   solido: cristal con los azules de la marca, un brillo arriba
+   y una sombra que lo separa del fondo.
+   ============================================================ */
+.login-form .sec-label{text-align:center;font-family:var(--font-stamp);
+  font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.login-form .field{text-align:center;font-family:var(--font-stamp);font-size:15px;
+  font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.login-form .field::placeholder{font-weight:500;letter-spacing:0;color:var(--dim)}
+.login-form .field:focus{border-color:#2463EB}
+
+.login-btn{display:block;width:min(240px,100%);margin:26px auto 0;
+  padding:13px 26px;border:0;border-radius:13px;
+  font-family:var(--font-stamp);font-size:14px;font-weight:600;letter-spacing:.01em;
+  color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  background:linear-gradient(135deg,rgba(36,99,235,.90),rgba(22,137,212,.88) 55%,
+                                    rgba(16,170,167,.88));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),
+             inset 0 -1px 0 rgba(10,30,60,.18),
+             0 8px 18px -8px rgba(22,110,200,.55),
+             0 1px 2px rgba(15,23,43,.10);
+  transition:transform .14s ease,box-shadow .2s ease,filter .2s ease}
+.login-btn:hover{transform:translateY(-1px);filter:saturate(1.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),
+             inset 0 -1px 0 rgba(10,30,60,.18),
+             0 12px 22px -10px rgba(22,110,200,.6),
+             0 1px 2px rgba(15,23,43,.10)}
+.login-btn:active{transform:translateY(1px);
+  box-shadow:inset 0 2px 5px rgba(10,30,60,.28),0 1px 2px rgba(15,23,43,.10)}
+.login-btn:focus-visible{outline:2px solid #2463EB;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){ .login-btn{transition:none} }
