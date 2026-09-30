@@ -122,15 +122,15 @@ function renderLabResults(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return lrState(a)===k; }).length; };
     kp.innerHTML = [
-      ['waiting', n('waiting'), 'waiting for the lab', 'var(--fail)'],
-      ['in',      n('in'),      'results in, no verdict', 'var(--dim)'],
-      ['done',    n('done'),    'closed', 'var(--pass)'],
-      ['all',     all.length,   'records in range', '']
+      ['waiting', n('waiting'), 'waiting for the lab',    'bad',  'clock'],
+      ['in',      n('in'),      'results in, no verdict', 'warn', 'doc'],
+      ['done',    n('done'),    'closed',                 'ok',   'check'],
+      ['all',     all.length,   'records in range',       '',     'grid']
     ].map(function(k){
-      return '<button class="kpi'+(lrView===k[0]?' on':'')+'" onclick="setLrView(\''+k[0]+'\')">'+
-        '<b>'+k[1]+'</b><span>'+
-        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+      return kpiCard(k[1], k[2], {tono:k[3], icono:k[4], on:lrView===k[0],
+                                  click:"setLrView('"+k[0]+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(a){ return lrView==='all' || lrState(a)===lrView; });
@@ -326,15 +326,15 @@ function renderCoa(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return coaState(a)===k; }).length; };
     kp.innerHTML = [
-      ['ready',   n('ready'),   'ready to certify', 'var(--fail)'],
-      ['waiting', n('waiting'), 'incomplete', 'var(--dim)'],
-      ['issued',  n('issued'),  'certified', 'var(--pass)'],
-      ['all',     all.length,   'records in range', '']
+      ['ready',   n('ready'),   'ready to certify', 'bad', 'pdf'],
+      ['waiting', n('waiting'), 'incomplete',       '',    'clock'],
+      ['issued',  n('issued'),  'certified',        'ok',  'check'],
+      ['all',     all.length,   'records in range', '',    'grid']
     ].map(function(k){
-      return '<button class="kpi'+(coaView===k[0]?' on':'')+'" onclick="setCoaView(\''+k[0]+'\')">'+
-        '<b>'+k[1]+'</b><span>'+
-        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+      return kpiCard(k[1], k[2], {tono:k[3], icono:k[4], on:coaView===k[0],
+                                  click:"setCoaView('"+k[0]+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(a){ return coaView==='all' || coaState(a)===coaView; });
@@ -634,15 +634,15 @@ function renderCoaStatus(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return stState(a)===k; }).length; };
     kp.innerHTML = [
-      ['qa',   n('qa'),    'pending QA lab', 'var(--fail)'],
-      ['lab',  n('lab'),   'pending lab', 'var(--fail)'],
-      ['done', n('done'),  'complete', 'var(--pass)'],
-      ['all',  all.length, 'samples in range', '']
+      ['qa',   n('qa'),    'pending QA lab',   'warn', 'droplet'],
+      ['lab',  n('lab'),   'pending lab',      'bad',  'doc'],
+      ['done', n('done'),  'complete',         'ok',   'check'],
+      ['all',  all.length, 'samples in range', '',     'grid']
     ].map(function(k){
-      return '<button class="kpi'+(stView===k[0]?' on':'')+'" onclick="setStView(\''+k[0]+'\')">'+
-        '<b>'+k[1]+'</b><span>'+
-        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+      return kpiCard(k[1], k[2], {tono:k[3], icono:k[4], on:stView===k[0],
+                                  click:"setStView('"+k[0]+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(a){ return stView==='all' || stState(a)===stView; });

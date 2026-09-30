@@ -192,15 +192,16 @@ function renderGrilling(){
 
   var kp = document.getElementById('gc-kpis');
   if(kp){
-    var k = function(v,n,label,color){
-      return '<button class="kpi'+(gcView===v?' on':'')+'" onclick="setGcView(\''+v+'\')">'+
-        '<b>'+n+'</b><span>'+(color?'<i class="dot" style="background:'+color+'"></i>':'')+label+'</span></button>';
+    var k = function(v, n, label, tono, icono){
+      return kpiCard(n, label, {tono:tono, icono:icono, on:gcView===v,
+                                click:"setGcView('"+v+"')"});
     };
-    kp.innerHTML = k('all', all.length, 'lots in range','') +
-      k('lab', cuenta.lab, 'pending lab', 'var(--fail)') +
-      k('sensory', cuenta.sensory, 'pending sensory', 'var(--fail)') +
-      k('approval', cuenta.approval, 'pending approval', 'var(--fail)') +
-      k('done', cuenta.done, 'completed', 'var(--pass)');
+    kp.innerHTML = k('all', all.length, 'lots in range', '', 'box') +
+      k('lab', cuenta.lab, 'pending lab', 'bad', 'droplet') +
+      k('sensory', cuenta.sensory, 'pending sensory', 'bad', 'user') +
+      k('approval', cuenta.approval, 'pending approval', 'bad', 'lock') +
+      k('done', cuenta.done, 'completed', 'ok', 'check');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(r){

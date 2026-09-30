@@ -48,12 +48,12 @@ function statusBadge(status) {
 var holdView = 'open';   // open | hold | review | released | destroyed | all
 
 var HOLD_STATES = [
-  {k:'open',      label:'Open cases',   color:'var(--fail)'},
-  {k:'hold',      label:'On hold',      color:'#c1121f'},
-  {k:'review',    label:'Under review', color:'#b45309'},
-  {k:'released',  label:'Released',     color:'var(--pass)'},
-  {k:'destroyed', label:'Destroyed',    color:'var(--dim)'},
-  {k:'all',       label:'All cases',    color:''}
+  {k:'open',      label:'Open cases',   color:'var(--fail)', tono:'bad',  ico:'alert'},
+  {k:'hold',      label:'On hold',      color:'#c1121f',     tono:'bad',  ico:'lock'},
+  {k:'review',    label:'Under review', color:'#b45309',     tono:'warn', ico:'clock'},
+  {k:'released',  label:'Released',     color:'var(--pass)', tono:'ok',   ico:'check'},
+  {k:'destroyed', label:'Destroyed',    color:'var(--dim)',  tono:'',     ico:'trash'},
+  {k:'all',       label:'All cases',    color:'',            tono:'',     ico:'grid'}
 ];
 
 function initHold() {
@@ -125,12 +125,11 @@ function renderHoldSheet(){
       return all.filter(function(h){ return h.status===k; }).length;
     };
     kp.innerHTML = HOLD_STATES.map(function(st){
-      return '<button class="kpi' + (holdView===st.k ? ' on' : '') +
-        '" onclick="setHoldView(' + "'" + st.k + "'" + ')">' +
-        '<b>' + count(st.k) + '</b><span>' +
-        (st.color ? '<i class="dot" style="background:' + st.color + '"></i>' : '') +
-        st.label + '</span></button>';
+      return kpiCard(count(st.k), st.label, {tono:st.tono, icono:st.ico, color:st.color,
+                                             on:holdView===st.k,
+                                             click:"setHoldView('"+st.k+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   var q    = (document.getElementById('hold-q')||{}).value || '';

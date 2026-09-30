@@ -107,15 +107,15 @@ function renderYeast(){
     var n = function(k){ return k==='all' ? all.length
       : all.filter(function(a){ return ymState(a)===k; }).length; };
     kp.innerHTML = [
-      ['ready',   n('ready'),   'ready to read', 'var(--fail)'],
-      ['waiting', n('waiting'), 'still incubating', 'var(--dim)'],
-      ['done',    n('done'),    'read', 'var(--pass)'],
-      ['all',     all.length,   'plates in range', '']
+      ['ready',   n('ready'),   'ready to read',    'bad', 'alert'],
+      ['waiting', n('waiting'), 'still incubating', '',    'clock'],
+      ['done',    n('done'),    'read',             'ok',  'check'],
+      ['all',     all.length,   'plates in range',  '',    'droplet']
     ].map(function(k){
-      return '<button class="kpi'+(ymView===k[0]?' on':'')+'" onclick="setYmView(\''+k[0]+'\')">'+
-        '<b>'+k[1]+'</b><span>'+
-        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+      return kpiCard(k[1], k[2], {tono:k[3], icono:k[4], on:ymView===k[0],
+                                  click:"setYmView('"+k[0]+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(a){ return ymView==='all' || ymState(a)===ymView; });

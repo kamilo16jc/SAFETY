@@ -48,15 +48,15 @@ function renderSampleList(){
   var kp = document.getElementById('sl-kpis');
   if(kp){
     kp.innerHTML = [
-      ['all',  rows.length,  'runs scheduled', ''],
-      ['todo', sum(todo),    'samples to collect', 'var(--fail)'],
-      ['done', sum(done),    'collected', 'var(--pass)'],
-      ['none', none.length,  'runs without sample', 'var(--dim)']
+      ['all',  rows.length, 'runs scheduled',      '',    'calendar'],
+      ['todo', sum(todo),   'samples to collect',  'bad', 'alert'],
+      ['done', sum(done),   'collected',           'ok',  'check'],
+      ['none', none.length, 'runs without sample', '',    'close']
     ].map(function(k){
-      return '<button class="kpi'+(slView===k[0]?' on':'')+'" onclick="setSlView(\''+k[0]+'\')">'+
-        '<b>'+k[1]+'</b><span>'+
-        (k[3] ? '<i class="dot" style="background:'+k[3]+'"></i>' : '')+k[2]+'</span></button>';
+      return kpiCard(k[1], k[2], {tono:k[3], icono:k[4], on:slView===k[0],
+                                  click:"setSlView('"+k[0]+"')"});
     }).join('');
+    renderIcons(kp);
   }
 
   if(!rows.length){

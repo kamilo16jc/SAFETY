@@ -1180,11 +1180,12 @@ body.logged-out .topstack{display:none}
   color:var(--dim);opacity:.09;pointer-events:none;transition:transform .4s ease}
 .kpi .kpi-ico svg{width:100%;height:100%}
 
-/* solo se encoge lo que de verdad se puede pulsar */
+/* El cursor dice la verdad —mano solo donde hay accion—, pero el movimiento
+   es de todas: la tarjeta responde al raton se pulse o no. */
 .kpi[onclick]{cursor:pointer}
 .kpi:not([onclick]){cursor:default}
-.kpi[onclick]:hover{transform:scale(.975)}
-.kpi[onclick]:hover .kpi-ico{transform:scale(1.06)}
+.kpi:hover{transform:scale(.975)}
+.kpi:hover .kpi-ico{transform:scale(1.06)}
 .kpi[onclick]:active{transform:scale(.94)}
 .kpi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 

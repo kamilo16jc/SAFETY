@@ -118,16 +118,13 @@ function renderLab(){
 
   var sum = document.getElementById('lab-summary');
   if(sum){
-    var k = function(n, label, color){
-      return '<div class="kpi"><b>'+n+'</b><span>'+
-        (color ? '<i class="dot" style="background:'+color+'"></i>' : '')+label+'</span></div>';
-    };
     sum.innerHTML = all.length
-      ? k(all.length, 'samples', '') +
-        k(pend.length, 'pending', pend.length?'var(--fail)':'var(--pass)') +
-        k(all.length-pend.length, 'sent', 'var(--pass)') +
-        k(notReady, 'missing data', notReady?'var(--fail)':'var(--dim)')
+      ? kpiCard(all.length, 'samples', {icono:'droplet'}) +
+        kpiCard(pend.length, 'pending', {tono:'bad', icono:'alert'}) +
+        kpiCard(all.length-pend.length, 'sent', {tono:'ok', icono:'check'}) +
+        kpiCard(notReady, 'missing data', {tono:'warn', icono:'note'})
       : '';
+    renderIcons(sum);
   }
 
   if(!list.length){

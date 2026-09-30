@@ -166,13 +166,8 @@ function renderAnalysisRows(){
     var full = list.filter(analysisComplete).length;
     var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
     var k = function(v, n, rot, tono, icono){
-      var pinta = tono && n ? ' kpi-'+tono : '';        // sin nada que contar, sin color
-      var punto = pinta ? '<i class="dot" style="background:var(--'+
-                          (tono==='ok'?'pass':'fail')+')"></i>' : '';
-      return '<button type="button" class="kpi'+pinta+(anView===v?' on':'')+'" '+
-        'onclick="setAnView(\''+v+'\')">'+
-        '<b>'+n+'</b><span>'+punto+rot+'</span>'+
-        '<span class="kpi-ico" data-icon="'+icono+'"></span></button>';
+      return kpiCard(n, rot, {tono:tono, icono:icono, on:anView===v,
+                              click:"setAnView('"+v+"')"});
     };
     sum.innerHTML =
       k('all',      list.length,      'analyses',    '',    'clipboard') +

@@ -67,6 +67,27 @@ function hideSyncStatus() {
 // elegida en letras, para que nadie confunda 09/10 con el 10 de septiembre.
 
 
+// ===== TARJETA DE CONTEO =====
+// La misma en todas las pantallas: el rotulo arriba, la cifra abajo, el dibujo
+// de fondo y el color solo cuando hay algo que contar — una tarjeta roja con un
+// cero no avisa de nada. Si lleva accion sale como boton; si no, como bloque.
+//   kpiCard(3, 'pending', {tono:'bad', icono:'alert', click:"setRawView('pending')"})
+function kpiCard(n, rotulo, o){
+  o = o || {};
+  var hay  = !!(typeof n === 'number' ? n : parseFloat(n));
+  var tono = (o.tono && hay) ? o.tono : '';
+  var color = o.color || (tono
+    ? 'var(--' + (tono === 'ok' ? 'pass' : tono === 'warn' ? 'warn' : 'fail') + ')'
+    : '');
+  var dentro = '<b>' + n + '</b><span>' +
+    (color ? '<i class="dot" style="background:' + color + '"></i>' : '') + rotulo + '</span>' +
+    (o.icono ? '<span class="kpi-ico" data-icon="' + o.icono + '"></span>' : '');
+  var cls = 'class="kpi' + (tono ? ' kpi-' + tono : '') + (o.on ? ' on' : '') + '"';
+  return o.click
+    ? '<button type="button" ' + cls + ' onclick="' + o.click + '">' + dentro + '</button>'
+    : '<div ' + cls + '>' + dentro + '</div>';
+}
+
 // ===== LO QUE SE MIRA CUANDO NADIE HA FILTRADO =====
 // Las casillas de fecha abren vacias, y vacio NO significa "traelo todo":
 // significa HOY. Sacar semanas de historial que nadie pidio llena la pantalla

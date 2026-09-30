@@ -353,13 +353,14 @@ function renderRawRows(){
 
   var kp = document.getElementById('rw-kpis');
   if(kp){
-    var k = function(v,n,label,color){
-      return '<button class="kpi'+(rawView===v?' on':'')+'" onclick="setRawView(\''+v+'\')">'+
-        '<b>'+n+'</b><span>'+(color?'<i class="dot" style="background:'+color+'"></i>':'')+label+'</span></button>';
+    var k = function(v, n, label, tono, icono){
+      return kpiCard(n, label, {tono:tono, icono:icono, on:rawView===v,
+                                click:"setRawView('"+v+"')"});
     };
-    kp.innerHTML = k('all', all.length, 'samples in range','') +
-      k('pending', pend, 'plate pending', 'var(--fail)') +
-      k('read', all.length-pend, 'plate completed', 'var(--pass)');
+    kp.innerHTML = k('all', all.length, 'samples in range', '', 'box') +
+      k('pending', pend, 'plate pending', 'bad', 'alert') +
+      k('read', all.length-pend, 'plate completed', 'ok', 'check');
+    renderIcons(kp);
   }
 
   var list = all.filter(function(r){ return rawView==='all' || rawState(r)===rawView; });

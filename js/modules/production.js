@@ -377,16 +377,14 @@ function renderProduction(){
   });
   var sum = document.getElementById('pr-summary');
   if(sum){
-    var k = function(n, label, color){
-      return '<div class="kpi"><b>'+n+'</b><span>'+
-        (color ? '<i class="dot" style="background:'+color+'"></i>' : '')+label+'</span></div>';
-    };
     sum.innerHTML = list.length
-      ? k(list.length, 'runs scheduled', '') +
-        k(done, 'complete', 'var(--pass)') +
-        k(untested, 'not tested', untested?'var(--fail)':'var(--dim)') +
-        k(labsPending+'/'+labs, 'lab samples pending', labsPending?'var(--fail)':'var(--dim)')
+      ? kpiCard(list.length, 'runs scheduled', {icono:'calendar'}) +
+        kpiCard(done, 'complete', {tono:'ok', icono:'check'}) +
+        kpiCard(untested, 'not tested', {tono:'bad', icono:'alert'}) +
+        kpiCard(labsPending+'/'+labs, 'lab samples pending',
+                {tono:labsPending?'bad':'', icono:'droplet'})
       : '';
+    renderIcons(sum);
   }
 
   if(!list.length){
