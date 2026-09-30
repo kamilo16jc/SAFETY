@@ -104,7 +104,10 @@ function renderRibbon(){
   }).join('');
 
   host.innerHTML =
-    '<div class="rb-tabs" role="tablist">'+pestañas+
+    '<div class="rb-tabs" role="tablist">'+
+      '<button class="rb-home" type="button" onclick="goTo(\'screen-home\')" '+
+      'title="Inicio" aria-label="Inicio"><span data-icon="home"></span></button>'+
+      pestañas+
       '<button class="rb-collapse" id="rb-collapse" type="button" onclick="toggleRibbonBody()" '+
       'title="Plegar la cinta" aria-label="Plegar la cinta">'+
       (ribbonCollapsed() ? '&#709;' : '&#94;')+'</button>'+
@@ -165,6 +168,12 @@ function ribbonOpen(modId){
 
 // Pulsar un boton si navega — y deja el modulo activo, que es lo que decide
 // el alcance de Search, Reports y Shift Report
+// Del inicio a la linea: se abre Weights con esa linea ya elegida
+function homeLinea(n){
+  if(typeof selectLine === 'function') selectLine(n);
+  ribbonGo('qa', 'screen-weight');
+}
+
 function ribbonGo(modId, screen){
   activeModule = modId;
   ribbonTab = modId;
@@ -195,6 +204,8 @@ function ribbonHighlight(screenId){
   host.querySelectorAll('.rb-tab').forEach(function(t){
     t.setAttribute('aria-selected', String(t.getAttribute('data-mod') === ribbonTab));
   });
+  var casa = host.querySelector('.rb-home');
+  if(casa) casa.classList.toggle('on', screenId === 'screen-home');
   host.querySelectorAll('.rb-cmd[data-screen]').forEach(function(b){
     if(b.getAttribute('data-screen') === screenId) b.setAttribute('aria-current','true');
     else b.removeAttribute('aria-current');
@@ -251,6 +262,75 @@ function ribbonRecent(){
 }
 
 // Lo que quedo a medias, contado sobre lo que ya hay en el equipo
+// ===== LAS LINEAS, AHORA MISMO =====
+// Lo primero que se mira al llegar: que corre en cada linea, cuanto hace del
+// ultimo peso y cual esta parada. Sale de lo que ya esta en memoria —el
+// horario del dia y los pesos de hoy—, no se pide nada afuera.
+//
+// El cronometro de la app avisa cada hora para TODAS las lineas por igual; esto
+// es lo que ese cronometro no sabe: que la 3 lleva 50 minutos sin pesar y la 1
+// acaba de registrar.
+function ribbonLineas(){
+  if(typeof getDB !== 'function' || typeof localDateStr !== 'function') return [];
+  var hoy = localDateStr(), lineas = {};
+  var toca = function(n){
+    n = parseInt(n, 10);
+    if(!n) return null;
+    if(!lineas[n]) lineas[n] = {n:n, prod:'', pkg:'', hora:'', issue:null, runs:0};
+    return lineas[n];
+  };
+
+  // lo programado: una linea sin un solo peso es justo la que hay que ver
+  if(typeof getRuns === 'function'){
+    getRuns().forEach(function(r){
+      if(String(r.date||'').slice(0,10) !== hoy) return;
+      var L = toca(r.line); if(!L) return;
+      L.runs++;
+      if(!L.prod && r.product) L.prod = String(r.product);
+    });
+  }
+  // y el ultimo apunte de cada una, sea peso o parada
+  ((getDB().weights)||[]).forEach(function(w){
+    if(String(w.date||'').slice(0,10) !== hoy) return;
+    var L = toca(w.line); if(!L) return;
+    var t = String(w.time||'');
+    if(t && t >= L.hora){            // "HH:MM" se ordena solo
+      L.hora = t; L.issue = w.issue || null;
+      if(w.product) L.prod = String(w.product);
+      if(w.pkgLabel) L.pkg = w.pkgLabel;
+    }
+  });
+
+  // minutos desde una hora de hoy; si sale negativo, era de anoche (2o turno)
+  var ahora = new Date();
+  var desde = function(hhmm){
+    if(!hhmm) return null;
+    var p = String(hhmm).split(':'), h = parseInt(p[0],10), m = parseInt(p[1],10);
+    if(isNaN(h) || isNaN(m)) return null;
+    var d = new Date(); d.setHours(h, m, 0, 0);
+    if(d > ahora) d.setDate(d.getDate() - 1);
+    return Math.round((ahora - d) / 60000);
+  };
+
+  var lim = (typeof checkInterval === 'number' && checkInterval) ? checkInterval : 60;
+  return Object.keys(lineas).map(function(k){ return lineas[k]; })
+    .sort(function(a,b){ return a.n - b.n; })
+    .map(function(L){
+      L.min = desde(L.hora);
+      if(L.issue){                       // parada: no es que se olvide, es que no puede
+        L.tono = 'warn';
+        L.estado = (typeof WEIGHT_ISSUES === 'object' && WEIGHT_ISSUES[L.issue])
+                   ? WEIGHT_ISSUES[L.issue].label : L.issue;
+      } else if(L.min == null){
+        L.tono = 'warn'; L.estado = 'sin pesos';
+      } else {
+        L.tono = L.min >= lim ? 'bad' : (L.min >= lim*0.75 ? 'warn' : 'ok');
+        L.estado = L.min + ' min';
+      }
+      return L;
+    });
+}
+
 function ribbonPendientes(){
   var hoy = (typeof localDateStr === 'function') ? localDateStr() : '';
   var out = [];
@@ -303,9 +383,31 @@ function renderRibbonStart(){
       esc(item.name)+'</button>';
   }).join('');
 
+  var abre = (typeof canSeeScreen !== 'function') || canSeeScreen('screen-weight');
+  var lineas = ribbonLineas().map(function(L){
+    var nom = (typeof findProduct === 'function' && L.prod) ? findProduct(L.prod) : null;
+    var pie = [L.prod ? esc(L.prod) : '', nom && nom.name ? esc(nom.name) : (L.pkg ? esc(L.pkg) : '')]
+              .filter(Boolean).join(' \u00b7 ');
+    return '<'+(abre ? 'button' : 'div')+' class="hl-card hl-'+L.tono+'" '+
+      (abre ? 'type="button" onclick="homeLinea('+L.n+')"' : '')+'>'+
+      '<span class="hl-top"><b>L\u00ednea '+L.n+'</b><i class="hl-dot"></i></span>'+
+      '<span class="hl-state">'+esc(L.estado)+'</span>'+
+      '<span class="hl-prod">'+(pie || '&nbsp;')+'</span>'+
+    '</'+(abre ? 'button' : 'div')+'>';
+  }).join('');
+
   host.innerHTML =
+    (lineas ? '<div class="hs-label">L\u00edneas</div><div class="hl-strip">'+lineas+'</div>' : '')+
     (tarjetas ? '<div class="hs-label">Hoy</div><div class="hs-grid">'+tarjetas+'</div>' : '')+
     (rec ? '<div class="hs-label">Donde estabas</div><div class="hs-recents">'+rec+'</div>' : '');
   renderIcons(host);
+
+  // Los minutos envejecen solos: mientras el inicio este a la vista, se repinta
+  if(!window._hsReloj){
+    window._hsReloj = setInterval(function(){
+      var h = document.getElementById('screen-home');
+      if(h && h.classList.contains('active')) renderRibbonStart();
+    }, 60000);
+  }
   return true;
 }
