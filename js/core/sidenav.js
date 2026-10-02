@@ -66,12 +66,13 @@ function renderSideNav(){
   snavHighlight((document.querySelector('.screen.active')||{}).id);
 }
 
-// El modulo, como una baldosa de color. Los dos tonos salen de la propia tabla
-// —color e ink—, asi que cada modulo conserva el suyo y nadie inventa paletas.
+// El modulo es el dibujo y nada mas: sin caja detras. El color es el tono de
+// tinta de la tabla de modulos, no el claro: el marco de escritorio va siempre
+// sobre blanco. Asi cada modulo conserva el suyo y nadie inventa paletas.
 function snavTileHTML(m){
   var abierto = (m.id === snavOpen);
   return '<button class="snav-tile'+(abierto ? ' open' : '')+'" type="button" '+
-    'data-mod="'+m.id+'" style="--m1:'+m.color+';--m2:'+m.ink+'" '+
+    'data-mod="'+m.id+'" style="--mcol:'+m.ink+'" '+
     'title="'+esc(m.name)+'" aria-label="'+esc(m.name)+'" '+
     'aria-expanded="'+abierto+'" onclick="snavToggle(\''+m.id+'\')">'+
     '<span class="snav-glyph" data-icon="'+m.icon+'"></span>'+
