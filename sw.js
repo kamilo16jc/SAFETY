@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v99';
+const CACHE = 'nexora-qc-v100';
 
 const SHELL = [
   './',
@@ -42,9 +42,14 @@ const NEVER_CACHE = [
 self.addEventListener('install', function(e){
   e.waitUntil(
     caches.open(CACHE).then(function(c){
-      // addAll falla si un archivo falta; se cachea uno por uno para no romper la instalación
+      // addAll falla si un archivo falta; se cachea uno por uno para no romper
+      // la instalación. Y cada uno se pide con cache:'reload': sin eso el
+      // navegador entrega su propia copia HTTP —que en GitHub Pages dura diez
+      // minutos— y la versión nueva se instalaría guardando los archivos
+      // viejos. Esa era la razón de que una publicación no se viera.
       return Promise.all(SHELL.map(function(url){
-        return c.add(url).catch(function(){ /* ignora el que no exista */ });
+        return c.add(new Request(url, {cache:'reload'}))
+                .catch(function(){ return c.add(url).catch(function(){}); });
       }));
     }).then(function(){ return self.skipWaiting(); })
   );
