@@ -2359,3 +2359,29 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 @media (min-width:1100px){
   .cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* ------------------------------------------------------------
+   El aviso del producto desconocido, sin gritar.
+   Un recuadro gris con una frase y el botón de la interfaz
+   nueva. El naranja de antes compite con el aviso de verdad —el
+   de las muestras fuera de rango—, y ese sí tiene que verse.
+   Solo escritorio: el teléfono se queda como está.
+   ------------------------------------------------------------ */
+@media (min-width:1024px){
+  body.ui-fluent .product-card{gap:12px;padding:10px 12px;border-radius:var(--radius-sm);
+    margin-bottom:0}
+  body.ui-fluent .product-card.found,
+  body.ui-fluent .product-card.missing{background:var(--surface2);
+    border:1px solid var(--border)}
+  body.ui-fluent .product-card .pc-name{font-size:13px;font-weight:600;color:var(--text)}
+  body.ui-fluent .product-card .pc-meta{font-size:12px;color:var(--muted)}
+  body.ui-fluent .product-card .pc-badge{background:var(--surface);color:var(--muted);
+    border:1px solid var(--border);border-radius:var(--radius-sm);font-weight:600}
+  body.ui-fluent .product-card .pc-add{height:32px;padding:0 13px;
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--surface);color:var(--text);
+    font-family:inherit;font-size:13px;font-weight:500}
+  body.ui-fluent .product-card .pc-add:hover{background:var(--accent-tint);
+    border-color:var(--accent);color:var(--accent)}
+}

@@ -543,7 +543,6 @@ function renderProductCard(screen, code){
     el.className = 'product-card missing';
     el.innerHTML = '<div class="pc-main">'+
         '<div class="pc-name">Product '+c+' is not in the catalog</div>'+
-        '<div class="pc-meta">Create it once and it fills in by itself from now on</div>'+
       '</div>'+
       '<button class="pc-add" onclick="openProductModal(\''+screen+'\')">+ Create</button>';
     el.style.display='flex';
