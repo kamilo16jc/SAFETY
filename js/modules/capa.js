@@ -62,8 +62,20 @@ function resetCapaForm(){
   renderCapaSeverity();
   renderCapaStatus();
   renderProductOptions('capa-product-list');
-  document.getElementById('capa-save-btn').textContent = capaEditingId ? 'Update report' : 'Save report';
-  document.getElementById('capa-cancel-btn').style.display = capaEditingId ? '' : 'none';
+  updateCapaDue();
+  capaCloseMsg(false);
+  capaSaveLabel();
+}
+
+// El boton de guardar dice lo que va a hacer. "New report" se queda siempre a
+// la vista: es como se vuelve a empezar, no solo como se cancela una edicion.
+function capaSaveLabel(){
+  var b = document.getElementById('capa-save-btn');
+  if(!b) return;
+  var t = b.querySelector('span') || b;
+  var txt = capaEditingId ? 'Update report' : 'Save report';
+  if(b.lastChild && b.lastChild.nodeType === 3) b.lastChild.nodeValue = ' ' + txt;
+  else b.textContent = txt;
 }
 
 var capaSeverity = null, capaStatus = 'open';
@@ -71,21 +83,71 @@ var capaSeverity = null, capaStatus = 'open';
 function renderCapaSeverity(){
   document.getElementById('capa-severity').innerHTML = CAPA_SEVERITY.map(function(s){
     var on = capaSeverity===s.key;
-    return '<button type="button" class="sev-btn'+(on?' on '+s.key:'')+'" onclick="setCapaSeverity(\''+s.key+'\')">'+
-      '<div class="sev-top"><span class="sev-name">'+s.label+'</span>'+
-        '<span class="sev-when">Investigate '+s.deadline+'</span></div>'+
-      '<div class="sev-desc">'+s.desc+'</div></button>';
+    return '<button type="button" class="sev-btn'+(on?' on '+s.key:'')+'" '+
+      'aria-pressed="'+(on?'true':'false')+'" onclick="setCapaSeverity(\''+s.key+'\')">'+
+      '<span class="sev-ring"></span>'+
+      '<span class="sev-body">'+
+        '<span class="sev-top"><span class="sev-name">'+s.label+'</span>'+
+          '<span class="sev-when '+s.key+'">Investigate '+s.deadline+'</span></span>'+
+        '<span class="sev-desc">'+s.desc+'</span>'+
+      '</span></button>';
   }).join('');
 }
-function setCapaSeverity(k){ capaSeverity = k; renderCapaSeverity(); }
+function setCapaSeverity(k){ capaSeverity = k; renderCapaSeverity(); updateCapaDue(); }
 
 function renderCapaStatus(){
   document.getElementById('capa-status').innerHTML = Object.keys(CAPA_STATUS).map(function(k){
-    return '<button type="button" class="pkg-chip'+(capaStatus===k?' selected':'')+'" onclick="setCapaStatus(\''+k+'\')">'+
+    var on = capaStatus===k;
+    return '<button type="button" class="seg'+(on?' on':'')+'" role="radio" '+
+      'aria-checked="'+(on?'true':'false')+'" onclick="setCapaStatus(\''+k+'\')">'+
       CAPA_STATUS[k].label+'</button>';
   }).join('');
 }
-function setCapaStatus(k){ capaStatus = k; renderCapaStatus(); }
+function setCapaStatus(k){
+  capaStatus = k;
+  renderCapaStatus();
+  updateCapaDue();
+  // El aviso de cierre solo molesta cuando de verdad se intenta cerrar
+  if(k !== 'closed') capaCloseMsg(false);
+}
+
+// ===== LA FECHA LIMITE DE INVESTIGACION =====
+// No se escribe: sale de la severidad. Major son 24 horas desde la fecha del
+// CAPA, Moderate 48 y Minimal 96, que es lo que dice la propia forma.
+function capaDueDate(fecha, sev){
+  var s = CAPA_SEVERITY.filter(function(x){ return x.key===sev; })[0];
+  if(!fecha || !s) return null;
+  var d = new Date(fecha + 'T00:00:00');
+  if(isNaN(d)) return null;
+  d.setHours(d.getHours() + s.hours);
+  return d;
+}
+function capaOverdue(rec){
+  if(!rec || rec.status === 'closed') return false;
+  var d = capaDueDate(rec.capaDate, rec.severity);
+  return !!d && d < new Date();
+}
+function updateCapaDue(){
+  var caja = document.getElementById('capa-due');
+  if(!caja) return;
+  var fecha = (document.getElementById('capa-date')||{}).value;
+  var d = capaDueDate(fecha, capaSeverity);
+  if(!d){ caja.hidden = true; return; }
+  caja.hidden = false;
+  var tarde = (capaStatus !== 'closed') && d < new Date();
+  caja.classList.toggle('overdue', tarde);
+  document.getElementById('capa-due-text').textContent =
+    (tarde ? 'Overdue \u2014 investigation was due ' : 'Investigation due by ') +
+    d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+}
+function capaCloseMsg(ver){
+  var m = document.getElementById('capa-close-msg');
+  if(m) m.classList.toggle('show', !!ver);
+}
+function printCapa(){
+  if(!capaEditingId){ toast('Open a report first to print it'); return; }
+  if(typeof exportCapaPDF === 'function') exportCapaPDF(capaEditingId);
+}
 
 function saveCapa(){
   var g = function(id){ return document.getElementById(id).value.trim(); };
@@ -94,6 +156,14 @@ function saveCapa(){
   if(!report){ toast('Enter a report number'); return; }
   if(!capaSeverity){ toast('Select the severity'); return; }
   if(!problem){ toast('Describe the problem or deviation'); return; }
+  // Cerrar un CAPA es decir que no vuelve a pasar y que alguien lo comprobo.
+  // Sin accion de largo plazo ni verificador, eso no se puede afirmar.
+  if(capaStatus === 'closed' && (!g('capa-long') || !g('capa-verified'))){
+    capaCloseMsg(true);
+    toast('Complete the long-term action and verifier to close');
+    return;
+  }
+  capaCloseMsg(false);
 
   var list = getCapa();
   var now  = localISOStr();
@@ -164,11 +234,13 @@ function editCapa(id){
   g('capa-verified').value  = rec.verifiedBy||'';
   capaSeverity = rec.severity;
   capaStatus   = rec.status||'open';
-  document.getElementById('capa-title').textContent = 'Edit report';
+  document.getElementById('capa-title').textContent = 'Editing ' + (rec.reportNumber || 'report');
   renderCapaSeverity(); renderCapaStatus();
   renderProductOptions('capa-product-list');
-  document.getElementById('capa-save-btn').textContent = 'Update report';
-  document.getElementById('capa-cancel-btn').style.display = '';
+  updateCapaDue();
+  capaCloseMsg(false);
+  capaSaveLabel();
+  renderCapaList();      // marca en la tabla cual se esta editando
   document.getElementById('screen-capa').scrollTop = 0;
   window.scrollTo(0,0);
 }
@@ -191,39 +263,79 @@ function deleteCapa(id){
 function renderCapaList(){
   var el = document.getElementById('capa-list');
   if(!el) return;
-  var list = getCapa().slice().sort(function(a,b){
+
+  var q = ((document.getElementById('capa-filter')||{}).value || '').trim().toLowerCase();
+  var todos = getCapa().slice().sort(function(a,b){
     return String(b.capaDate||'').localeCompare(String(a.capaDate||''));
   });
-  var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+  var list = q ? todos.filter(function(c){
+    return [c.reportNumber, c.product, c.productName, c.lot, c.problem, c.complaint]
+      .join(' ').toLowerCase().indexOf(q) >= 0;
+  }) : todos;
+
+  capaCounts(todos);
+
   if(!list.length){
-    el.innerHTML = '<div class="cd-empty" style="padding:24px">No reports yet. Fill in the form above to open the first one.</div>';
+    el.innerHTML = '<div class="ntable-empty">'+
+      (todos.length ? 'No reports match the filter.'
+                    : 'No reports yet. Fill in the form above to open the first one.')+
+      '</div>';
     return;
   }
-  el.innerHTML = list.map(function(c){
-    var sev = CAPA_SEV[c.severity] || {label:'—',cls:''};
-    var st  = CAPA_STATUS[c.status] || CAPA_STATUS.open;
-    return '<div class="capa-card">'+
-      '<div class="capa-card-main">'+
-        '<div class="capa-card-top">'+
-          '<span class="capa-num">'+(c.reportNumber||'—')+'</span>'+
-          '<span class="pill '+sev.cls+'">'+sev.label+'</span>'+
-          '<span class="pill '+st.cls+'">'+st.label+'</span>'+
-        '</div>'+
-        '<div class="capa-card-title">'+(esc(c.problem||'—').slice(0,120))+'</div>'+
-        '<div class="capa-card-meta">'+fmtCapaDate(c.capaDate)+
-          (c.product?' · '+esc(c.product):'')+(c.lot?' · LOT '+esc(c.lot):'')+
-          (c.completedBy?' · '+esc(c.completedBy):'')+'</div>'+
-      '</div>'+
-      '<div class="capa-card-actions">'+
-        '<button class="btn-ghost" onclick="exportCapaPDF('+c.id+')"><span data-icon="doc"></span>PDF</button>'+
-        '<button class="btn-ghost" onclick="editCapa('+c.id+')">Edit</button>'+
-        (canDelete?'<button class="btn-danger" onclick="deleteCapa('+c.id+')">Delete</button>':'')+
-      '</div>'+
-    '</div>';
-  }).join('');
-  renderIcons(el);
 
-  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+
+  el.innerHTML =
+    '<div class="ntable-wrap"><table class="ntable"><thead><tr>'+
+      '<th>Report #</th><th>Date</th><th>Severity</th><th>Status</th>'+
+      '<th>Investigate by</th><th>Item / Lot</th><th class="nt-wide">Problem</th><th></th>'+
+    '</tr></thead><tbody>'+
+    list.map(capaRow(canDelete)).join('')+
+    '</tbody></table></div>';
+  renderIcons(el);
+}
+
+// Cuantos siguen abiertos y cuantos se pasaron de plazo. Es lo que un
+// supervisor mira primero, asi que va arriba y no dentro de la tabla.
+function capaCounts(todos){
+  var el = document.getElementById('capa-counts');
+  if(!el) return;
+  if(!todos.length){ el.textContent = ''; el.className = 'cbar-note'; return; }
+  var abiertos = todos.filter(function(c){ return c.status !== 'closed'; }).length;
+  var tarde    = todos.filter(capaOverdue).length;
+  el.textContent = abiertos + ' open \u00b7 ' + tarde + ' overdue';
+  el.className = 'cbar-note' + (tarde ? ' bad' : '');
+}
+
+function capaRow(canDelete){
+  return function(c){
+    var sev = CAPA_SEV[c.severity] || {label:'\u2014', cls:''};
+    var st  = CAPA_STATUS[c.status] || CAPA_STATUS.open;
+    var due = capaDueDate(c.capaDate, c.severity);
+    var tarde = capaOverdue(c);
+    var cosa = [c.product, c.lot ? 'LOT '+c.lot : ''].filter(Boolean).join(' \u00b7 ') || '\u2014';
+    return '<tr class="'+(c.id===capaEditingId ? 'editing' : '')+'" '+
+        'onclick="editCapa('+c.id+')" title="Open this report">'+
+      '<td class="nt-mono">'+esc(c.reportNumber||'\u2014')+'</td>'+
+      '<td>'+fmtCapaDate(c.capaDate)+'</td>'+
+      '<td><span class="dl-badge '+(sev.cls==='bad'?'bad':sev.cls==='warn'?'warn':'')+'">'+
+        esc(sev.label)+'</span></td>'+
+      '<td><span class="dl-badge '+(st.cls==='ok'?'ok':st.cls==='warn'?'warn':'info')+'">'+
+        esc(st.label)+'</span></td>'+
+      '<td>'+(due ? due.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '\u2014')+
+        (tarde ? ' <span class="dl-badge bad">Overdue</span>' : '')+'</td>'+
+      '<td>'+esc(cosa)+'</td>'+
+      '<td class="nt-wide" title="'+esc(c.problem||'')+'">'+esc(c.problem||'\u2014')+'</td>'+
+      '<td class="nt-acts" onclick="event.stopPropagation()">'+
+        '<button class="cbtn cbtn-outline nt-mini" onclick="exportCapaPDF('+c.id+')" '+
+          'title="Download PDF" aria-label="Download PDF"><span data-icon="doc"></span></button>'+
+        (canDelete
+          ? '<button class="cbtn cbtn-outline nt-mini nt-del" onclick="deleteCapa('+c.id+')" '+
+            'title="Delete report" aria-label="Delete report"><span data-icon="trash"></span></button>'
+          : '')+
+      '</td>'+
+    '</tr>';
+  };
 }
 
 function fmtCapaDate(iso){

@@ -2453,3 +2453,102 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   body.ui-fluent .dup-hint-title{font-size:13px;font-weight:600;color:var(--warn)}
   body.ui-fluent .dup-hint-detail{font-size:12px;color:var(--muted);margin-top:2px}
 }
+
+/* ============================================================
+   INCIDENT & CAPA
+   El formulario es largo y tiene un orden: incidente, severidad,
+   investigación y firma. Los cuatro pasos van numerados para que
+   se lea como la forma oficial, no como un montón de campos.
+   ============================================================ */
+
+/* ---- cabecera con la referencia de la norma ---- */
+.pg-head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ref-chip{height:22px;padding:0 9px;border-radius:11px;flex-shrink:0;
+  display:inline-flex;align-items:center;font-size:12px;font-weight:600;
+  color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent)}
+
+/* ---- el paso de cada tarjeta ---- */
+.ncard-head{display:flex;align-items:center;gap:9px}
+.ncard-head .ncard-title{margin:0}
+.nstep{width:22px;height:22px;flex-shrink:0;border-radius:50%;
+  display:grid;place-items:center;font-size:12px;font-weight:700;
+  background:var(--accent-tint);color:var(--accent-deep)}
+.nreq{color:var(--fail);font-weight:700}
+.nmono{font-family:var(--font-mono)}
+
+/* ---- el estado, como un conmutador de tres ---- */
+.segmented{display:inline-flex;align-self:flex-start;gap:2px;padding:2px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2)}
+.segmented .seg{height:28px;padding:0 13px;border:0;border-radius:3px;background:transparent;
+  font-family:inherit;font-size:12.5px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.segmented .seg:hover{background:var(--surface)}
+.segmented .seg.on{background:var(--surface);color:var(--accent);font-weight:600;
+  box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.segmented .seg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ---- severidad: tarjeta con su aro y su plazo ---- */
+.sev-list{display:flex;flex-direction:column;gap:8px}
+.sev-list .sev-btn{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;align-items:start;
+  width:100%;padding:12px 14px;cursor:pointer}
+.sev-ring{width:18px;height:18px;margin-top:2px;border-radius:50%;
+  border:1px solid var(--dim);display:grid;place-items:center}
+.sev-ring::after{content:"";width:10px;height:10px;border-radius:50%}
+.sev-btn.on .sev-ring{border-color:var(--accent)}
+.sev-btn.on .sev-ring::after{background:var(--accent)}
+.sev-body{min-width:0}
+.sev-list .sev-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+.sev-list .sev-when{margin-left:auto;height:22px;padding:0 8px;border-radius:11px;
+  display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;white-space:nowrap;
+  color:var(--muted);background:var(--surface2);border:1px solid var(--border)}
+.sev-list .sev-when.major{color:var(--fail);background:var(--fail-tint);border-color:var(--fail)}
+.sev-list .sev-when.moderate{color:var(--warn);background:var(--warn-tint);border-color:var(--warn)}
+.sev-list .sev-when.minimal{color:var(--accent);background:var(--accent-tint);border-color:var(--accent)}
+.sev-list .sev-desc{display:block;font-size:12px;line-height:1.45;color:var(--muted)}
+
+/* El atributo hidden no puede con un display:flex escrito a mano: sin esta
+   linea, la banda del plazo se queda puesta en un formulario nuevo. */
+.info-bar[hidden]{display:none}
+
+/* el plazo vencido pinta la banda de aviso */
+.info-bar.overdue{background:var(--fail-tint);border-color:var(--fail);color:var(--fail)}
+.info-bar.overdue .ib-v{color:var(--fail)}
+
+/* ---- la barra de comandos con una nota a la derecha ---- */
+.cbar-gap{flex:1}
+.cbar-note{padding:0 8px;font-size:12.5px;color:var(--dim);white-space:nowrap}
+.cbar-note.bad{color:var(--fail);font-weight:600}
+
+/* ---- acción larga con su fecha al lado ---- */
+.ngrid-act{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+
+/* ---- la tabla de reportes guardados ---- */
+.ncard-table{gap:0;padding:0;overflow:hidden}
+.ntable-head{padding:16px 18px 12px;gap:12px;flex-wrap:wrap}
+.nfilter{width:240px;max-width:100%}
+.ntable-wrap{overflow-x:auto}
+.ntable{width:100%;border-collapse:collapse;font-size:13px}
+.ntable th,.ntable td{text-align:left;padding:0 12px;height:44px;white-space:nowrap;
+  border-bottom:1px solid var(--border)}
+.ntable th{height:36px;font-size:11.5px;font-weight:700;color:var(--muted);
+  background:var(--surface2);border-top:1px solid var(--border)}
+.ntable th:first-child,.ntable td:first-child{padding-left:18px}
+.ntable tbody tr{cursor:pointer}
+.ntable tbody tr:hover{background:var(--surface2)}
+.ntable tbody tr.editing{background:var(--accent-tint)}
+.ntable tbody tr:last-child td{border-bottom:0}
+.nt-mono{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.nt-wide{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.nt-acts{text-align:right;white-space:nowrap}
+.nt-mini{height:28px;padding:0 9px;margin-left:4px}
+.nt-mini span{display:flex}
+.nt-mini svg{width:15px;height:15px}
+.nt-del:hover{border-color:var(--fail);color:var(--fail);background:var(--fail-tint)}
+.ntable-empty{padding:30px 18px;text-align:center;color:var(--dim);font-size:13px}
+
+/* dos tonos más para las insignias de la lista */
+.dl-badge.warn{color:var(--warn);background:var(--warn-tint);border-color:var(--warn)}
+.dl-badge.info{color:var(--accent);background:var(--accent-tint);border-color:var(--accent)}
+
+@media (min-width:640px){
+  .ngrid-act{grid-template-columns:minmax(0,1fr) 170px;gap:16px}
+}

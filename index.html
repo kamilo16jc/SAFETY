@@ -1182,81 +1182,152 @@
 <!-- INCIDENT & CAPA -->
 <div class="screen" id="screen-capa">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="page-head">
+
+  <div class="pg-head pg-head-row">
     <div>
-      <div class="form-title">Incident &amp; CAPA</div>
-      <div class="form-meta">SQF #2.5.C.2</div>
+      <h1 class="pg-title">Incident &amp; CAPA</h1>
+      <div class="pg-sub" id="capa-title">New incident &amp; CAPA report</div>
     </div>
+    <span class="ref-chip">SQF 2.5.C.2</span>
   </div>
 
-  <div class="panel capa-form">
-    <div class="capa-form-head"><span id="capa-title">New incident &amp; CAPA report</span></div>
-    <div class="capa-form-body">
-      <div class="fgrid">
-      <div class="fcol">
-      <div class="pair">
-        <div class="field-group"><div class="sec-label">Report number</div>
-          <input type="text" class="field" id="capa-report" placeholder="CAPA-2026-001"></div>
-        <div class="field-group"><div class="sec-label">Date of CAPA</div>
-          <input type="date" class="field" id="capa-date"></div>
-      </div>
-      <div class="pair">
-        <div class="field-group"><div class="sec-label">Customer complaint # <span class="opt">· if applicable</span></div>
-          <input type="text" class="field" id="capa-complaint" placeholder="Optional"></div>
-        <div class="field-group"><div class="sec-label">Status</div>
-          <div id="capa-status" class="chip-row"></div></div>
-      </div>
-      <div class="pair">
-        <div class="field-group"><div class="sec-label">Building / Item # <span class="opt">· product</span></div>
-          <input type="text" class="field" id="capa-product" list="capa-product-list" placeholder="Product number or name" autocomplete="off">
-          <datalist id="capa-product-list"></datalist></div>
-        <div class="field-group"><div class="sec-label">Lot number</div>
-          <input type="text" class="field" id="capa-lot" placeholder="Lot"></div>
-      </div>
-
-      <div class="sec-label" style="margin-top:6px">Corrective action severity</div>
-      <div id="capa-severity" class="capa-sev"></div>
-
-      <div class="sec-label" style="margin-top:6px">Problem / Deviation</div>
-      <textarea class="field" id="capa-problem" rows="3" placeholder="What was found, where, and when"></textarea>
-
-      </div>
-      <div class="fcol">
-      <div class="sec-label">Investigation, affected product/area and outcome(s)</div>
-      <textarea class="field" id="capa-desc" rows="4" placeholder="Root cause analysis, affected quantity/area, and how it was resolved"></textarea>
-
-      <div class="pair">
-        <div class="field-group" style="flex:1"><div class="sec-label">Short-term corrective action taken</div>
-          <textarea class="field" id="capa-short" rows="3" placeholder="Immediate action"></textarea></div>
-      </div>
-      <div class="field-group"><div class="sec-label">Short-term action date</div>
-        <input type="date" class="field" id="capa-short-date" style="max-width:200px"></div>
-
-      <div class="field-group"><div class="sec-label">Long-term corrective / preventative action taken</div>
-        <textarea class="field" id="capa-long" rows="3" placeholder="Preventative action"></textarea></div>
-      <div class="field-group"><div class="sec-label">Long-term action date</div>
-        <input type="date" class="field" id="capa-long-date" style="max-width:200px"></div>
-
-      <div class="pair">
-        <div class="field-group"><div class="sec-label">Completed by (print name)</div>
-          <input type="text" class="field" id="capa-completed" placeholder="Name"></div>
-        <div class="field-group"><div class="sec-label">Verified by (signature)</div>
-          <input type="text" class="field" id="capa-verified" placeholder="Name"></div>
-      </div>
-
-      <div class="capa-form-actions">
-        <button class="main-btn" id="capa-save-btn" onclick="saveCapa()">Save report</button>
-        <button class="btn-ghost" id="capa-cancel-btn" style="display:none" onclick="cancelCapaEdit()">Cancel edit</button>
-      </div>
-      </div>
-      </div>
-    </div>
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" id="capa-save-btn" onclick="saveCapa()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      Save report
+    </button>
+    <button class="cbtn" id="capa-cancel-btn" onclick="cancelCapaEdit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      New report
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="printCapa()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+      Print
+    </button>
+    <span class="cbar-gap"></span>
+    <span class="cbar-note" id="capa-counts"></span>
   </div>
 
-  <div class="sec-label" style="margin-top:6px">Saved reports</div>
-  <div id="capa-list"></div>
+  <div class="cards-2">
+
+    <div class="ncol">
+      <section class="ncard">
+        <div class="ncard-head"><span class="nstep">1</span><h2 class="ncard-title">Incident</h2></div>
+
+        <div class="ngrid-2">
+          <label class="nfield">
+            <span class="nlabel">Report number</span>
+            <input type="text" class="ninput nmono" id="capa-report" placeholder="CAPA-2026-001">
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Date of CAPA <b class="nreq">*</b></span>
+            <input type="date" class="ninput" id="capa-date" onchange="updateCapaDue()">
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Customer complaint # <i>· if applicable</i></span>
+            <input type="text" class="ninput" id="capa-complaint" placeholder="Optional">
+          </label>
+          <div class="nfield">
+            <span class="nlabel">Status</span>
+            <div id="capa-status" class="segmented" role="radiogroup" aria-label="Status"></div>
+          </div>
+          <label class="nfield">
+            <span class="nlabel">Building / Item # <i>· product</i></span>
+            <input type="text" class="ninput" id="capa-product" list="capa-product-list"
+                   placeholder="Product number or name" autocomplete="off">
+            <datalist id="capa-product-list"></datalist>
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Lot number</span>
+            <input type="text" class="ninput" id="capa-lot" placeholder="Lot">
+          </label>
+        </div>
+
+        <label class="nfield">
+          <span class="nlabel">Problem / deviation <b class="nreq">*</b></span>
+          <textarea class="ninput ntext" id="capa-problem" rows="3"
+                    placeholder="What was found, where, and when"></textarea>
+        </label>
+      </section>
+
+      <section class="ncard">
+        <div class="ncard-head"><span class="nstep">2</span>
+          <h2 class="ncard-title">Corrective action severity <b class="nreq">*</b></h2></div>
+        <div id="capa-severity" class="sev-list"></div>
+        <div class="info-bar" id="capa-due" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span class="ib-v" id="capa-due-text"></span>
+        </div>
+      </section>
+    </div>
+
+    <div class="ncol">
+      <section class="ncard">
+        <div class="ncard-head"><span class="nstep">3</span>
+          <h2 class="ncard-title">Investigation &amp; actions</h2></div>
+
+        <label class="nfield">
+          <span class="nlabel">Investigation, affected product/area and outcome(s)</span>
+          <textarea class="ninput ntext" id="capa-desc" rows="4"
+                    placeholder="Root cause analysis, affected quantity/area, and how it was resolved"></textarea>
+        </label>
+
+        <div class="ngrid-act">
+          <label class="nfield">
+            <span class="nlabel">Short-term corrective action taken</span>
+            <textarea class="ninput ntext" id="capa-short" rows="3" placeholder="Immediate action"></textarea>
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Date</span>
+            <input type="date" class="ninput" id="capa-short-date">
+          </label>
+        </div>
+
+        <div class="ngrid-act">
+          <label class="nfield">
+            <span class="nlabel">Long-term corrective / preventative action</span>
+            <textarea class="ninput ntext" id="capa-long" rows="3" placeholder="Preventative action"></textarea>
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Date</span>
+            <input type="date" class="ninput" id="capa-long-date">
+          </label>
+        </div>
+      </section>
+
+      <section class="ncard">
+        <div class="ncard-head"><span class="nstep">4</span><h2 class="ncard-title">Sign-off</h2></div>
+        <div class="ngrid-2">
+          <label class="nfield">
+            <span class="nlabel">Completed by <i>· print name</i></span>
+            <input type="text" class="ninput" id="capa-completed" placeholder="Name">
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Verified by <i>· signature</i></span>
+            <input type="text" class="ninput" id="capa-verified" placeholder="Name">
+          </label>
+        </div>
+        <div class="msgbar" id="capa-close-msg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+          <span>To close a CAPA it needs a long-term action and a verifier.</span>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <section class="ncard ncard-table">
+    <div class="ncard-head ntable-head">
+      <h2 class="ncard-title">Saved reports</h2>
+      <span class="cbar-gap"></span>
+      <input type="search" class="ninput nfilter" id="capa-filter"
+             placeholder="Filter by number, item, lot…" aria-label="Filter reports"
+             oninput="renderCapaList()">
+    </div>
+    <div id="capa-list"></div>
+  </section>
 </div>
-
 
 <!-- SHIFT REPORTS -->
 <div class="screen" id="screen-shift">
