@@ -804,7 +804,7 @@ function viewWeightRecord(id){
   }
 
   var actions = edit
-    ? '<button class="btn-solid" onclick="saveWeightEdit('+w.id+')">Save changes</button>'+
+    ? saveBtn("saveWeightEdit("+w.id+",this)", {texto:'Save changes', grande:true})+
       '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
     : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
@@ -817,7 +817,7 @@ function recEdit(label, control){
          '<div class="rec-edit">'+control+'</div></div>';
 }
 
-function saveWeightEdit(id){
+function saveWeightEdit(id, btn){
   var db = getDB();
   var w = (db.weights||[]).filter(function(x){ return x.id===id; })[0];
   if(!w) return;
@@ -936,14 +936,14 @@ function viewSealRecord(id){
       recBlock('Comments', s.comments);
   }
   var actions = edit
-    ? '<button class="btn-solid" onclick="saveSealEdit('+s.id+')">Save changes</button>'+
+    ? saveBtn("saveSealEdit("+s.id+",this)", {texto:'Save changes', grande:true})+
       '<button class="btn-danger" onclick="deleteSealRecord('+s.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
     : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
   openRecordModal('Bag seal record'+(s.lot?' · LOT '+esc(s.lot):''), body, actions);
 }
 
-function saveSealEdit(id){
+function saveSealEdit(id, btn){
   var db = getDB();
   var s = (db.seals||[]).filter(function(x){ return x.id===id; })[0];
   if(!s) return;

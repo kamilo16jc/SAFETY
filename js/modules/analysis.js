@@ -244,7 +244,7 @@ function anRowHTML(a, i){
     '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
     '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
     '<td class="soft">'+esc(a.testedBy||'\u2014')+'</td>'+
-    '<td><button class="sheet-btn" onclick="saveAnRow('+a.id+',this)">Save</button></td>'+
+    '<td>'+saveBtn("saveAnRow("+a.id+",this)")+'</td>'+
     '<td><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
       '<span data-icon="close"></span></button></td>'+
   '</tr>';

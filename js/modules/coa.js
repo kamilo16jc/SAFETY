@@ -191,7 +191,7 @@ function lrRowHTML(a, i){
     '<td class="soft">'+v(a.ymBy)+'</td>'+
     '<td>'+txt('result','e.g. No Moldy')+'</td>'+
     '<td class="soft" id="lr-by-'+a.id+'">'+v(a.resultBy)+'</td>'+
-    '<td><button class="sheet-btn" onclick="saveLrRow('+a.id+',this)">Save</button></td>'+
+    '<td>'+saveBtn("saveLrRow("+a.id+",this)")+'</td>'+
   '</tr>';
 }
 

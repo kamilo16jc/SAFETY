@@ -253,7 +253,7 @@ function gcRowHTML(r, i){
     '<td class="soft">'+v(g.sensoryBy)+(g.sensoryDate?'<br><span class="soft">'+esc(fmtDate(g.sensoryDate))+'</span>':'')+'</td>'+
     '<td id="gc-ap-'+r.id+'">'+gcApproveHTML(r, g)+'</td>'+
     '<td id="gc-st-'+r.id+'">'+gcStageHTML(r, g)+'</td>'+
-    '<td><button class="sheet-btn" onclick="saveGcRow('+r.id+',this)">Save</button></td>'+
+    '<td>'+saveBtn("saveGcRow("+r.id+",this)")+'</td>'+
     '<td><button class="ico-btn sm" onclick="downloadGrillingDoc('+r.id+')" aria-label="Download the form"'+
       ' title="Fill SQF 2.4.D.3.A and download it in Word"><span data-icon="doc"></span></button></td>'+
   '</tr>';

@@ -174,7 +174,7 @@ function renderCatalogDetail(){
       '</div>'+
     '</div>'+
     '<div class="cd-actions">'+
-      '<button class="btn-solid" onclick="saveCatalogEdits()">Save changes</button>'+
+      saveBtn('saveCatalogEdits(this)', {texto:'Save changes', grande:true})+
       (canDelete ? '<button class="btn-danger" onclick="deleteCatalogProduct()">Delete</button>' : '')+
     '</div>';
   // El bloque de laboratorio se rellena una vez esta en el DOM
@@ -195,7 +195,7 @@ function countProductUse(number){
   return n;
 }
 
-function saveCatalogEdits(){
+function saveCatalogEdits(btn){
   var list = getProducts();
   var p = list.filter(function(x){ return x.number===catSelected; })[0];
   if(!p) return;

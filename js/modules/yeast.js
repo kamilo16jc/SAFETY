@@ -159,7 +159,7 @@ function ymRowHTML(a, i){
     '<td class="num">'+cell('yeast', a.yeast)+'</td>'+
     '<td class="num">'+cell('mold',  a.mold)+'</td>'+
     '<td class="soft" id="ym-by-'+a.id+'">'+esc(a.ymBy || '')+'</td>'+
-    '<td><button class="sheet-btn" onclick="saveYmRow('+a.id+',this)">Save</button></td>'+
+    '<td>'+saveBtn("saveYmRow("+a.id+",this)")+'</td>'+
   '</tr>';
 }
 

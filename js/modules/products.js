@@ -171,7 +171,7 @@ function newCustomerHTML(pre){
         '<span>Samples are numbered</span></label>'+
     '</div>'+
     '<div class="cd-actions" style="margin-top:10px">'+
-      '<button type="button" class="btn-solid" onclick="saveNewCustomer(\''+pre+'\')">Save customer</button>'+
+      saveBtn("saveNewCustomer('"+pre+"',this)", {texto:'Save customer', grande:true})+
       '<button type="button" class="btn-ghost" onclick="toggleNewCustomer(\''+pre+'\',false)">Cancel</button>'+
     '</div>'+
   '</div>';
@@ -205,7 +205,7 @@ function renderNewCustomerTests(pre){
     '<div class="hint">That form has no columns loaded yet.</div>';
 }
 
-function saveNewCustomer(pre){
+function saveNewCustomer(pre, btn){
   var g = function(f){ var e = pel(pre,f); return e ? e.value.trim() : ''; };
   var company = g('nc-company');
   var id = g('nc-id').toUpperCase();
@@ -249,6 +249,7 @@ function saveNewCustomer(pre){
   db.customers.list.push(cust);
   saveDB(db);
   if(window.saveCustomersToFirebase) window.saveCustomersToFirebase(db.customers);
+  flashSaved(btn);
   logActivity('admin','Customer created',
     company+' ('+id+') \u00b7 form '+cust.form+
     (tests.length ? ' \u00b7 '+tests.length+' test(s)' : ' \u00b7 no tests'),

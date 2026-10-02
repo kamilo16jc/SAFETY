@@ -176,7 +176,7 @@ function rawScreenHTML(){
       '<div class="sb-field"><label for="rs-name">Supplier</label>'+
         '<input class="field" id="rs-name" placeholder="Vendor name" autocomplete="off"></div>'+
       '<div class="sb-field"><label>&nbsp;</label>'+
-        '<button class="btn-solid" onclick="saveSupplier()">Add supplier</button></div>'+
+        saveBtn('saveSupplier(this)', {texto:'Add supplier', hecho:'Added', grande:true})+'</div>'+
     '</div>'+
     '<b>New received material</b>'+
     '<div class="sheet-bar">'+
@@ -187,7 +187,7 @@ function rawScreenHTML(){
       '<div class="sb-field"><label for="ri-grilling">Grilling cheese</label>'+
         '<label class="chk"><input type="checkbox" id="ri-grilling"> SQF 2.4.D.3.A applies</label></div>'+
       '<div class="sb-field"><label>&nbsp;</label>'+
-        '<button class="btn-solid" onclick="saveRawItem()">Add material</button></div>'+
+        saveBtn('saveRawItem(this)', {texto:'Add material', hecho:'Added', grande:true})+'</div>'+
     '</div>'+
     '<div class="hint">What comes in is almost always the same, so it is created once here '+
       'and after that you just pick it in the sheet.</div>'+
@@ -398,7 +398,7 @@ function rawRowHTML(r, i, c){
   if(c.cfg.notas) html += '<td class="wide"><input class="cell" data-f="notes" value="'+esc(r.notes||'')+'" '+
     'onchange="setRawCell('+r.id+',\'notes\',this.value)"></td>';
   html += '<td class="soft">'+v(r.testedBy)+'</td>'+
-          '<td><button class="sheet-btn" onclick="saveRawRow('+r.id+',this)">Save</button></td>'+
+          '<td>'+saveBtn("saveRawRow("+r.id+",this)")+'</td>'+
           '<td><button class="run-del" onclick="deleteRawRecord('+r.id+')" title="Delete">'+
             '<span data-icon="close"></span></button></td>'+
         '</tr>';
@@ -534,7 +534,7 @@ function toggleRawForm(forzar){
   if(n) n.focus();
 }
 
-function saveSupplier(){
+function saveSupplier(btn){
   var el = document.getElementById('rs-name');
   var name = el ? el.value.trim() : '';
   if(!name){ toast('Type the supplier name'); return; }
@@ -553,10 +553,11 @@ function saveSupplier(){
   el.value = '';
   toggleRawForm(true);
   renderRawDatalists();
+  flashSaved(btn);
   toast(name+' saved');
 }
 
-function saveRawItem(){
+function saveRawItem(btn){
   var g = function(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; };
   var name = g('ri-name');
   if(!name){ toast('Type the cheese or product type'); return; }

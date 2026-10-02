@@ -162,11 +162,10 @@ function custEditorHTML(c, nuevo){
     '</div>'+
     custTestsHTML(c)+
     '<div class="sheet-actions">'+
-      '<button class="save-btn" onclick="'+(nuevo ? 'createCustomer()'
-        : 'saveCustomerEdit(\''+esc(c.customerId)+'\')')+'">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
-        '<path d="m5 12.5 4.5 4.5L19 7"/></svg>'+(nuevo?'Create customer':'Save')+'</button>'+
+      saveBtn(nuevo ? 'createCustomer(this)'
+                    : 'saveCustomerEdit(\''+esc(c.customerId)+'\',this)',
+              {texto:(nuevo ? 'Create customer' : 'Save'),
+               hecho:(nuevo ? 'Created' : 'Saved'), grande:true})+
       '<button class="btn-ghost" onclick="'+(nuevo?'cancelNewCustomer()':'closeCustomer()')+'">Cancel</button>'+
     '</div>'+
   '</div>';
@@ -183,7 +182,7 @@ function cancelNewCustomer(){ custNuevo = false; renderCustomers(); }
 
 // Alta: los mismos campos del editor, para no tener dos formularios que se
 // separen con el tiempo. Lo unico propio es que el ID no puede repetirse.
-function createCustomer(){
+function createCustomer(btn){
   var g = function(f){ var e = document.getElementById('cu-'+f); return e ? e.value.trim() : ''; };
   var company = g('company');
   var id = g('id').toUpperCase();
@@ -225,6 +224,7 @@ function createCustomer(){
               currentUser?currentUser.name:'—');
   custNuevo = false;
   custOpen  = id;
+  flashSaved(btn);
   renderCustomers();
   toast(company+' created');
 }
@@ -235,7 +235,7 @@ function editCustomer(id){
 }
 function closeCustomer(){ custOpen = null; renderCustomers(); }
 
-function saveCustomerEdit(id){
+function saveCustomerEdit(id, btn){
   var list = getCustomers();
   var c = list.filter(function(x){ return x.customerId === id; })[0];
   if(!c) return;
@@ -300,6 +300,7 @@ function saveCustomerEdit(id){
   logActivity('admin','Customer updated', c.company+' ('+c.customerId+')',
               currentUser?currentUser.name:'—');
   custOpen = null;
+  flashSaved(btn);
   renderCustomers();
   toast('Customer saved');
 }

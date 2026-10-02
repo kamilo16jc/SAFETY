@@ -173,8 +173,32 @@ function inScope(fecha, from, to, pendiente){
 // Las celdas de las hojas se guardan al salir del campo, pero eso no se ve.
 // El boton de la fila hace lo mismo a la vista, y se queda un momento en
 // "Saved" para que quede claro que ya esta.
+// ===== BOTON DE GUARDAR =====
+// Dos caras apiladas dentro del mismo boton: la azul dice "Save" y, cuando ya
+// quedo guardado, sube la verde con "Saved". El movimiento lo dispara el
+// codigo —no el raton—, que es lo que hace que signifique algo.
+//   saveBtn("saveAnRow("+a.id+",this)")           -> en una fila de hoja
+//   saveBtn("saveCatalogEdits(this)", {texto:'Save changes', grande:true})
+function saveBtn(onclick, o){
+  o = o || {};
+  return '<button type="button" class="btn-save'+(o.grande?' lg':'')+'" '+
+    'onclick="'+onclick+'">'+
+    '<div><span><p>'+(o.texto || 'Save')+'</p></span></div>'+
+    '<div><span><p>'+(o.hecho || 'Saved')+'</p></span></div>'+
+  '</button>';
+}
+
 function flashSaved(btn, label){
   if(!btn) return;
+  // El boton de dos caras no cambia de texto: sube la verde y vuelve sola
+  var caja = btn.classList && btn.classList.contains('btn-save') ? btn
+           : (btn.closest ? btn.closest('.btn-save') : null);
+  if(caja){
+    caja.classList.add('done');
+    clearTimeout(caja._flash);
+    caja._flash = setTimeout(function(){ caja.classList.remove('done'); }, 1800);
+    return;
+  }
   var prev = btn.getAttribute('data-prev') || btn.textContent;
   btn.setAttribute('data-prev', prev);
   btn.classList.add('ok');
