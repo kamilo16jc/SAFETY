@@ -105,7 +105,10 @@
 <!-- LIST SAMPLES -->
 <div class="screen" id="screen-samplelist">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">List Samples</div>
+  <div class="pg-head">
+    <h1 class="pg-title">List Samples</h1>
+    <div class="pg-sub">What the lab has to collect today &middot; comes from Production Schedule</div>
+  </div>
 
   <div class="sheet-bar">
     <div class="sb-field"><label for="sl-date">Date</label>
@@ -1560,10 +1563,9 @@
 <!-- SHIFT REPORTS -->
 <div class="screen" id="screen-shift">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="page-head">
-    <div>
-      <div class="form-title">Shift Reports</div>
-    </div>
+  <div class="pg-head">
+    <h1 class="pg-title">Shift Reports</h1>
+    <div class="pg-sub">What the shift leaves written for the next one</div>
   </div>
 
   <div class="panel capa-form">
@@ -1641,11 +1643,14 @@
 <!-- REPORTS -->
 <div class="screen" id="screen-reports">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title" id="title-reports">Reports</div>
+  <div class="pg-head">
+    <h1 class="pg-title" id="title-reports">Reports</h1>
+    <div class="pg-sub">Everything captured on a day, ready to print or export</div>
+  </div>
 
   <!-- FILTERS -->
   <div class="gmp-section" style="margin-bottom:18px">
-    <div class="gmp-section-hdr">FILTER RECORDS</div>
+    <div class="gmp-section-hdr">Filter records</div>
     <div class="rpt-filters">
 
       <div>
@@ -1757,7 +1762,10 @@
 <!-- HOLD MANAGEMENT -->
 <div class="screen" id="screen-hold">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Hold Cases</div>
+  <div class="pg-head">
+    <h1 class="pg-title">Hold Cases</h1>
+    <div class="pg-sub">Product held back and why &middot; nothing ships until it is released</div>
+  </div>
 
   <!-- El menu son los estados: cada tarjeta dice cuantos casos hay y filtra la hoja -->
   <div class="kpi-row" id="hold-kpis"></div>
@@ -1836,10 +1844,9 @@
 <!-- LOT SEARCH SCREEN -->
 <div class="screen" id="screen-lotsearch">
   <button class="back-btn" onclick="goBack()"><span data-icon="back"></span>BACK</button>
-  <div class="page-head">
-    <div>
-      <div class="form-title">Search</div>
-    </div>
+  <div class="pg-head">
+    <h1 class="pg-title">Search</h1>
+    <div class="pg-sub">Find a LOT across every record it touched</div>
   </div>
 
   <div class="panel filter-panel">

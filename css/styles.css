@@ -2214,6 +2214,65 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
     .snav-item.on .snav-iico{animation:none}
   }
 
+  /* ------------------------------------------------------------
+     LAS PANTALLAS DE CONSULTA
+     Una barra de filtros y una hoja. La hoja la comparten veinte
+     pantallas, asi que no se toca su marcado: se le cambia el
+     vestido aqui y cambian todas a la vez.
+     ------------------------------------------------------------ */
+
+  /* el titulo, como el de las pantallas nuevas */
+  body.ui-fluent .form-title{font-size:20px;line-height:28px;font-weight:600;
+    letter-spacing:-.02em;color:var(--text)}
+  body.ui-fluent .form-meta{font-size:13px;color:var(--dim);margin-top:2px}
+  body.ui-fluent .page-head{align-items:flex-start;margin-bottom:14px}
+
+  /* la barra de filtros, dibujada como la barra de comandos */
+  body.ui-fluent .sheet-bar{align-items:center;gap:8px;padding:8px 10px;margin-bottom:16px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+  body.ui-fluent .sheet-bar .sb-field{flex-direction:row;align-items:center;gap:7px}
+  body.ui-fluent .sheet-bar .sb-field > label{font-size:12px;line-height:20px;font-weight:400;
+    letter-spacing:0;text-transform:none;color:var(--dim);white-space:nowrap}
+  /* el rotulo vacio solo servia para alinear con los campos de arriba */
+  body.ui-fluent .sheet-bar .sb-field > label:empty{display:none}
+  body.ui-fluent .sheet-bar select.field,
+  body.ui-fluent .sheet-bar input.field{height:32px;padding:0 10px;font-size:13px;
+    border-radius:var(--radius-sm)}
+  body.ui-fluent .sheet-bar select.field{padding-right:30px}
+  body.ui-fluent .sheet-bar .search-wrap input{height:32px;font-size:13px}
+  body.ui-fluent .filter-panel{border-radius:var(--radius-lg)}
+
+  /* fuera las versales: un rotulo en mayusculas no se lee mas rapido */
+  body.ui-fluent .sec-label,
+  body.ui-fluent .kpi-lbl,
+  body.ui-fluent .sub-label,
+  body.ui-fluent .dh-lbl,
+  body.ui-fluent .res-lbl,
+  body.ui-fluent .rec-lbl{text-transform:none;letter-spacing:0}
+  body.ui-fluent .sec-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
+  body.ui-fluent .kpi-lbl{font-size:12px;font-weight:600;color:var(--muted)}
+  body.ui-fluent .kpi-lbl::first-letter{text-transform:uppercase}
+
+  body.ui-fluent .sheet thead th,
+  body.ui-fluent .cat-table thead th{text-transform:none;letter-spacing:.01em;
+    font-size:11.5px;font-weight:700;color:var(--muted)}
+
+  /* los botones de antes, a la altura y el radio de los nuevos */
+  body.ui-fluent .btn-solid,
+  body.ui-fluent .btn-ghost{height:32px;padding:0 13px;border-radius:var(--radius-sm);
+    font-size:13px;font-weight:500}
+  body.ui-fluent .btn-solid{font-weight:600;border-color:var(--accent)}
+  body.ui-fluent .btn-solid:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+  body.ui-fluent .btn-ghost:hover{background:var(--surface2)}
+  body.ui-fluent .btn-solid:active,
+  body.ui-fluent .btn-ghost:active{transform:translateY(1px)}
+  body.ui-fluent .ico-btn{width:32px;height:32px}
+  /* la cabecera de seccion deja de ser una cinta en versales */
+  body.ui-fluent .gmp-section-hdr{text-transform:none;letter-spacing:.01em;
+    text-align:left;font-size:13px;font-weight:600;color:var(--text);
+    background:var(--surface2)}
+
   /* ---- se baja el volumen a lo que gritaba ---- */
   body.ui-fluent .add-btn,
   body.ui-fluent .save-btn,
