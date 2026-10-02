@@ -57,6 +57,44 @@ function renderSealList(){
       '</div>' +
     '</div>';
   }).join('');
+  sealSummary();
+}
+
+// Como va la hoja: cuantas revisiones llevas y cuales fallaron. Lo mismo que
+// en Weight Log, por el mismo motivo: que el estado se lea sin contar a mano.
+function sealSummary(){
+  var hechas  = SEAL_CHECKS.filter(function(c){ return st.sealChecks[c]; });
+  var fallan  = SEAL_CHECKS.filter(function(c){ return st.sealChecks[c] === 'fail'; });
+
+  var d = document.getElementById('s-done');
+  if(d){
+    d.textContent = hechas.length + ' / ' + SEAL_CHECKS.length;
+    d.className = 'ns-v' + (hechas.length === SEAL_CHECKS.length ? ' ok' : '');
+  }
+  var f = document.getElementById('s-failed');
+  if(f){
+    f.textContent = String(fallan.length);
+    f.className = 'ns-v' + (fallan.length ? ' bad' : (hechas.length ? ' ok' : ''));
+  }
+
+  var caja = document.getElementById('s-outmsg');
+  if(!caja) return;
+  var txt = document.getElementById('s-outmsg-text');
+  if(fallan.length && txt){
+    // Con tres revisiones, decir cual fallo sirve mas que decir cuantas
+    txt.textContent = (fallan.length === 1 ? fallan[0] + ' failed.'
+                                           : fallan.length + ' checks failed.') +
+                      ' Add a corrective action in Comments.';
+  }
+  caja.classList.toggle('show', fallan.length > 0);
+}
+
+// Vaciar las revisiones sin tocar el resto del registro: la linea cambia de
+// producto y se vuelve a revisar, pero el lote y la hora siguen siendo los
+// mismos.
+function clearSealChecks(){
+  st.sealChecks = {};
+  renderSealList();
 }
 function setSeal(btn){
   var chk=btn.getAttribute('data-chk');

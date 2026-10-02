@@ -612,56 +612,119 @@
 <!-- BAG SEAL -->
 <div class="screen" id="screen-seal">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Bag Seal</div>
-  <div class="form-meta">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
-  <div class="fgrid">
-  <div class="fcol">
-  <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
-  <input type="date" class="time-input" id="s-date" style="width:100%;margin-bottom:18px">
-  <div class="sec-label">Production Line</div>
-  <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
-    <option value="">Select line</option>
-    <option value="1">Line 1</option>
-    <option value="2">Line 2</option>
-    <option value="3">Line 3</option>
-    <option value="4">Line 4</option>
-    <option value="5">Line 5</option>
-    <option value="6">Line 6</option>
-  </select></div>
-  <div class="dup-hint" id="s-dup-hint" style="display:none"></div>
-  <div class="sec-label">Shift</div>
-  <div class="select-wrap"><select class="field shift-select" onchange="onShiftPick(this.value)">
-    <option value="">Select shift</option>
-    <option value="1">1st Shift</option>
-    <option value="2">2nd Shift</option>
-  </select></div>
-  <div class="sec-label">Product Number</div>
-  <div class="prod-row">
-    <input type="text" class="field" id="s-product" list="s-product-list" placeholder="Type or scan the product number"
-           autocomplete="off" autocapitalize="characters" style="margin-bottom:0" oninput="onProductInput('seal')">
-    <datalist id="s-product-list"></datalist>
-    <button class="scan-btn" onclick="openScanner('seal')" title="Scan barcode">
-      <span data-icon="scan"></span>
+
+  <div class="pg-head">
+    <h1 class="pg-title">Bag Seal</h1>
+    <div class="pg-sub">Line <span id="sm-line">—</span> · <span id="sm-shift">—</span> Shift</div>
+  </div>
+
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" onclick="saveSeal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      Save record
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="clearSealChecks()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Clear checks
+    </button>
+    <button class="cbtn" onclick="goTo('screen-reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      Today’s log
     </button>
   </div>
-  <div class="product-card" id="s-product-card" style="display:none"></div>
-  <div class="sec-label">Time of Check</div>
-  <div class="time-row">
-    <input type="time" class="time-input" id="seal-time">
-    <button class="now-btn" onclick="setSealNow()">Now</button>
-  </div>
-  </div>
-  <div class="fcol">
-  <div class="sec-label">Monitoring Checks</div>
-  <div id="seal-list"></div>
-  <div class="sec-label">LOT Number</div>
-  <input type="text" class="field" id="s-lot" placeholder="Enter LOT number">
-  <div class="sec-label">Comments</div>
-  <textarea class="field" id="s-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
-  <div class="sec-label">Operator Initials</div>
-  <input type="text" class="field" id="s-initials" placeholder="Initials">
-  <button class="main-btn" onclick="saveSeal()">Save Record</button>
-  </div>
+
+  <div class="cards-2">
+
+    <section class="ncard">
+      <h2 class="ncard-title">Record details</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Record date <i>· change for past records</i></span>
+          <input type="date" class="ninput" id="s-date">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Shift</span>
+          <select class="ninput shift-select" onchange="onShiftPick(this.value)">
+            <option value="">Select shift</option>
+            <option value="1">1st Shift</option>
+            <option value="2">2nd Shift</option>
+          </select>
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Production line</span>
+          <select class="ninput line-select" onchange="selectLine(parseInt(this.value)||0)">
+            <option value="">Select line</option>
+            <option value="1">Line 1</option>
+            <option value="2">Line 2</option>
+            <option value="3">Line 3</option>
+            <option value="4">Line 4</option>
+            <option value="5">Line 5</option>
+            <option value="6">Line 6</option>
+          </select>
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Time of check</span>
+          <div class="nrow">
+            <input type="time" class="ninput" id="seal-time">
+            <button type="button" class="cbtn cbtn-outline" onclick="setSealNow()">Now</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="dup-hint" id="s-dup-hint" style="display:none"></div>
+
+      <label class="nfield">
+        <span class="nlabel">Product number</span>
+        <div class="nrow">
+          <input type="text" class="ninput" id="s-product" list="s-product-list"
+                 placeholder="Type or scan the product number" autocomplete="off"
+                 autocapitalize="characters" oninput="onProductInput('seal')">
+          <datalist id="s-product-list"></datalist>
+          <button type="button" class="cbtn cbtn-outline" onclick="openScanner('seal')"
+                  title="Scan barcode" aria-label="Scan barcode"><span data-icon="scan"></span></button>
+        </div>
+      </label>
+      <div class="product-card" id="s-product-card" style="display:none"></div>
+    </section>
+
+    <section class="ncard">
+      <h2 class="ncard-title">Monitoring checks</h2>
+
+      <div class="checks-box">
+        <div class="check-item chead"><span>Check</span><span>Result</span></div>
+        <div id="seal-list"></div>
+      </div>
+
+      <div class="nstats">
+        <div class="nstat"><div class="ns-k">Checked</div><div class="ns-v" id="s-done">—</div></div>
+        <div class="nstat"><div class="ns-k">Failed</div><div class="ns-v" id="s-failed">—</div></div>
+      </div>
+
+      <div class="msgbar" id="s-outmsg" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+        <span id="s-outmsg-text"></span>
+      </div>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">LOT number</span>
+          <input type="text" class="ninput" id="s-lot" placeholder="Enter LOT number">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Operator initials</span>
+          <input type="text" class="ninput" id="s-initials" placeholder="Initials">
+        </label>
+      </div>
+
+      <label class="nfield">
+        <span class="nlabel">Comments</span>
+        <textarea class="ninput ntext" id="s-comments" rows="3"
+                  placeholder="Comments or corrective actions…"></textarea>
+      </label>
+    </section>
+
   </div>
 </div>
 
