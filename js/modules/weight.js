@@ -214,9 +214,15 @@ function weightOutMsg(fuera, total){
 // Guardar y seguir: el mismo guardado, pero deja la hoja lista para la
 // siguiente revision —muestras en blanco y la hora puesta—, que es como se
 // trabaja una linea corriendo.
+// Guardar puede pasar por el aviso de duplicidad y volver mas tarde, asi que
+// se apunta que boton se pulso y lo consume quien escribe el registro. Se
+// apunta al entrar: si el aviso corta el guardado, la proxima vez no se
+// confirma en el boton equivocado.
+var weightSaveBtn = 'w-save-btn';
+
 function saveWeightNext(){
   var antes=(getDB().weights||[]).length;
-  saveWeight();
+  saveWeight('w-next-btn');
   if((getDB().weights||[]).length>antes){
     clearSamples();
     setNow();
@@ -266,7 +272,8 @@ function updateDupHint(){
   renderDupHint('w-dup-hint', d?dupWeightTitle(d):'', d?dupWeightDetail(d):'');
 }
 
-function saveWeight(){
+function saveWeight(cual){
+  weightSaveBtn = cual || 'w-save-btn';
   if(st.wIssue){ commitWeightIssue(); return; }   // línea parada: registra el issue
   if(!st.line||!st.shift){toast('Select line & shift first');return}
   if(!activePkg()){toast('Select package size');return}
@@ -324,6 +331,7 @@ function commitWeight(){
     rec.initials||(currentUser?currentUser.name:'—'));
   // Play sound based on compliance
   if(rec.pass!=null && rec.pass < rec.total) playAlert('fail'); else playAlert('pass');
+  cbtnSaved(weightSaveBtn);
   toast('Record saved!');
   updateDupHint();
   // Si ese producto está en el schedule y debe muestra de lab, ofrecer marcarla.
@@ -367,5 +375,7 @@ function commitWeightIssue(){
   // vuelve a modo normal para el próximo registro
   var ws=document.getElementById('w-status'); if(ws) ws.value='running';
   setWeightStatus('running');
+  // de ultima: setWeightStatus reescribe el rotulo del boton
+  cbtnSaved(weightSaveBtn, 'Logged');
 }
 

@@ -562,11 +562,11 @@
   <div class="cmdbar">
     <button class="cbtn cbtn-primary" id="w-save-btn" onclick="saveWeight()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
-      <span id="w-save-label">Save record</span>
+      <span class="cb-lbl" id="w-save-label">Save record</span>
     </button>
-    <button class="cbtn" onclick="saveWeightNext()">
+    <button class="cbtn" id="w-next-btn" onclick="saveWeightNext()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-      Save &amp; next check
+      <span class="cb-lbl">Save &amp; next check</span>
     </button>
     <span class="cbar-div"></span>
     <button class="cbtn" onclick="clearSamples()">
@@ -713,9 +713,9 @@
   </div>
 
   <div class="cmdbar">
-    <button class="cbtn cbtn-primary" onclick="saveSeal()">
+    <button class="cbtn cbtn-primary" id="s-save-btn" onclick="saveSeal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
-      Save record
+      <span class="cb-lbl">Save record</span>
     </button>
     <span class="cbar-div"></span>
     <button class="cbtn" onclick="clearSealChecks()">
@@ -1288,7 +1288,7 @@
   <div class="cmdbar">
     <button class="cbtn cbtn-primary" id="capa-save-btn" onclick="saveCapa()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
-      Save report
+      <span class="cb-lbl">Save report</span>
     </button>
     <button class="cbtn" id="capa-cancel-btn" onclick="cancelCapaEdit()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>

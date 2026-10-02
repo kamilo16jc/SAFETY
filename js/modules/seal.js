@@ -197,6 +197,7 @@ function commitSeal(){
   clearProductSelection('seal');
   document.getElementById('s-initials').value='';
   renderSealToday();
+  cbtnSaved('s-save-btn');
   toast('Seal record saved!');
   updateSealDupHint();
 }

@@ -210,6 +210,46 @@ function flashSaved(btn, label){
   }, 1800);
 }
 
+// ============================================================
+// LA CONFIRMACION EN EL PROPIO BOTON
+//
+// Una franja verde cruza el boton y el rotulo pasa a "Saved". Se llama solo
+// desde donde el registro ya quedo escrito: un boton que se pone verde cuando
+// la validacion rechazo el dato miente, y aqui mentir sale caro.
+//
+// Se busca por id y no se guarda el nodo: asi da igual que entre medias se
+// repinte la pantalla.
+// ============================================================
+var CBTN_SAVED_MS = 1600;
+
+function cbtnSaved(id, texto){
+  var btn = document.getElementById(id);
+  if(!btn) return;
+  var lbl = btn.querySelector('.cb-lbl');
+  if(!lbl) return;
+
+  // Si ya habia una confirmacion encendida, el rotulo de antes es el bueno:
+  // el que esta a la vista dice "Saved".
+  var antes = btn.getAttribute('data-lbl') || lbl.textContent;
+  btn.setAttribute('data-lbl', antes);
+  // El ancho se clava antes de tocar el texto: "Saved" es mas corto y el boton
+  // encogeria, empujando a los de al lado.
+  if(!btn.style.minWidth) btn.style.minWidth = btn.offsetWidth + 'px';
+  lbl.textContent = texto || 'Saved';
+  btn.classList.add('saved');
+
+  clearTimeout(btn._saved);
+  btn._saved = setTimeout(function(){
+    btn.classList.remove('saved');
+    // Solo se devuelve el rotulo si nadie lo cambio mientras tanto —el estado
+    // de linea, por ejemplo, reescribe el de Weights—.
+    if(lbl.textContent === (texto || 'Saved'))
+      lbl.textContent = btn.getAttribute('data-lbl') || 'Save';
+    btn.removeAttribute('data-lbl');
+    btn.style.minWidth = '';
+  }, CBTN_SAVED_MS);
+}
+
 // Lee los campos marcados con data-f dentro de una fila
 function readRowFields(btn){
   var tr = btn && btn.closest ? btn.closest('tr') : null;

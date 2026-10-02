@@ -2284,6 +2284,27 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .cbtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .cbtn-primary{background:var(--accent);color:var(--accent-fg);font-weight:600;padding:0 15px}
 .cbtn-primary:hover{background:var(--accent-deep)}
+
+/* ---- el boton confirma que guardo ----
+   Una franja verde cruza el boton de izquierda a derecha y el rotulo pasa a
+   "Saved". El verde va en un pseudo-elemento con z-index negativo: eso lo pone
+   por encima del fondo azul y por debajo del texto y del icono, asi que cruza
+   por detras de las letras sin taparlas. Al terminar se desvanece, que
+   retroceder se lee como si algo se hubiera deshecho. */
+.cbtn{position:relative;overflow:hidden;isolation:isolate}
+.cbtn::after{content:"";position:absolute;inset:0;z-index:-1;
+  background:var(--pass);opacity:0;
+  transform:scaleX(0);transform-origin:left center;
+  transition:transform .42s cubic-bezier(.22,.61,.36,1),opacity .25s ease}
+.cbtn.saved::after{transform:scaleX(1);opacity:1}
+/* el que no es el principal es claro: sobre verde hay que escribir en blanco */
+.cbtn.saved{color:#fff}
+.cbtn.saved svg{color:#fff}
+
+@media (prefers-reduced-motion:reduce){
+  .cbtn::after{transition:opacity .15s ease}
+  .cbtn.saved::after{transform:scaleX(1)}
+}
 .cbtn-outline{border:1px solid var(--border);background:var(--surface);flex-shrink:0}
 .cbar-div{width:1px;height:20px;background:var(--border);margin:0 4px}
 

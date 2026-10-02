@@ -70,12 +70,9 @@ function resetCapaForm(){
 // El boton de guardar dice lo que va a hacer. "New report" se queda siempre a
 // la vista: es como se vuelve a empezar, no solo como se cancela una edicion.
 function capaSaveLabel(){
-  var b = document.getElementById('capa-save-btn');
-  if(!b) return;
-  var t = b.querySelector('span') || b;
-  var txt = capaEditingId ? 'Update report' : 'Save report';
-  if(b.lastChild && b.lastChild.nodeType === 3) b.lastChild.nodeValue = ' ' + txt;
-  else b.textContent = txt;
+  var lbl = document.querySelector('#capa-save-btn .cb-lbl');
+  if(!lbl) return;
+  lbl.textContent = capaEditingId ? 'Update report' : 'Save report';
 }
 
 var capaSeverity = null, capaStatus = 'open';
@@ -206,6 +203,9 @@ function saveCapa(){
   capaEditingId = null;
   resetCapaForm();
   renderCapaList();
+  // De ultima: resetCapaForm() devuelve el rotulo a "Save report" y borraria
+  // la confirmacion si fuera antes.
+  cbtnSaved('capa-save-btn', wasEdit ? 'Updated' : 'Saved');
   toast(wasEdit ? 'Report updated' : 'Report saved');
 }
 
