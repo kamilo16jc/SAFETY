@@ -326,7 +326,7 @@ function renderDash(){
   var coverage = pctOf(temps.length, expected);
 
   document.getElementById('dash-temp').innerHTML =
-    '<div class="tgrid">'+tCell('begin','BEGINNING')+tCell('mid','MIDDLE')+tCell('end','END')+'</div>'+
+    '<div class="tgrid">'+tCell('begin','Beginning')+tCell('mid','Middle')+tCell('end','End')+'</div>'+
     barList([hum('chop','Chopping area humidity'), hum('plat','Under platform humidity'), hum('line6','Line 6 & grilling humidity')],
             'No humidity readings')+
     (shiftCount ? '<div class="dash-mini">Checkpoint coverage: <b>'+coverage+'%</b> — '+temps.length+
@@ -344,8 +344,8 @@ function renderDash(){
   var mdTop = Object.keys(mdFails).sort(function(a,b){ return mdFails[b]-mdFails[a]; }).slice(0,3);
   document.getElementById('dash-metal').innerHTML = metal.length
     ? '<div class="tgrid two">'+
-        '<div class="tcell"><div class="tcell-lbl">CHECKS</div><div class="tcell-val">'+metal.length+'</div><div class="tcell-sub">in the period</div></div>'+
-        '<div class="tcell"><div class="tcell-lbl">ALL YES</div><div class="tcell-val '+(mdClean===metal.length?'ok':'warn')+'">'+pctOf(mdClean,metal.length)+'%</div><div class="tcell-sub">'+mdClean+' of '+metal.length+'</div></div>'+
+        '<div class="tcell"><div class="tcell-lbl">Checks</div><div class="tcell-val">'+metal.length+'</div><div class="tcell-sub">in the period</div></div>'+
+        '<div class="tcell"><div class="tcell-lbl">All yes</div><div class="tcell-val '+(mdClean===metal.length?'ok':'warn')+'">'+pctOf(mdClean,metal.length)+'%</div><div class="tcell-sub">'+mdClean+' of '+metal.length+'</div></div>'+
       '</div>'+
       (mdTop.length ? barList(mdTop.map(function(i){
         var c = mdFails[i];
@@ -367,8 +367,8 @@ function renderDash(){
   var topFails = Object.keys(itemFails).sort(function(a,b){ return itemFails[b]-itemFails[a]; }).slice(0,5);
   document.getElementById('dash-gmp').innerHTML =
     '<div class="tgrid two">'+
-      '<div class="tcell"><div class="tcell-lbl">AUDITS</div><div class="tcell-val">'+gmps.length+'</div><div class="tcell-sub">in the period</div></div>'+
-      '<div class="tcell"><div class="tcell-lbl">ACCEPTABLE</div><div class="tcell-val '+compClass(gmpRate)+'">'+((gmpYes+gmpNo)?gmpRate+'%':'—')+'</div><div class="tcell-sub">'+gmpYes+' yes · '+gmpNo+' no</div></div>'+
+      '<div class="tcell"><div class="tcell-lbl">Audits</div><div class="tcell-val">'+gmps.length+'</div><div class="tcell-sub">in the period</div></div>'+
+      '<div class="tcell"><div class="tcell-lbl">Acceptable</div><div class="tcell-val '+compClass(gmpRate)+'">'+((gmpYes+gmpNo)?gmpRate+'%':'—')+'</div><div class="tcell-sub">'+gmpYes+' yes · '+gmpNo+' no</div></div>'+
     '</div>'+
     (topFails.length ? barList(topFails.map(function(item){
       return {label:item, value:itemFails[item]+'x', pct:pctOf(itemFails[item], gmps.length||1),

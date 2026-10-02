@@ -122,7 +122,7 @@ function buildAnalysisSheet(){
       '<th>By</th><th>Save</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="an-new"><tr class="newrow">'+
-      '<td class="rn">new</td>'+
+      '<td class="rn">New</td>'+
       '<td><input type="date" class="cell" id="an-date"></td>'+
       '<td><input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
         'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()"></td>'+

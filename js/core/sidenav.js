@@ -81,14 +81,12 @@ function snavSubHTML(m){
       usadas[s] = 1;
       return snavItemHTML(porPantalla[s], m);
     }).join('');
-    if(!items) return '';
-    return (g.n ? '<div class="snav-gname">'+esc(g.n)+'</div>' : '') + items;
+    return items;            // sin subtitulo: el modulo plegado ya agrupa
   }).join('');
 
   var sueltas = permitidas.filter(function(i){ return !usadas[i.screen]; });
   if(sueltas.length){
-    html += '<div class="snav-gname">Más</div>'+
-      sueltas.map(function(i){ return snavItemHTML(i, m); }).join('');
+    html += sueltas.map(function(i){ return snavItemHTML(i, m); }).join('');
   }
   return html;
 }
