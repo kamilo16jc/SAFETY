@@ -187,7 +187,7 @@ var CRUMBS = {
   'screen-activity': ['Review', 'Activity Log'],
   'screen-products': ['Setup', 'Product Catalog'],
   'screen-customers': ['Setup', 'Customers'],
-  'screen-addproduct':['Setup', 'Add Product'],
+  'screen-addproduct':['Setup', 'Create Product'],
   'screen-admin':    ['Setup', 'Admin']
 };
 // ===== EL SALUDO DE LA MARCA =====

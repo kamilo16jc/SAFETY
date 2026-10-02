@@ -128,12 +128,19 @@ function custEditorHTML(c){
     // cliente tienen humedades distintas. Se ponen en Add Product y en el
     // catalogo, y desde ahi los toma el certificado.
     
-    ((c.tests||[]).length
-      ? '<div class="lt-from">'+(c.tests||[]).length+' lab test(s) on this customer · '+
-          esc((c.tests||[]).join(' · '))+
-          ' <button type="button" class="lt-clear" onclick="clearCustomerTests(\''+esc(c.customerId)+'\')">'+
-          'Remove them</button></div>'
-      : '')+
+    // Las reglas del laboratorio son del cliente: el producto las hereda.
+    // Create Product ya no las pregunta, asi que este es el unico sitio donde
+    // se dicen.
+    '<div class="sub-label">Lab rules</div>'+
+    '<div class="sheet-bar">'+
+      '<div class="sb-field"><label for="cu-per">Samples per order</label>'+
+        '<input type="text" class="field" id="cu-per" inputmode="numeric" value="'+
+        v(c.samplesPerOrder == null ? 1 : c.samplesPerOrder)+'"></div>'+
+      '<label class="lab-check" style="margin:0">'+
+        '<input type="checkbox" id="cu-numbered"'+(c.numbered?' checked':'')+'>'+
+        '<span>Samples are numbered</span></label>'+
+    '</div>'+
+    custTestsHTML(c)+
     '<div class="sheet-actions">'+
       '<button class="save-btn" onclick="saveCustomerEdit(\''+esc(c.customerId)+'\')">'+
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
@@ -172,8 +179,24 @@ function saveCustomerEdit(id){
   c.phone       = g('phone');
   c.fax         = g('fax');
   c.code        = g('code').toUpperCase();
-  c.targets     = {moisture:g('tmoist'), fat:g('tfat'), ph:g('tph'),
+  // Los objetivos numericos viven en el producto. Los de texto que quedan en
+  // clientes viejos solo se tocan si sus campos siguen en pantalla: si no,
+  // guardar borraba lo que el certificado todavia lee.
+  if(document.getElementById('cu-tmoist')){
+    c.targets   = {moisture:g('tmoist'), fat:g('tfat'), ph:g('tph'),
                    yeast:g('tyeast'), mold:g('tmold')};
+  }
+  var per = document.getElementById('cu-per');
+  if(per) c.samplesPerOrder = Math.max(1, parseInt(per.value, 10) || 1);
+  var num = document.getElementById('cu-numbered');
+  if(num) c.numbered = !!num.checked;
+  if(document.querySelector('.cu-test')){
+    var marcados = [];
+    Array.prototype.forEach.call(document.querySelectorAll('.cu-test:checked'), function(b){
+      marcados.push(b.getAttribute('data-lt-label'));
+    });
+    c.tests = marcados;
+  }
   c.updatedBy   = currentUser ? currentUser.name : '—';
   c.updatedAt   = localISOStr();
 
@@ -197,6 +220,48 @@ function saveCustomerEdit(id){
   custOpen = null;
   renderCustomers();
   toast('Customer saved');
+}
+
+// ===== LOS TESTS DEL CLIENTE =====
+// Antes solo se podian quitar. Desde que Create Product dejo de preguntarlos,
+// este es el sitio donde se eligen: misma ventana y mismo catalogo que usaba
+// el producto, pero guardando nombres, que es como el cliente los tiene.
+function custTestsHTML(c){
+  var cat = (typeof labTestCatalog === 'function') ? labTestCatalog() : {};
+  var hay = Object.keys(cat).some(function(k){ return (cat[k] || []).length; });
+  if(!hay) return '<div class="hint">No lab test catalog loaded yet.</div>';
+  var puestos = (c.tests || []).map(function(t){ return labNorm(labTestName(t)); });
+  var grupo = function(kind, titulo){
+    if(!(cat[kind] || []).length) return '';
+    return '<div class="lt-group"><div class="lt-title">'+titulo+'</div>'+
+      cat[kind].map(function(lbl){
+        var marcada = puestos.indexOf(labNorm(lbl)) >= 0;
+        return '<label class="lt-item"><input type="checkbox" class="cu-test" '+
+          'data-lt-label="'+esc(lbl)+'"'+(marcada?' checked':'')+'>'+
+          '<span>'+esc(lbl)+'</span></label>';
+      }).join('')+'</div>';
+  };
+  return '<div class="lt-ask-row">'+
+      '<button type="button" class="btn-ghost" onclick="custTestsOpen()">Choose lab tests</button>'+
+      '<span class="lt-count" id="cu-test-count">'+custTestsLabel((c.tests||[]).length)+'</span>'+
+      ((c.tests||[]).length
+        ? ' <button type="button" class="lt-clear" onclick="clearCustomerTests(\''+esc(c.customerId)+'\')">Remove them</button>'
+        : '')+
+    '</div>'+
+    '<div class="lt-modal" id="cu-ltmodal" hidden><div class="lt-sheet">'+
+      '<div class="lt-head"><b>Lab tests \u00b7 '+esc(c.company || c.customerId)+'</b>'+
+        '<button type="button" class="ico-btn" aria-label="Close" onclick="custTestsClose()">'+
+        '<span data-icon="close"></span></button></div>'+
+      '<div class="lt-box">'+grupo('micro','Micro')+grupo('chem','Chemistry')+grupo('nlea','NLEA')+'</div>'+
+      '<div class="lt-foot"><button type="button" class="save-btn" onclick="custTestsClose()">Done</button>'+
+      '</div></div></div>';
+}
+function custTestsLabel(n){ return n ? (n + ' test' + (n===1?'':'s')) : 'none'; }
+function custTestsOpen(){ var m = document.getElementById('cu-ltmodal'); if(m) m.hidden = false; }
+function custTestsClose(){
+  var m = document.getElementById('cu-ltmodal'); if(m) m.hidden = true;
+  var n = document.querySelectorAll('.cu-test:checked').length;
+  var e = document.getElementById('cu-test-count'); if(e) e.textContent = custTestsLabel(n);
 }
 
 // Los tests del cliente son los que un producto hereda si no eligio los suyos.

@@ -641,7 +641,7 @@
 
   <!-- KPIs -->
   <div class="dash-head" id="dash-head"></div>
-  <div class="tiles dash-kpis" id="dash-kpis"></div>
+  <div class="kpi-row dash-kpis" id="dash-kpis"></div>
 
   <!-- PANELES -->
   <div class="dash-grid">
@@ -833,36 +833,78 @@
 <!-- ADD PRODUCT -->
 <div class="screen" id="screen-addproduct">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Add Product</div>
+  <div class="form-title">Create Product</div>
 
-  <!-- Todo en una sola hoja: se lee de arriba abajo y se guarda al final -->
+  <!-- Una sola hoja, en renglones: identidad arriba, cliente en medio y el
+       analisis abajo. Lo del laboratorio lo manda el cliente, no el producto. -->
   <div class="form-sheet">
-    <div class="sec-label">Product Number</div>
-    <div class="prod-row">
-      <input type="text" class="field" id="ap-number" placeholder="e.g. 880" autocapitalize="characters"
-             autocomplete="off" style="margin-bottom:0" oninput="onProdNumberInput('ap')">
-      <button class="scan-btn" onclick="scanNewProduct()" title="Scan barcode"><span data-icon="scan"></span></button>
-    </div>
-    <div class="sec-label">Description</div>
-    <input type="text" class="field" id="ap-name" placeholder="e.g. Shredded Mozzarella">
-    <div class="sec-label">Package Size</div>
-    <div class="select-wrap"><select class="field" id="ap-pkg" onchange="toggleProductCustom('ap')"></select></div>
-    <div id="ap-custom-wrap" style="display:none">
-      <div class="sec-label">Size label</div>
-      <input type="text" class="field" id="ap-custom-label" placeholder="e.g. 3.5 lbs or 4 oz">
-      <div class="sec-label">Target range <span class="opt">· optional · in the same unit as the label</span></div>
-      <div class="pair">
-        <input type="text" class="field" id="ap-min" placeholder="Min" inputmode="decimal">
-        <input type="text" class="field" id="ap-max" placeholder="Max" inputmode="decimal">
+
+    <div class="cp-row cp-r1">
+      <div class="cp-f">
+        <label class="sec-label" for="ap-number">Product Number</label>
+        <div class="cp-box">
+          <input type="text" class="field" id="ap-number" placeholder="e.g. 880"
+                 autocapitalize="characters" autocomplete="off" oninput="onProdNumberInput('ap')">
+        </div>
+      </div>
+      <div class="cp-f">
+        <label class="sec-label" for="ap-name">Description</label>
+        <div class="cp-box"><input type="text" class="field" id="ap-name" placeholder="e.g. Shredded Mozzarella"></div>
+      </div>
+      <div class="cp-f">
+        <label class="sec-label" for="ap-pkg">Package Size</label>
+        <div class="cp-box"><div class="select-wrap"><select class="field" id="ap-pkg" onchange="toggleProductCustom('ap')"></select></div></div>
+      </div>
+      <div class="cp-f">
+        <label class="sec-label" for="ap-bags">Bags per case</label>
+        <div class="cp-box"><input type="text" class="field" id="ap-bags" placeholder="e.g. 4" inputmode="numeric"></div>
       </div>
     </div>
-    <div class="sec-label">Bags per case</div>
-    <input type="text" class="field" id="ap-bags" placeholder="e.g. 4" inputmode="numeric">
-    <div class="sec-label">Barcode <span class="opt">· optional</span></div>
-    <input type="text" class="field" id="ap-barcode" placeholder="Scan it or type it">
+
+    <div id="ap-custom-wrap" class="cp-row cp-custom" style="display:none">
+      <div class="cp-f">
+        <label class="sec-label" for="ap-custom-label">Size label</label>
+        <div class="cp-box"><input type="text" class="field" id="ap-custom-label" placeholder="e.g. 3.5 lbs or 4 oz"></div>
+      </div>
+      <div class="cp-f">
+        <label class="sec-label" for="ap-min">Weight range <span class="opt">· optional · same unit as the label</span></label>
+        <div class="cp-box cp-pair">
+          <input type="text" class="field" id="ap-min" placeholder="Min" inputmode="decimal">
+          <em>to</em>
+          <input type="text" class="field" id="ap-max" placeholder="Max" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="cp-row cp-r2">
+      <div class="cp-f">
+        <label class="sec-label" for="ap-barcode">Barcode <span class="opt">· optional</span></label>
+        <div class="cp-box prod-row">
+          <input type="text" class="field" id="ap-barcode" placeholder="Scan it or type it">
+          <button class="scan-btn" onclick="scanNewProduct()" title="Scan barcode"
+                  aria-label="Scan barcode"><span data-icon="scan"></span></button>
+        </div>
+      </div>
+      <div class="cp-f">
+        <label class="sec-label" for="ap-customer">Customer</label>
+        <div class="cp-box"><div class="select-wrap"><select class="field" id="ap-customer"
+             onchange="onProdCustomerChange('ap')"></select></div></div>
+      </div>
+      <div class="cp-f cp-new">
+        <span class="sec-label">Create customer</span>
+        <div class="cp-box">
+          <button type="button" class="add-mini cp-plus" onclick="goTo('screen-customers')"
+                  title="Create customer" aria-label="Create customer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="ap-customer-hint"></div>
 
     <div id="ap-targets"></div>
-    <div id="ap-labblock"></div>
 
     <div class="sheet-actions">
       <button class="save-btn" onclick="saveNewProduct()">

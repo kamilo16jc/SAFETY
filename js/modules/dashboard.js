@@ -216,17 +216,19 @@ function renderDash(){
         '<div class="dh-note">No weights with a target range in this period</div></div>';
   }
 
-  var kpi = function(label, value, note, cls){
-    return '<div class="tile"><div class="t-top"><span class="t-lbl">'+label+'</span></div>'+
-      '<div class="t-val'+(cls?' '+cls:'')+'">'+value+'</div>'+
-      '<div class="t-note">'+note+'</div></div>';
-  };
-  document.getElementById('dash-kpis').innerHTML =
-    kpi('Weight checks', w.length, scored.length+' scored · '+(w.length-scored.length)+' without target') +
-    kpi('Out of target', tFail, under+' under · '+over+' over', tFail?'bad':'') +
-    kpi('Average deviation', avgDev==null?'—':(avgDev>0?'+':'')+avgDev.toFixed(3), 'lbs from the center of the range') +
-    kpi('Overfill', overSum?overSum.toFixed(1):'0', 'lbs above the maximum') +
-    kpi('Open holds', openHolds, holds.length+' case(s) in the period', openHolds?'bad':'');
+  var caja = document.getElementById('dash-kpis');
+  caja.innerHTML =
+    kpiCard(w.length, 'Weight checks', {icono:'scale',
+      note:scored.length+' scored · '+(w.length-scored.length)+' without target'}) +
+    kpiCard(tFail, 'Out of target', {icono:'alert', tono:'bad',
+      note:under+' under · '+over+' over'}) +
+    kpiCard(avgDev==null?'—':(avgDev>0?'+':'')+avgDev.toFixed(3), 'Average deviation',
+      {icono:'pulse', note:'lbs from the center of the range'}) +
+    kpiCard(overSum?overSum.toFixed(1):'0', 'Overfill', {icono:'droplet',
+      note:'lbs above the maximum'}) +
+    kpiCard(openHolds, 'Open holds', {icono:'lock', tono:'bad',
+      note:holds.length+' case(s) in the period'});
+  renderIcons(caja);
 
   // ---------- Tendencia diaria ----------
   var byDay = {};

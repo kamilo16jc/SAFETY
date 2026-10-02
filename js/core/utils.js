@@ -133,12 +133,21 @@ function kpiCard(n, rotulo, o){
   o = o || {};
   var hay  = !!(typeof n === 'number' ? n : parseFloat(n));
   var tono = (o.tono && hay) ? o.tono : '';
-  var color = o.color || (tono
-    ? 'var(--' + (tono === 'ok' ? 'pass' : tono === 'warn' ? 'warn' : 'fail') + ')'
-    : '');
-  var dentro = '<b>' + n + '</b><span>' +
-    (color ? '<i class="dot" style="background:' + color + '"></i>' : '') + rotulo + '</span>' +
-    (o.icono ? '<span class="kpi-ico" data-icon="' + o.icono + '"></span>' : '');
+  // El dibujo vive en su propio cuadro a la izquierda; al lado, el rotulo
+  // pequeño y la cifra debajo. El color sigue diciendo estado y sigue sin ir
+  // solo: tiñe la cifra, que es lo que se lee.
+  var ico = o.icono
+    ? '<span class="kpi-box"><span class="kpi-ico" data-icon="' + o.icono + '"></span></span>'
+    : '';
+  var delta = o.delta
+    ? '<span class="kpi-delta kpi-d-' + (o.deltaTono || 'ok') + '">' + o.delta + '</span>'
+    : '';
+  var dentro = ico +
+    '<span class="kpi-txt">' +
+      '<span class="kpi-lbl">' + rotulo + '</span>' +
+      '<span class="kpi-val"><b>' + n + '</b>' + delta + '</span>' +
+      (o.note ? '<span class="kpi-note">' + o.note + '</span>' : '') +
+    '</span>';
   var cls = 'class="kpi' + (tono ? ' kpi-' + tono : '') + (o.on ? ' on' : '') + '"';
   return o.click
     ? '<button type="button" ' + cls + ' onclick="' + o.click + '">' + dentro + '</button>'

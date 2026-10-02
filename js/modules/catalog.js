@@ -66,7 +66,7 @@ function renderCatalog(){
 
   if(!list.length){
     var msg;
-    if(!all.length)                   msg = 'No products yet. Add the first one in Add Product.';
+    if(!all.length)                   msg = 'No products yet. Add the first one in Create Product.';
     else if(!catFilter.trim() && !catShowAll)
       msg = 'Search a product by number or description to open and edit it — or press "Show all".';
     else if(catFilter.trim())         msg = 'No product matches “'+esc(catFilter)+'”.';

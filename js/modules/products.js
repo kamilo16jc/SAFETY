@@ -279,7 +279,6 @@ function labBlockHTML(pre, p){
   var mode = productCustomerMode(p);
   var ids  = productCustomerIds(p);
   var n    = p ? productSampleCount(p) : 1;
-  var plate = !p || p.plate !== false;
   // El cliente se elige en su lista y punto: quien no esta, se anade con el
   // boton de al lado. El rotulo sobraba —el selector ya dice lo que es— y los
   // tres modos se deducen solos de lo que quede elegido.
@@ -307,8 +306,6 @@ function labBlockHTML(pre, p){
       '<input type="text" class="field" id="'+pre+'-lab-n" inputmode="numeric" '+
         'value="'+n+'" placeholder="e.g. 1" oninput="this.dataset.touched=\'1\'">'+
       '<div class="hint" id="'+pre+'-lab-hint">0 means this product is never sampled.</div>'+
-      '<label class="lab-check"><input type="checkbox" id="'+pre+'-plate"'+(plate?' checked':'')+'>'+
-        '<span><b>Y&amp;M</b></span></label>'+
       '<div id="'+pre+'-lt">'+
         (typeof renderLabTestPicker==='function' ? renderLabTestPicker(p, pre) : '')+'</div>'+
     '</div>';
@@ -670,23 +667,38 @@ function outOfTarget(p, campo, valor){
 function labTargetsHTML(pre, p){
   var nuevo = !p;                       // dando de alta: se proponen los de casa
   var t = (p && p.labTargets) || {};
+  var plate = !p || p.plate !== false;
+  var pres  = !!(p && p.preservatives);
   var num = function(id, val, paso, ph){
     return '<input type="number" step="'+paso+'" class="field tgt" id="'+pre+'-t-'+id+'" '+
       'placeholder="'+ph+'" value="'+(val == null ? '' : val)+'">';
   };
-  return '<div class="sec-label">Targets <span class="opt">\u00b7 what the certificate promises</span></div>'+
-    '<div class="tgt-grid">'+
-      LAB_TARGETS.map(function(x){
-        var v = t[x.f] || (nuevo && x.casa ? x.casa : {});
-        var min = (x.lado==='min' || x.lado==='dos')
-          ? num(x.f+'-min', v.min, x.paso, x.lado==='min' ? 'At least' : 'Min')
-          : '<span class="tgt-hueco"></span>';
-        var max = (x.lado==='max' || x.lado==='dos')
-          ? num(x.f+'-max', v.max, x.paso, x.lado==='max' ? 'No more than' : 'Max')
-          : '<span class="tgt-hueco"></span>';
-        return '<div class="tgt-row"><span class="tgt-n">'+x.n+
-          (x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+min+max+'</div>';
-      }).join('')+
+  // Cada medida pide el lado que promete su forma. El pH pide los dos, con el
+  // "to" en medio, que es como se lee en la hoja del cliente.
+  var celda = function(x){
+    var v = t[x.f] || (nuevo && x.casa ? x.casa : {});
+    var caja;
+    if(x.lado === 'dos'){
+      caja = '<div class="cp-box cp-pair">'+num(x.f+'-min', v.min, x.paso, 'Min')+
+             '<em>to</em>'+num(x.f+'-max', v.max, x.paso, 'Max')+'</div>';
+    } else if(x.lado === 'min'){
+      caja = '<div class="cp-box">'+num(x.f+'-min', v.min, x.paso, 'At least')+'</div>';
+    } else {
+      caja = '<div class="cp-box">'+num(x.f+'-max', v.max, x.paso, 'No more than')+'</div>';
+    }
+    return '<div class="cp-t'+(x.lado==='dos'?' cp-t2':'')+'">'+
+      '<span class="sec-label">'+x.n+(x.u ? ' <i>'+x.u+'</i>' : '')+'</span>'+caja+'</div>';
+  };
+  // Plate y Preservatives son del laboratorio de casa: no se mandan a nadie.
+  var casilla = function(id, marcada, texto){
+    return '<label class="cp-chk"><input type="checkbox" id="'+pre+'-'+id+'"'+
+      (marcada?' checked':'')+'><span>'+texto+'</span></label>';
+  };
+  return '<div class="sec-label cp-sec">Target Analysis</div>'+
+    '<div class="cp-targets">'+
+      LAB_TARGETS.map(celda).join('')+
+      casilla('plate', plate, 'Plate')+
+      casilla('pres',  pres,  'Preservatives')+
     '</div>';
 }
 
@@ -733,13 +745,17 @@ function readProductForm(pre){
   var bags = parseInt(g('bags'));
   var barcode = normNumber(g('barcode'));
   // El bloque de laboratorio: cliente(s), cuantas muestras y si lleva placa
+  // Sin bloque de laboratorio en pantalla (Create Product), el producto no
+  // decide nada del laboratorio: labSamples queda en null y labTests sin
+  // escribir, que es justo lo que hace que hereden del cliente.
+  var chk = function(f){ var e = pel(pre,f); return e ? !!e.checked : null; };
   var lab = pel(pre,'cmode') ? readLabBlock(pre) : {
     customerMode: 'one',
     customerId: g('customer') || (findCustomerByProduct(number)||{}).customerId || '',
     customerIds: [],
-    labSamples: parseSampleCount(g('lab-n')),
-    labSample: parseSampleCount(g('lab-n')) > 0,
-    plate: true
+    labSamples: null,
+    labSample: true,
+    plate: chk('plate') !== false
   };
   return {
     id: newRecordId(),
@@ -753,6 +769,7 @@ function readProductForm(pre){
     labSamples: lab.labSamples,
     labSample: lab.labSample,
     plate: lab.plate,
+    preservatives: chk('pres') === true,
     customerMode: lab.customerMode,
     customerId: lab.customerId,
     customerIds: lab.customerIds,
@@ -807,11 +824,12 @@ function resetAddProduct(){
   });
   var tg = document.getElementById('ap-targets');
   if(tg) tg.innerHTML = labTargetsHTML('ap', null);
-  var box = document.getElementById('ap-labblock');
-  if(box){
-    box.innerHTML = labBlockHTML('ap', null);
-    fillLabBlock('ap', null);
-  }
+  // El cliente se elige aqui, pero sus reglas —tests, muestras— son suyas:
+  // el producto las hereda y esta pantalla ya no las pregunta.
+  fillProdCustomerSelect('', 'ap');
+  onProdCustomerChange('ap');
+  var hint = document.getElementById('ap-customer-hint');
+  if(hint) hint.innerHTML = '';
   fillProductSizes('ap');
   var num = pel('ap','number'); if(num) num.focus();
 }
@@ -819,10 +837,6 @@ function resetAddProduct(){
 function saveNewProduct(){
   var prod = readProductForm('ap');
   if(!prod) return;
-  // Los tests se leen SOLO del bloque de esta pantalla
-  if(typeof readLabTestPicker==='function'){
-    readLabTestPicker(prod, document.getElementById('ap-lt'));
-  }
   persistNewProduct(prod);
   resetAddProduct();
   toast(prod.number+' saved \u2014 edit it in Product Catalog');
