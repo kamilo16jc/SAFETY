@@ -10,13 +10,13 @@ var MODULES = [
   { id:'qa', color:'#4ade80', ink:'#047857', name:'QA Inspection', icon:'clipboard', items:[
       {screen:'screen-weight',    name:'Weights',          icon:'scale', color:'#047857'},
       {screen:'screen-samplelist',name:'List Samples',     icon:'droplet', color:'#0f766e'},
-      {screen:'screen-seal',      name:'Seal Bags',        icon:'droplet', color:'#0369a1'},
+      {screen:'screen-seal',      name:'Seal Bags',        icon:'seal', color:'#0369a1'},
       {screen:'screen-temp',      name:'Temperatures',     icon:'thermo', color:'#b45309'},
       {screen:'screen-gmp',       name:'GMP Audit',        icon:'clipboard', color:'#7c3aed'},
       {screen:'screen-metal',     name:'Metal Detector',   icon:'magnet', color:'#be123c'},
       {screen:'screen-capa',      name:'CAPA Reports',     icon:'alert', color:'#0e7490'},
       {screen:'screen-hold',      name:'Hold Cases',       icon:'lock', color:'#15803d'},
-      {screen:'screen-shift',     name:'Shift Report',     icon:'note', color:'#c2410c'},
+      {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#c2410c'},
       {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#6d28d9'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#9d174d'}
   ]},
@@ -26,10 +26,10 @@ var MODULES = [
       {screen:'screen-lab',       name:'Lab Samples',      icon:'droplet', color:'#0369a1'},
       {screen:'screen-grilling',  name:'Grilling Cheese',  icon:'thermo', color:'#b45309'},
       {screen:'screen-raw',       name:'Raw Analysis',     icon:'box', color:'#7c3aed'},
-      {screen:'screen-dry',       name:'Dry 1935',         icon:'thermo', color:'#a16207'},
+      {screen:'screen-dry',       name:'Dry 1935',         icon:'sun', color:'#a16207'},
       {screen:'screen-formag',    name:'Formag',           icon:'factory', color:'#0e7490'},
       {screen:'screen-rd',        name:'R&D',              icon:'scan', color:'#be123c'},
-      {screen:'screen-shift',     name:'Shift Report',     icon:'note', color:'#be123c'},
+      {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#be123c'},
       {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#0e7490'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#15803d'}
   ]},

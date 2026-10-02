@@ -21,14 +21,21 @@ function snavActivo(){
 function renderSideNav(){
   var host = document.getElementById('snav');
   if(!host) return;
-  if(!snavActivo() || !currentUser){ host.innerHTML = ''; return; }
+  if(!snavActivo() || !currentUser){
+    host.innerHTML = '';
+    document.body.classList.remove('snav-open');
+    return;
+  }
 
   var mods = (typeof myModules === 'function') ? myModules() : [];
-  if(!mods.length){ host.innerHTML = ''; return; }
+  if(!mods.length){
+    host.innerHTML = '';
+    document.body.classList.remove('snav-open');
+    return;
+  }
 
   // Se abre en el modulo de la pantalla en la que ya estas, no en el primero.
-  // Cadena vacia = el usuario lo plego a proposito, y eso se respeta: solo se
-  // elige uno cuando todavia no se ha decidido nada (null).
+  // Cadena vacia = el usuario lo plego a proposito, y eso se respeta.
   if(snavOpen == null || (snavOpen && !mods.some(function(m){ return m.id === snavOpen; }))){
     var actual = (typeof moduleOfScreen === 'function')
       ? moduleOfScreen((document.querySelector('.screen.active')||{}).id) : null;
@@ -38,34 +45,42 @@ function renderSideNav(){
           ? activeModule : mods[0].id);
   }
 
+  var abierto = snavOpen ? moduleById(snavOpen) : null;
+
   host.innerHTML =
-    '<div class="snav-list">'+
-      mods.map(snavModHTML).join('')+
-    '</div>'+
-    '<div class="snav-foot">'+
-      '<span class="snav-cap">Hoy</span>'+
-      '<strong>'+esc(snavFecha())+'</strong>'+
-      '<span class="snav-cap">'+esc(snavPie())+'</span>'+
-    '</div>';
+    '<div class="snav-rail">'+ mods.map(snavTileHTML).join('') +'</div>'+
+    (abierto
+      ? '<div class="snav-panel">'+
+          '<div class="snav-ptitle">'+esc(abierto.name)+'</div>'+
+          '<div class="snav-list">'+ snavSubHTML(abierto) +'</div>'+
+          '<div class="snav-foot">'+
+            '<span class="snav-cap">Hoy</span>'+
+            '<strong>'+esc(snavFecha())+'</strong>'+
+            '<span class="snav-cap">'+esc(abierto.name)+'</span>'+
+          '</div>'+
+        '</div>'
+      : '');
+
+  document.body.classList.toggle('snav-open', !!abierto);
   renderIcons(host);
   snavHighlight((document.querySelector('.screen.active')||{}).id);
 }
 
-function snavModHTML(m){
+// El modulo, como una baldosa de color. Los dos tonos salen de la propia tabla
+// —color e ink—, asi que cada modulo conserva el suyo y nadie inventa paletas.
+function snavTileHTML(m){
   var abierto = (m.id === snavOpen);
-  return '<div class="snav-mod'+(abierto ? ' open' : '')+'" data-mod="'+m.id+'">'+
-    '<button class="snav-head" type="button" aria-expanded="'+abierto+'" '+
-      'onclick="snavToggle(\''+m.id+'\')">'+
-      '<span class="snav-ico" data-icon="'+m.icon+'"></span>'+
-      '<span class="snav-name">'+esc(m.name)+'</span>'+
-      '<span class="snav-chev" aria-hidden="true"></span>'+
-    '</button>'+
-    (abierto ? '<div class="snav-sub">'+snavSubHTML(m)+'</div>' : '')+
-  '</div>';
+  return '<button class="snav-tile'+(abierto ? ' open' : '')+'" type="button" '+
+    'data-mod="'+m.id+'" style="--m1:'+m.color+';--m2:'+m.ink+'" '+
+    'title="'+esc(m.name)+'" aria-label="'+esc(m.name)+'" '+
+    'aria-expanded="'+abierto+'" onclick="snavToggle(\''+m.id+'\')">'+
+    '<span class="snav-glyph" data-icon="'+m.icon+'"></span>'+
+  '</button>';
 }
 
-// Las funciones del modulo, con los mismos grupos que usaba la cinta. Lo que no
-// este en ningun grupo cae al final: añadir una pantalla nunca la deja fuera.
+// Las funciones del modulo. Se conserva el orden de los grupos —es el que
+// tiene sentido en planta— pero sin sus rotulos: el nombre de cada funcion ya
+// dice lo que es.
 function snavSubHTML(m){
   var permitidas = (typeof moduleItemsFor === 'function') ? moduleItemsFor(m) : m.items;
   var porPantalla = {};
@@ -75,30 +90,30 @@ function snavSubHTML(m){
     ? RIBBON_GROUPS[m.id]
     : [{n:'', s:permitidas.map(function(i){ return i.screen; })}];
 
-  var usadas = {};
-  var html = grupos.map(function(g){
-    var items = g.s.filter(function(s){ return porPantalla[s]; }).map(function(s){
-      usadas[s] = 1;
-      return snavItemHTML(porPantalla[s], m);
-    }).join('');
-    if(!items) return '';
-    return (g.n ? '<div class="snav-gname">'+esc(g.n)+'</div>' : '') + items;
-  }).join('');
-
-  var sueltas = permitidas.filter(function(i){ return !usadas[i.screen]; });
-  if(sueltas.length){
-    html += '<div class="snav-gname">Más</div>'+
-      sueltas.map(function(i){ return snavItemHTML(i, m); }).join('');
-  }
+  var usadas = {}, html = '';
+  grupos.forEach(function(g){
+    g.s.forEach(function(sc){
+      if(!porPantalla[sc]) return;
+      usadas[sc] = 1;
+      html += snavItemHTML(porPantalla[sc], m);
+    });
+  });
+  permitidas.forEach(function(i){
+    if(!usadas[i.screen]) html += snavItemHTML(i, m);
+  });
   return html;
 }
 
 function snavItemHTML(item, m){
   if(item.soon){
-    return '<span class="snav-item soon" title="En preparación">'+esc(item.name)+'</span>';
+    return '<span class="snav-item soon">'+
+      '<span class="snav-iico" data-icon="'+item.icon+'"></span>'+
+      '<span class="snav-ilbl">'+esc(item.name)+'</span></span>';
   }
   return '<button class="snav-item" type="button" data-screen="'+item.screen+'" '+
-    'onclick="snavGo(\''+m.id+'\',\''+item.screen+'\')">'+esc(item.name)+'</button>';
+    'onclick="snavGo(\''+m.id+'\',\''+item.screen+'\')">'+
+    '<span class="snav-iico" data-icon="'+item.icon+'"></span>'+
+    '<span class="snav-ilbl">'+esc(item.name)+'</span></button>';
 }
 
 // Abrir un modulo NO navega: solo despliega sus funciones, como la cinta
@@ -145,8 +160,8 @@ function snavHighlight(screenId){
     b.classList.toggle('on', b.getAttribute('data-screen') === screenId);
   });
   var m = (typeof moduleOfScreen === 'function') ? moduleOfScreen(screenId) : null;
-  host.querySelectorAll('.snav-mod').forEach(function(d){
-    d.classList.toggle('here', d.getAttribute('data-mod') === m);
+  host.querySelectorAll('.snav-tile').forEach(function(t){
+    t.classList.toggle('here', t.getAttribute('data-mod') === m);
   });
 }
 

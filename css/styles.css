@@ -622,8 +622,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
   .topbar .tb-brand img{height:27px}
   .topbar .tb-crumb{display:flex;flex-direction:column;justify-content:center;line-height:1.24;
     margin-left:12px;padding-left:26px;border-left:1px solid var(--border);min-height:34px}
+  /* El modulo se escribe como se llama: QA Inspection, no QA INSPECTION */
   .topbar .tb-eyebrow{font-size:11.5px;color:var(--muted);font-weight:600;
-    letter-spacing:.02em;text-transform:uppercase}
+    letter-spacing:.01em}
   .topbar .tb-crumb b{font-size:23px;font-weight:700;letter-spacing:-0.025em}
   .topbar .tb-chip{border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);font-weight:600}
   .topbar .tb-dot{background:var(--accent)}
@@ -2146,57 +2147,72 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   body.ui-fluent .topstack{border-bottom:1px solid var(--border)}
   body.ui-fluent .ribbon{display:none}
 
-  /* ---- la barra lateral ---- */
+  /* ---- la barra lateral: una tira de iconos y su panel ---- */
+  /* Los modulos son baldosas de color, como los de Outlook. Al pulsar una se
+     abre su panel al lado; al volver a pulsarla queda solo la tira. Los dos
+     tonos de cada baldosa salen de la tabla de modulos, asi que nadie inventa
+     colores nuevos. */
   body.ui-fluent .snav{
-    display:flex;flex-direction:column;gap:2px;
-    position:fixed;left:0;top:48px;bottom:0;width:232px;z-index:80;
-    padding:12px 8px;overflow-y:auto;
+    display:flex;position:fixed;left:0;top:48px;bottom:0;z-index:80;
     background:var(--surface2);border-right:1px solid var(--border);
     font-family:var(--font-ui)}
   body.logged-out .snav{display:none}
-  body.ui-fluent .screen{padding-left:256px}
-  body.ui-fluent .screen#screen-home,body.ui-fluent .screen#screen-login{padding-left:256px}
 
+  .snav-rail{width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;
+    gap:7px;padding:10px 0;overflow-y:auto;overflow-x:hidden;
+    background:var(--surface);border-right:1px solid var(--border)}
+  .snav-tile{position:relative;width:40px;height:40px;flex-shrink:0;padding:0;border:0;
+    border-radius:11px;display:grid;place-items:center;cursor:pointer;
+    background:linear-gradient(155deg,var(--m1) 0%,var(--m2) 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.18),
+               0 1px 2px rgba(0,0,0,.22);
+    transition:transform .16s ease,box-shadow .2s ease}
+  .snav-glyph{display:flex;color:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+  .snav-glyph svg{width:20px;height:20px;display:block}
+  .snav-tile:hover{transform:translateY(-1px) scale(1.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 9px rgba(0,0,0,.26)}
+  .snav-tile:active{transform:scale(.93)}
+  .snav-tile.open{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),
+    0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+  .snav-tile:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  /* el modulo de la pantalla abierta lleva su marca pegada al borde */
+  .snav-tile.here::before{content:"";position:absolute;left:-8px;top:9px;
+    width:3px;height:22px;border-radius:0 2px 2px 0;background:var(--accent)}
+
+  .snav-panel{width:208px;flex-shrink:0;display:flex;flex-direction:column;
+    padding:12px 8px;overflow-y:auto}
+  .snav-ptitle{padding:4px 10px 10px;font-size:12px;font-weight:700;
+    letter-spacing:.02em;color:var(--muted)}
   .snav-list{display:flex;flex-direction:column;gap:2px}
 
-  .snav-head{height:36px;width:100%;padding:0 10px 0 12px;
-    display:flex;align-items:center;gap:10px;
+  .snav-item{width:100%;height:34px;padding:0 10px;display:flex;align-items:center;gap:10px;
     border:0;border-radius:var(--radius-sm);background:transparent;
-    font-family:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
-  .snav-head:hover{background:#ebebeb}
-  .snav-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-  .snav-ico{display:inline-flex;width:16px;height:16px;flex-shrink:0;color:var(--dim)}
-  .snav-ico svg{width:16px;height:16px}
-  .snav-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .snav-chev{width:8px;height:8px;flex-shrink:0;border-right:1.4px solid var(--dim);
-    border-bottom:1.4px solid var(--dim);transform:rotate(-45deg);
-    transition:transform .15s ease}
-  .snav-mod.open > .snav-head{font-weight:600;background:#ebebeb}
-  .snav-mod.open > .snav-head .snav-chev{transform:rotate(45deg)}
-  .snav-mod.open > .snav-head .snav-ico{color:var(--accent)}
-
-  /* el módulo de la pantalla abierta lleva la barrita de acento */
-  .snav-mod{position:relative}
-  .snav-mod.here > .snav-head::before{content:"";position:absolute;left:0;top:10px;
-    width:3px;height:16px;border-radius:2px;background:var(--accent)}
-
-  .snav-sub{display:flex;flex-direction:column;gap:1px;padding:2px 0 6px}
-  .snav-gname{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--dim);
-    padding:8px 12px 2px 38px}
-  .snav-item{height:32px;padding:0 12px 0 38px;
-    display:flex;align-items:center;
-    border:0;border-radius:var(--radius-sm);background:transparent;
-    font-family:inherit;font-size:13.5px;color:var(--text-2,var(--muted));
-    text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .snav-item:hover{background:#ebebeb;color:var(--text)}
+    font-family:inherit;font-size:13.5px;color:var(--text);text-align:left;cursor:pointer}
+  .snav-iico{display:inline-flex;width:18px;height:18px;flex-shrink:0;color:var(--dim);
+    transition:color .18s ease,transform .18s cubic-bezier(.34,1.56,.64,1)}
+  .snav-iico svg{width:18px;height:18px;display:block}
+  .snav-ilbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .snav-item:hover{background:#ebebeb}
+  .snav-item:hover .snav-iico{color:var(--accent);transform:scale(1.15)}
   .snav-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   .snav-item.on{background:var(--accent-tint);color:var(--accent);font-weight:600}
+  .snav-item.on .snav-iico{color:var(--accent);animation:snav-pop .34s cubic-bezier(.34,1.56,.64,1)}
   .snav-item.soon{color:var(--dim);cursor:default}
+  @keyframes snav-pop{0%{transform:scale(.68)}60%{transform:scale(1.24)}100%{transform:scale(1)}}
 
   .snav-foot{margin-top:auto;padding:12px;display:flex;flex-direction:column;gap:4px;
     background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
   .snav-cap{font-size:12px;color:var(--dim)}
   .snav-foot strong{font-size:13.5px}
+
+  /* el contenido se corre segun la barra este abierta o plegada */
+  body.ui-fluent .screen{padding-left:80px}
+  body.ui-fluent.snav-open .screen{padding-left:288px}
+
+  @media (prefers-reduced-motion:reduce){
+    .snav-tile,.snav-iico{transition:none}
+    .snav-item.on .snav-iico{animation:none}
+  }
 
   /* ---- se baja el volumen a lo que gritaba ---- */
   body.ui-fluent .add-btn,
@@ -2235,10 +2251,10 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   body.ui-fluent .cp-plus{border-radius:var(--radius)}
 }
 
-/* la barra lateral se pliega sola cuando la ventana no da para ella */
+/* en ventana estrecha se encoge el panel; la tira de iconos no se toca */
 @media (min-width:1024px) and (max-width:1279px){
-  body.ui-fluent .snav{width:200px}
-  body.ui-fluent .screen{padding-left:224px}
+  .snav-panel{width:176px}
+  body.ui-fluent.snav-open .screen{padding-left:256px}
 }
 
 /* ============================================================
