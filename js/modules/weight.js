@@ -26,26 +26,22 @@ function setWeightStatus(v){
   var bot = document.getElementById('w-weight-bottom');
   if(top) top.style.display = isIssue ? 'none' : '';
   if(bot) bot.style.display = isIssue ? 'none' : '';
-  var banner = document.getElementById('w-issue-banner');
+  // Que la linea esta parada lo dicen ya el propio selector y la nota que
+  // aparece sola en Comments. Un recuadro de color repitiendolo quitaba sitio
+  // y competia con el aviso que si hay que leer, el de duplicidad.
   var btn = document.getElementById('w-save-label') ||
             document.querySelector('#screen-weight .main-btn');
   if(isIssue){
-    var info = WEIGHT_ISSUES[st.wIssue];
-    if(banner){
-      banner.style.display='block';
-      banner.innerHTML = '<div class="dup-hint-title">'+info.note+'</div>'+
-        '<div class="dup-hint-detail">Logging an issue — no weights recorded. The time and comment go into the log.</div>';
-    }
     var c = document.getElementById('w-comments');
     if(c) c.value = weightIssueComment(st.wIssue, document.getElementById('check-time').value);
     if(btn) btn.textContent = 'Log issue';
     var dh = document.getElementById('w-dup-hint'); if(dh) dh.style.display='none';
   } else {
-    if(banner) banner.style.display='none';
     var c2 = document.getElementById('w-comments'); if(c2) c2.value='';
     if(btn) btn.textContent = 'Save record';
     updateDupHint();
   }
+  syncUnitLabel();
 }
 
 // Peso activo: uno de la lista PKGS o el del producto si no está en la lista.
@@ -72,10 +68,13 @@ function targetText(p){
   return p.min+' – '+p.max+' '+unitLabel(pkgUnit(p));
 }
 
-// Ajusta la etiqueta "Samples (LBS/OZ)" según la unidad del paquete activo
+// Ajusta la etiqueta "Samples (LBS/OZ)" según la unidad del paquete activo.
+// Con la línea parada no hay muestras y en esa tarjeta solo queda el
+// comentario, así que el título dice lo que de verdad hay debajo.
 function syncUnitLabel(){
   var el = document.getElementById('w-samples-label');
   if(!el) return;
+  if(st.wIssue){ el.textContent = 'Note'; return; }
   var p = activePkg();
   el.textContent = 'Samples ('+unitLabel(p?pkgUnit(p):'lb').toUpperCase()+')';
 }
