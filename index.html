@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="logged-out">
+<body class="logged-out ui-fluent">
 <!-- EL SALUDO: la marca se dibuja sola y una barra fina la acompaña. Sale al
      entrar, cuando la sesion ya esta abierta, y no carga nada — la app ya
      esta lista detras. Nace apagado: lo enciende playSplash(). -->
@@ -66,6 +66,10 @@
 </header>
   <div class="ribbon" id="ribbon"></div>
 </div>
+
+<!-- BARRA LATERAL (escritorio): solo los modulos; el abierto despliega sus
+     funciones. La pinta js/core/sidenav.js desde la tabla de MODULES. -->
+<nav class="snav" id="snav" aria-label="Módulos"></nav>
 
 <!-- DRAWER -->
 <!-- WEIGHT -->
@@ -1633,6 +1637,7 @@
 <script src="js/core/modules.js"></script>
 <script src="js/core/nav.js"></script>
 <script src="js/core/ribbon.js"></script>
+<script src="js/core/sidenav.js"></script>
 <script src="js/core/dup-guard.js"></script>
 <script src="js/modules/products.js"></script>
 <script src="js/modules/customers.js"></script>

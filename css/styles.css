@@ -2102,3 +2102,141 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   .btn-save{--h:36px;max-width:none}
   .btn-save.lg{--h:46px;max-width:none}
 }
+
+/* ============================================================
+   FLUENT — EL MARCO CORPORATIVO (solo escritorio)
+   Mismo sistema, otro tono: azul de oficina, grises, esquinas de
+   4px y una sola sombra fina. Todo cuelga de los tokens, así que
+   la app entera gira desde aquí sin tocar pantalla por pantalla.
+   El teléfono del operador no entra: nada de esto existe por
+   debajo de 1024px.
+   ============================================================ */
+.snav{display:none}
+
+@media (min-width:1024px){
+
+  /* ---- los tokens, en versión oficina ---- */
+  body.ui-fluent{
+    --font-ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --font-mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
+
+    --bg:#f5f5f5; --surface:#ffffff; --surface2:#fafafa;
+    --border:#e0e0e0;
+    --text:#242424; --muted:#424242; --dim:#616161;
+
+    --accent:#0f6cbd; --accent-deep:#115ea3;
+    --accent-tint:#ebf3fc; --accent-fg:#ffffff;
+
+    --pass:#0e700e; --pass-tint:#f1faf1;
+    --fail:#b10e1c; --fail-tint:#fdf3f4;
+    --warn:#8a3707; --warn-tint:#fff9f5;
+
+    /* el riel deja de ser verde oscuro: en esta vista es superficie */
+    --rail:#ffffff; --rail-2:#fafafa; --rail-txt:#424242; --rail-hi:#242424;
+    --rail-dim:#616161; --rail-mark:#0f6cbd;
+
+    --radius:4px; --radius-sm:4px; --radius-lg:8px;
+    --shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+
+  /* ---- la barra de título ---- */
+  body.ui-fluent .topbar{min-height:48px;padding:0 16px;gap:12px}
+  body.ui-fluent .topbar .tb-brand img{height:20px}
+  body.ui-fluent .topbar .tb-crumb{font-size:12px}
+  body.ui-fluent .topstack{border-bottom:1px solid var(--border)}
+  body.ui-fluent .ribbon{display:none}
+
+  /* ---- la barra lateral ---- */
+  body.ui-fluent .snav{
+    display:flex;flex-direction:column;gap:2px;
+    position:fixed;left:0;top:48px;bottom:0;width:232px;z-index:80;
+    padding:12px 8px;overflow-y:auto;
+    background:var(--surface2);border-right:1px solid var(--border);
+    font-family:var(--font-ui)}
+  body.logged-out .snav{display:none}
+  body.ui-fluent .screen{padding-left:256px}
+  body.ui-fluent .screen#screen-home,body.ui-fluent .screen#screen-login{padding-left:256px}
+
+  .snav-list{display:flex;flex-direction:column;gap:2px}
+
+  .snav-head{height:36px;width:100%;padding:0 10px 0 12px;
+    display:flex;align-items:center;gap:10px;
+    border:0;border-radius:var(--radius-sm);background:transparent;
+    font-family:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
+  .snav-head:hover{background:#ebebeb}
+  .snav-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .snav-ico{display:inline-flex;width:16px;height:16px;flex-shrink:0;color:var(--dim)}
+  .snav-ico svg{width:16px;height:16px}
+  .snav-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .snav-chev{width:8px;height:8px;flex-shrink:0;border-right:1.4px solid var(--dim);
+    border-bottom:1.4px solid var(--dim);transform:rotate(-45deg);
+    transition:transform .15s ease}
+  .snav-mod.open > .snav-head{font-weight:600;background:#ebebeb}
+  .snav-mod.open > .snav-head .snav-chev{transform:rotate(45deg)}
+  .snav-mod.open > .snav-head .snav-ico{color:var(--accent)}
+
+  /* el módulo de la pantalla abierta lleva la barrita de acento */
+  .snav-mod{position:relative}
+  .snav-mod.here > .snav-head::before{content:"";position:absolute;left:0;top:10px;
+    width:3px;height:16px;border-radius:2px;background:var(--accent)}
+
+  .snav-sub{display:flex;flex-direction:column;gap:1px;padding:2px 0 6px}
+  .snav-gname{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--dim);
+    padding:8px 12px 2px 38px}
+  .snav-item{height:32px;padding:0 12px 0 38px;
+    display:flex;align-items:center;
+    border:0;border-radius:var(--radius-sm);background:transparent;
+    font-family:inherit;font-size:13.5px;color:var(--text-2,var(--muted));
+    text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .snav-item:hover{background:#ebebeb;color:var(--text)}
+  .snav-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  .snav-item.on{background:var(--accent-tint);color:var(--accent);font-weight:600}
+  .snav-item.soon{color:var(--dim);cursor:default}
+
+  .snav-foot{margin-top:auto;padding:12px;display:flex;flex-direction:column;gap:4px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+  .snav-cap{font-size:12px;color:var(--dim)}
+  .snav-foot strong{font-size:13.5px}
+
+  /* ---- se baja el volumen a lo que gritaba ---- */
+  body.ui-fluent .add-btn,
+  body.ui-fluent .save-btn,
+  body.ui-fluent .add-mini{
+    background:var(--accent);background-image:none;
+    border-radius:var(--radius);box-shadow:none;
+    color:#fff;font-weight:600;letter-spacing:0}
+  body.ui-fluent .add-btn:hover,
+  body.ui-fluent .save-btn:hover,
+  body.ui-fluent .add-mini:hover{background:var(--accent-deep);box-shadow:none;transform:none}
+  body.ui-fluent .add-btn:active,
+  body.ui-fluent .save-btn:active,
+  body.ui-fluent .add-mini:active{box-shadow:none;transform:none}
+
+  /* el botón de dos caras: mismo gesto, colores de oficina */
+  body.ui-fluent .btn-save{border-radius:var(--radius);box-shadow:none}
+  body.ui-fluent .btn-save div:nth-child(1){background:var(--accent)}
+  body.ui-fluent .btn-save div:nth-child(2){background:var(--pass)}
+  body.ui-fluent .btn-save.done{box-shadow:none}
+
+  /* el botón redondo de más opciones pasa a ser un botón de icono */
+  body.ui-fluent .more-btn{width:32px;height:32px;border-radius:var(--radius-sm);
+    background:transparent;background-image:none;color:var(--muted);box-shadow:none}
+  body.ui-fluent .more-box:hover .more-btn,
+  body.ui-fluent .more-box[data-open="true"] .more-btn{
+    background:#ebebeb;color:var(--text);box-shadow:none}
+  body.ui-fluent .more-item{border-radius:var(--radius-sm);
+    box-shadow:0 2px 8px rgba(0,0,0,.10)}
+
+  /* tarjetas y hojas: esquinas de oficina */
+  body.ui-fluent .kpi{border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+  body.ui-fluent .sheet-wrap,
+  body.ui-fluent .form-sheet,
+  body.ui-fluent .panel{border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+  body.ui-fluent .cp-plus{border-radius:var(--radius)}
+}
+
+/* la barra lateral se pliega sola cuando la ventana no da para ella */
+@media (min-width:1024px) and (max-width:1279px){
+  body.ui-fluent .snav{width:200px}
+  body.ui-fluent .screen{padding-left:224px}
+}

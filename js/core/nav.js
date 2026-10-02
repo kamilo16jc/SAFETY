@@ -107,6 +107,12 @@ function goTo(id){
     var _rb = document.getElementById('ribbon');
     if(_rb && !_rb.firstChild) renderRibbon(); else if(typeof ribbonMark==='function') ribbonMark(id);
   }
+  // La barra lateral marca la funcion abierta y despliega su modulo
+  if(typeof renderSideNav==='function'){
+    var _sn = document.getElementById('snav');
+    if(_sn && !_sn.firstChild) renderSideNav();
+    else if(typeof snavMark==='function') snavMark(id);
+  }
   applyScreenAccent(id);
   updateTopbar(id);
 }

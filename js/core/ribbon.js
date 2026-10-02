@@ -82,7 +82,8 @@ function toggleRibbonBody(){
 function renderRibbon(){
   var host = document.getElementById('ribbon');
   if(!host) return;
-  if(!ribbonOn() || !currentUser || window.innerWidth < RIBBON_MIN){
+  if(!ribbonOn() || !currentUser || window.innerWidth < RIBBON_MIN ||
+     document.body.classList.contains('ui-fluent')){
     host.innerHTML = ''; return;
   }
   var mods = (typeof myModules === 'function') ? myModules() : [];
