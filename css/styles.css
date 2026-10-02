@@ -2240,3 +2240,122 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   body.ui-fluent .snav{width:200px}
   body.ui-fluent .screen{padding-left:224px}
 }
+
+/* ============================================================
+   PANTALLA DE CAPTURA — el patrón de Weight Log
+   Cabecera, barra de comandos y dos tarjetas: a la izquierda lo
+   que identifica el registro, a la derecha lo que se mide. Las
+   clases llevan prefijo propio (n-, c-) para no chocar con las
+   que ya existen. Nace apilada: en el teléfono es una columna y
+   los campos son grandes; de 1100px en adelante se abre en dos.
+   ============================================================ */
+
+/* ---- cabecera ---- */
+.pg-head{margin-bottom:14px}
+.pg-title{margin:0;font-size:22px;line-height:28px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+.pg-sub{margin-top:2px;font-size:13px;color:var(--dim)}
+
+/* ---- barra de comandos ---- */
+.cmdbar{display:flex;align-items:center;gap:4px;padding:4px;flex-wrap:wrap;margin-bottom:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow)}
+.cbtn{height:38px;padding:0 13px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text);
+  font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap}
+.cbtn svg{width:16px;height:16px;flex-shrink:0}
+.cbtn:hover{background:var(--surface2)}
+.cbtn:active{transform:translateY(1px)}
+.cbtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.cbtn-primary{background:var(--accent);color:var(--accent-fg);font-weight:600;padding:0 15px}
+.cbtn-primary:hover{background:var(--accent-deep)}
+.cbtn-outline{border:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.cbar-div{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* ---- tarjetas ---- */
+.cards-2{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.ncard{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ncard-title{margin:0;font-size:16px;line-height:22px;font-weight:600;color:var(--text)}
+
+/* ---- campos ---- */
+.nstack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ngrid-2{display:grid;grid-template-columns:1fr;gap:14px}
+.nfield{display:flex;flex-direction:column;gap:5px;min-width:0}
+.nlabel{font-size:13px;font-weight:600;color:var(--text)}
+.nlabel i{font-style:normal;font-weight:400;font-size:12px;color:var(--dim)}
+.ninput{width:100%;height:42px;padding:0 12px;
+  border:1px solid var(--border);border-bottom-color:var(--dim);
+  border-radius:var(--radius-sm);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:15px;outline:none}
+.ninput::placeholder{color:var(--dim)}
+.ninput:focus{border-bottom:2px solid var(--accent)}
+.ntext{height:auto;min-height:84px;padding:9px 12px;resize:vertical;line-height:1.45}
+.nrow{display:flex;gap:8px;align-items:stretch}
+.nrow .ninput{flex:1;min-width:0}
+.nrow .cbtn{height:auto;align-self:stretch}
+
+/* ---- la banda del objetivo ---- */
+.info-bar{display:flex;align-items:center;gap:12px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--accent-tint);color:var(--accent-deep)}
+.info-bar svg{width:18px;height:18px;flex-shrink:0}
+.info-bar .ib-k{font-size:12px;color:var(--muted)}
+.info-bar .ib-v{font-weight:700;color:var(--accent-deep)}
+.info-bar .ib-gap{flex:1}
+.info-bar .ib-right{text-align:right}
+
+/* ---- las muestras ---- */
+.samples-box{border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);overflow:hidden}
+.samples-box .samples-wrap{display:block;gap:0;margin:0}
+.samples-box .sample-row{display:grid;grid-template-columns:92px minmax(0,1fr) 84px;gap:12px;
+  align-items:center;padding:7px 12px;background:none;border:0;border-radius:0;
+  border-bottom:1px solid var(--border);box-shadow:none}
+.samples-box .sample-row:last-child{border-bottom:0}
+.samples-box .sample-row.shead{background:var(--surface2);padding:8px 12px;
+  font-size:11.5px;font-weight:700;color:var(--muted)}
+.samples-box .sample-row.shead span:nth-child(2){text-align:right}
+.samples-box .sample-row.pass,.samples-box .sample-row.fail{border-color:var(--border)}
+.samples-box .snum{min-width:0;font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted)}
+.samples-box .sinput{font-size:15px;font-weight:600;font-family:var(--font-mono);
+  text-align:right;padding:5px 9px;border:1px solid var(--border);
+  border-bottom-color:var(--dim);border-radius:var(--radius-sm);background:var(--surface)}
+.samples-box .sinput:focus{border-color:var(--accent);background:var(--surface)}
+.samples-box .sicon{justify-self:start;min-width:0;height:22px;padding:0 9px;border-radius:11px;
+  display:inline-flex;align-items:center;font-size:12px;font-weight:700;
+  border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
+.samples-box .sicon.ok{color:var(--pass);background:var(--pass-tint);border-color:var(--pass)}
+.samples-box .sicon.low,.samples-box .sicon.high{color:var(--fail);background:var(--fail-tint);
+  border-color:var(--fail)}
+
+/* ---- los dos totales ---- */
+.nstats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.nstat{padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface2)}
+.ns-k{font-size:12px;color:var(--muted)}
+.ns-v{font-size:24px;line-height:32px;font-weight:700;color:var(--text);
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.ns-v.ok{color:var(--pass)}
+.ns-v.bad{color:var(--fail)}
+
+/* ---- el aviso ---- */
+.msgbar{display:none;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:var(--radius-sm);background:var(--fail-tint);
+  border:1px solid var(--fail);color:var(--fail)}
+.msgbar.show{display:flex}
+.msgbar svg{width:16px;height:16px;flex-shrink:0}
+
+@media (min-width:640px){
+  .ngrid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+}
+@media (min-width:1024px){
+  .cbtn{height:32px;font-size:13px}
+  .ninput{height:32px;font-size:13px;padding:0 10px}
+  .ntext{height:auto;padding:8px 10px}
+  .pg-title{font-size:20px;font-weight:600}
+  /* las tarjetas solo se dibujan como tarjetas en el monitor */
+  body.ui-fluent .ncard{background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px}
+}
+@media (min-width:1100px){
+  .cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

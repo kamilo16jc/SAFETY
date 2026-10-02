@@ -458,90 +458,154 @@
 
 <div class="screen" id="screen-weight">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Weight Log</div>
-  <div class="form-meta">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
-  <div class="fgrid">
-  <div class="fcol">
-  <div class="sec-label">Record Date <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· change for past records</span></div>
-  <input type="date" class="time-input" id="w-date" style="width:100%;margin-bottom:18px">
-  <div class="sec-label">Production Line</div>
-  <div class="select-wrap"><select class="field line-select" onchange="selectLine(parseInt(this.value)||0)">
-    <option value="">Select line</option>
-    <option value="1">Line 1</option>
-    <option value="2">Line 2</option>
-    <option value="3">Line 3</option>
-    <option value="4">Line 4</option>
-    <option value="5">Line 5</option>
-    <option value="6">Line 6</option>
-  </select></div>
-  <div class="dup-hint" id="w-dup-hint" style="display:none"></div>
-  <div class="sec-label">Shift</div>
-  <div class="select-wrap"><select class="field shift-select" onchange="onShiftPick(this.value)">
-    <option value="">Select shift</option>
-    <option value="1">1st Shift</option>
-    <option value="2">2nd Shift</option>
-  </select></div>
-  <div class="sec-label">Line Status</div>
-  <div class="select-wrap"><select class="field" id="w-status" onchange="setWeightStatus(this.value)">
-    <option value="running">Running — taking weights</option>
-    <option value="labeling">Labeling — line stopped</option>
-    <option value="break">On break</option>
-    <option value="down">Line down</option>
-  </select></div>
-  <div class="dup-hint" id="w-issue-banner" style="display:none"></div>
-  <div id="w-weight-top">
-  <div class="sec-label">Product Number</div>
-  <div class="prod-row">
-    <input type="text" class="field" id="w-product" list="w-product-list" placeholder="Type or scan the product number"
-           autocomplete="off" autocapitalize="characters" style="margin-bottom:0" oninput="onProductInput('weight')">
-    <datalist id="w-product-list"></datalist>
-    <button class="scan-btn" onclick="openScanner('weight')" title="Scan barcode">
-      <span data-icon="scan"></span>
+
+  <div class="pg-head">
+    <h1 class="pg-title">Weight Log</h1>
+    <div class="pg-sub">Line <span id="wm-line">—</span> · <span id="wm-shift">—</span> Shift</div>
+  </div>
+
+  <!-- Las acciones de la pantalla, juntas y siempre en el mismo sitio -->
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" id="w-save-btn" onclick="saveWeight()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      <span id="w-save-label">Save record</span>
+    </button>
+    <button class="cbtn" onclick="saveWeightNext()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Save &amp; next check
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="clearSamples()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Clear samples
+    </button>
+    <button class="cbtn" onclick="goTo('screen-reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      Today’s log
     </button>
   </div>
-  <div class="product-card" id="w-product-card" style="display:none"></div>
-  <div class="sec-label">Package Size</div>
-  <div class="select-wrap"><select class="field" id="pkg-select" onchange="selectPkg(this.value)"></select></div>
-  <div class="target-box">
-    <div>
-      <div class="target-lbl">Target Range</div>
-      <div class="target-val" id="target-val">Select package size</div>
-    </div>
-    <div style="text-align:right">
-      <div class="target-lbl">Time</div>
-      <div class="target-val" id="time-val">—</div>
-    </div>
-  </div>
-  </div><!-- /w-weight-top -->
-  <div class="sec-label">Time of Check</div>
-  <div class="time-row">
-    <input type="time" class="time-input" id="check-time">
-    <button class="now-btn" onclick="setNow()">Now</button>
-  </div>
-  </div>
-  <div class="fcol">
-  <div id="w-weight-bottom">
-  <div class="sec-label" id="w-samples-label">Samples (LBS)</div>
-  <div class="samples-wrap" id="samples-wrap"></div>
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="slabel">Average</div>
-      <div class="svalue" id="avg-val" style="color:var(--muted)">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="slabel">Compliance</div>
-      <div class="svalue" id="comp-val" style="color:var(--muted)">—</div>
-    </div>
-  </div>
-  <div class="sec-label">LOT Number</div>
-  <input type="text" class="field" id="w-lot" placeholder="Enter LOT number">
-  </div><!-- /w-weight-bottom -->
-  <div class="sec-label">Comments</div>
-  <textarea class="field" id="w-comments" placeholder="Comments or corrective actions..." rows="3"></textarea>
-  <div class="sec-label">Operator Initials</div>
-  <input type="text" class="field" id="w-initials" placeholder="Initials">
-  <button class="main-btn" onclick="saveWeight()">Save Record</button>
-  </div>
+
+  <div class="cards-2">
+
+    <!-- ===== lo que identifica el registro ===== -->
+    <section class="ncard">
+      <h2 class="ncard-title">Record details</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Record date <i>· change for past records</i></span>
+          <input type="date" class="ninput" id="w-date">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Shift</span>
+          <select class="ninput shift-select" onchange="onShiftPick(this.value)">
+            <option value="">Select shift</option>
+            <option value="1">1st Shift</option>
+            <option value="2">2nd Shift</option>
+          </select>
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Production line</span>
+          <select class="ninput line-select" onchange="selectLine(parseInt(this.value)||0)">
+            <option value="">Select line</option>
+            <option value="1">Line 1</option>
+            <option value="2">Line 2</option>
+            <option value="3">Line 3</option>
+            <option value="4">Line 4</option>
+            <option value="5">Line 5</option>
+            <option value="6">Line 6</option>
+          </select>
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Line status</span>
+          <select class="ninput" id="w-status" onchange="setWeightStatus(this.value)">
+            <option value="running">Running — taking weights</option>
+            <option value="labeling">Labeling — line stopped</option>
+            <option value="break">On break</option>
+            <option value="down">Line down</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="dup-hint" id="w-dup-hint" style="display:none"></div>
+      <div class="dup-hint" id="w-issue-banner" style="display:none"></div>
+
+      <div id="w-weight-top" class="nstack">
+        <label class="nfield">
+          <span class="nlabel">Product number</span>
+          <div class="nrow">
+            <input type="text" class="ninput" id="w-product" list="w-product-list"
+                   placeholder="Type or scan the product number" autocomplete="off"
+                   autocapitalize="characters" oninput="onProductInput('weight')">
+            <datalist id="w-product-list"></datalist>
+            <button type="button" class="cbtn cbtn-outline" onclick="openScanner('weight')"
+                    title="Scan barcode" aria-label="Scan barcode"><span data-icon="scan"></span></button>
+          </div>
+        </label>
+        <div class="product-card" id="w-product-card" style="display:none"></div>
+
+        <div class="ngrid-2">
+          <label class="nfield">
+            <span class="nlabel">Package size</span>
+            <select class="ninput" id="pkg-select" onchange="selectPkg(this.value)"></select>
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Time of check</span>
+            <div class="nrow">
+              <input type="time" class="ninput" id="check-time">
+              <button type="button" class="cbtn cbtn-outline" onclick="setNow()">Now</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="info-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+          <div><div class="ib-k">Target range</div><div class="ib-v" id="target-val">Select package size</div></div>
+          <span class="ib-gap"></span>
+          <div class="ib-right"><div class="ib-k">Time</div><div class="ib-v" id="time-val">—</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== lo que se mide ===== -->
+    <section class="ncard">
+      <h2 class="ncard-title" id="w-samples-label">Samples (LBS)</h2>
+
+      <div id="w-weight-bottom" class="nstack">
+        <div class="samples-box">
+          <div class="sample-row shead"><span>Sample</span><span>Weight</span><span>Check</span></div>
+          <div class="samples-wrap" id="samples-wrap"></div>
+        </div>
+
+        <div class="nstats">
+          <div class="nstat"><div class="ns-k">Average</div><div class="ns-v" id="avg-val">—</div></div>
+          <div class="nstat"><div class="ns-k">Compliance</div><div class="ns-v" id="comp-val">—</div></div>
+        </div>
+
+        <div class="msgbar" id="w-outmsg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+          <span id="w-outmsg-text"></span>
+        </div>
+
+        <div class="ngrid-2">
+          <label class="nfield">
+            <span class="nlabel">LOT number</span>
+            <input type="text" class="ninput" id="w-lot" placeholder="Enter LOT number">
+          </label>
+          <label class="nfield">
+            <span class="nlabel">Operator initials</span>
+            <input type="text" class="ninput" id="w-initials" placeholder="Initials">
+          </label>
+        </div>
+      </div>
+
+      <label class="nfield">
+        <span class="nlabel">Comments</span>
+        <textarea class="ninput ntext" id="w-comments" rows="3"
+                  placeholder="Comments or corrective actions…"></textarea>
+      </label>
+    </section>
+
   </div>
 </div>
 

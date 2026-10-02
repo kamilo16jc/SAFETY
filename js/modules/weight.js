@@ -27,7 +27,8 @@ function setWeightStatus(v){
   if(top) top.style.display = isIssue ? 'none' : '';
   if(bot) bot.style.display = isIssue ? 'none' : '';
   var banner = document.getElementById('w-issue-banner');
-  var btn = document.querySelector('#screen-weight .main-btn');
+  var btn = document.getElementById('w-save-label') ||
+            document.querySelector('#screen-weight .main-btn');
   if(isIssue){
     var info = WEIGHT_ISSUES[st.wIssue];
     if(banner){
@@ -37,12 +38,12 @@ function setWeightStatus(v){
     }
     var c = document.getElementById('w-comments');
     if(c) c.value = weightIssueComment(st.wIssue, document.getElementById('check-time').value);
-    if(btn) btn.textContent = 'Log Issue';
+    if(btn) btn.textContent = 'Log issue';
     var dh = document.getElementById('w-dup-hint'); if(dh) dh.style.display='none';
   } else {
     if(banner) banner.style.display='none';
     var c2 = document.getElementById('w-comments'); if(c2) c2.value='';
-    if(btn) btn.textContent = 'Save Record';
+    if(btn) btn.textContent = 'Save record';
     updateDupHint();
   }
 }
@@ -135,9 +136,9 @@ function buildSamples(){
   if(wrap.children.length===0){
     wrap.innerHTML=st.samples.map(function(v,i){
       return '<div class="sample-row" id="sr-'+i+'">' +
-        '<span class="snum">SAMPLE '+(i+1)+'</span>' +
+        '<span class="snum">Sample '+(i+1)+'</span>' +
         '<input class="sinput" type="text" inputmode="decimal" id="si-'+i+'" placeholder="0.00" autocomplete="off" oninput="onSample('+i+',this.value)">' +
-        '<span class="sicon" id="sico-'+i+'"></span>' +
+        '<span class="sicon" id="sico-'+i+'">\u2014</span>' +
       '</div>';
     }).join('');
   }
@@ -152,14 +153,18 @@ function updateSampleUI(i){
   var ico=document.getElementById('sico-'+i);
   if(!row||!ico) return;
   row.className='sample-row';
-  ico.textContent='';
+  ico.className='sicon';
+  ico.textContent='\u2014';
   var p=activePkg();
   // Sin target (producto nuevo sin rango) sólo se registra el peso, sin pass/fail
   if(p && p.min!=null && st.samples[i]!==''){
     var num=parseFloat(st.samples[i]);
     if(!isNaN(num)){
-      if(num>=p.min&&num<=p.max){row.classList.add('pass');ico.textContent='✓';}
-      else{row.classList.add('fail');ico.textContent='✗';}
+      // La palabra dice si se paso o se quedo corto; el color solo lo repite,
+      // que en una hoja impresa en blanco y negro es lo unico que queda.
+      if(num < p.min){ row.classList.add('fail'); ico.classList.add('low');  ico.textContent='Low'; }
+      else if(num > p.max){ row.classList.add('fail'); ico.classList.add('high'); ico.textContent='High'; }
+      else { row.classList.add('pass'); ico.classList.add('ok'); ico.textContent='OK'; }
     }
   }
 }
@@ -175,16 +180,49 @@ function updateStats(){
     return;
   }
   var avg=vals.reduce(function(a,b){return a+b},0)/vals.length;
-  document.getElementById('avg-val').textContent=avg.toFixed(3);
+  var av=document.getElementById('avg-val');
+  av.textContent=avg.toFixed(3);
+  av.className='ns-v';
   if(p.min==null){
     cv.textContent='—';
-    cv.style.color='var(--muted)';
+    cv.className='ns-v';
+    weightOutMsg(0, vals.length);
     return;
   }
+  av.classList.add(avg>=p.min&&avg<=p.max ? 'ok' : 'bad');
   var pass=vals.filter(function(v){return v>=p.min&&v<=p.max}).length;
+  var fuera=vals.length-pass;
   var comp=Math.round((pass/vals.length)*100);
   cv.textContent=comp+'%';
-  cv.style.color=comp>=80?'var(--pass)':comp>=60?'var(--warn)':'var(--fail)';
+  cv.className='ns-v'+(fuera ? ' bad' : ' ok');
+  weightOutMsg(fuera, vals.length);
+}
+
+// El aviso de lo que se sale: dice cuantas y que hacer, y se va solo cuando
+// deja de haber motivo.
+function weightOutMsg(fuera, total){
+  var caja=document.getElementById('w-outmsg');
+  if(!caja) return;
+  var txt=document.getElementById('w-outmsg-text');
+  if(fuera>0 && txt){
+    txt.textContent=fuera+' of '+total+' sample'+(total===1?'':'s')+
+      ' out of range. Add a corrective action in Comments.';
+  }
+  caja.classList.toggle('show', fuera>0);
+}
+
+// Guardar y seguir: el mismo guardado, pero deja la hoja lista para la
+// siguiente revision —muestras en blanco y la hora puesta—, que es como se
+// trabaja una linea corriendo.
+function saveWeightNext(){
+  var antes=(getDB().weights||[]).length;
+  saveWeight();
+  if((getDB().weights||[]).length>antes){
+    clearSamples();
+    setNow();
+    var primero=document.getElementById('si-0');
+    if(primero) primero.focus();
+  }
 }
 function setNow(){
   var now=new Date();

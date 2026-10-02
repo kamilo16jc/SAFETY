@@ -7,3 +7,9 @@ serve.tmp.py
 .agents/
 .claude/
 skills-lock.json
+
+# Servidor de desarrollo local: no va al repositorio
+dev-server.py
+_dev.html
+_banco*.html
+__pycache__/
