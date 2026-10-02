@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v106';
+const CACHE = 'nexora-qc-v107';
 
 const SHELL = [
   './',
@@ -13,10 +13,10 @@ const SHELL = [
   './assets/nexora.svg',
   './assets/nexora-dark.svg',
   './js/main.js',
-  './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/utils.js',
+  './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/sidenav.js','./js/core/utils.js',
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
-  './js/modules/weight.js','./js/modules/seal.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
+  './js/modules/weight.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
   './js/modules/admin.js','./js/modules/reports.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
   './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',

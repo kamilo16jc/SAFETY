@@ -122,6 +122,12 @@ function snavItemHTML(item, m){
 function snavToggle(modId){
   snavOpen = (snavOpen === modId) ? '' : modId;
   renderSideNav();
+  // Plegar la barra ensancha el contenido, y las graficas del inicio se miden
+  // en pixeles al dibujarse: sin esto quedan estiradas hasta el siguiente
+  // cambio de tamano de ventana.
+  var home = document.getElementById('screen-home');
+  if(home && home.classList.contains('active') && typeof renderHomeKPI === 'function')
+    renderHomeKPI();
 }
 
 // Pulsar una funcion si navega — y deja el modulo activo, que es lo que decide

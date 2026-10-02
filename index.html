@@ -302,6 +302,100 @@
 
   <div class="home-start" id="home-start"></div>
   <div class="mcards" id="home-modules"></div>
+
+  <!-- ============================================================
+       EL TABLERO DE INDICADORES (solo monitor)
+       Lo pinta js/modules/kpi.js con lo que el sistema ya guarda.
+       ============================================================ -->
+  <div class="kd" id="kd">
+    <div class="pg-head">
+      <h1 class="pg-title">QA KPI Dashboard</h1>
+      <div class="pg-sub" id="kd-range-label"></div>
+    </div>
+
+    <div class="cmdbar">
+      <span class="kd-lbl">Period</span>
+      <div class="segmented" id="kd-range">
+        <button class="seg" type="button" onclick="kpiPeriodo(1,this)">Today</button>
+        <button class="seg on" type="button" onclick="kpiPeriodo(7,this)">7 days</button>
+        <button class="seg" type="button" onclick="kpiPeriodo(30,this)">30 days</button>
+      </div>
+      <span class="cbar-div"></span>
+      <span class="kd-lbl">Line</span>
+      <select class="ninput kd-sel" id="kd-line" aria-label="Line" onchange="kpiFiltro()">
+        <option value="all">All lines</option>
+        <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
+        <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+      </select>
+      <span class="kd-lbl">Shift</span>
+      <select class="ninput kd-sel" id="kd-shift" aria-label="Shift" onchange="kpiFiltro()">
+        <option value="all">All shifts</option>
+        <option value="1">1st shift</option><option value="2">2nd shift</option>
+      </select>
+      <span class="cbar-gap"></span>
+      <button class="cbtn" type="button" onclick="window.print()">
+        <span data-icon="doc"></span>Print</button>
+    </div>
+
+    <div class="kd-kpis" id="kd-kpis"></div>
+
+    <div class="kd-grid">
+      <section class="ncard kd-s8">
+        <div class="ncard-head">
+          <div><h2 class="ncard-title">Weight compliance</h2>
+            <div class="kd-sub">% of samples inside the target range, per day</div></div>
+          <span class="cbar-gap"></span>
+          <div class="kd-legend">
+            <span><i class="kd-k-line"></i>Compliance</span>
+            <span><i class="kd-k-dash"></i>Target</span>
+          </div>
+        </div>
+        <div class="kd-chart" id="kd-ch-weight"></div>
+      </section>
+
+      <section class="ncard kd-s4">
+        <div class="ncard-head">
+          <div><h2 class="ncard-title">Checks completed</h2>
+            <div class="kd-sub">Captured vs scheduled, by module</div></div>
+        </div>
+        <div class="kd-progress" id="kd-progress"></div>
+      </section>
+
+      <section class="ncard kd-s6">
+        <div class="ncard-head">
+          <div><h2 class="ncard-title">Out-of-range samples</h2>
+            <div class="kd-sub">Weight samples outside the target, by line</div></div>
+        </div>
+        <div class="kd-chart" id="kd-ch-line"></div>
+      </section>
+
+      <section class="ncard kd-s6">
+        <div class="ncard-head">
+          <div><h2 class="ncard-title">Open CAPAs by severity</h2>
+            <div class="kd-sub">Not closed</div></div>
+        </div>
+        <div class="kd-chart" id="kd-ch-capa"></div>
+      </section>
+
+      <section class="ncard ncard-table kd-s12">
+        <div class="ncard-head ntable-head">
+          <div><h2 class="ncard-title">Needs attention</h2>
+            <div class="kd-sub">Overdue CAPAs, out-of-range results and product on hold</div></div>
+          <span class="cbar-gap"></span>
+          <span class="cbar-note" id="kd-attn-n"></span>
+        </div>
+        <div class="ntable-wrap">
+          <table class="ntable">
+            <thead><tr><th>Type</th><th>Reference</th><th>Where</th><th>Detail</th>
+                       <th>Date</th><th>Status</th></tr></thead>
+            <tbody id="kd-attn"></tbody>
+          </table>
+          <div class="ntable-empty" id="kd-attn-empty" hidden>
+            Nothing needs attention in this period.</div>
+        </div>
+      </section>
+    </div>
+  </div>
 </div>
 
 <!-- MODULO: sus funciones como tarjetas -->
@@ -1853,6 +1947,7 @@
 <script src="js/export/xlsx-write.js"></script>
 <script src="js/modules/weight.js"></script>
 <script src="js/modules/seal.js"></script>
+<script src="js/modules/kpi.js"></script>
 <script src="js/modules/dash-charts.js"></script>
 <script src="js/modules/dashboard.js"></script>
 <script src="js/export/pdf-reports.js"></script>

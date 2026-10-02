@@ -264,6 +264,12 @@ function updateDate(){
   document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 }
 
+// El tablero solo se pinta donde se ve: interfaz nueva y pantalla de monitor.
+// Es el mismo corte que hace la hoja de estilos, escrito una vez aqui.
+function homeConTablero(){
+  return document.body.classList.contains('ui-fluent') && window.innerWidth >= 1024;
+}
+
 function initHome(){
   // Saludo
   var h = new Date().getHours();
@@ -272,6 +278,18 @@ function initHome(){
   var first = currentUser ? currentUser.name.split(' ')[0] : '';
   first = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   document.getElementById('home-name').textContent = first || 'Welcome';
+
+  // En el monitor el inicio es el tablero de indicadores: dice como va la
+  // planta antes de que nadie pregunte. El telefono se queda con el saludo y
+  // sus tarjetas, que es lo que sirve con una mano y guantes puestos.
+  if(typeof renderHomeKPI === 'function' && homeConTablero()){
+    var hs = document.getElementById('home-start');
+    var hm0 = document.getElementById('home-modules');
+    if(hs) hs.innerHTML = '';
+    if(hm0) hm0.innerHTML = '';
+    renderHomeKPI();
+    return;
+  }
 
   // Con la cinta el inicio no es un menu: las funciones ya estan arriba, asi
   // que aqui va lo que falta hoy y donde estabas. Sin cinta, las tarjetas.
