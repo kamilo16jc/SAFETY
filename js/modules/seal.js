@@ -8,6 +8,7 @@ function initSeal(){
   setSealNow();
   if(!st.shift) selectShift(expectedShift());   // turno por defecto según la hora
   renderSealList();
+  renderSealToday();
   if(currentUser) document.getElementById('s-initials').value = getInitials();
   renderProductOptions('s-product-list');
   onProductInput('seal');
@@ -89,6 +90,61 @@ function sealSummary(){
   caja.classList.toggle('show', fallan.length > 0);
 }
 
+// Lo revisado hoy, lo ultimo arriba. No es un informe: es lo justo para no
+// repetir una linea ni olvidarse de otra.
+var SEAL_HOY_MAX = 8;
+
+function renderSealToday(){
+  var host = document.getElementById('seal-today');
+  if(!host) return;
+  var hoy = localDateStr();
+  var todas = (getDB().seals || []).filter(function(r){
+    return String(r.date || '').slice(0, 10) === hoy;
+  }).sort(function(a, b){
+    return String(b.date || '').localeCompare(String(a.date || ''));
+  });
+
+  if(!todas.length){
+    host.innerHTML = '<div class="dl-empty">No bag seal checks recorded today.</div>';
+    return;
+  }
+
+  var list = todas.slice(0, SEAL_HOY_MAX);
+  host.innerHTML =
+    '<div class="daylist">'+
+      '<div class="dl-row dl-head"><span>Time</span><span>Line</span>'+
+        '<span>LOT</span><span>Result</span></div>'+
+      list.map(sealTodayRow).join('')+
+    '</div>'+
+    (todas.length > list.length
+      ? '<div class="dl-more">Showing the last '+list.length+' of '+todas.length+' today.</div>'
+      : '');
+}
+
+function sealTodayRow(r){
+  var c = r.checks || {};
+  var fallan = SEAL_CHECKS.filter(function(k){ return c[k] === 'fail'; });
+  var hechas = SEAL_CHECKS.filter(function(k){ return c[k]; }).length;
+  var etiqueta, clase;
+  if(fallan.length){
+    // Con una sola, el nombre dice mas que el numero
+    etiqueta = (fallan.length === 1) ? fallan[0] : fallan.length + ' failed';
+    clase = 'bad';
+  } else if(hechas === SEAL_CHECKS.length){
+    etiqueta = 'All pass';
+    clase = 'ok';
+  } else {
+    etiqueta = hechas + ' / ' + SEAL_CHECKS.length;
+    clase = '';
+  }
+  return '<div class="dl-row">'+
+    '<span class="dl-t">'+esc(r.time || '\u2014')+'</span>'+
+    '<span>Line '+esc(String(r.line || '\u2014'))+'</span>'+
+    '<span class="dl-soft">'+esc(r.lot || r.product || '\u2014')+'</span>'+
+    '<span class="dl-badge '+clase+'">'+esc(etiqueta)+'</span>'+
+  '</div>';
+}
+
 // Vaciar las revisiones sin tocar el resto del registro: la linea cambia de
 // producto y se vuelve a revisar, pero el lote y la hora siguen siendo los
 // mismos.
@@ -140,6 +196,7 @@ function commitSeal(){
   document.getElementById('s-comments').value='';
   clearProductSelection('seal');
   document.getElementById('s-initials').value='';
+  renderSealToday();
   toast('Seal record saved!');
   updateSealDupHint();
 }

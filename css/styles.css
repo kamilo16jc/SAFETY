@@ -2411,3 +2411,45 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .checks-box .tog:hover{background:var(--surface2)}
 .checks-box .tog.pass-active{background:var(--pass-tint);border-color:var(--pass);color:var(--pass)}
 .checks-box .tog.fail-active{background:var(--fail-tint);border-color:var(--fail);color:var(--fail)}
+
+/* ------------------------------------------------------------
+   LA LISTA DEL DÍA
+   Lo ya registrado hoy, en la misma caja con cabecera que las
+   muestras y las revisiones. Nace genérica: Weight Log pide lo
+   mismo y usará estas clases tal cual.
+   ------------------------------------------------------------ */
+.daylist{border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);overflow:hidden}
+.dl-row{display:grid;grid-template-columns:58px 72px minmax(0,1fr) auto;gap:10px;
+  align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.dl-row:last-child{border-bottom:0}
+.dl-head{background:var(--surface2);padding:8px 12px;
+  font-size:11.5px;font-weight:700;color:var(--muted)}
+.dl-t{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--text)}
+.dl-soft{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-badge{justify-self:end;height:22px;padding:0 9px;border-radius:11px;
+  display:inline-flex;align-items:center;white-space:nowrap;
+  font-size:11.5px;font-weight:700;
+  border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
+.dl-badge.ok{color:var(--pass);background:var(--pass-tint);border-color:var(--pass)}
+.dl-badge.bad{color:var(--fail);background:var(--fail-tint);border-color:var(--fail)}
+.dl-empty{padding:14px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--dim);font-size:13px}
+.dl-more{margin-top:8px;font-size:11.5px;color:var(--dim)}
+
+/* la izquierda pasa a ser una columna de tarjetas */
+.ncol{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* ------------------------------------------------------------
+   El aviso de duplicado, en el tono de la paleta.
+   Este sí es una advertencia de verdad —estás a punto de anotar
+   dos veces la misma línea—, así que conserva el color de aviso;
+   lo que pierde es el naranja crudo escrito a mano y las
+   esquinas de 12px. Solo escritorio.
+   ------------------------------------------------------------ */
+@media (min-width:1024px){
+  body.ui-fluent .dup-hint{background:var(--warn-tint);border:1px solid var(--warn);
+    border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:0}
+  body.ui-fluent .dup-hint-title{font-size:13px;font-weight:600;color:var(--warn)}
+  body.ui-fluent .dup-hint-detail{font-size:12px;color:var(--muted);margin-top:2px}
+}
