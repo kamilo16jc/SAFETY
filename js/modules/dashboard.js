@@ -435,28 +435,84 @@ function drawDonut(pass, fail){
 // ===== GMP =====
 function initGmp(){
   document.getElementById('gmp-date').value=localDateStr();
+  // El conmutador tiene que mostrar el turno que ya estaba elegido: al volver
+  // a la pantalla, lo contrario hace creer que no se escogio ninguno.
+  if(gmpShift) setGmpShift(gmpShift);
   renderGmpList();
 }
+// Las preguntas, en la misma caja de verificaciones que el sellado: mismo
+// renglon y mismo par de botones, que es lo que hace que las pantallas de
+// captura se sientan una sola.
 function renderGmpList(){
   document.getElementById('gmp-list').innerHTML=GMP_ITEMS.map(function(item,i){
     var v=gmpAnswers[i];
-    return '<div class="gmp-row">' +
-      '<div class="gmp-item-lbl">'+item+'</div>' +
-      '<div class="gmp-btns">' +
-        '<button class="gmp-tog'+(v==='yes'?' yes-on':'')+'" data-i="'+i+'" data-v="yes" onclick="setGmpItem(this)">YES</button>' +
-        '<button class="gmp-tog'+(v==='no'?' no-on':'')+'" data-i="'+i+'" data-v="no" onclick="setGmpItem(this)">NO</button>' +
+    return '<div class="check-item'+(v==='yes'?' pass':v==='no'?' fail':'')+'">' +
+      '<span class="check-label">'+esc(item)+'</span>' +
+      '<div class="toggle-wrap">' +
+        '<button class="tog'+(v==='yes'?' pass-active':'')+'" data-i="'+i+'" data-v="yes" onclick="setGmpItem(this)">YES</button>' +
+        '<button class="tog'+(v==='no'?' fail-active':'')+'" data-i="'+i+'" data-v="no" onclick="setGmpItem(this)">NO</button>' +
       '</div>' +
     '</div>';
   }).join('');
+  gmpSummary();
 }
+
+// Cuantas van y cuantas salieron mal. Con dieciseis preguntas, contar a mano
+// es justo como se olvida una.
+function gmpSummary(){
+  var hechas = 0, malas = 0;
+  GMP_ITEMS.forEach(function(_,i){
+    if(gmpAnswers[i]) hechas++;
+    if(gmpAnswers[i] === 'no') malas++;
+  });
+  var d = document.getElementById('gmp-done');
+  if(d){
+    d.textContent = hechas + ' / ' + GMP_ITEMS.length;
+    d.className = 'ns-v' + (hechas === GMP_ITEMS.length ? ' ok' : '');
+  }
+  var f = document.getElementById('gmp-no');
+  if(f){
+    f.textContent = malas;
+    f.className = 'ns-v' + (malas ? ' bad' : hechas ? ' ok' : '');
+  }
+  var n = document.getElementById('gmp-count');
+  if(n){
+    n.textContent = hechas ? hechas + ' of ' + GMP_ITEMS.length + ' answered' : '';
+    n.className = 'cbar-note' + (hechas === GMP_ITEMS.length ? '' : '');
+  }
+  gmpOutMsg(malas);
+}
+
+// El aviso solo sale si hay algo que avisar, y dice que hacer.
+function gmpOutMsg(malas){
+  var caja = document.getElementById('gmp-outmsg');
+  if(!caja) return;
+  var t = document.getElementById('gmp-outmsg-text');
+  if(!malas){ caja.classList.remove('show'); return; }
+  caja.classList.add('show');
+  if(t) t.textContent = malas === 1
+    ? '1 item not acceptable \u2014 write the corrective action before saving'
+    : malas + ' items not acceptable \u2014 write the corrective action before saving';
+}
+
 function setGmpItem(btn){
   gmpAnswers[parseInt(btn.getAttribute('data-i'))]=btn.getAttribute('data-v');
   renderGmpList();
 }
 function setGmpShift(n){
   gmpShift=n;
-  document.getElementById('gmp-s1').className='gmp-tog'+(n===1?' yes-on':'');
-  document.getElementById('gmp-s2').className='gmp-tog'+(n===2?' yes-on':'');
+  var caja = document.getElementById('gmp-shift');
+  if(!caja) return;
+  caja.querySelectorAll('.seg').forEach(function(b,i){ b.classList.toggle('on', i === n-1); });
+}
+
+// Dejar la hoja en blanco sin salir de la pantalla: pasa cuando se empieza a
+// auditar un sitio y resulta ser otro.
+function clearGmp(){
+  gmpAnswers = {};
+  renderGmpList();
+  var c = document.getElementById('gmp-comments'); if(c) c.value = '';
+  toast('Answers cleared');
 }
 function gv(id){var e=document.getElementById(id);return e?e.value:'';}
 function saveGmp(){
@@ -468,6 +524,7 @@ function saveGmp(){
     comments:gv('gmp-comments'), completedBy:gv('gmp-completed'), verifiedBy:gv('gmp-verified')
   });
   saveDB(db,'gmps');
+  cbtnSaved('gmp-save-btn');
   if(window.saveToFirebase) window.saveToFirebase('gmps', db.gmps[db.gmps.length-1]);
   var grec = db.gmps[db.gmps.length-1];
   logActivity('gmp','GMP Audit completed',
@@ -488,7 +545,10 @@ var thEditing = false;   // true sólo si el usuario pidió corregir un checkpoi
 
 var TH_FIELDS = ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed'];
 var TH_CP_LABEL = {begin:'Beginning', mid:'Middle', end:'End'};
-var TH_CP_BTN   = {begin:'th-cp1', mid:'th-cp2', end:'th-cp3'};
+var TH_CPS = ['begin','mid','end'];
+
+// El boton de un checkpoint dentro del conmutador
+function thCpBtn(cp){ return document.querySelector('#th-cps .seg[data-cp="'+cp+'"]'); }
 
 
 function initTempScreen(){
@@ -497,8 +557,7 @@ function initTempScreen(){
   var d = document.getElementById('th-date');
   d.onchange = function(){ thCheckpoint=null; thEditing=false; clearThFields(); renderThUI(); };
   thShift = null; thCheckpoint = null; thEditing = false;
-  document.getElementById('th-s1').className='gmp-tog';
-  document.getElementById('th-s2').className='gmp-tog';
+  document.querySelectorAll('#th-shift .seg').forEach(function(b){ b.classList.remove('on'); });
   clearThFields();
   renderThUI();
 }
@@ -540,8 +599,9 @@ function thRecordSummary(r){
 function setThShift(n){
   thShift = n;
   thCheckpoint = null; thEditing = false;
-  document.getElementById('th-s1').className='gmp-tog'+(n===1?' yes-on':'');
-  document.getElementById('th-s2').className='gmp-tog'+(n===2?' yes-on':'');
+  document.querySelectorAll('#th-shift .seg').forEach(function(b,i){
+    b.classList.toggle('on', i === n-1);
+  });
   clearThFields();
   renderThUI();
 }
@@ -568,39 +628,42 @@ function setThCheckpoint(cp){
   renderThUI();
 }
 
-// Pinta selección, checkpoints ya guardados, banner de estado y el botón de guardar
+// Pinta la seleccion, marca los checkpoints ya tomados y deja el boton y la
+// nota de estado como toca.
+//
+// El recuadro de color que decia "ya esta registrado" se fue: lo dice la nota
+// de la barra, al lado del boton que no se puede pulsar, y los campos
+// bloqueados ya se ven bloqueados.
 function renderThUI(){
-  ['begin','mid','end'].forEach(function(cp){
-    var btn = document.getElementById(TH_CP_BTN[cp]);
+  TH_CPS.forEach(function(cp){
+    var btn = thCpBtn(cp);
     if(!btn) return;
     var saved = !!thRecordFor(cp);
-    btn.className = 'gmp-tog'+(thCheckpoint===cp?' yes-on':'')+(saved?' done':'');
-    btn.innerHTML = TH_CP_LABEL[cp]+(saved?' <span class="cp-done">•</span>':'');
+    btn.classList.toggle('on', thCheckpoint===cp);
+    btn.innerHTML = TH_CP_LABEL[cp]+(saved?' <span class="seg-dot" title="Already recorded">\u25cf</span>':'');
   });
 
   var locked = !!(thCheckpoint && thRecordFor(thCheckpoint) && !thEditing);
   thFieldsDisabled(locked);
 
-  var note = document.getElementById('th-lock-note');
-  if(note){
+  var nota = document.getElementById('th-state');
+  if(nota){
     if(locked){
-      note.className = 'dup-hint';
-      note.innerHTML = '<div class="dup-hint-title">'+TH_CP_LABEL[thCheckpoint]+' is already recorded — locked</div>'+
-        '<div class="dup-hint-detail">'+thRecordSummary(thRecordFor(thCheckpoint))+'</div>';
-      note.style.display='block';
+      nota.textContent = TH_CP_LABEL[thCheckpoint]+' already recorded \u00b7 '+
+                         thRecordSummary(thRecordFor(thCheckpoint));
+      nota.className = 'cbar-note';
     } else if(thEditing && thCheckpoint){
-      note.className = 'th-edit-note';
-      note.innerHTML = '<div class="dup-hint-title">Editing '+TH_CP_LABEL[thCheckpoint]+' — this replaces the saved values</div>'+
-        '<div class="dup-hint-detail">Save to update the record</div>';
-      note.style.display='block';
+      nota.textContent = 'Editing '+TH_CP_LABEL[thCheckpoint]+' \u2014 saving replaces it';
+      nota.className = 'cbar-note bad';
     } else {
-      note.style.display='none'; note.innerHTML='';
+      nota.textContent = ''; nota.className = 'cbar-note';
     }
   }
 
   var btn = document.getElementById('th-save-btn');
   if(btn){
-    btn.textContent = thEditing ? 'Update Checkpoint' : 'Save Checkpoint';
+    var lbl = btn.querySelector('.cb-lbl');
+    if(lbl) lbl.textContent = thEditing ? 'Update checkpoint' : 'Save checkpoint';
     btn.disabled = locked;
   }
   renderThSummary();
@@ -616,7 +679,7 @@ function thEditExisting(){
 
 function thPickAnother(){
   closeDupModal();
-  var btn = document.getElementById(TH_CP_BTN[thCheckpoint]);
+  var btn = thCpBtn(thCheckpoint);
   if(btn && btn.scrollIntoView) btn.scrollIntoView({block:'center'});
 }
 
@@ -629,21 +692,21 @@ function renderThSummary(){
   var recs = (db.temps||[]).filter(function(t){ return t.date===date && t.shift===thShift; });
   if(!recs.length){ el.innerHTML=''; return; }
 
-  var cpLabel = {begin:'Beginning', mid:'Middle', end:'End'};
-  var rows = ['begin','mid','end'].map(function(cp){
+  // En la misma caja del dia que Bag Seal: los tres checkpoints siempre a la
+  // vista, para ver de un golpe cual falta.
+  var filas = TH_CPS.map(function(cp){
     var r = recs.find(function(t){ return t.checkpoint===cp; });
-    var saved = r ? 'Recorded' : '—';
-    var color = r ? '#2d6a4f' : '#aaa';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)">'+
-      '<span style="font-size:12px;font-weight:700;color:'+color+'">'+cpLabel[cp]+'</span>'+
-      '<span style="font-size:11px;color:'+color+'">'+(r ? r.temp+'°F · '+r.time : 'Not recorded')+'</span>'+
-      '<span style="font-size:14px;font-weight:900;color:'+color+'">'+saved+'</span>'+
+    return '<div class="dl-row">'+
+      '<span>'+TH_CP_LABEL[cp]+'</span>'+
+      '<span class="dl-t">'+(r ? esc(r.time||'\u2014') : '\u2014')+'</span>'+
+      '<span class="dl-soft">'+(r ? esc(r.temp||'\u2014')+'\u00b0F \u00b7 '+
+          esc(r.chop||'\u2014')+'% \u00b7 '+esc(r.plat||'\u2014')+'% \u00b7 '+
+          esc(r.line6||'\u2014')+'%' : 'Not recorded yet')+'</span>'+
+      '<span class="dl-badge'+(r?' ok':'')+'">'+(r ? 'Recorded' : 'Pending')+'</span>'+
     '</div>';
   }).join('');
 
-  el.innerHTML = '<div style="background:white;border:1px solid #e0e0e0;border-radius:10px;padding:10px;margin-bottom:4px">'+
-    '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Checkpoints this shift</div>'+
-    rows+'</div>';
+  el.innerHTML = '<div class="daylist dl-wide">'+filas+'</div>';
 }
 
 function saveTempHumidity(){
@@ -703,6 +766,7 @@ function commitTempHumidity(date, existing){
     if(window.saveToFirebase) window.saveToFirebase('temps', rec);
   }
   var wasEdit = !!existing;
+  cbtnSaved('th-save-btn', wasEdit ? 'Updated' : 'Saved');
   logActivity('temp', wasEdit ? 'Temp & Humidity updated' : 'Temp & Humidity recorded',
     cpLabel[thCheckpoint]+' · Shift '+(thShift===1?'1st':'2nd')+' · '+date+
     (wasEdit?' · corrected an existing checkpoint':''),

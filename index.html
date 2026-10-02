@@ -944,121 +944,211 @@
 <!-- GMP -->
 <div class="screen" id="screen-gmp">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">GMP Audit</div>
-  <div class="form-meta">SQF # 2.5.D.A</div>
-  <div class="fgrid narrow-right">
-  <div class="fcol">
-  <div class="sec-label">Location</div>
-  <input type="text" class="field" id="gmp-loc" placeholder="Enter location">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-    <div>
-      <div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="gmp-date" style="width:100%">
-    </div>
-    <div>
-      <div class="sec-label">Shift</div>
-      <div style="display:flex;gap:8px">
-        <button class="gmp-tog" id="gmp-s1" onclick="setGmpShift(1)" style="flex:1;padding:12px 8px">1st</button>
-        <button class="gmp-tog" id="gmp-s2" onclick="setGmpShift(2)" style="flex:1;padding:12px 8px">2nd</button>
+
+  <div class="pg-head">
+    <h1 class="pg-title">GMP Audit</h1>
+    <div class="pg-sub">SQF # 2.5.D.A</div>
+  </div>
+
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" id="gmp-save-btn" onclick="saveGmp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      <span class="cb-lbl">Save record</span>
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="clearGmp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Clear answers
+    </button>
+    <button class="cbtn" onclick="exportGmpPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+      Export PDF
+    </button>
+    <span class="cbar-gap"></span>
+    <span class="cbar-note" id="gmp-count"></span>
+  </div>
+
+  <div class="cards-2">
+
+    <div class="ncol">
+    <section class="ncard">
+      <h2 class="ncard-title">Record details</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Audit date</span>
+          <input type="date" class="ninput" id="gmp-date">
+        </label>
+        <div class="nfield">
+          <span class="nlabel">Shift</span>
+          <div class="segmented" id="gmp-shift">
+            <button class="seg" type="button" onclick="setGmpShift(1)">1st Shift</button>
+            <button class="seg" type="button" onclick="setGmpShift(2)">2nd Shift</button>
+          </div>
+        </div>
       </div>
+
+      <label class="nfield">
+        <span class="nlabel">Location</span>
+        <input type="text" class="ninput" id="gmp-loc" placeholder="Where the audit was done">
+      </label>
+    </section>
+
+    <section class="ncard">
+      <h2 class="ncard-title">Sign-off</h2>
+
+      <label class="nfield">
+        <span class="nlabel">Comments <i>&middot; corrective actions</i></span>
+        <textarea class="ninput ntext" id="gmp-comments" rows="3"
+                  placeholder="Comments, notes or corrective actions&hellip;"></textarea>
+      </label>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Completed by</span>
+          <input type="text" class="ninput" id="gmp-completed" placeholder="Print name">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Verified by</span>
+          <input type="text" class="ninput" id="gmp-verified" placeholder="Print name">
+        </label>
+      </div>
+    </section>
     </div>
-  </div>
-  <div class="gmp-section">
-    <div class="gmp-section-hdr">GOOD MANUFACTURING PRACTICES — EVERYWHERE FOOD IS EXPOSED</div>
-    <div style="display:grid;grid-template-columns:1fr auto;border-bottom:1px solid var(--border)">
-      <div style="padding:8px 14px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.1em">CHECK / INSPECT</div>
-      <div style="padding:8px 14px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.1em;min-width:130px;text-align:center">ACCEPTABLE</div>
-    </div>
-    <div id="gmp-list"></div>
-  </div>
-  
-  </div>
-  <div class="fcol">
-  <div class="sec-label">Additional Comments / Corrective Actions</div>
-  <textarea class="field" id="gmp-comments" placeholder="Add comments, notes or corrective actions..." rows="3"></textarea>
-  <div class="sec-label">Completed By (Print Name)</div>
-  <input type="text" class="field" id="gmp-completed">
-  <div class="sec-label">Verified By (Signature)</div>
-  <input type="text" class="field" id="gmp-verified" style="margin-bottom:16px">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-    <button class="sec-btn" style="margin:0" onclick="exportGmpPDF()"><span class="btn-ico" data-icon="doc"></span>Export PDF</button>
-    <button class="main-btn" style="margin:0" onclick="saveGmp()">Save Record</button>
-  </div>
-  </div>
+
+    <section class="ncard">
+      <h2 class="ncard-title">Good manufacturing practices</h2>
+      <div class="ncard-sub">Everywhere food is exposed</div>
+
+      <div class="checks-box">
+        <div class="check-item chead"><span>Check / inspect</span><span>Acceptable</span></div>
+        <div id="gmp-list"></div>
+      </div>
+
+      <div class="nstats">
+        <div class="nstat"><div class="ns-k">Answered</div><div class="ns-v" id="gmp-done">&mdash;</div></div>
+        <div class="nstat"><div class="ns-k">Not acceptable</div><div class="ns-v" id="gmp-no">&mdash;</div></div>
+      </div>
+
+      <div class="msgbar" id="gmp-outmsg" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+        <span id="gmp-outmsg-text"></span>
+      </div>
+    </section>
+
   </div>
 </div>
 
 <!-- TEMP & HUMIDITY -->
 <div class="screen" id="screen-temp">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Temp & Humidity</div>
-  <div class="form-meta">SQF # 2.5.D.A</div>
-  <div class="fgrid">
-  <div class="fcol">
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-    <div>
-      <div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="th-date" style="width:100%">
-    </div>
-    <div>
-      <div class="sec-label">Shift</div>
-      <div style="display:flex;gap:8px">
-        <button class="gmp-tog" id="th-s1" onclick="setThShift(1)" style="flex:1;padding:12px 8px">1st</button>
-        <button class="gmp-tog" id="th-s2" onclick="setThShift(2)" style="flex:1;padding:12px 8px">2nd</button>
-      </div>
-    </div>
+  <div class="pg-head">
+    <h1 class="pg-title">Temp &amp; Humidity</h1>
+    <div class="pg-sub">SQF # 2.5.D.A &middot; Building 1945</div>
   </div>
 
-  <div class="sec-label">Checkpoint</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-    <button class="gmp-tog" id="th-cp1" onclick="setThCheckpoint('begin')" style="padding:12px 8px">Beginning</button>
-    <button class="gmp-tog" id="th-cp2" onclick="setThCheckpoint('mid')"   style="padding:12px 8px">Middle</button>
-    <button class="gmp-tog" id="th-cp3" onclick="setThCheckpoint('end')"   style="padding:12px 8px">End</button>
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" id="th-save-btn" onclick="saveTempHumidity()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      <span class="cb-lbl">Save checkpoint</span>
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="clearThFields()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Clear fields
+    </button>
+    <button class="cbtn" onclick="goTo('screen-reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      Today’s log
+    </button>
+    <span class="cbar-gap"></span>
+    <span class="cbar-note" id="th-state"></span>
   </div>
-  <div id="th-lock-note" style="display:none"></div>
 
-  <div class="gmp-section">
-    <div class="gmp-section-hdr" style="background:#1a5276">1945 TEMPERATURE &amp; % RELATIVE HUMIDITY MONITORING</div>
-    <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div class="sec-label">Time</div>
-          <input type="time" class="time-input" id="th-time" style="width:100%">
-        </div>
-        <div>
-          <div class="sec-label">Temperature (°F)</div>
-          <input type="text" class="time-input" id="th-temp" placeholder="°F" inputmode="decimal" style="width:100%">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <div>
-          <div class="sec-label">Chopping Area Hum. (%)</div>
-          <input type="text" class="time-input" id="th-chop" placeholder="%" inputmode="decimal" style="width:100%">
-        </div>
-        <div>
-          <div class="sec-label">Under Platform Hum. (%)</div>
-          <input type="text" class="time-input" id="th-plat" placeholder="%" inputmode="decimal" style="width:100%">
-        </div>
-        <div>
-          <div class="sec-label">Line 6 &amp; Grilling Hum. (%)</div>
-          <input type="text" class="time-input" id="th-line6" placeholder="%" inputmode="decimal" style="width:100%">
+  <div class="cards-2">
+
+    <div class="ncol">
+    <section class="ncard">
+      <h2 class="ncard-title">Record details</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Record date</span>
+          <input type="date" class="ninput" id="th-date">
+        </label>
+        <div class="nfield">
+          <span class="nlabel">Shift</span>
+          <div class="segmented" id="th-shift">
+            <button class="seg" type="button" onclick="setThShift(1)">1st Shift</button>
+            <button class="seg" type="button" onclick="setThShift(2)">2nd Shift</button>
+          </div>
         </div>
       </div>
+
+      <div class="nfield">
+        <span class="nlabel">Checkpoint <i>&middot; a dot marks the ones already taken</i></span>
+        <div class="segmented" id="th-cps">
+          <button class="seg" type="button" data-cp="begin" onclick="setThCheckpoint('begin')">Beginning</button>
+          <button class="seg" type="button" data-cp="mid"   onclick="setThCheckpoint('mid')">Middle</button>
+          <button class="seg" type="button" data-cp="end"   onclick="setThCheckpoint('end')">End</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ncard">
+      <h2 class="ncard-title">Readings</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Time</span>
+          <input type="time" class="ninput" id="th-time">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Temperature <i>&middot; &deg;F</i></span>
+          <input type="text" class="ninput" id="th-temp" placeholder="&deg;F" inputmode="decimal">
+        </label>
+      </div>
+
+      <div class="ngrid-3">
+        <label class="nfield">
+          <span class="nlabel">Chopping area <i>&middot; %</i></span>
+          <input type="text" class="ninput" id="th-chop" placeholder="%" inputmode="decimal">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Under platform <i>&middot; %</i></span>
+          <input type="text" class="ninput" id="th-plat" placeholder="%" inputmode="decimal">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Line 6 &amp; grilling <i>&middot; %</i></span>
+          <input type="text" class="ninput" id="th-line6" placeholder="%" inputmode="decimal">
+        </label>
+      </div>
+    </section>
     </div>
-  </div>
 
-  <!-- Live summary of saved checkpoints for this date/shift -->
-  </div>
-  <div class="fcol">
-  <div id="th-summary" style="margin-bottom:16px"></div>
+    <div class="ncol">
+    <section class="ncard">
+      <h2 class="ncard-title">Checkpoints this shift</h2>
+      <div id="th-summary"></div>
+    </section>
 
-  <div class="sec-label">Comments / Corrective Actions</div>
-  <textarea class="field" id="th-comments" placeholder="Add comments or corrective actions..." rows="2"></textarea>
-  <div class="sec-label">Completed By</div>
-  <input type="text" class="field" id="th-completed" placeholder="Print name">
-  <button class="main-btn" id="th-save-btn" onclick="saveTempHumidity()">Save Checkpoint</button>
-  </div>
+    <section class="ncard">
+      <h2 class="ncard-title">Sign-off</h2>
+
+      <label class="nfield">
+        <span class="nlabel">Comments <i>&middot; corrective actions</i></span>
+        <textarea class="ninput ntext" id="th-comments" rows="3"
+                  placeholder="Comments or corrective actions&hellip;"></textarea>
+      </label>
+
+      <label class="nfield">
+        <span class="nlabel">Completed by</span>
+        <input type="text" class="ninput" id="th-completed" placeholder="Print name">
+      </label>
+    </section>
+    </div>
+
   </div>
 </div>
 
@@ -1223,51 +1313,107 @@
 <!-- METAL DETECTOR -->
 <div class="screen" id="screen-metal">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>
-  <div class="form-title">Metal Detector Check</div>
-  <div class="fgrid narrow-right">
-  <div class="fcol">
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-    <div>
-      <div class="sec-label">Date</div>
-      <input type="date" class="time-input" id="md-date" style="width:100%">
-    </div>
-    <div>
-      <div class="sec-label">Line &amp; Metal Detector</div>
-      <input type="text" class="field" id="md-line" placeholder="e.g. 1" style="margin-bottom:0">
-    </div>
+  <div class="pg-head">
+    <h1 class="pg-title">Metal Detector Check</h1>
+    <div class="pg-sub">Routine verification of the detector on the line</div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-    <div>
-      <div class="sec-label">Observation Start</div>
-      <div class="time-row" style="margin-bottom:0">
-        <input type="time" class="time-input" id="md-start">
-        <button class="now-btn" onclick="setMdNow('md-start')">Now</button>
+
+  <div class="cmdbar">
+    <button class="cbtn cbtn-primary" id="md-save-btn" onclick="saveMetal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>
+      <span class="cb-lbl">Save check</span>
+    </button>
+    <span class="cbar-div"></span>
+    <button class="cbtn" onclick="clearMetal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Clear answers
+    </button>
+    <button class="cbtn" onclick="sendMetalForm()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+      Export form
+    </button>
+    <span class="cbar-gap"></span>
+    <span class="cbar-note" id="md-count"></span>
+  </div>
+
+  <div class="cards-2">
+
+    <div class="ncol">
+    <section class="ncard">
+      <h2 class="ncard-title">Record details</h2>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Record date</span>
+          <input type="date" class="ninput" id="md-date">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Line &amp; metal detector</span>
+          <input type="text" class="ninput" id="md-line" placeholder="e.g. Line 3 / MD-2">
+        </label>
       </div>
-    </div>
-    <div>
-      <div class="sec-label">Observation End</div>
-      <div class="time-row" style="margin-bottom:0">
-        <input type="time" class="time-input" id="md-end">
-        <button class="now-btn" onclick="setMdNow('md-end')">Now</button>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Observation start</span>
+          <div class="nrow">
+            <input type="time" class="ninput" id="md-start">
+            <button type="button" class="cbtn cbtn-outline" onclick="setMdNow('md-start')">Now</button>
+          </div>
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Observation end</span>
+          <div class="nrow">
+            <input type="time" class="ninput" id="md-end">
+            <button type="button" class="cbtn cbtn-outline" onclick="setMdNow('md-end')">Now</button>
+          </div>
+        </label>
       </div>
+    </section>
+
+    <section class="ncard">
+      <h2 class="ncard-title">Sign-off</h2>
+
+      <label class="nfield">
+        <span class="nlabel">Corrective actions <i>&middot; additional observations</i></span>
+        <textarea class="ninput ntext" id="md-corrective" rows="3"
+                  placeholder="Corrective actions, training performed, observations&hellip;"></textarea>
+      </label>
+
+      <div class="ngrid-2">
+        <label class="nfield">
+          <span class="nlabel">Completed by</span>
+          <input type="text" class="ninput" id="md-completed" placeholder="Print name">
+        </label>
+        <label class="nfield">
+          <span class="nlabel">Verified by <i>&middot; optional</i></span>
+          <input type="text" class="ninput" id="md-verified" placeholder="Print name">
+        </label>
+      </div>
+    </section>
     </div>
-  </div>
 
-  <div class="sec-label">Answer yes or no to the following</div>
-  <div id="md-questions" style="margin-bottom:18px"></div>
+    <section class="ncard">
+      <h2 class="ncard-title">Verification questions</h2>
+      <div class="ncard-sub">Answer every one before saving</div>
 
-  </div>
-  <div class="fcol">
-  <div class="sec-label">Corrective Actions / Additional Observations</div>
-  <textarea class="field" id="md-corrective" placeholder="Corrective actions, training performed, observations..." rows="3"></textarea>
+      <div class="checks-box">
+        <div class="check-item chead"><span>Question</span><span>Answer</span></div>
+        <div id="md-questions"></div>
+      </div>
 
-  <div class="sec-label">Completed By</div>
-  <input type="text" class="field" id="md-completed" placeholder="Print name">
-  <div class="sec-label">Verified By (optional)</div>
-  <input type="text" class="field" id="md-verified" placeholder="Print name">
-  <button class="main-btn" onclick="saveMetal()">Save Check</button>
-  </div>
+      <div class="nstats">
+        <div class="nstat"><div class="ns-k">Answered</div><div class="ns-v" id="md-done">&mdash;</div></div>
+        <div class="nstat"><div class="ns-k">Answered no</div><div class="ns-v" id="md-no">&mdash;</div></div>
+      </div>
+
+      <div class="msgbar" id="md-outmsg" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>
+        <span id="md-outmsg-text"></span>
+      </div>
+    </section>
+
   </div>
 </div>
 

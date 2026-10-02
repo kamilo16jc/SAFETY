@@ -2312,10 +2312,12 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .cards-2{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
 .ncard{display:flex;flex-direction:column;gap:16px;min-width:0}
 .ncard-title{margin:0;font-size:16px;line-height:22px;font-weight:600;color:var(--text)}
+.ncard-sub{margin-top:-10px;font-size:12.5px;color:var(--dim)}
 
 /* ---- campos ---- */
 .nstack{display:flex;flex-direction:column;gap:16px;min-width:0}
 .ngrid-2{display:grid;grid-template-columns:1fr;gap:14px}
+.ngrid-3{display:grid;grid-template-columns:1fr;gap:14px}
 .nfield{display:flex;flex-direction:column;gap:5px;min-width:0}
 .nlabel{font-size:13px;font-weight:600;color:var(--text)}
 .nlabel i{font-style:normal;font-weight:400;font-size:12px;color:var(--dim)}
@@ -2383,6 +2385,7 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 
 @media (min-width:640px){
   .ngrid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .ngrid-3{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 }
 @media (min-width:1024px){
   .cbtn{height:32px;font-size:13px}
@@ -2434,11 +2437,14 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .checks-box .check-item{display:flex;align-items:center;justify-content:space-between;gap:12px;
   margin:0;padding:9px 12px;background:none;border:0;border-radius:0;
   border-bottom:1px solid var(--border);box-shadow:none;transition:none}
-.checks-box #seal-list .check-item:last-child{border-bottom:0}
+.checks-box > div > .check-item:last-child{border-bottom:0}
 .checks-box .check-item.chead{background:var(--surface2);padding:8px 12px;
   font-size:11.5px;font-weight:700;color:var(--muted)}
 .checks-box .check-item.pass,.checks-box .check-item.fail{background:none;border-color:var(--border)}
-.checks-box .check-label{font-size:13.5px;font-weight:500;color:var(--text)}
+.checks-box .check-label{font-size:13.5px;font-weight:500;color:var(--text);line-height:1.4}
+/* el numero de la pregunta, donde el papel lo tiene */
+.checks-box .chk-n{display:inline-block;width:20px;flex-shrink:0;
+  font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums}
 
 .checks-box .toggle-wrap{gap:0}
 .checks-box .tog{height:28px;padding:0 14px;border:1px solid var(--border);border-radius:0;
@@ -2460,6 +2466,8 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .dl-row{display:grid;grid-template-columns:58px 72px minmax(0,1fr) auto;gap:10px;
   align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
 .dl-row:last-child{border-bottom:0}
+/* cuando la primera columna lleva un nombre y no un numero de linea */
+.daylist.dl-wide .dl-row{grid-template-columns:86px 62px minmax(0,1fr) auto}
 .dl-head{background:var(--surface2);padding:8px 12px;
   font-size:11.5px;font-weight:700;color:var(--muted)}
 .dl-t{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--text)}
@@ -2522,6 +2530,8 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .segmented .seg.on{background:var(--surface);color:var(--accent);font-weight:600;
   box-shadow:0 1px 2px rgba(0,0,0,.14)}
 .segmented .seg:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* el punto dice "esto ya esta tomado" sin gastar una palabra */
+.segmented .seg .seg-dot{margin-left:5px;font-size:8px;vertical-align:middle;color:var(--pass)}
 
 /* ---- severidad: tarjeta con su aro y su plazo ---- */
 .sev-list{display:flex;flex-direction:column;gap:8px}
