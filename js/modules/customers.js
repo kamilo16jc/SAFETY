@@ -7,10 +7,11 @@
 //
 // Esta pantalla es ese sitio: ver, corregir y borrar.
 
-var custQuery = '', custOpen = null;
+var custQuery = '', custOpen = null, custNuevo = false;
 
 function initCustomers(){
   custOpen = null;
+  custNuevo = false;
   var q = document.getElementById('cu-search');
   if(q) q.value = custQuery;
   renderCustomers();
@@ -67,15 +68,20 @@ function renderCustomers(){
     renderIcons(kp);
   }
 
+  // El alta va arriba del todo: se abre, se llena y se guarda sin perder de
+  // vista la lista de los que ya hay.
+  var alta = custNuevo ? '<div class="cu-alta">'+custEditorHTML({}, true)+'</div>' : '';
+
   if(!list.length){
-    host.innerHTML = '<div class="sheet-empty">'+
+    host.innerHTML = alta + '<div class="sheet-empty">'+
       (todos.length ? 'No customer matches that search.'
-                    : 'No customers yet. They are created from a product’s Laboratory block.')+
+                    : 'No customers yet. Create the first one with New customer.')+
       '</div>';
+    renderIcons(host);
     return;
   }
 
-  host.innerHTML =
+  host.innerHTML = alta +
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Customer</th><th>ID</th><th>Contact</th><th>Phone</th>'+
       '<th class="num">Products</th><th>Lab tests</th><th></th><th></th>'+
@@ -103,7 +109,8 @@ function renderCustomers(){
 }
 
 // ---- El editor: los mismos campos que pide el certificado ----
-function custEditorHTML(c){
+function custEditorHTML(c, nuevo){
+  c = c || {};
   var v = function(x){ return esc(x==null?'':x); };
   var t = c.targets || {};
   var campo = function(f, rot, val){
@@ -111,6 +118,7 @@ function custEditorHTML(c){
       '<input type="text" class="field" id="cu-'+f+'" value="'+v(val)+'"></div>';
   };
   return '<div class="cu-edit">'+
+    (nuevo ? '<div class="sub-label">New customer</div>' : '')+
     '<div class="sheet-bar">'+
       campo('company','Customer name', c.company)+
       campo('id','Customer ID', c.customerId)+
@@ -123,6 +131,18 @@ function custEditorHTML(c){
       campo('phone','Phone', c.phone)+
       campo('fax','Fax', c.fax)+
       campo('code','Customer code', c.code)+
+    '</div>'+
+    // La forma del laboratorio y su prefijo arman el codigo de la muestra.
+    // Antes solo se podian poner al crear el cliente y nunca corregir.
+    '<div class="sub-label">Lab form</div>'+
+    '<div class="sheet-bar">'+
+      campo('prefix','Form prefix', c.prefix)+
+      '<div class="sb-field"><label for="cu-form">Form</label>'+
+        '<div class="select-wrap"><select class="field" id="cu-form">'+
+        ((typeof customerFormOptions==='function')
+          ? customerFormOptions(c.form || 'general')
+          : '<option value="general">general</option>')+
+        '</select></div></div>'+
     '</div>'+
     // Los objetivos son del producto, no del cliente: dos productos del mismo
     // cliente tienen humedades distintas. Se ponen en Add Product y en el
@@ -142,13 +162,71 @@ function custEditorHTML(c){
     '</div>'+
     custTestsHTML(c)+
     '<div class="sheet-actions">'+
-      '<button class="save-btn" onclick="saveCustomerEdit(\''+esc(c.customerId)+'\')">'+
+      '<button class="save-btn" onclick="'+(nuevo ? 'createCustomer()'
+        : 'saveCustomerEdit(\''+esc(c.customerId)+'\')')+'">'+
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" '+
         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
-        '<path d="m5 12.5 4.5 4.5L19 7"/></svg>Save</button>'+
-      '<button class="btn-ghost" onclick="closeCustomer()">Cancel</button>'+
+        '<path d="m5 12.5 4.5 4.5L19 7"/></svg>'+(nuevo?'Create customer':'Save')+'</button>'+
+      '<button class="btn-ghost" onclick="'+(nuevo?'cancelNewCustomer()':'closeCustomer()')+'">Cancel</button>'+
     '</div>'+
   '</div>';
+}
+
+function newCustomer(){
+  custNuevo = true;
+  custOpen  = null;
+  renderCustomers();
+  var e = document.getElementById('cu-company');
+  if(e){ e.focus(); e.scrollIntoView({block:'center'}); }
+}
+function cancelNewCustomer(){ custNuevo = false; renderCustomers(); }
+
+// Alta: los mismos campos del editor, para no tener dos formularios que se
+// separen con el tiempo. Lo unico propio es que el ID no puede repetirse.
+function createCustomer(){
+  var g = function(f){ var e = document.getElementById('cu-'+f); return e ? e.value.trim() : ''; };
+  var company = g('company');
+  var id = g('id').toUpperCase();
+  if(!company){ toast('Enter the customer name'); return; }
+  if(!id){ toast('Enter the customer ID'); return; }
+  var list = getCustomers();
+  if(list.some(function(x){ return x.customerId === id; })){
+    toast('That customer ID already exists'); return;
+  }
+
+  var per = document.getElementById('cu-per');
+  var num = document.getElementById('cu-numbered');
+  var tests = [];
+  Array.prototype.forEach.call(document.querySelectorAll('.cu-test:checked'), function(b){
+    tests.push(b.getAttribute('data-lt-label'));
+  });
+
+  list.push({
+    customerId: id,
+    company: company,
+    productName: g('prod'),
+    packaging: g('pack'),
+    contact: g('contact'),
+    email: g('email'),
+    phone: g('phone'),
+    fax: g('fax'),
+    code: g('code').toUpperCase(),
+    prefix: g('prefix').toUpperCase(),
+    form: g('form') || 'general',
+    samplesPerOrder: per ? Math.max(1, parseInt(per.value, 10) || 1) : 1,
+    numbered: num ? !!num.checked : false,
+    tests: tests,
+    targets: {},
+    createdBy: currentUser ? currentUser.name : '—',
+    createdAt: localISOStr()
+  });
+  saveCustomerList(list);
+  logActivity('admin','Customer created', company+' ('+id+')',
+              currentUser?currentUser.name:'—');
+  custNuevo = false;
+  custOpen  = id;
+  renderCustomers();
+  toast(company+' created');
 }
 
 function editCustomer(id){
@@ -186,6 +264,10 @@ function saveCustomerEdit(id){
     c.targets   = {moisture:g('tmoist'), fat:g('tfat'), ph:g('tph'),
                    yeast:g('tyeast'), mold:g('tmold')};
   }
+  var pf = document.getElementById('cu-prefix');
+  if(pf) c.prefix = pf.value.trim().toUpperCase();
+  var fm = document.getElementById('cu-form');
+  if(fm) c.form = fm.value || 'general';
   var per = document.getElementById('cu-per');
   if(per) c.samplesPerOrder = Math.max(1, parseInt(per.value, 10) || 1);
   var num = document.getElementById('cu-numbered');

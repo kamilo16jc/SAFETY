@@ -2061,3 +2061,8 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
   .cp-chk{flex:1 1 100%;justify-content:flex-start}
   .cp-sec{text-align:left}
 }
+
+/* la hoja de alta de cliente, arriba de la lista */
+.cu-alta{margin-bottom:16px}
+.cu-alta .cu-edit{border:1px solid var(--accent);border-radius:var(--radius-lg);
+  background:var(--surface);padding:16px 18px}
