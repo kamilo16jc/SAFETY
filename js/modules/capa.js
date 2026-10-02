@@ -260,43 +260,18 @@ function deleteCapa(id){
   toast('Report deleted');
 }
 
+// La lista de reportes guardados salio de esta pantalla a proposito: aqui se
+// abre un incidente y se cierra, no se repasa el historial. Un CAPA viejo se
+// busca en Search, que trae el boton "Open to edit" y lo abre aqui mismo.
+//
+// Lo unico que queda a la vista es el conteo, porque un reporte vencido tiene
+// que verse sin ir a buscarlo. La funcion conserva el nombre: la llaman cuatro
+// sitios y lo que necesitan de ella es justo esto.
 function renderCapaList(){
-  var el = document.getElementById('capa-list');
-  if(!el) return;
-
-  var q = ((document.getElementById('capa-filter')||{}).value || '').trim().toLowerCase();
-  var todos = getCapa().slice().sort(function(a,b){
-    return String(b.capaDate||'').localeCompare(String(a.capaDate||''));
-  });
-  var list = q ? todos.filter(function(c){
-    return [c.reportNumber, c.product, c.productName, c.lot, c.problem, c.complaint]
-      .join(' ').toLowerCase().indexOf(q) >= 0;
-  }) : todos;
-
-  capaCounts(todos);
-
-  if(!list.length){
-    el.innerHTML = '<div class="ntable-empty">'+
-      (todos.length ? 'No reports match the filter.'
-                    : 'No reports yet. Fill in the form above to open the first one.')+
-      '</div>';
-    return;
-  }
-
-  var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
-
-  el.innerHTML =
-    '<div class="ntable-wrap"><table class="ntable"><thead><tr>'+
-      '<th>Report #</th><th>Date</th><th>Severity</th><th>Status</th>'+
-      '<th>Investigate by</th><th>Item / Lot</th><th class="nt-wide">Problem</th><th></th>'+
-    '</tr></thead><tbody>'+
-    list.map(capaRow(canDelete)).join('')+
-    '</tbody></table></div>';
-  renderIcons(el);
+  capaCounts(getCapa());
 }
 
-// Cuantos siguen abiertos y cuantos se pasaron de plazo. Es lo que un
-// supervisor mira primero, asi que va arriba y no dentro de la tabla.
+// Cuantos siguen abiertos y cuantos se pasaron de plazo.
 function capaCounts(todos){
   var el = document.getElementById('capa-counts');
   if(!el) return;
@@ -305,37 +280,6 @@ function capaCounts(todos){
   var tarde    = todos.filter(capaOverdue).length;
   el.textContent = abiertos + ' open \u00b7 ' + tarde + ' overdue';
   el.className = 'cbar-note' + (tarde ? ' bad' : '');
-}
-
-function capaRow(canDelete){
-  return function(c){
-    var sev = CAPA_SEV[c.severity] || {label:'\u2014', cls:''};
-    var st  = CAPA_STATUS[c.status] || CAPA_STATUS.open;
-    var due = capaDueDate(c.capaDate, c.severity);
-    var tarde = capaOverdue(c);
-    var cosa = [c.product, c.lot ? 'LOT '+c.lot : ''].filter(Boolean).join(' \u00b7 ') || '\u2014';
-    return '<tr class="'+(c.id===capaEditingId ? 'editing' : '')+'" '+
-        'onclick="editCapa('+c.id+')" title="Open this report">'+
-      '<td class="nt-mono">'+esc(c.reportNumber||'\u2014')+'</td>'+
-      '<td>'+fmtCapaDate(c.capaDate)+'</td>'+
-      '<td><span class="dl-badge '+(sev.cls==='bad'?'bad':sev.cls==='warn'?'warn':'')+'">'+
-        esc(sev.label)+'</span></td>'+
-      '<td><span class="dl-badge '+(st.cls==='ok'?'ok':st.cls==='warn'?'warn':'info')+'">'+
-        esc(st.label)+'</span></td>'+
-      '<td>'+(due ? due.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '\u2014')+
-        (tarde ? ' <span class="dl-badge bad">Overdue</span>' : '')+'</td>'+
-      '<td>'+esc(cosa)+'</td>'+
-      '<td class="nt-wide" title="'+esc(c.problem||'')+'">'+esc(c.problem||'\u2014')+'</td>'+
-      '<td class="nt-acts" onclick="event.stopPropagation()">'+
-        '<button class="cbtn cbtn-outline nt-mini" onclick="exportCapaPDF('+c.id+')" '+
-          'title="Download PDF" aria-label="Download PDF"><span data-icon="doc"></span></button>'+
-        (canDelete
-          ? '<button class="cbtn cbtn-outline nt-mini nt-del" onclick="deleteCapa('+c.id+')" '+
-            'title="Delete report" aria-label="Delete report"><span data-icon="trash"></span></button>'
-          : '')+
-      '</td>'+
-    '</tr>';
-  };
 }
 
 function fmtCapaDate(iso){
