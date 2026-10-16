@@ -39,13 +39,13 @@ function labTestsOf(p, c){
       return String(x||'').trim() && !labIsComposite(x);
     });
   };
-  // Si el producto ya paso por el editor, manda lo que quedo marcado AUNQUE NO
-  // SEA NADA: desmarcarlo todo es una decision, no un descuido. Antes una lista
-  // vacia se tomaba por "sin decidir" y volvian a salir los del cliente.
-  if(p && p.externalLab === false) return [];   // se dijo que no va: no hereda nada
-  if(p && p.labTests) return limpiar(p.labTests);
+  // Los tests son del cliente: todas sus referencias llevan los mismos. Lo que
+  // un producto tuviera marcado por su cuenta (labTests, externalLab) ya no
+  // cuenta. Si el cliente no va al laboratorio, no hay tests.
   if(c === undefined) c = (typeof productCustomer==='function') ? productCustomer(p) : null;
-  return limpiar(c && c.tests);
+  if(!c) return [];
+  if(typeof custGoesToLab==='function' && !custGoesToLab(c)) return [];
+  return limpiar(c.tests);
 }
 
 // Sin esto no hay nada que pedirle al laboratorio
@@ -163,13 +163,27 @@ function labTestColumn(form, kind, label){
 }
 
 // ---- Tests de un producto ----
-// Solo lo que alguien marco. Nada se deduce: antes, si el producto no tenia
-// tests propios, se proponian los de la forma del cliente traducidos, y en la
-// pantalla aparecian tests que nadie habia pedido —Salmonella, Listeria— sin
-// que se viera de donde salian. Si no se marco nada, no hay nada.
-function productTests(p){
-  if(p && p.labTests) return p.labTests;
-  return [];
+// Los tests son del cliente: todas sus referencias llevan los mismos al
+// laboratorio. Aqui solo se ubican en las columnas de la forma, que es lo que
+// necesita la forma del laboratorio: {sheet, label} por cada test del cliente.
+// El que la forma no tiene se devuelve igual (sheet del catalogo) para que
+// quien genera la forma avise que se salta.
+function productTests(p, c){
+  if(c === undefined) c = (typeof productCustomer==='function') ? productCustomer(p) : null;
+  if(!c) return [];
+  var form = c.form || 'general';
+  var cat = labTestCatalog();
+  return labTestsOf(p, c).map(function(name){
+    var kinds = ['micro','chem','nlea'];
+    for(var i=0;i<kinds.length;i++){
+      var col = labTestColumn(form, kinds[i], name);
+      if(col) return {sheet:kinds[i], label:((getFormHeaders()[form]||{})[kinds[i]]||{})[col] || name};
+    }
+    var enCat = kinds.filter(function(k){
+      return (cat[k]||[]).some(function(l){ return labNorm(l)===labNorm(name); });
+    })[0];
+    return {sheet: enCat || 'micro', label: name};
+  });
 }
 
 // Ya no la llama nadie: traducia los tests del cliente a las etiquetas de su
@@ -217,144 +231,24 @@ function formTestCatalog(form){
   return out;
 }
 
-function productTestsVerified(p){ return !!(p && p.labTests && p.labTests.length); }
-
-// ---- Editor (dentro de la ficha del producto) ----
-// Primero lo que decide todo: ¿esto va al laboratorio de fuera? Si no va, no
-// hay nada que elegir y el producto se guarda tal cual. Si va, se abre la
-// ventana con los tests encima de la hoja.
+// ---- Dentro de la ficha del producto: solo se ve, no se elige ----
+// Los tests ya no se marcan producto por producto: salen del cliente, y se
+// cambian en la pantalla Customers. Aqui se dice cuales trae y de quien.
 function renderLabTestPicker(p, pre){
   p = p || {};
-  pre = pre || 'ap';
-  var cat = labTestCatalog();
-  if(!Object.keys(cat).some(function(k){ return cat[k].length; })) return '';
-  var cur = productTests(p);
-  var has = function(kind,label){
-    return cur.some(function(t){ return t.sheet===kind && labNorm(t.label)===labNorm(label); });
-  };
   var c = (typeof productCustomer==='function') ? productCustomer(p) : null;
-  var form = c ? (c.form||'general') : null;
-
-  var block = function(kind, title){
-    if(!cat[kind] || !cat[kind].length) return '';
-    return '<div class="lt-group"><div class="lt-title">'+title+'</div>'+
-      cat[kind].map(function(lbl){
-        // Marca si la forma del cliente NO tiene esa columna
-        var inForm = !form || !!labTestColumn(form, kind, lbl);
-        return '<label class="lt-item'+(inForm?'':' off')+'">'+
-          '<input type="checkbox" data-lt-kind="'+kind+'" data-lt-label="'+esc(lbl)+'"'+
-            (has(kind,lbl)?' checked':'')+'>'+
-          '<span>'+esc(lbl)+(inForm?'':' <em>· not on this form</em>')+'</span></label>';
-      }).join('')+'</div>';
-  };
-
-  var fuera = cur.length > 0 || p.externalLab === true;
-  var casilla = function(id, si, punto, texto){
-    return '<label class="lab-check lt-ask"><input type="checkbox" class="'+id+'" id="'+pre+'-'+id+'"'+
-      (si===fuera ? ' checked' : '')+' onchange="ltExternal(\''+pre+'\','+si+')">'+
-      '<span><i class="lt-dot '+punto+'"></i>'+texto+'</span></label>';
-  };
-
-  // De donde salen los tests que se ven. Si el producto no tiene propios pero
-  // su cliente si, se dice con todas las letras y se ofrece quitarlos: antes
-  // aparecian sin explicacion y parecian inventados.
-  var delCliente = (!p.labTests && c && (c.tests||[]).length)
-    ? (c.tests.length+' test(s) from '+esc(c.company||c.customerId||'the customer'))
-    : '';
-
-  return '<div class="field-group" id="'+pre+'-ltwrap">'+
-    (delCliente ? '<div class="lt-from">'+delCliente+
-      ' <button type="button" class="lt-clear" onclick="ltNone(\'' + pre + '\')">Use none</button></div>' : '')+
-    '<div class="lt-ask-row">'+
-      casilla('lt-no',  'false', 'bad', 'No lab')+
-      casilla('lt-yes', 'true',  'ok',  'External lab')+
-      '<span class="lt-count" id="'+pre+'-lt-count">'+(cur.length ? cur.length+' tests' : '')+'</span>'+
-    '</div>'+
-    '<div class="lt-modal" id="'+pre+'-ltmodal" hidden>'+
-      '<div class="lt-sheet">'+
-        '<div class="lt-head"><b>Lab tests</b>'+
-          '<button type="button" class="ico-btn" aria-label="Close" '+
-            'onclick="ltCloseModal(\''+pre+'\')"><span data-icon="close"></span></button></div>'+
-        '<div class="lt-box">'+
-          block('micro','Micro')+block('chem','Chemistry')+block('nlea','NLEA')+
-        '</div>'+
-        '<div class="lt-foot"><button type="button" class="save-btn" '+
-          'onclick="ltCloseModal(\''+pre+'\')">Done</button></div>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
-}
-
-// ---- La pregunta de arriba ----
-// Dos casillas que se excluyen: o no va al laboratorio de fuera, o va y hay
-// que decir con que tests. Decir que no borra lo que hubiera elegido, porque
-// eso es justo lo que significa.
-function ltExternal(pre, si){
-  var no = document.getElementById(pre+'-lt-no');
-  var yes = document.getElementById(pre+'-lt-yes');
-  if(no)  no.checked  = !si;
-  if(yes) yes.checked = !!si;
-  if(si) ltOpenModal(pre);
-  else {
-    var caja = document.getElementById(pre+'-ltwrap');
-    if(caja) caja.querySelectorAll('[data-lt-kind]').forEach(function(c){ c.checked = false; });
-    ltCount(pre);
-  }
-}
-function ltOpenModal(pre){
-  var m = document.getElementById(pre+'-ltmodal');
-  if(m){ m.hidden = false; renderIcons(m); }
-}
-function ltCloseModal(pre){
-  var m = document.getElementById(pre+'-ltmodal');
-  if(m) m.hidden = true;
-  ltCount(pre);
-}
-// "Ninguno" explicito: el producto deja de heredar los del cliente
-function ltNone(pre){
-  var caja = document.getElementById(pre+'-ltwrap');
-  if(caja) caja.querySelectorAll('[data-lt-kind]').forEach(function(c){ c.checked = false; });
-  var aviso = caja ? caja.querySelector('.lt-from') : null;
-  if(aviso) aviso.remove();
-  ltExternal(pre, false);
-  if(typeof toast === 'function') toast('No tests for this product');
-}
-
-function ltCount(pre){
-  var caja = document.getElementById(pre+'-ltwrap');
-  var el = document.getElementById(pre+'-lt-count');
-  if(!caja || !el) return;
-  var n = caja.querySelectorAll('[data-lt-kind]:checked').length;
-  el.textContent = n ? n+' tests' : '';
-}
-
-// Lee el picker y guarda en el producto (lo llama saveCatalogEdits)
-function readLabTestPicker(p, root){
-  root = root || document;
-  // La decision de "No lab / External lab" se guarda SIEMPRE. Antes vivia
-  // despues del return de abajo, asi que si la lista de tests no se habia
-  // dibujado —porque la forma del cliente no tiene columnas cargadas— marcar
-  // "No lab" no dejaba ningun rastro y el producto seguia heredando los tests
-  // del cliente. Ese era el motivo de que se quedara "pending" para siempre
-  // por mas veces que se desmarcara.
-  var si = root.querySelector('.lt-yes');
-  if(si){
-    p.externalLab = !!si.checked;
-    p.labTestsAt  = localISOStr();
-    p.labTestsBy  = currentUser ? currentUser.name : '—';
-    if(!si.checked) p.labTests = [];          // sin laboratorio, sin tests
-  }
-  var boxes = root.querySelectorAll('[data-lt-kind]');
-  if(!boxes.length) return !!si;
-  var sel = [];
-  Array.prototype.forEach.call(boxes, function(b){
-    if(b.checked) sel.push({sheet:b.getAttribute('data-lt-kind'), label:b.getAttribute('data-lt-label')});
-  });
-  var before = JSON.stringify(productTests(p));
-  if(JSON.stringify(sel)===before && p.labTests) return false;   // sin cambios
-  p.labTests   = sel;
-  p.externalLab = sel.length > 0;
-  p.labTestsAt = localISOStr();
-  p.labTestsBy = currentUser ? currentUser.name : '—';
-  return true;
+  var va = c && (typeof custGoesToLab==='function' ? custGoesToLab(c) : (c.tests||[]).length > 0);
+  var tests = va ? labTestsOf(p, c) : [];
+  var quien = c ? esc(c.company || c.customerId) : '';
+  var txt;
+  if(!c)             txt = 'Pick the customer: the lab tests come from it.';
+  else if(!va)       txt = quien+' does not send samples to the external lab.';
+  else if(!tests.length) txt = quien+' goes to the lab but has no tests marked yet.';
+  else txt = tests.length+' test'+(tests.length===1?'':'s')+' from '+quien+': '+
+             tests.map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' ');
+  // Una nota y no un boton: desde la ventana de producto nuevo, saltar a otra
+  // pantalla la dejaba abierta encima
+  return '<div class="lt-from">'+txt+
+    (c ? ' <span class="lt-where">· set per customer in Customers</span>' : '')+
+    '</div>';
 }

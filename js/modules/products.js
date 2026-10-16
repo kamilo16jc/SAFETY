@@ -445,11 +445,8 @@ function customerHintHTML(c, number){
   var code = (c.prefix || c.customerId || '') + (number||'');
   return '<div class="cust-hint">'+
     '<div class="cust-name">'+esc(c.company)+' <span class="tag">'+esc(c.customerId)+'</span></div>'+
-    '<div class="cust-tests">Required lab tests: '+
-      ((typeof testsLegendHTML==='function')
-        ? testsLegendHTML([c.tests])
-        : (c.tests||[]).map(function(t){ return '<span class="tag">'+esc(t)+'</span>'; }).join(' '))+
-    '</div>'+
+    // Los tests del cliente los dice el resumen del laboratorio, mas abajo
+    // (renderLabTestPicker): aqui salian repetidos.
     (number ? '<div class="lab-code">Lab form code: <b class="mono">'+esc(code)+'</b></div>' : '')+
   '</div>';
 }

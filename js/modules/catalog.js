@@ -255,7 +255,9 @@ function saveCatalogEdits(btn){
   p.customerMode = lab.customerMode;
   p.customerIds  = lab.customerIds;
   p.customerId   = lab.customerId;
-  if(typeof readLabTestPicker==='function') readLabTestPicker(p, document.getElementById('cd-lt'));
+  // Los tests ya no son del producto: salen de su cliente. Lo que quedaba
+  // marcado aqui de antes se va al guardar, para que nadie lo tome por vigente.
+  delete p.labTests; delete p.externalLab; delete p.labTestsAt; delete p.labTestsBy;
   p.updatedBy = currentUser ? currentUser.name : '—';
   p.updatedAt = localISOStr();
 

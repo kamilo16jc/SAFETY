@@ -1974,10 +1974,13 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
   justify-content:flex-end}
 [data-theme="dark"] .lt-modal{background:rgba(0,0,0,.6)}
 
-/* De donde salen los tests que se ven, cuando no los marco nadie aqui */
-.lt-from{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 0;
-  padding:8px 11px;border-radius:var(--radius-sm);background:var(--warn-tint);
-  font-size:11.5px;font-weight:600;color:var(--text)}
+/* El resumen de los tests en la ficha del producto: salen del cliente y aqui
+   solo se leen. Informa, no avisa: va en la superficie y no en amarillo. */
+.lt-from{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 0;
+  padding:8px 11px;border-radius:var(--radius-sm);background:var(--surface2);
+  border:1px solid var(--border);font-size:11.5px;font-weight:600;color:var(--text)}
+.lt-from .tag{margin:0}
+.lt-where{color:var(--dim);font-weight:500}
 .lt-clear{appearance:none;border:1px solid var(--border);background:var(--surface);
   color:var(--text);border-radius:50px;padding:4px 11px;font-family:inherit;
   font-size:11px;font-weight:700;cursor:pointer}

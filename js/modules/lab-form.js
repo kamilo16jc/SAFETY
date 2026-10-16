@@ -105,11 +105,11 @@ function generateLabForm(customerId, date){
         return zip.file(path).async('string').then(function(x){ sheets[path]=x; });
       }
 
-      // Cada producto trae SUS tests (etiqueta exacta); se resuelven a columna
-      // en la forma de este cliente.
+      // Los tests son los del cliente de esta forma (todas sus referencias
+      // llevan los mismos); se resuelven a columna en su forma.
       rows.forEach(function(row){
         var p = (typeof findProduct==='function') ? findProduct(row.run.product) : null;
-        var sel = (typeof productTests==='function') ? productTests(p||{number:row.run.product}) : [];
+        var sel = (typeof productTests==='function') ? productTests(p||{number:row.run.product}, group.customer) : [];
         row.marks = []; row.missing = [];
         sel.forEach(function(t){
           var col = (typeof labTestColumn==='function') ? labTestColumn(formName, t.sheet, t.label) : null;

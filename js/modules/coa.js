@@ -271,9 +271,8 @@ function nextCoaNo(year){
 function coaNeedsLab(a){
   var p = (typeof findProduct==='function') ? findProduct(a.product) : null;
   if(!p) return false;
-  if(p.externalLab === true) return true;
-  if(p.externalLab === false) return false;
-  return (typeof hasLabTests==='function') ? hasLabTests(p) : ((p.labTests||[]).length > 0);
+  // Lo decide el cliente: si va al laboratorio y tiene tests, se espera dictamen
+  return (typeof hasLabTests==='function') ? hasLabTests(p) : false;
 }
 
 // Un registro se puede certificar cuando tiene las tres medidas y, SOLO si el
@@ -429,11 +428,8 @@ function coaRowHTML(a, i){
 function coaMissing(a){
   if(!(a.moisture && a.fat && a.ph)) return 'needs analysis';
   if(coaNeedsLab(a) && !(a.result && String(a.result).trim())){
-    var p = (typeof findProduct==='function') ? findProduct(a.product) : null;
-    var porTests = p && p.externalLab !== true &&
-                   (typeof hasLabTests==='function') && hasLabTests(p);
-    // Si espera por tests heredados del cliente, se dice: es lo que sorprende
-    return porTests ? 'waiting for lab · tests from customer' : 'waiting for lab';
+    // Los tests siempre salen del cliente
+    return 'waiting for lab · tests from customer';
   }
   return 'incomplete';
 }
