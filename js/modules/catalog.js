@@ -1,5 +1,6 @@
 // ===== PRODUCTS SCREEN (catálogo) =====
-// Tabla del catálogo con búsqueda, orden y panel de edición. El alta sigue
+// La tabla del catálogo a todo el ancho, con búsqueda y orden. Cada fila lleva
+// una lupa que abre la ficha del producto para verlo y editarlo. El alta sigue
 // viviendo en js/modules/products.js (el mismo modal que usan Weight y Seal).
 var catSort = 'number', catDir = 1, catFilter = '', catSelected = null;
 // El catalogo NO arrastra los cientos de productos de entrada: se busca el que
@@ -9,6 +10,7 @@ var catShowAll = false;
 function initCatalog(){
   var s = document.getElementById('cat-search');
   if(s) s.value = catFilter;
+  catSelected = null;          // al volver a la pantalla no se reabre la ficha
   renderCatalogAllBtn();
   renderCatalog();
   renderCatalogDetail();
@@ -68,15 +70,15 @@ function renderCatalog(){
     var msg;
     if(!all.length)                   msg = 'No products yet. Add the first one in Create Product.';
     else if(!catFilter.trim() && !catShowAll)
-      msg = 'Search a product by number or description to open and edit it — or press "Show all".';
+      msg = 'Type a number or description and press the magnifier (or Enter) — or "Show all".';
     else if(catFilter.trim())         msg = 'No product matches “'+esc(catFilter)+'”.';
     else                              msg = 'No products.';
-    body.innerHTML = '<tr><td colspan="8" class="cd-empty">'+msg+'</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="cd-empty">'+msg+'</td></tr>';
   } else {
     body.innerHTML = list.map(function(p){
       var t = catTargetText(p);
       var linked = (p.barcodes||[]).length;
-      return '<tr data-num="'+esc(p.number)+'" tabindex="0" aria-selected="'+(p.number===catSelected)+'" onclick="selectCatalogRow(this.getAttribute(\'data-num\'))">'+
+      return '<tr data-num="'+esc(p.number)+'" aria-selected="'+(p.number===catSelected)+'">'+
         '<td class="code">'+esc(p.number)+'</td>'+
         '<td class="desc">'+esc(p.name||'—')+(p.labSample?' <span class="tag">LAB</span>':'')+'</td>'+
         '<td class="mono">'+esc(p.pkgLabel||'—')+'</td>'+
@@ -85,8 +87,12 @@ function renderCatalog(){
         '<td>'+(linked ? '<span class="tag ok">Linked</span>' : '<span class="tag">Not linked</span>')+'</td>'+
         '<td class="soft col-by">'+esc(p.createdBy||'—')+'</td>'+
         '<td class="mono soft">'+((p.createdAt||'').slice(5,10) || '—')+'</td>'+
+        '<td class="view-cell" data-nolabel><button class="view-btn" type="button" data-icon="search"'+
+          ' aria-label="Open product '+esc(p.number)+'" title="Open product"'+
+          ' onclick="openCatalogCard(this.closest(\'tr\').getAttribute(\'data-num\'))"></button></td>'+
       '</tr>';
     }).join('');
+    if(typeof renderIcons==='function') renderIcons(body);
   }
 
   var foot = document.getElementById('cat-foot');
@@ -104,11 +110,24 @@ function renderCatalog(){
   if(count) count.textContent = all.length;
 }
 
-function selectCatalogRow(number){
+// La lupa de la fila abre la ficha; la X, el fondo o Escape la cierran
+function openCatalogCard(number){
   catSelected = number;
   renderCatalog();
   renderCatalogDetail();
 }
+function closeCatalogCard(){
+  if(catSelected == null) return;
+  catSelected = null;
+  renderCatalog();
+  renderCatalogDetail();
+}
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  var m = document.getElementById('cat-modal');
+  // la ventana de tests va encima: Escape cierra primero esa, no la ficha
+  if(m && !m.hidden && !document.querySelector('#cat-detail .lt-modal:not([hidden])')) closeCatalogCard();
+});
 
 function sortCatalog(th, key){
   catDir = (key===catSort) ? -catDir : 1;
@@ -120,19 +139,25 @@ function sortCatalog(th, key){
   renderCatalog();
 }
 
-function onCatalogSearch(v){
-  catFilter = v;
+// Buscar es una orden, no un efecto de teclear: corre con la lupa o con Enter.
+function runCatalogSearch(){
+  var s = document.getElementById('cat-search');
+  catFilter = s ? s.value : '';
   renderCatalog();
 }
+function catalogSearchKey(e){ if(e.key==='Enter'){ e.preventDefault(); runCatalogSearch(); } }
 
 function renderCatalogDetail(){
   var el = document.getElementById('cat-detail');
+  var modal = document.getElementById('cat-modal');
   if(!el) return;
   var p = getProducts().filter(function(x){ return x.number===catSelected; })[0];
   if(!p){
-    el.innerHTML = '<div class="cd-empty">Select a product to see and edit its details.</div>';
+    el.innerHTML = '';
+    if(modal) modal.hidden = true;
     return;
   }
+  if(modal) modal.hidden = false;
   var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
   var sizeOpts = PKGS.map(function(k,i){
     return '<option value="'+i+'"'+(p.pkg===i?' selected':'')+'>'+k.label+'</option>';
@@ -144,8 +169,13 @@ function renderCatalogDetail(){
 
   el.innerHTML =
     '<div class="cd-head">'+
-      '<h2>'+esc(p.name||'Product '+p.number)+'</h2>'+
-      '<div class="cd-num">Product '+esc(p.number)+'</div>'+
+      '<div class="cd-title">'+
+        '<h2>'+esc(p.name||'Product '+p.number)+'</h2>'+
+        '<div class="cd-num">Product '+esc(p.number)+(p.pkgLabel?' · '+esc(p.pkgLabel):'')+'</div>'+
+      '</div>'+
+      '<button class="cd-close" type="button" aria-label="Close" title="Close" onclick="closeCatalogCard()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'+
+      '</button>'+
     '</div>'+
     '<div class="cd-body">'+
       '<div class="field-group"><div class="sec-label">Description</div>'+
@@ -277,8 +307,9 @@ function catalogScanResult(code){
   if(p){
     if(catSelected && catSelected!==p.number) linkBarcode(p, code);
     catSelected = p.number;
-    catFilter = '';
-    var s = document.getElementById('cat-search'); if(s) s.value='';
+    // queda buscado: al cerrar la ficha, su fila sigue a la vista
+    catFilter = p.number;
+    var s = document.getElementById('cat-search'); if(s) s.value = p.number;
     renderCatalog();
     renderCatalogDetail();
     toast('Scanned: '+p.number);

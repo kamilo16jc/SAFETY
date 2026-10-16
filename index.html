@@ -1265,8 +1265,10 @@
     <div class="ph-tools">
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
-        <input type="search" id="cat-search" placeholder="Search by number or description" autocomplete="off" oninput="onCatalogSearch(this.value)">
+        <input type="search" id="cat-search" placeholder="Search by number or description" autocomplete="off" onkeydown="catalogSearchKey(event)">
       </div>
+      <!-- Busca solo al pedirlo: con la lupa o con Enter, nunca mientras se escribe -->
+      <button class="btn-solid" id="cat-go" aria-label="Buscar" title="Buscar" onclick="runCatalogSearch()"><span data-icon="search"></span></button>
       <button class="btn-ghost" onclick="openScanner('catalog')"><span data-icon="scan"></span>Scan</button>
       <button class="btn-ghost" id="cat-all-btn" onclick="toggleCatalogAll()">Show all</button>
     </div>
@@ -1285,6 +1287,7 @@
               <th onclick="sortCatalog(this,'linked')">Barcode<span class="arrow">▲</span></th>
               <th class="col-by" onclick="sortCatalog(this,'createdBy')">Created by<span class="arrow">▲</span></th>
               <th onclick="sortCatalog(this,'createdAt')">Added<span class="arrow">▲</span></th>
+              <th class="view-cell" aria-label="Open"></th>
             </tr>
           </thead>
           <tbody id="cat-rows"></tbody>
@@ -1292,7 +1295,12 @@
       </div>
       <div class="table-foot" id="cat-foot"></div>
     </div>
-    <aside class="panel cat-detail" id="cat-detail"></aside>
+  </div>
+
+  <!-- La ficha del producto: la abre la lupa de cada fila. Toda la tabla
+       queda a lo ancho; ya no hay panel a la derecha. -->
+  <div class="cat-modal" id="cat-modal" hidden onclick="if(event.target===this) closeCatalogCard()">
+    <div class="panel cat-detail" id="cat-detail" role="dialog" aria-modal="true" aria-label="Product"></div>
   </div>
 </div>
 
