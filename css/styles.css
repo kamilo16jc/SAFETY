@@ -477,7 +477,7 @@ canvas{width:100%!important}
      separado por una linea fina para que se lean como dos cosas */
   .topbar .tb-brand{display:flex;align-items:center;flex-shrink:0;padding:0;
     background:none;border:0;cursor:pointer}
-  .topbar .tb-brand img{height:24px;width:auto;display:block}
+  .topbar .tb-brand img{height:34px;width:auto;display:block}
   .topbar .tb-brand:focus-visible{outline:2px solid var(--accent);outline-offset:4px;
     border-radius:var(--radius-sm)}
   .topbar .tb-crumb{font-size:12px;color:var(--muted)}
@@ -619,7 +619,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 
   /* barra superior de 72px, sobre la superficie de tarjeta */
   .topbar{height:72px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border)}
-  .topbar .tb-brand img{height:27px}
+  .topbar .tb-brand img{height:40px}
   .topbar .tb-crumb{display:flex;flex-direction:column;justify-content:center;line-height:1.24;
     margin-left:12px;padding-left:26px;border-left:1px solid var(--border);min-height:34px}
   /* El modulo se escribe como se llama: QA Inspection, no QA INSPECTION */
@@ -1719,16 +1719,18 @@ body.logged-out .topstack{display:none}
 /* Las animaciones cuelgan de .on: mientras el saludo esta apagado no existen,
    y al encenderlo empiezan de cero. Dentro del SVG solo corrian una vez, al
    cargar la pagina, que es justo cuando ya no queremos que corran. */
-.splash.on #sp-left-stem { animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) both }
-.splash.on #sp-right-stem{ animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) 160ms both }
-.splash.on #sp-connection{ animation:sp-in 800ms cubic-bezier(.2,.7,.2,1) 300ms both }
-.splash.on #sp-wordmark  { animation:sp-in 1000ms cubic-bezier(.2,.7,.2,1) 500ms both }
+/* El logo de Caputo se arma por capas: la silueta verde, el blanco de
+   adentro, las letras y al final la (R). */
+.splash.on #sp-c-green{ animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) both }
+.splash.on #sp-c-white{ animation:sp-in 700ms cubic-bezier(.2,.7,.2,1) 160ms both }
+.splash.on #sp-c-red  { animation:sp-in 800ms cubic-bezier(.2,.7,.2,1) 300ms both }
+.splash.on #sp-c-reg  { animation:sp-in 1000ms cubic-bezier(.2,.7,.2,1) 500ms both }
 @keyframes sp-in{from{opacity:0}to{opacity:1}}
-.sp-mark{width:min(340px,62vw);height:auto;display:block;color:var(--text)}
+.sp-mark{width:min(280px,60vw);height:auto;display:block;color:var(--text)}
 .sp-bar{width:min(210px,42vw);height:3px;border-radius:999px;background:var(--surface2);
   overflow:hidden}
 .sp-bar i{display:block;height:100%;border-radius:999px;transform-origin:left;
-  background:linear-gradient(90deg,#2463EB,#1689D4,#10AAA7);transform:scaleX(.02)}
+  background:#019b67;transform:scaleX(.02)}
 .splash.on .sp-bar i{animation:sp-load 1.9s cubic-bezier(.35,.1,.2,1) both}
 @keyframes sp-load{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:reduce){
@@ -2142,7 +2144,7 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 
   /* ---- la barra de título ---- */
   body.ui-fluent .topbar{min-height:48px;padding:0 16px;gap:12px}
-  body.ui-fluent .topbar .tb-brand img{height:20px}
+  body.ui-fluent .topbar .tb-brand img{height:32px}
   body.ui-fluent .topbar .tb-crumb{font-size:12px}
   body.ui-fluent .topstack{border-bottom:1px solid var(--border)}
   body.ui-fluent .ribbon{display:none}

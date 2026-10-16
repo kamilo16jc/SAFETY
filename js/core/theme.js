@@ -1,13 +1,28 @@
 // ===== LA MARCA =====
-// El mismo dibujo en dos tintas: la palabra va en azul marino sobre fondo
-// claro y en hueso sobre fondo oscuro, asi se lee igual en los dos temas.
+// El logo de Caputo trae su propio fondo blanco, asi que se lee en los dos
+// temas; lo unico que cambia es la (R), negra en claro y hueso en oscuro.
+// Se mira el fondo de verdad y no solo data-theme: en escritorio la vista de
+// oficina se queda en claro aunque el tema diga oscuro, y ahi una (R) hueso
+// desaparece sobre el blanco.
+function fondoOscuro(){
+  var c = (getComputedStyle(document.body).backgroundColor.match(/[\d.]+/g) || []).map(Number);
+  if(c.length < 3 || c[3] === 0) return document.documentElement.getAttribute('data-theme') === 'dark';
+  return (0.299*c[0] + 0.587*c[1] + 0.114*c[2]) < 128;
+}
 function paintBrand(root){
-  var oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+  var oscuro = fondoOscuro();
   var imgs = (root||document).querySelectorAll('[data-brand]');
   Array.prototype.forEach.call(imgs, function(img){
-    var anim = img.getAttribute('data-brand') === 'anim';
-    img.src = 'assets/nexora' + (anim ? '-anim' : '') + (oscuro ? '-dark' : '') + '.svg';
+    img.src = 'assets/caputo' + (oscuro ? '-dark' : '') + '.svg';
   });
+}
+// Al cruzar los 1024px cambia el fondo (oficina en claro, telefono con el
+// tema elegido), y con el la tinta de la (R)
+if(window.matchMedia){
+  var _mqBrand = matchMedia('(min-width:1024px)');
+  var _onBrand = function(){ paintBrand(); };
+  if(_mqBrand.addEventListener) _mqBrand.addEventListener('change', _onBrand);
+  else if(_mqBrand.addListener) _mqBrand.addListener(_onBrand);
 }
 
 // ===== DARK MODE =====
