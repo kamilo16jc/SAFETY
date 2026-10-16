@@ -281,8 +281,9 @@ function labBlockHTML(pre, p){
   var n    = p ? productSampleCount(p) : 1;
   // El cliente se elige en su lista y punto: quien no esta, se anade con el
   // boton de al lado. El rotulo sobraba —el selector ya dice lo que es— y los
-  // tres modos se deducen solos de lo que quede elegido.
-  return '<div class="sec-label">Laboratory</div>'+
+  // tres modos se deducen solos de lo que quede elegido. La seccion se llama
+  // Customer porque eso es lo que se elige; el laboratorio sale del cliente.
+  return '<div class="sec-label">Customer</div>'+
     '<div class="lab-block">'+
       '<div class="cmode-row" id="'+pre+'-cmode">'+
         '<div id="'+pre+'-cone" style="display:'+(mode==='many'?'none':'block')+'">'+
