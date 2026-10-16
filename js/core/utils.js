@@ -142,9 +142,13 @@ function kpiCard(n, rotulo, o){
   var delta = o.delta
     ? '<span class="kpi-delta kpi-d-' + (o.deltaTono || 'ok') + '">' + o.delta + '</span>'
     : '';
+  // Los rotulos se escribieron en minuscula cuando el CSS los subia a altas;
+  // ahora se escriben como se leen, con la primera en alta y nada mas.
+  var lbl = String(rotulo || '');
+  lbl = lbl.charAt(0).toUpperCase() + lbl.slice(1);
   var dentro = ico +
     '<span class="kpi-txt">' +
-      '<span class="kpi-lbl">' + rotulo + '</span>' +
+      '<span class="kpi-lbl">' + lbl + '</span>' +
       '<span class="kpi-val"><b>' + n + '</b>' + delta + '</span>' +
       (o.note ? '<span class="kpi-note">' + o.note + '</span>' : '') +
     '</span>';

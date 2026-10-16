@@ -34,7 +34,7 @@ function buildProductionSheet(){
       '<th>Sent to lab</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="pr-new"><tr class="newrow">'+
-      '<td class="rn">new</td>'+
+      '<td class="rn">New</td>'+
       '<td><input class="cell" id="pr-product" list="pr-product-list" placeholder="Product #" '+
         'autocomplete="off" autocapitalize="characters" oninput="onScheduleProduct()" '+
         'onkeydown="if(event.key===\'Enter\')addRun()"></td>'+

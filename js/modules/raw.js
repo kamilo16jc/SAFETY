@@ -144,7 +144,7 @@ function initRd(){     initRawSection('rd'); }
 function rawScreenHTML(){
   var cfg = RAW_SECTIONS[rawSection];
   return '' +
-  '<button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>BACK</button>'+
+  '<button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>'+
   '<div class="form-title">'+esc(cfg.titulo)+'</div>'+
 
   '<div class="sheet-bar">'+
@@ -288,7 +288,7 @@ function buildRawSheet(forzar){
   th += '<th>By</th><th>Save</th><th></th>';
 
   // fila de alta, arriba, como en Sample Analysis
-  var nueva = '<td class="rn">new</td>'+
+  var nueva = '<td class="rn">New</td>'+
     '<td><input type="date" class="cell" id="rw-n-date"></td>';
   c.ident.forEach(function(x){ nueva += '<td'+(x.wide?' class="wide"':'')+'>'+rawInput('rw-n-'+x.f, x)+'</td>'; });
   c.medidas.forEach(function(x){

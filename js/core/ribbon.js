@@ -341,21 +341,21 @@ function ribbonPendientes(){
     var porRecoger = getRuns().filter(function(r){
       return String(r.date||'').slice(0,10) === hoy && runSampleCount(r) > 0 && !r.collected;
     }).length;
-    out.push({n:porRecoger, t:'muestras por recoger', s:'screen-samplelist', m:'qa'});
+    out.push({n:porRecoger, t:'Muestras por recoger', s:'screen-samplelist', m:'qa'});
   }
   if(typeof labFormGroups === 'function'){
     var formas = labFormGroups().filter(function(g){ return g.sent < g.runs.length; }).length;
-    out.push({n:formas, t:'formas del laboratorio por enviar', s:'screen-lab', m:'lab'});
+    out.push({n:formas, t:'Formas del laboratorio por enviar', s:'screen-lab', m:'lab'});
   }
   if(typeof ymDone === 'function' && typeof ymDueDate === 'function'){
     var placas = (getDB().analysis || []).filter(function(a){
       return !ymDone(a) && ymDueDate(a) && ymDueDate(a) <= hoy;
     }).length;
-    out.push({n:placas, t:'placas listas para leer', s:'screen-yeast', m:'lab'});
+    out.push({n:placas, t:'Placas listas para leer', s:'screen-yeast', m:'lab'});
   }
   if(typeof getHolds === 'function'){
     var holds = getHolds().filter(function(h){ return h.status === 'hold'; }).length;
-    out.push({n:holds, t:holds === 1 ? 'producto retenido' : 'productos retenidos', s:'screen-hold', m:'qa'});
+    out.push({n:holds, t:holds === 1 ? 'Producto retenido' : 'Productos retenidos', s:'screen-hold', m:'qa'});
   }
   // Solo lo que este usuario puede abrir
   return out.filter(function(p){
