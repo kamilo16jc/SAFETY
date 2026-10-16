@@ -1995,6 +1995,16 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 .cu-edit{padding:14px 4px 6px}
 .cu-edit .sheet-bar{margin-bottom:10px}
 .cu-edit .sb-field{min-width:150px;flex:1}
+/* En escritorio el rotulo va al lado del cuadro, y el cuadro se quedaba en su
+   minimo dejando un hueco hasta el siguiente campo: ahora llena su campo. En
+   el telefono el rotulo va encima y el cuadro ya ocupa todo el ancho. */
+@media (min-width:1024px){
+  body.ui-fluent .cu-edit .sb-field{flex:1 1 auto}
+  body.ui-fluent .cu-edit .sb-field > .field,
+  body.ui-fluent .cu-edit .sb-field > .select-wrap{flex:1;min-width:100px;width:0}
+  body.ui-fluent .cu-edit .sb-field > .select-wrap .field{width:100%}
+  body.ui-fluent .cu-edit #cu-per{flex:0 0 140px}
+}
 .cu-edit .sub-label{margin:12px 0 6px}
 .cu-edit .lt-from{margin:10px 0 0}
 .cu-edit .sheet-actions{margin-top:16px}
