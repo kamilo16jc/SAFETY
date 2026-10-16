@@ -54,8 +54,18 @@ function productSampleCount(p){
   return customerSampleCount(productCustomer(p));
 }
 
+// El Customer ID se puede repetir (varios clientes comparten el codigo), asi
+// que no sirve de llave. Cada cliente tiene la suya: uid, y los de antes, que
+// nacieron con el ID unico, usan su ID de siempre. Asi lo ya guardado —los
+// productos que apuntan a un cliente— sigue valiendo sin reescribir nada.
+function custKey(c){ return c ? String(c.uid || c.customerId || '') : ''; }
+function newCustUid(){ return 'cu-' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+// Busca por llave; si no hay, por Customer ID (registros viejos), el primero
 function customerById(id){
-  return getCustomers().filter(function(c){ return c.customerId===id; })[0] || null;
+  if(!id) return null;
+  var list = getCustomers();
+  return list.filter(function(c){ return custKey(c)===id; })[0] ||
+         list.filter(function(c){ return c.customerId===id; })[0] || null;
 }
 // Cliente de un producto: el asignado a mano gana (necesario para los clientes
 // marcados "all items", que no listan números), si no se deduce del número.
@@ -101,7 +111,7 @@ function productCustomerIds(p){
   if((p.customerIds||[]).length) return p.customerIds.slice();
   if(p.customerId) return [p.customerId];
   var auto = findCustomerByProduct(p.number);
-  return auto ? [auto.customerId] : [];
+  return auto ? [custKey(auto)] : [];
 }
 // Todos los clientes de un producto (el primero manda para la forma)
 function productCustomers(p){
@@ -211,7 +221,6 @@ function saveNewCustomer(pre, btn){
   var id = g('nc-id').toUpperCase();
   if(!company){ toast('Enter the company name'); return; }
   if(!id){ toast('Enter the customer code'); return; }
-  if(customerById(id)){ toast('That customer code already exists'); return; }
 
   // Aqui el cliente nace sin tests: si va al laboratorio, sus tests se marcan
   // en la pantalla Customers, una vez para todas sus referencias.
@@ -219,6 +228,7 @@ function saveNewCustomer(pre, btn){
 
   var per = parseInt(g('nc-per'), 10);
   var cust = {
+    uid: newCustUid(),       // la llave: el Customer ID se puede repetir
     company: company,
     customerId: id,
     // los datos con los que se arma la cabecera del certificado (el producto
@@ -257,8 +267,8 @@ function saveNewCustomer(pre, btn){
   // Queda elegido para el producto que se esta creando
   toggleNewCustomer(pre, false);
   setCustomerMode(pre, 'one');
-  fillProdCustomerSelect(id, pre);
-  renderCustomerPicks(pre, [id]);
+  fillProdCustomerSelect(cust.uid, pre);
+  renderCustomerPicks(pre, [cust.uid]);
   onProdCustomerChange(pre);
   refreshLabTestPicker(pre);
   toast(company+' saved');
@@ -327,9 +337,9 @@ function renderCustomerPicks(pre, ids){
   if(!el) return;
   ids = ids || [];
   el.innerHTML = getCustomers().map(function(c){
-    var on = ids.indexOf(c.customerId) >= 0;
+    var on = ids.indexOf(custKey(c)) >= 0;
     return '<label class="cust-pick" data-name="'+esc((c.company+' '+c.customerId).toLowerCase())+'">'+
-      '<input type="checkbox" value="'+esc(c.customerId)+'"'+(on?' checked':'')+' '+
+      '<input type="checkbox" value="'+esc(custKey(c))+'"'+(on?' checked':'')+' '+
         'onchange="onProdCustomerChange(\''+pre+'\')">'+
       '<span>'+esc(c.company)+' <b class="mono">'+esc(c.customerId)+'</b></span></label>';
   }).join('') || '<div class="hint">No customers loaded yet.</div>';
@@ -396,7 +406,7 @@ function fillProdCustomerSelect(sel, pre){
   var el = pel(pre, 'customer');
   if(!el) return;
   el.innerHTML = '<option value="">— none —</option>' + getCustomers().map(function(c){
-    return '<option value="'+esc(c.customerId)+'"'+(c.customerId===sel?' selected':'')+'>'+
+    return '<option value="'+esc(custKey(c))+'"'+(custKey(c)===sel?' selected':'')+'>'+
       esc(c.company)+' ('+esc(c.customerId)+')'+'</option>';
   }).join('');
 }
@@ -412,7 +422,7 @@ function onProdNumberInput(pre){
   var c = findCustomerByProduct(el.value);
   // Si el número no pertenece a nadie se limpia: nunca debe quedarse pegado
   // el cliente del producto anterior.
-  fillProdCustomerSelect(c ? c.customerId : '', pre);
+  fillProdCustomerSelect(c ? custKey(c) : '', pre);
   if(pel(pre,'cmode')) setCustomerMode(pre, c ? 'one' : 'none');
   else onProdCustomerChange(pre);
 }

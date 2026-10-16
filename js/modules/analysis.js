@@ -337,6 +337,8 @@ function saveAnalysis(){
     product: product,
     cheese: g('an-cheese') || (p ? (p.name||'') : ''),
     customerId: c ? c.customerId : '',
+    // la llave dice CUAL cliente: el Customer ID se puede repetir
+    customerKey: c ? custKey(c) : '',
     customer: c ? c.company : '',
     lot: g('an-lot'),
     prodDate: date,          // la fecha de la hoja ES la de produccion

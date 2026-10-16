@@ -37,7 +37,8 @@ function labFormGroups(){
       if(!hasLabTests(p, c)) return;
     }
     var day = String(r.date).slice(0,10);
-    var key = c.customerId+'|'+day;
+    // por la llave del cliente: dos clientes pueden compartir Customer ID
+    var key = custKey(c)+'|'+day;
     if(!groups[key]) groups[key] = {customer:c, date:day, runs:[], sent:0};
     groups[key].runs.push(r);
     if(r.labSent) groups[key].sent++;
@@ -74,9 +75,9 @@ function labFormWarnings(group){
 }
 
 // ---- Generación ----
-function generateLabForm(customerId, date){
+function generateLabForm(customerKey, date){
   var group = labFormGroups().filter(function(g){
-    return g.customer.customerId===customerId && g.date===date; })[0];
+    return custKey(g.customer)===customerKey && g.date===date; })[0];
   if(!group){ toast('No collected samples for that customer and date'); return; }
 
   var warn = labFormWarnings(group);
@@ -252,7 +253,7 @@ function renderLabForms(){
         '<td class="wide">'+st+'</td>'+
         '<td><button class="ico-btn sm" title="Generate the submission form" '+
           'aria-label="Generate submission form" '+
-          'onclick="generateLabForm(\'' + esc(g.customer.customerId) + '\',\'' + esc(g.date) + '\')">'+
+          'onclick="generateLabForm(\'' + esc(custKey(g.customer)) + '\',\'' + esc(g.date) + '\')">'+
           '<span data-icon="grid"></span></button></td>'+
       '</tr>';
     }).join('')+

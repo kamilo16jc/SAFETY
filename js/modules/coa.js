@@ -557,6 +557,11 @@ var COA_METODO = {
 // analisis, su nombre, y —si el analisis se capturo sin cliente, que es lo
 // normal en los viejos— el propio producto, que si sabe de quien es.
 function coaCustomerOf(a){
+  // La llave primero: dos clientes pueden compartir Customer ID
+  if(typeof customerById === 'function' && a.customerKey){
+    var k = customerById(a.customerKey);
+    if(k) return k;
+  }
   if(typeof customerById === 'function' && a.customerId){
     var c = customerById(a.customerId);
     if(c) return c;

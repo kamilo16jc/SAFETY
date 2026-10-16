@@ -33,8 +33,8 @@ function saveCustomerList(list){
 function custProductCount(c){
   var n = 0;
   (getProducts()||[]).forEach(function(p){
-    if(p.customerId === c.customerId) { n++; return; }
-    if((p.customerIds||[]).indexOf(c.customerId) >= 0) { n++; return; }
+    if(p.customerId === custKey(c)) { n++; return; }
+    if((p.customerIds||[]).indexOf(custKey(c)) >= 0) { n++; return; }
     if((c.products||[]).some(function(x){ return normNumber(x) === normNumber(p.number); })) n++;
   });
   return n;
@@ -106,7 +106,8 @@ function renderCustomers(){
     '</tr></thead><tbody>'+
     list.map(function(c, i){
       var tests = custGoesToLab(c) ? (c.tests||[]).length : 0;
-      return '<tr'+(custOpen===c.customerId?' class="done"':'')+'>'+
+      var k = custKey(c);        // la llave: el ID puede repetirse
+      return '<tr'+(custOpen===k?' class="done"':'')+'>'+
         '<td class="rn">'+(i+1)+'</td>'+
         '<td class="wide"><b>'+esc(c.company||'—')+'</b></td>'+
         '<td class="code">'+esc(c.customerId||'—')+'</td>'+
@@ -116,11 +117,11 @@ function renderCustomers(){
         '<td>'+(tests
           ? '<span class="pill warn" title="'+esc((c.tests||[]).join(' · '))+'">'+tests+'</span>'
           : '<span class="soft">—</span>')+'</td>'+
-        '<td><button class="sheet-btn" onclick="editCustomer(\''+esc(c.customerId)+'\')">Edit</button></td>'+
+        '<td><button class="sheet-btn" onclick="editCustomer(\''+esc(k)+'\')">Edit</button></td>'+
         '<td><button class="run-del" title="Delete customer" '+
-          'onclick="deleteCustomer(\''+esc(c.customerId)+'\')">×</button></td>'+
+          'onclick="deleteCustomer(\''+esc(k)+'\')">×</button></td>'+
       '</tr>'+
-      (custOpen===c.customerId ? '<tr><td colspan="9">'+custEditorHTML(c)+'</td></tr>' : '');
+      (custOpen===k ? '<tr><td colspan="9">'+custEditorHTML(c)+'</td></tr>' : '');
     }).join('')+
     '</tbody></table></div>';
   renderIcons(host);
@@ -190,7 +191,7 @@ function custEditorHTML(c, nuevo){
     '</div>'+
     '<div class="sheet-actions">'+
       saveBtn(nuevo ? 'createCustomer(this)'
-                    : 'saveCustomerEdit(\''+esc(c.customerId)+'\',this)',
+                    : 'saveCustomerEdit(\''+esc(custKey(c))+'\',this)',
               {texto:(nuevo ? 'Create customer' : 'Save'),
                hecho:(nuevo ? 'Created' : 'Saved'), grande:true})+
       '<button class="btn-ghost" onclick="'+(nuevo?'cancelNewCustomer()':'closeCustomer()')+'">Cancel</button>'+
@@ -208,7 +209,8 @@ function newCustomer(){
 function cancelNewCustomer(){ custNuevo = false; renderCustomers(); }
 
 // Alta: los mismos campos del editor, para no tener dos formularios que se
-// separen con el tiempo. Lo unico propio es que el ID no puede repetirse.
+// separen con el tiempo. El ID SI puede repetirse (varios clientes comparten
+// codigo): cada cliente nace con su propia llave, uid.
 function createCustomer(btn){
   var g = function(f){ var e = document.getElementById('cu-'+f); return e ? e.value.trim() : ''; };
   var company = g('company');
@@ -216,15 +218,15 @@ function createCustomer(btn){
   if(!company){ toast('Enter the customer name'); return; }
   if(!id){ toast('Enter the customer ID'); return; }
   var list = getCustomers();
-  if(list.some(function(x){ return x.customerId === id; })){
-    toast('That customer ID already exists'); return;
-  }
+  var mismos = list.filter(function(x){ return x.customerId === id; }).length;
 
   var per = document.getElementById('cu-per');
   var num = document.getElementById('cu-numbered');
   var lab = custLabRead();
 
+  var uid = newCustUid();
   list.push({
+    uid: uid,
     customerId: id,
     company: company,
     contact: g('contact'),
@@ -246,10 +248,10 @@ function createCustomer(btn){
   logActivity('admin','Customer created', company+' ('+id+')',
               currentUser?currentUser.name:'—');
   custNuevo = false;
-  custOpen  = id;
+  custOpen  = uid;
   flashSaved(btn);
   renderCustomers();
-  toast(company+' created');
+  toast(company+' created'+(mismos ? ' · ID '+id+' is shared' : ''));
 }
 
 function editCustomer(id){
@@ -275,16 +277,17 @@ function closeCustomer(){ custOpen = null; renderCustomers(); }
 
 function saveCustomerEdit(id, btn){
   var list = getCustomers();
-  var c = list.filter(function(x){ return x.customerId === id; })[0];
+  var c = list.filter(function(x){ return custKey(x) === id; })[0];
   if(!c) return;
   var g = function(f){ var e = document.getElementById('cu-'+f); return e ? e.value.trim() : ''; };
 
   var nuevoId = g('id').toUpperCase();
   if(!g('company')){ toast('Enter the customer name'); return; }
   if(!nuevoId){ toast('Enter the customer ID'); return; }
-  if(nuevoId !== id && list.some(function(x){ return x.customerId === nuevoId; })){
-    toast('That customer ID already exists'); return;
-  }
+  // El ID puede repetirse. Un cliente de antes no tiene uid: su llave es su ID
+  // de siempre, y se queda fija aunque el ID cambie, asi sus productos (que
+  // apuntan a la llave) lo siguen encontrando.
+  if(!c.uid) c.uid = id;
 
   c.company     = g('company');
   c.customerId  = nuevoId;
@@ -322,19 +325,9 @@ function saveCustomerEdit(id, btn){
   c.updatedBy   = currentUser ? currentUser.name : '—';
   c.updatedAt   = localISOStr();
 
-  // Si cambio el codigo, los productos que apuntaban al viejo se quedarian
-  // huerfanos: se reapuntan aqui mismo.
-  if(nuevoId !== id){
-    var prods = getProducts();
-    var tocados = 0;
-    prods.forEach(function(p){
-      if(p.customerId === id){ p.customerId = nuevoId; tocados++; }
-      var ids = p.customerIds || [];
-      var k = ids.indexOf(id);
-      if(k >= 0){ ids[k] = nuevoId; tocados++; }
-    });
-    if(tocados) saveProducts(prods);
-  }
+  // Cambiar el ID ya no deja productos huerfanos: apuntan a la llave, que no
+  // cambia. (Antes se reapuntaban, y con IDs repetidos eso movia tambien los
+  // productos del otro cliente.)
 
   saveCustomerList(list);
   logActivity('admin','Customer updated', c.company+' ('+c.customerId+')',
@@ -388,7 +381,7 @@ function custTestsCount(){
 
 function deleteCustomer(id){
   var list = getCustomers();
-  var c = list.filter(function(x){ return x.customerId === id; })[0];
+  var c = list.filter(function(x){ return custKey(x) === id; })[0];
   if(!c) return;
   if(typeof canDeleteRecords === 'function' && !canDeleteRecords()){
     toast('Your role cannot delete'); return;
@@ -399,7 +392,8 @@ function deleteCustomer(id){
   aviso += '\n\nThis cannot be undone.';
   if(!confirm(aviso)) return;
 
-  var resto = list.filter(function(x){ return x.customerId !== id; });
+  // Solo este cliente, aunque otro comparta su ID
+  var resto = list.filter(function(x){ return custKey(x) !== id; });
   saveCustomerList(resto);
   logActivity('admin','Customer deleted', (c.company||id)+(n?' · '+n+' product(s) affected':''),
               currentUser?currentUser.name:'—');

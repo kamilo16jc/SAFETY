@@ -307,7 +307,9 @@ function assignLabSampleRange(run, db){
   if(!c.numbered) return;                               // este cliente no enumera
   var per = runSampleCount(run) || (c.samplesPerOrder || 5);
   var wk = weekKey(run.date);
-  var st = ((db && db.labCounters) || getLabCounters())[c.customerId];
+  // El contador es de cada cliente, por su llave (el Customer ID se puede
+  // repetir). Los de antes tienen de llave su ID: siguen con su cuenta.
+  var st = ((db && db.labCounters) || getLabCounters())[custKey(c)];
   var proposed = (st && st.week===wk) ? st.next : 1;   // semana nueva -> arranca en 1
   var ans = prompt('Sample numbers for '+c.company+'\n'+
     'Week of '+wk+'. This order takes '+per+' samples.\n'+
@@ -316,7 +318,7 @@ function assignLabSampleRange(run, db){
   var n = parseInt(ans,10);
   if(isNaN(n) || n<1){ toast('Invalid sample number'); return; }
   run.sampleFrom = n; run.sampleTo = n+per-1;
-  setLabCounter(c.customerId, wk, n+per, db);
+  setLabCounter(custKey(c), wk, n+per, db);
   toast('Samples '+run.sampleFrom+'–'+run.sampleTo+' assigned');
 }
 
