@@ -1,9 +1,12 @@
 // ===== CLIENTES =====
 // Hasta ahora un cliente solo se podia crear —desde la ficha de un producto— y
 // nunca mas se le podia mirar ni corregir. Con el certificado de por medio eso
-// dejo de valer: de aqui salen el telefono, el fax, el contacto, el correo, el
-// empaque y los cinco objetivos que imprime el COA, y tambien los tests que un
-// producto hereda cuando no eligio los suyos.
+// dejo de valer: de aqui salen el telefono, el fax, el contacto y el correo que
+// imprime el COA, y tambien los tests del laboratorio.
+//
+// Un cliente compra muchas referencias, asi que aqui no va ningun producto: el
+// nombre y el empaque salen de cada producto. Los tests si son del cliente:
+// todas sus referencias llevan los mismos al laboratorio.
 //
 // Esta pantalla es ese sitio: ver, corregir y borrar.
 
@@ -44,9 +47,24 @@ function custMatches(c){
   return hay.indexOf(custQuery) >= 0;
 }
 
-function onCustSearch(v){
-  custQuery = String(v||'').trim().toLowerCase();
+// Buscar es una orden: corre con la lupa o con Enter, no mientras se escribe
+function runCustSearch(){
+  var q = document.getElementById('cu-search');
+  custQuery = String(q ? q.value : '').trim().toLowerCase();
   renderCustomers();
+}
+function custSearchKey(e){ if(e.key==='Enter'){ e.preventDefault(); runCustSearch(); } }
+
+// Va al laboratorio externo? Los clientes de antes no lo tienen escrito: se
+// deduce de lo que ya traen (tests marcados o prefijo de la forma).
+function custGoesToLab(c){
+  if(!c) return false;
+  if(c.lab != null) return !!c.lab;
+  return (c.tests||[]).length > 0 || !!c.prefix;
+}
+function custLabToggle(on){
+  var box = document.getElementById('cu-lab-box');
+  if(box) box.hidden = !on;
 }
 
 function renderCustomers(){
@@ -87,7 +105,7 @@ function renderCustomers(){
       '<th class="num">Products</th><th>Lab tests</th><th></th><th></th>'+
     '</tr></thead><tbody>'+
     list.map(function(c, i){
-      var tests = (c.tests||[]).length;
+      var tests = custGoesToLab(c) ? (c.tests||[]).length : 0;
       return '<tr'+(custOpen===c.customerId?' class="done"':'')+'>'+
         '<td class="rn">'+(i+1)+'</td>'+
         '<td class="wide"><b>'+esc(c.company||'—')+'</b></td>'+
@@ -112,18 +130,16 @@ function renderCustomers(){
 function custEditorHTML(c, nuevo){
   c = c || {};
   var v = function(x){ return esc(x==null?'':x); };
-  var t = c.targets || {};
   var campo = function(f, rot, val){
     return '<div class="sb-field"><label for="cu-'+f+'">'+rot+'</label>'+
       '<input type="text" class="field" id="cu-'+f+'" value="'+v(val)+'"></div>';
   };
+  var vaLab = custGoesToLab(c);
   return '<div class="cu-edit">'+
     (nuevo ? '<div class="sub-label">New customer</div>' : '')+
     '<div class="sheet-bar">'+
       campo('company','Customer name', c.company)+
       campo('id','Customer ID', c.customerId)+
-      campo('prod','Product name', c.productName)+
-      campo('pack','Product packaging', c.packaging)+
     '</div>'+
     '<div class="sheet-bar">'+
       campo('contact','Contact', c.contact)+
@@ -132,17 +148,29 @@ function custEditorHTML(c, nuevo){
       campo('fax','Fax', c.fax)+
       campo('code','Customer code', c.code)+
     '</div>'+
-    // La forma del laboratorio y su prefijo arman el codigo de la muestra.
-    // Antes solo se podian poner al crear el cliente y nunca corregir.
-    '<div class="sub-label">Lab form</div>'+
+    // Primero la pregunta: van sus muestras al laboratorio? Solo si van se
+    // piden la forma y los tests.
+    '<div class="sub-label">Laboratory</div>'+
     '<div class="sheet-bar">'+
-      campo('prefix','Form prefix', c.prefix)+
-      '<div class="sb-field"><label for="cu-form">Form</label>'+
-        '<div class="select-wrap"><select class="field" id="cu-form">'+
-        ((typeof customerFormOptions==='function')
-          ? customerFormOptions(c.form || 'general')
-          : '<option value="general">general</option>')+
-        '</select></div></div>'+
+      '<label class="lab-check cu-lab-ask"><input type="checkbox" id="cu-lab"'+(vaLab?' checked':'')+
+        ' onchange="custLabToggle(this.checked)">'+
+        '<span><b>Samples go to the external lab</b><br>'+
+        'Every product of this customer is sent with the same tests.</span></label>'+
+    '</div>'+
+    '<div id="cu-lab-box"'+(vaLab?'':' hidden')+'>'+
+      // La forma del laboratorio y su prefijo arman el codigo de la muestra.
+      '<div class="sub-label">Lab form</div>'+
+      '<div class="sheet-bar">'+
+        campo('prefix','Form prefix', c.prefix)+
+        '<div class="sb-field"><label for="cu-form">Form</label>'+
+          '<div class="select-wrap"><select class="field" id="cu-form">'+
+          ((typeof customerFormOptions==='function')
+            ? customerFormOptions(c.form || 'general')
+            : '<option value="general">general</option>')+
+          '</select></div></div>'+
+      '</div>'+
+      '<div class="sub-label">Lab tests</div>'+
+      custTestsHTML(c)+
     '</div>'+
     // Los objetivos son del producto, no del cliente: dos productos del mismo
     // cliente tienen humedades distintas. Se ponen en Add Product y en el
@@ -160,7 +188,6 @@ function custEditorHTML(c, nuevo){
         '<input type="checkbox" id="cu-numbered"'+(c.numbered?' checked':'')+'>'+
         '<span>Samples are numbered</span></label>'+
     '</div>'+
-    custTestsHTML(c)+
     '<div class="sheet-actions">'+
       saveBtn(nuevo ? 'createCustomer(this)'
                     : 'saveCustomerEdit(\''+esc(c.customerId)+'\',this)',
@@ -195,16 +222,11 @@ function createCustomer(btn){
 
   var per = document.getElementById('cu-per');
   var num = document.getElementById('cu-numbered');
-  var tests = [];
-  Array.prototype.forEach.call(document.querySelectorAll('.cu-test:checked'), function(b){
-    tests.push(b.getAttribute('data-lt-label'));
-  });
+  var lab = custLabRead();
 
   list.push({
     customerId: id,
     company: company,
-    productName: g('prod'),
-    packaging: g('pack'),
     contact: g('contact'),
     email: g('email'),
     phone: g('phone'),
@@ -214,7 +236,8 @@ function createCustomer(btn){
     form: g('form') || 'general',
     samplesPerOrder: per ? Math.max(1, parseInt(per.value, 10) || 1) : 1,
     numbered: num ? !!num.checked : false,
-    tests: tests,
+    lab: lab.lab,
+    tests: lab.tests,
     targets: {},
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()
@@ -231,7 +254,22 @@ function createCustomer(btn){
 
 function editCustomer(id){
   custOpen = (custOpen === id) ? null : id;
+  custNuevo = false;        // un solo editor abierto: los dos usan los mismos campos
   renderCustomers();
+}
+
+// Lo que dice el editor del laboratorio. Si no va, el cliente queda sin tests:
+// asi ninguno de sus productos hereda nada que no se va a mandar.
+function custLabRead(){
+  var chk = document.getElementById('cu-lab');
+  var va = chk ? !!chk.checked : false;
+  var tests = [];
+  if(va){
+    Array.prototype.forEach.call(document.querySelectorAll('#cu-lab-box .cu-test:checked'), function(b){
+      tests.push(b.getAttribute('data-lt-label'));
+    });
+  }
+  return {lab: va, tests: tests};
 }
 function closeCustomer(){ custOpen = null; renderCustomers(); }
 
@@ -250,8 +288,10 @@ function saveCustomerEdit(id, btn){
 
   c.company     = g('company');
   c.customerId  = nuevoId;
-  c.productName = g('prod');
-  c.packaging   = g('pack');
+  // El producto y su empaque ya no son del cliente (compra varias
+  // referencias): lo que quedaba guardado de antes se va al guardar.
+  delete c.productName;
+  delete c.packaging;
   c.contact     = g('contact');
   c.email       = g('email');
   c.phone       = g('phone');
@@ -272,12 +312,12 @@ function saveCustomerEdit(id, btn){
   if(per) c.samplesPerOrder = Math.max(1, parseInt(per.value, 10) || 1);
   var num = document.getElementById('cu-numbered');
   if(num) c.numbered = !!num.checked;
-  if(document.querySelector('.cu-test')){
-    var marcados = [];
-    Array.prototype.forEach.call(document.querySelectorAll('.cu-test:checked'), function(b){
-      marcados.push(b.getAttribute('data-lt-label'));
-    });
-    c.tests = marcados;
+  // Sin catalogo cargado no hay casillas: los tests que ya tenia se conservan
+  if(document.getElementById('cu-lab')){
+    var lab = custLabRead();
+    c.lab = lab.lab;
+    if(!lab.lab) c.tests = [];
+    else if(document.querySelector('#cu-lab-box .cu-test')) c.tests = lab.tests;
   }
   c.updatedBy   = currentUser ? currentUser.name : '—';
   c.updatedAt   = localISOStr();
@@ -306,62 +346,44 @@ function saveCustomerEdit(id, btn){
 }
 
 // ===== LOS TESTS DEL CLIENTE =====
-// Antes solo se podian quitar. Desde que Create Product dejo de preguntarlos,
-// este es el sitio donde se eligen: misma ventana y mismo catalogo que usaba
-// el producto, pero guardando nombres, que es como el cliente los tiene.
+// Los tests van por cliente: si compra diez referencias, las diez llevan los
+// mismos al laboratorio. Se muestran todos los del catalogo, a la vista, para
+// marcar los suyos; se guardan por nombre, que es como el cliente los tiene.
 function custTestsHTML(c){
   var cat = (typeof labTestCatalog === 'function') ? labTestCatalog() : {};
   var hay = Object.keys(cat).some(function(k){ return (cat[k] || []).length; });
-  if(!hay) return '<div class="hint">No lab test catalog loaded yet.</div>';
+  if(!hay) return '<div class="hint">No lab test catalog loaded yet: the tests come from the lab forms.</div>';
   var puestos = (c.tests || []).map(function(t){ return labNorm(labTestName(t)); });
+  var enCatalogo = {};
+  var item = function(lbl, marcada){
+    return '<label class="lt-item"><input type="checkbox" class="cu-test" '+
+      'data-lt-label="'+esc(lbl)+'"'+(marcada?' checked':'')+' onchange="custTestsCount()">'+
+      '<span>'+esc(lbl)+'</span></label>';
+  };
   var grupo = function(kind, titulo){
     if(!(cat[kind] || []).length) return '';
-    return '<div class="lt-group"><div class="lt-title">'+titulo+'</div>'+
+    return '<div class="lt-group"><div class="lt-title">'+titulo+'</div><div class="cu-tlist">'+
       cat[kind].map(function(lbl){
-        var marcada = puestos.indexOf(labNorm(lbl)) >= 0;
-        return '<label class="lt-item"><input type="checkbox" class="cu-test" '+
-          'data-lt-label="'+esc(lbl)+'"'+(marcada?' checked':'')+'>'+
-          '<span>'+esc(lbl)+'</span></label>';
-      }).join('')+'</div>';
+        enCatalogo[labNorm(lbl)] = 1;
+        return item(lbl, puestos.indexOf(labNorm(lbl)) >= 0);
+      }).join('')+'</div></div>';
   };
-  return '<div class="lt-ask-row">'+
-      '<button type="button" class="btn-ghost" onclick="custTestsOpen()">Choose lab tests</button>'+
-      '<span class="lt-count" id="cu-test-count">'+custTestsLabel((c.tests||[]).length)+'</span>'+
-      ((c.tests||[]).length
-        ? ' <button type="button" class="lt-clear" onclick="clearCustomerTests(\''+esc(c.customerId)+'\')">Remove them</button>'
-        : '')+
-    '</div>'+
-    '<div class="lt-modal" id="cu-ltmodal" hidden><div class="lt-sheet">'+
-      '<div class="lt-head"><b>Lab tests \u00b7 '+esc(c.company || c.customerId)+'</b>'+
-        '<button type="button" class="ico-btn" aria-label="Close" onclick="custTestsClose()">'+
-        '<span data-icon="close"></span></button></div>'+
-      '<div class="lt-box">'+grupo('micro','Micro')+grupo('chem','Chemistry')+grupo('nlea','NLEA')+'</div>'+
-      '<div class="lt-foot"><button type="button" class="save-btn" onclick="custTestsClose()">Done</button>'+
-      '</div></div></div>';
+  var html = grupo('micro','Micro')+grupo('chem','Chemistry')+grupo('nlea','NLEA');
+  // Lo que el cliente ya traia y el catalogo no tiene se muestra aparte y
+  // marcado: si no, guardar lo borraba sin que nadie lo viera.
+  var sueltos = (c.tests || []).filter(function(t){ return !enCatalogo[labNorm(labTestName(t))]; });
+  if(sueltos.length){
+    html += '<div class="lt-group"><div class="lt-title">Other · not in the lab forms</div><div class="cu-tlist">'+
+      sueltos.map(function(t){ return item(labTestName(t), true); }).join('')+'</div></div>';
+  }
+  return '<div class="cu-tests">'+html+'</div>'+
+    '<div class="cu-tests-foot"><span class="lt-count" id="cu-test-count">'+
+      custTestsLabel((c.tests || []).length)+'</span></div>';
 }
-function custTestsLabel(n){ return n ? (n + ' test' + (n===1?'':'s')) : 'none'; }
-function custTestsOpen(){ var m = document.getElementById('cu-ltmodal'); if(m) m.hidden = false; }
-function custTestsClose(){
-  var m = document.getElementById('cu-ltmodal'); if(m) m.hidden = true;
-  var n = document.querySelectorAll('.cu-test:checked').length;
+function custTestsLabel(n){ return n ? (n + ' test' + (n===1?'':'s') + ' selected') : 'No tests selected'; }
+function custTestsCount(){
+  var n = document.querySelectorAll('#cu-lab-box .cu-test:checked').length;
   var e = document.getElementById('cu-test-count'); if(e) e.textContent = custTestsLabel(n);
-}
-
-// Los tests del cliente son los que un producto hereda si no eligio los suyos.
-// Quitarlos de aqui corta la herencia de todos sus productos de una vez.
-function clearCustomerTests(id){
-  var list = getCustomers();
-  var c = list.filter(function(x){ return x.customerId === id; })[0];
-  if(!c) return;
-  var n = (c.tests||[]).length;
-  if(!confirm('Remove the '+n+' lab test(s) on '+(c.company||id)+'?\n\n'+
-              'Products that did not pick their own tests will stop inheriting them.')) return;
-  c.tests = [];
-  saveCustomerList(list);
-  logActivity('admin','Customer lab tests removed', (c.company||id)+' · '+n+' test(s)',
-              currentUser?currentUser.name:'—');
-  renderCustomers();
-  toast('Tests removed');
 }
 
 function deleteCustomer(id){
@@ -431,15 +453,16 @@ function deleteAllCustomers(){
 }
 
 function exportCustomersCSV(){
-  var out = [['Customer','ID','Code','Contact','Email','Phone','Fax','Product','Packaging',
+  var out = [['Customer','ID','Code','Contact','Email','Phone','Fax',
               'Target moisture','Target fat','Target pH','Target yeast','Target mold',
-              'Lab tests','Products']];
+              'External lab','Lab tests','Products']];
   getCustomers().forEach(function(c){
     var t = c.targets || {};
+    var lab = custGoesToLab(c);
     out.push([c.company||'', c.customerId||'', c.code||'', c.contact||'', c.email||'',
-              c.phone||'', c.fax||'', c.productName||'', c.packaging||'',
+              c.phone||'', c.fax||'',
               t.moisture||'', t.fat||'', t.ph||'', t.yeast||'', t.mold||'',
-              (c.tests||[]).join(' | '), custProductCount(c)]);
+              lab ? 'Yes' : 'No', lab ? (c.tests||[]).join(' | ') : '', custProductCount(c)]);
   });
   downloadCSV('customers-'+localDateStr()+'.csv', out);
 }

@@ -213,17 +213,16 @@ function saveNewCustomer(pre, btn){
   if(!id){ toast('Enter the customer code'); return; }
   if(customerById(id)){ toast('That customer code already exists'); return; }
 
-  // El cliente ya no lleva tests: se eligen en el producto, una sola vez y a
-  // la vista. Asi ningun producto hereda nada que nadie recuerde haber marcado.
+  // Aqui el cliente nace sin tests: si va al laboratorio, sus tests se marcan
+  // en la pantalla Customers, una vez para todas sus referencias.
   var tests = [];
 
   var per = parseInt(g('nc-per'), 10);
   var cust = {
     company: company,
     customerId: id,
-    // los datos con los que se arma la cabecera del certificado
-    productName: g('nc-prod'),
-    packaging: g('nc-pack'),
+    // los datos con los que se arma la cabecera del certificado (el producto
+    // y su empaque no: salen de cada referencia que el cliente compra)
     contact: g('nc-contact'),
     email: g('nc-email'),
     phone: g('nc-phone'),

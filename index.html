@@ -1234,8 +1234,10 @@
       <div class="search-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
         <input type="search" id="cu-search" placeholder="Name, ID, contact or email"
-               autocomplete="off" oninput="onCustSearch(this.value)">
+               autocomplete="off" onkeydown="custSearchKey(event)">
       </div></div>
+    <!-- Busca solo al pedirlo: con la lupa o con Enter -->
+    <button class="btn-solid" id="cu-go" aria-label="Buscar" title="Buscar" onclick="runCustSearch()"><span data-icon="search"></span></button>
     <span class="sb-gap"></span>
     <button class="add-btn" type="button" onclick="newCustomer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"

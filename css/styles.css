@@ -1995,6 +1995,16 @@ input[type=checkbox]:disabled{opacity:.45;cursor:default}
 .cu-edit .sub-label{margin:12px 0 6px}
 .cu-edit .lt-from{margin:10px 0 0}
 .cu-edit .sheet-actions{margin-top:16px}
+/* la pregunta del laboratorio: si se marca, se abren la forma y los tests */
+.cu-edit .cu-lab-ask{margin:0;flex:1;max-width:520px;align-items:center}
+.cu-edit .cu-lab-ask input{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.cu-edit .cu-lab-ask b{color:var(--text);font-weight:700}
+.cu-edit #cu-lab-box[hidden]{display:none}
+/* todos los tests a la vista, en columnas, para marcar los del cliente */
+.cu-tests{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.cu-tests .lt-group{padding:10px 14px}
+.cu-tlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 18px}
+.cu-tests-foot{margin:8px 0 4px}
 
 /* ============================================================
    OBJETIVOS DEL PRODUCTO

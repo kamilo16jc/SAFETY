@@ -62,7 +62,9 @@ function buildCoaTokens(a){
     ORDER:    a.order || '',
     LOT:      (typeof analysisLot === 'function' ? analysisLot(a) : a.lot) || '',
     MFGDATE:  _coaFecha(a.prodDate || a.date),
-    PACK:     c.packaging || (prod ? (prod.pkgLabel || prod.size || '') : ''),
+    // El empaque es del producto: un cliente compra varias referencias. El del
+    // cliente queda solo para registros viejos de productos sin tamano.
+    PACK:     (prod ? (prod.pkgLabel || prod.size || '') : '') || c.packaging || '',
     MOIST:    _coaVal(a,'moisture','mxMoisture'),
     FAT:      _coaVal(a,'fat','mxFat'),
     PH:       _coaVal(a,'ph','mxPh'),
