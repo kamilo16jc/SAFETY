@@ -122,6 +122,23 @@ body.ui-fluent .sheet-bar .sb-field {flex-direction:column;align-items:stretch;g
 body.ui-fluent .sheet-bar .sb-field > label {font-size:10px;line-height:1.4;white-space:normal;margin-bottom:6px}
 body.ui-fluent .sheet-bar .sb-field > .field {margin:0}
 body.ui-fluent .sheet-bar .search-wrap {min-width:150px}
+/* Ficha del cliente: aqui el rotulo va ENCIMA del cuadro. La regla vieja de
+   styles.css lo pensaba al lado y, con la columna, dejaba los cuadros en 100 px
+   de ancho y Samples per order en 140 px de alto. Ahora cada cuadro llena su
+   campo; el nombre del cliente lleva mas espacio que el ID, y los cinco de
+   contacto caben en un renglon. En el telefono el nombre y el email van
+   a todo lo ancho. */
+@media (min-width:701px) {
+ body.ui-fluent .cu-edit .sheet-bar .sb-field {flex:1 1 110px}
+ body.ui-fluent .cu-edit .sheet-bar .sb-field:has(#cu-company) {flex:2 1 340px}
+ body.ui-fluent .cu-edit .sheet-bar .sb-field > :is(.field,.select-wrap),
+ body.ui-fluent .cu-edit .sheet-bar .select-wrap .field {flex:none;width:100%;min-width:0}
+ body.ui-fluent .cu-edit .sheet-bar .sb-field:has(#cu-per) {flex:0 0 160px}
+ body.ui-fluent .cu-edit #cu-per {flex:none;width:100%}
+}
+@media (max-width:700px) {
+ body.ui-fluent .cu-edit .sheet-bar .sb-field:has(#cu-company,#cu-email) {grid-column:1 / -1}
+}
 body.ui-fluent :is(.cbtn,.btn-solid,.btn-ghost) {height:38px;min-height:38px;border-radius:8px;font-size:12px;font-weight:500;padding:0 13px;box-shadow:none}
 body.ui-fluent :is(.cbtn-primary,.btn-solid,.main-btn,.add-btn,.save-btn,.add-mini) {background:var(--accent);border-color:transparent;color:var(--accent-fg);background-image:none;border-radius:9px;font-size:13px;font-weight:550;box-shadow:none}
 body.ui-fluent :is(.main-btn,.sec-btn,.danger-btn) {min-height:44px;padding:12px 18px;border-radius:10px}
