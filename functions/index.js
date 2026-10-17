@@ -103,10 +103,19 @@ exports.safetyPhotoUpload = onRequest(OPTS, async (req, res) => {
   // usar de metadatos, pero nunca decide la ruta ni el nombre.
   const m = b.meta || {};
   const corto = (x, n) => String(x == null ? "" : x).slice(0, n);
+  // Por ahora las fotos van a la carpeta y la lista de fotos de EnviroTrack
+  // (decision del usuario, 2026-10-16). La etiqueta dice de donde vienen, y
+  // NO se manda retestId: EnviroTrack descarta al leer las que no lo traen,
+  // asi no le aparecen en sus retests.
+  const etiqueta = ["SAFETY weight check",
+    m.line ? "Line " + corto(m.line, 10) : "",
+    m.lot ? "LOT " + corto(m.lot, 40) : "",
+    m.by ? corto(m.by, 60) : ""].filter(Boolean).join(" · ");
   try {
     const r = await llamarFlujo(url, {
       fileName: fileName,
       contentBase64: b64,
+      label: etiqueta.slice(0, 200),
       date: corto(m.date, 30),
       line: corto(m.line, 10),
       product: corto(m.product, 40),
