@@ -280,7 +280,7 @@ body.ui-fluent .login-form .field {font-family:var(--font);text-align:left;font-
 .nx-password .field {padding-right:48px}
 .nx-password button {position:absolute;right:6px;top:5px;width:36px;height:36px;display:grid;place-items:center;border:0;background:transparent;color:var(--dim);border-radius:7px;cursor:pointer}
 .nx-password button svg {width:17px;height:17px}
-body.ui-fluent .login-btn {display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:46px;background:var(--text);color:var(--surface);border:0;border-radius:10px;font-size:13px;font-weight:500;margin:3px 0 0;box-shadow:none;backdrop-filter:none;filter:none}
+body.ui-fluent .login-btn {display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:none;height:46px;background:var(--text);color:var(--surface);border:0;border-radius:10px;font-size:13px;font-weight:500;margin:3px 0 0;box-shadow:none;backdrop-filter:none;filter:none}
 body.ui-fluent .login-btn:hover {background:var(--accent);color:var(--accent-fg);box-shadow:0 5px 15px #1f574c18}
 .login-btn svg {width:16px;height:16px;transition:transform .2s}
 .login-btn:hover svg {transform:translateX(3px)}
