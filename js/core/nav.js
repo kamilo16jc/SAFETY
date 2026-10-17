@@ -115,6 +115,7 @@ function goTo(id){
   }
   applyScreenAccent(id);
   updateTopbar(id);
+  window.dispatchEvent(new CustomEvent('nexora:screen', {detail:id}));
 }
 
 // ===== BARRA DE MODULOS (reemplaza el panel lateral) =====
@@ -208,7 +209,7 @@ function playSplash(){
   setTimeout(function(){
     sp.classList.add('gone');
     setTimeout(function(){ sp.classList.remove('on'); sp.classList.remove('gone'); }, 460);
-  }, quieto ? 260 : 1900);
+  }, quieto ? 100 : 650);
 }
 
 function updateTopbar(id){
@@ -219,6 +220,8 @@ function updateTopbar(id){
   var c = CRUMBS[id] || ['', ''];
   var am = (typeof moduleById==='function' && activeModule) ? moduleById(activeModule) : null;
   if(am) c = [am.name, c[1]];
+  if(id==='screen-home') c=['Workspace','Overview'];
+  if(id==='screen-module' && am) c=['Workspace',am.name];
   var el = document.getElementById('tb-crumb');
   if(el) el.innerHTML = (c[0] ? '<span class="tb-eyebrow">'+c[0]+'</span>' : '')+
                         '<b>'+c[1]+'</b>';
@@ -267,7 +270,7 @@ function updateDate(){
 // El tablero solo se pinta donde se ve: interfaz nueva y pantalla de monitor.
 // Es el mismo corte que hace la hoja de estilos, escrito una vez aqui.
 function homeConTablero(){
-  return document.body.classList.contains('ui-fluent') && window.innerWidth >= 1024;
+  return document.body.classList.contains('ui-fluent');
 }
 
 function initHome(){

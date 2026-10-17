@@ -623,6 +623,7 @@ function kpiPeriodo(dias, btn){
   renderHomeKPI();
 }
 function kpiFiltro(){
+  if(typeof nxMarkKpiDirty==='function') nxMarkKpiDirty(false);
   var l = document.getElementById('kd-line'), s = document.getElementById('kd-shift');
   kpiState.line  = l ? l.value : 'all';
   kpiState.shift = s ? s.value : 'all';
@@ -643,11 +644,13 @@ function renderHomeKPI(){
                     : kpiState.shift+(kpiState.shift === '1' ? 'st' : 'nd')+' shift');
   }
   kpiPintaCasillas();
-  kpiPintaPeso();
+  if(typeof nxRenderTrend==='function') nxRenderTrend(); else kpiPintaPeso();
   kpiPintaCapturas();
   kpiPintaLineas();
   kpiPintaCapa();
   kpiPintaPendiente();
+  if(typeof nxRenderInsights==='function') nxRenderInsights();
+  if(typeof nxEnhanceCharts==='function') nxEnhanceCharts();
 }
 
 // Las graficas se miden en pixeles, asi que al cambiar el ancho hay que

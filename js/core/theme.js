@@ -33,6 +33,7 @@ function toggleDarkMode() {
   if(btn) btn.innerHTML = isDark ? ICONS.moon : ICONS.sun;
   localStorage.setItem('safety_theme', isDark ? 'light' : 'dark');
   paintBrand();
+  window.dispatchEvent(new Event('nexora:theme'));
   // el color de la funcion se recalcula: en oscuro va mas claro
   if(typeof applyScreenAccent==='function'){
     applyScreenAccent((document.querySelector('.screen.active')||{}).id||'screen-home');

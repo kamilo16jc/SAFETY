@@ -137,12 +137,16 @@ function dcTrend(hostId, puntos, opts){
     var px = parseFloat(z.getAttribute('data-x')), py = parseFloat(z.getAttribute('data-y'));
     cross.setAttribute('x1', px); cross.setAttribute('x2', px); cross.style.opacity = 1;
     mark.setAttribute('cx', px);  mark.setAttribute('cy', py);  mark.style.opacity = 1;
-    tip.innerHTML = '<b>'+z.getAttribute('data-value')+'</b><span>'+z.getAttribute('data-label')+
-      (z.getAttribute('data-note') ? ' · '+z.getAttribute('data-note') : '')+'</span>';
+    tip.innerHTML = '<b>'+dcEsc(z.getAttribute('data-value'))+'</b><span>'+dcEsc(z.getAttribute('data-label'))+
+      (z.getAttribute('data-note') ? ' · '+dcEsc(z.getAttribute('data-note')) : '')+'</span>';
     tip.hidden = false;
     tip.style.left = (px / W * 100).toFixed(2) + '%';       // el svg se estira: en %
   };
   Array.prototype.forEach.call(host.querySelectorAll('.dc-hit'), function(z){
+    z.setAttribute('tabindex','0');
+    z.setAttribute('aria-label',z.getAttribute('data-label')+': '+z.getAttribute('data-value'));
+    z.addEventListener('focus',function(){mostrar(z);});
+    z.addEventListener('blur',function(){cross.style.opacity=0;mark.style.opacity=0;tip.hidden=true;});
     z.addEventListener('mouseenter', function(){ mostrar(z); });
     z.addEventListener('touchstart', function(){ mostrar(z); }, {passive:true});
   });

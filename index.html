@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NEXORA">
@@ -10,14 +10,13 @@
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <title>NEXORA | Quality Control</title>
-<!-- Tipografía del sistema visual: Manrope para la interfaz e IBM Plex Mono
-     para las cifras. Si no cargan, cae a la fuente del sistema. -->
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<!-- Tipografía nativa: SF Pro en Apple; fuente del sistema en Windows. -->
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/nexora-ui.css">
+<meta name="description" content="NEXORA — Food manufacturing quality workspace.">
 </head>
 <body class="logged-out ui-fluent">
+<a class="nx-skip" href="#screen-home" onclick="nxFocusContent(event)">Skip to workspace</a>
 <!-- EL SALUDO: el logo de Caputo se arma solo y una barra fina la acompaña. Sale al
      entrar, cuando la sesion ya esta abierta, y no carga nada — la app ya
      esta lista detras. Nace apagado: lo enciende playSplash(). -->
@@ -34,16 +33,20 @@
 <!-- TOPBAR (escritorio) -->
 <div class="topstack" id="topstack">
 <header class="topbar" id="topbar">
-  <button class="tb-brand" onclick="goTo('screen-home')" aria-label="Caputo — inicio">
-    <img data-brand="static" src="assets/caputo.svg" alt="Caputo"></button>
+  <button class="nx-menu-btn" id="nx-menu-btn" type="button" onclick="nxToggleNav()" aria-label="Open navigation" aria-controls="snav" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <button class="tb-brand" type="button" onclick="goTo('screen-home')" aria-label="NEXORA — overview">
+    <span class="nx-mark"><img src="assets/nexora-symbol.svg" alt=""></span>
+    <span class="nx-wordmark">nexora<small>Quality workspace</small></span>
+  </button>
   <div class="tb-crumb" id="tb-crumb"></div>
   <div class="tb-spacer"></div>
+  <button class="nx-command-btn" type="button" onclick="nxOpenCommand()" aria-label="Find a module" aria-keyshortcuts="Control+k Meta+k"><span data-icon="search"></span><span>Find a module</span><kbd>⌘ / Ctrl K</kbd></button>
   <span class="tb-stamp" id="tb-stamp"></span>
-  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()"><span class="tb-avatar" id="tb-init"></span><span id="tb-uname"></span></button>
+  <button class="tb-user" id="tb-user" onclick="toggleUserMenu()" aria-label="Account menu"><span class="tb-avatar" id="tb-init"></span><span id="tb-uname"></span></button>
   <div class="user-menu" id="user-menu">
     <div class="um-head"><b id="um-name"></b><span id="um-role"></span></div>
     <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
-    <button class="um-item" onclick="toggleRibbonUI()"><span data-icon="grid"></span>Cinta / vista clásica</button>
+    <button class="um-item" onclick="nxOpenCommand()"><span data-icon="grid"></span>Find a module</button>
     <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
   </div>
 </header>
@@ -52,7 +55,8 @@
 
 <!-- BARRA LATERAL (escritorio): solo los modulos; el abierto despliega sus
      funciones. La pinta js/core/sidenav.js desde la tabla de MODULES. -->
-<nav class="snav" id="snav" aria-label="Módulos"></nav>
+<nav class="snav" id="snav" aria-label="Workspace modules"></nav>
+<button class="nx-nav-scrim" onclick="nxToggleNav(false)" type="button" aria-label="Close navigation" tabindex="-1"></button>
 
 <!-- DRAWER -->
 <!-- WEIGHT -->
@@ -132,7 +136,7 @@
                autocomplete="off" oninput="renderCoa()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="coa-go" aria-label="Buscar" title="Buscar" onclick="applyCoaFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="coa-go" aria-label="Apply filters" title="Apply filters" onclick="applyCoaFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -164,7 +168,7 @@
                autocomplete="off" oninput="renderLabResults()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="lr-go" aria-label="Buscar" title="Buscar" onclick="applyLrFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="lr-go" aria-label="Apply filters" title="Apply filters" onclick="applyLrFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -196,7 +200,7 @@
                autocomplete="off" oninput="renderCoaStatus()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="st-go" aria-label="Buscar" title="Buscar" onclick="applyStFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="st-go" aria-label="Apply filters" title="Apply filters" onclick="applyStFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -226,18 +230,35 @@
 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px">
-    <img id="login-logo" data-brand="static" src="assets/caputo.svg" alt="Caputo"
-         style="height:96px;object-fit:contain;margin:0 0 40px">
-
-    <div class="login-form" style="width:100%;max-width:360px">
-      <div class="sec-label">Username or Email</div>
-      <input type="text" class="field" id="login-user" placeholder="Username or email" autocomplete="username" autocapitalize="none" style="margin-bottom:12px">
-      <div class="sec-label">Password</div>
-      <input type="password" class="field" id="login-pass" placeholder="••••••••" autocomplete="current-password">
-      <div id="login-error" style="display:none;color:var(--fail);font-size:12px;font-weight:700;margin-top:10px;text-align:center"></div>
-      <button class="main-btn login-btn" onclick="doLogin()">Sign In</button>
-    </div>
+  <div class="nx-login">
+    <aside class="nx-login-art" aria-hidden="true">
+      <div class="nx-login-brand"><span class="nx-mark"><img src="assets/nexora-symbol.svg" alt=""></span><span class="nx-wordmark">nexora<small>Quality workspace</small></span></div>
+      <div class="nx-orbit">
+        <div class="nx-orbit-core"><img src="assets/nexora-mark.svg" alt=""></div>
+        <div class="nx-orbit-chip"><span data-icon="clipboard"></span>Quality inspections</div>
+        <div class="nx-orbit-chip"><span data-icon="droplet"></span>Laboratory</div>
+        <div class="nx-orbit-chip"><span data-icon="chart"></span>Production insights</div>
+      </div>
+      <div class="nx-art-foot"><p>A clear view of quality.<br>From the line to the laboratory.</p><span>NEXORA / QC</span></div>
+    </aside>
+    <main class="nx-login-main">
+      <button class="nx-login-theme" type="button" onclick="toggleDarkMode()" aria-label="Switch color theme"><span data-icon="moon"></span></button>
+      <form class="login-form" onsubmit="event.preventDefault();doLogin()">
+        <div class="nx-login-client"><img id="login-logo" data-brand="static" src="assets/caputo.svg" alt="Caputo"></div>
+        <h1 class="nx-login-heading">Welcome back.</h1>
+        <p class="nx-login-sub">Sign in to your quality workspace.</p>
+        <label class="sec-label" for="login-user">Username or email</label>
+        <input type="text" class="field" id="login-user" placeholder="Enter your username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        <label class="sec-label" for="login-pass">Password</label>
+        <div class="nx-password">
+          <input type="password" class="field" id="login-pass" placeholder="Enter your password" autocomplete="current-password" required>
+          <button type="button" id="nx-pass-toggle" aria-label="Show password" aria-pressed="false" onclick="nxTogglePassword()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div id="login-error" role="alert" style="display:none"></div>
+        <button class="main-btn login-btn" id="nx-sign-in" type="submit"><span>Enter workspace</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12h15m-5-5 5 5-5 5"/></svg></button>
+        <p class="nx-login-note">Your assigned role defines your workspace access.</p>
+      </form>
+    </main>
   </div>
 </div>
 
@@ -295,7 +316,9 @@
        ============================================================ -->
   <div class="kd" id="kd">
     <div class="pg-head">
-      <h1 class="pg-title">Dashboard</h1>
+      <div class="nx-eyebrow">Operations overview</div>
+      <h1 class="pg-title">Quality, at a glance.</h1>
+      <p class="nx-home-intro">The details that keep your plant moving.</p>
       <div class="pg-sub" id="kd-range-label"></div>
     </div>
 
@@ -308,16 +331,17 @@
       </div>
       <span class="cbar-div"></span>
       <span class="kd-lbl">Line</span>
-      <select class="ninput kd-sel" id="kd-line" aria-label="Line" onchange="kpiFiltro()">
+      <select class="ninput kd-sel" id="kd-line" aria-label="Line" onchange="nxMarkKpiDirty()">
         <option value="all">All lines</option>
         <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
         <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
       </select>
       <span class="kd-lbl">Shift</span>
-      <select class="ninput kd-sel" id="kd-shift" aria-label="Shift" onchange="kpiFiltro()">
+      <select class="ninput kd-sel" id="kd-shift" aria-label="Shift" onchange="nxMarkKpiDirty()">
         <option value="all">All shifts</option>
         <option value="1">1st shift</option><option value="2">2nd shift</option>
       </select>
+      <button class="cbtn cbtn-primary" id="nx-kpi-apply" type="button" onclick="kpiFiltro()" aria-label="Apply line and shift filters"><span data-icon="search"></span>Apply</button>
       <span class="cbar-gap"></span>
       <button class="cbtn" type="button" onclick="window.print()">
         <span data-icon="doc"></span>Print</button>
@@ -325,18 +349,23 @@
 
     <div class="kd-kpis" id="kd-kpis"></div>
 
+    <section class="nx-insight" id="nx-insight" aria-label="Quality insights" aria-live="polite"></section>
+
     <div class="kd-grid">
       <section class="ncard kd-s8">
         <div class="ncard-head">
-          <div><h2 class="ncard-title">Weight compliance</h2>
-            <div class="kd-sub">% of samples inside the target range, per day</div></div>
-          <span class="cbar-gap"></span>
-          <div class="kd-legend">
-            <span><i class="kd-k-line"></i>Compliance</span>
-            <span><i class="kd-k-dash"></i>Target</span>
+          <div><h2 class="ncard-title" id="nx-trend-title">Weight compliance</h2>
+            <div class="kd-sub">Daily results against the configured target</div></div>
+          <div class="nx-chart-tools">
+            <div class="segmented" aria-label="Compliance measure">
+              <button class="seg on" id="nx-trend-weight" type="button" aria-pressed="true" onclick="nxSetTrend('weight')">Weight</button>
+              <button class="seg" id="nx-trend-seal" type="button" aria-pressed="false" onclick="nxSetTrend('seal')">Seal</button>
+            </div>
+            <button class="cbtn" id="nx-trend-table-btn" type="button" onclick="nxToggleTrendTable()" aria-expanded="false" aria-controls="nx-trend-table"><span data-icon="grid"></span>Data</button>
           </div>
         </div>
         <div class="kd-chart" id="kd-ch-weight"></div>
+        <div class="nx-chart-data" id="nx-trend-table" hidden></div>
       </section>
 
       <section class="ncard kd-s4">
@@ -409,7 +438,7 @@
                oninput="renderAnalysisRows()" onkeydown="anOnKey(event)">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="an-go" aria-label="Buscar" title="Buscar" onclick="applyAnFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="an-go" aria-label="Apply filters" title="Apply filters" onclick="applyAnFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -442,7 +471,7 @@
                oninput="renderYeast()" onkeydown="ymOnKey(event)">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="ym-go" aria-label="Buscar" title="Buscar" onclick="applyYmFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="ym-go" aria-label="Apply filters" title="Apply filters" onclick="applyYmFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -478,7 +507,7 @@
                oninput="renderGrilling()">
       </div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="gc-go" aria-label="Buscar" title="Buscar" onclick="applyGcFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="gc-go" aria-label="Apply filters" title="Apply filters" onclick="applyGcFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -519,7 +548,7 @@
         <option value="all">All</option>
       </select></div></div>
     <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" id="lab-go" aria-label="Buscar" title="Buscar" onclick="applyLabFilters()"><span data-icon="search"></span></button></div>
+      <button class="btn-solid" id="lab-go" aria-label="Apply filters" title="Apply filters" onclick="applyLabFilters()"><span data-icon="search"></span></button></div>
     <span class="sb-gap"></span>
     <div class="more-box" data-open="false">
       <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
@@ -867,7 +896,7 @@
           <option value="1">1st shift</option><option value="2">2nd shift</option>
         </select></div></div>
       <div class="f-field"><label>&nbsp;</label>
-        <button class="btn-solid" id="dash-go" aria-label="Buscar" title="Buscar" style="justify-content:center" onclick="applyDashFilters()"><span data-icon="search"></span></button></div>
+        <button class="btn-solid" id="dash-go" aria-label="Apply filters" title="Apply filters" style="justify-content:center" onclick="applyDashFilters()"><span data-icon="search"></span></button></div>
     </div>
   </div>
 
@@ -1250,7 +1279,7 @@
                autocomplete="off" onkeydown="custSearchKey(event)">
       </div></div>
     <!-- Busca solo al pedirlo: con la lupa o con Enter -->
-    <button class="btn-solid" id="cu-go" aria-label="Buscar" title="Buscar" onclick="runCustSearch()"><span data-icon="search"></span></button>
+    <button class="btn-solid" id="cu-go" aria-label="Apply filters" title="Apply filters" onclick="runCustSearch()"><span data-icon="search"></span></button>
     <span class="sb-gap"></span>
     <button class="add-btn" type="button" onclick="newCustomer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
@@ -1283,7 +1312,7 @@
         <input type="search" id="cat-search" placeholder="Search by number or description" autocomplete="off" onkeydown="catalogSearchKey(event)">
       </div>
       <!-- Busca solo al pedirlo: con la lupa o con Enter, nunca mientras se escribe -->
-      <button class="btn-solid" id="cat-go" aria-label="Buscar" title="Buscar" onclick="runCatalogSearch()"><span data-icon="search"></span></button>
+      <button class="btn-solid" id="cat-go" aria-label="Apply filters" title="Apply filters" onclick="runCatalogSearch()"><span data-icon="search"></span></button>
       <button class="btn-ghost" onclick="openScanner('catalog')"><span data-icon="scan"></span>Scan</button>
       <button class="btn-ghost" id="cat-all-btn" onclick="toggleCatalogAll()">Show all</button>
     </div>
@@ -1863,7 +1892,7 @@
                autocomplete="off" autocapitalize="characters" onkeydown="searchOnKey(event)">
       </div>
       <button class="btn-ghost" onclick="openScanner('search')"><span data-icon="scan"></span>Scan</button>
-      <button class="btn-solid" id="search-go" aria-label="Buscar" title="Buscar" onclick="runSearch()"><span data-icon="search"></span></button>
+      <button class="btn-solid" id="search-go" aria-label="Apply filters" title="Apply filters" onclick="runSearch()"><span data-icon="search"></span></button>
       <button class="btn-ghost" onclick="clearSearch()">Clear</button>
     </div>
     <div class="filter-grid">
@@ -2075,7 +2104,7 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast">Saved!</div>
+<div class="toast" id="toast" role="status" aria-live="polite">Saved!</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2137,6 +2166,14 @@
 <script src="js/modules/capa.js"></script>
 <script src="js/modules/shift.js"></script>
 <script src="js/core/mobile.js"></script>
+<script src="js/core/nexora-ui.js"></script>
+<script src="js/modules/nexora-insights.js"></script>
 <script src="js/main.js"></script>
+<dialog class="nx-command" id="nx-command" aria-labelledby="nx-command-title">
+  <div class="nx-command-head"><h2 id="nx-command-title">Find your workspace</h2><button type="button" onclick="nxCloseCommand()" aria-label="Close module finder">Esc</button></div>
+  <form class="nx-command-form" onsubmit="event.preventDefault();nxSearchModules()"><input id="nx-command-input" class="ninput" type="search" placeholder="Search modules and functions…" aria-label="Module or function name" autocomplete="off"><button class="cbtn cbtn-primary" type="submit" aria-label="Search modules"><span data-icon="search"></span></button></form>
+  <div class="nx-command-results" id="nx-command-results" aria-live="polite"></div>
+  <div class="nx-command-foot">Enter to search · Tab to move · Esc to close</div>
+</dialog>
 </body>
 </html>

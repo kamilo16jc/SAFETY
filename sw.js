@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v120';
+const CACHE = 'nexora-qc-v120-design-1';
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
 // no, cada telefono los volveria a bajar despues de cada actualizacion.
@@ -13,7 +13,9 @@ function inmutable(url){ return url.hostname === 'cdn.jsdelivr.net' && /@\d/.tes
 const SHELL = [
   './',
   './index.html',
-  './css/styles.css',
+  './css/styles.css','./css/nexora-ui.css',
+  './js/core/nexora-ui.js','./js/modules/nexora-insights.js',
+  './assets/nexora-symbol.svg','./assets/nexora-mark.svg',
   './apple-touch-icon.png',
   './assets/caputo.svg',
   './assets/caputo-dark.svg',

@@ -98,8 +98,8 @@ function initLogin() {
   var u = document.getElementById('login-user');
   var p = document.getElementById('login-pass');
   var err = document.getElementById('login-error');
-  if(u) { u.value=''; u.onkeydown = function(e){ if(e.key==='Enter') p.focus(); }; }
-  if(p) { p.value=''; p.onkeydown = function(e){ if(e.key==='Enter') doLogin(); }; }
+  if(u) { u.value=''; u.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();p.focus();} }; }
+  if(p) { p.value=''; p.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();doLogin();} }; }
   if(err) err.style.display = 'none';
 }
 
@@ -109,6 +109,7 @@ function showLoginError(msg) {
 }
 
 function doLogin() {
+  if(window.nxLoginBusy) return;
   var id = (document.getElementById('login-user').value||'').trim().toLowerCase();
   var pass = document.getElementById('login-pass').value||'';
   if(!id || !pass) { showLoginError('Enter your username and password'); return; }
@@ -121,7 +122,9 @@ function doLogin() {
   });
   if(!op) { showLoginError('User not found'); return; }
 
+  if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(true);
   var finish = function(ok){
+    if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(false);
     if(ok) {
       document.getElementById('login-pass').value = '';
       currentUser = op;
@@ -144,6 +147,9 @@ function doLogin() {
         });
       }
       finish(res==='ok' || res==='upgrade');
+    }).catch(function(){
+      if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(false);
+      showLoginError('Unable to sign in. Please try again.');
     });
   } else if(op.pin) {
     // Legacy operator (created in the PIN era): PIN works as password
