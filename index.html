@@ -683,6 +683,14 @@
         <textarea class="ninput ntext" id="w-comments" rows="3"
                   placeholder="Comments or corrective actions…"></textarea>
       </label>
+
+      <!-- Foto opcional de la bascula y la etiqueta (js/modules/weight-photo.js) -->
+      <div class="nfield">
+        <span class="nlabel">Photo <span class="wp-opt">· optional: the scale and the label</span></span>
+        <div class="wp-box" id="w-photo-box"></div>
+        <input type="file" id="w-photo-input" accept="image/*" capture="environment" hidden onchange="wpAlElegir(this)">
+        <div class="wp-pend" id="w-photo-pend" hidden></div>
+      </div>
     </section>
 
   </div>
@@ -2091,6 +2099,7 @@
 <script src="js/integrations/grilling-fill.js"></script>
 <script src="js/export/xlsx-write.js"></script>
 <script src="js/modules/weight.js"></script>
+<script src="js/modules/weight-photo.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/kpi.js"></script>
 <script src="js/modules/dash-charts.js"></script>

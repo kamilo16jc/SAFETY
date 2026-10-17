@@ -14,6 +14,7 @@ function initWeight(){
   onProductInput('weight');
   var ws=document.getElementById('w-status'); if(ws) ws.value='running';
   setWeightStatus('running');   // arranca en modo normal (llama a updateDupHint)
+  if(typeof wpPintar==='function'){ wpPintar(); wpAviso(); }
 }
 
 // ===== LINE STATUS (Running / Labeling / On break / Line down) =====
@@ -293,7 +294,7 @@ function commitWeight(){
   var hasTarget = p.min!=null && p.max!=null;
   var pass = hasTarget ? vals.filter(function(v){return v>=p.min&&v<=p.max}).length : null;
   var db=getDB();
-  db.weights.push({
+  var nuevo = {
     id:newRecordId(), date:isoFromDateTime(document.getElementById('w-date').value, document.getElementById('check-time').value),
     line:st.line, shift:st.shift,
     pkg:st.pkg, pkgLabel:p.label, unit:pkgUnit(p),
@@ -308,7 +309,10 @@ function commitWeight(){
     comments:document.getElementById('w-comments').value,
     initials:document.getElementById('w-initials').value,
     target:{min:hasTarget?p.min:null, max:hasTarget?p.max:null}
-  });
+  };
+  // La foto (si se tomo) se lleva su nombre; el archivo espera en el telefono
+  if(typeof wpAdjuntar==='function') wpAdjuntar(nuevo);
+  db.weights.push(nuevo);
   saveDB(db,'weights');
   if(window.saveToFirebase) window.saveToFirebase('weights', db.weights[db.weights.length-1]);
   st.samples=['','','','',''];
@@ -348,7 +352,7 @@ function commitWeightIssue(){
   var timeVal = document.getElementById('check-time').value;
   var comment = document.getElementById('w-comments').value.trim() || weightIssueComment(issue, timeVal);
   var db = getDB();
-  db.weights.push({
+  var nuevo = {
     id: newRecordId(),
     date: isoFromDateTime(document.getElementById('w-date').value, timeVal),
     line: st.line, shift: st.shift,
@@ -360,7 +364,10 @@ function commitWeightIssue(){
     comments: comment,
     initials: document.getElementById('w-initials').value,
     target: {min:null, max:null}
-  });
+  };
+  // Una linea parada tambien puede llevar foto (de lo que la paro)
+  if(typeof wpAdjuntar==='function') wpAdjuntar(nuevo);
+  db.weights.push(nuevo);
   saveDB(db);
   var rec = db.weights[db.weights.length-1];
   if(window.saveToFirebase) window.saveToFirebase('weights', rec);

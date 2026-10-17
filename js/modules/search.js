@@ -808,8 +808,11 @@ function viewWeightRecord(id){
       '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
     : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  // La foto, si la tiene: se pide al abrir (ver js/modules/weight-photo.js)
+  if(typeof wpBloqueHTML==='function') body += wpBloqueHTML(w);
   openRecordModal((issue ? 'Line status record' : 'Weight record')+
     (w.lot?' · LOT '+esc(w.lot):''), body, actions);
+  if(typeof wpCargarEn==='function') wpCargarEn(document.getElementById('rec-modal-body'));
 }
 
 function recEdit(label, control){

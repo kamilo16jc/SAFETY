@@ -13,3 +13,9 @@ dev-server.py
 _dev.html
 _banco*.html
 __pycache__/
+
+# Funciones de Firebase (fotos): dependencias y URLs de los flujos, nunca a git
+functions/node_modules/
+functions/.env
+functions/.env.*
+firebase-debug.log

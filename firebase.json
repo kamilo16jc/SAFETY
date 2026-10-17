@@ -1,0 +1,10 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "safety",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", ".git", "*.log", ".env.local"]
+    }
+  ]
+}
