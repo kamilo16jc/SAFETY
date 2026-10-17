@@ -87,6 +87,7 @@ function renderSampleList(){
     '</tr></thead><tbody>'+
     view.map(function(x, i){ return slRowHTML(x, i+1); }).join('')+
     '</tbody></table></div>';
+  renderIcons(host);
 }
 
 function slRowHTML(x, i){
@@ -99,19 +100,30 @@ function slRowHTML(x, i){
           : '<button class="sheet-btn'+(r.collected?' done':'')+'" '+
             'onclick="toggleRunCheck('+r.id+",'collected')"+'">'+
             (r.collected ? '✓ Collected' : 'Mark collected')+'</button>';
-  return '<tr>'+
+  // El LOT se escribe o se escanea aqui mismo, al recoger la muestra: es el
+  // que despues toma Sample Analysis. Se guarda en la corrida del schedule.
+  var lot = '<div class="sl-lotbox">'+
+      '<input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
+        'autocapitalize="characters" aria-label="LOT" '+
+        'onchange="setRunLot('+r.id+', this.value)">'+
+      '<button type="button" class="ico-btn sm sl-scan" title="Scan LOT" aria-label="Scan LOT" '+
+        'onclick="scanRunLot('+r.id+')"><span data-icon="scan"></span></button>'+
+    '</div>';
+  return '<tr'+(x.kind==='done'?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+
-    '<td class="mid">'+esc(String(r.line||'—'))+'</td>'+
-    '<td class="soft">'+esc(r.time||'—')+'</td>'+
-    '<td class="code">'+esc(r.product||'—')+'</td>'+
-    '<td class="wide">'+esc(r.productName||'—')+
-      (x.known ? '' : ' <span class="pill bad">not in catalog</span>')+'</td>'+
-    '<td class="soft">'+esc(x.cust ? x.cust.company : '—')+'</td>'+
-    '<td class="code">'+esc(r.lot||'—')+'</td>'+
-    '<td class="num">'+(x.n||'—')+'</td>'+
-    '<td class="code soft">'+(r.sampleFrom ? r.sampleFrom+'–'+r.sampleTo : '—')+'</td>'+
-    '<td>'+st+'</td>'+
-    '<td>'+act+'</td>'+
+    '<td class="mid sl-line">'+esc(String(r.line||'—'))+'</td>'+
+    '<td class="soft sl-time">'+esc(r.time||'—')+'</td>'+
+    '<td class="code sl-code">'+esc(r.product||'—')+'</td>'+
+    '<td class="wide sl-name">'+esc(r.productName||'—')+
+      (x.known ? '' : ' <span class="pill bad">not in catalog</span>')+
+      // en el telefono el cliente va debajo del nombre (su columna se oculta)
+      (x.cust ? '<span class="sl-cust-in">'+esc(x.cust.company)+'</span>' : '')+'</td>'+
+    '<td class="soft sl-cust">'+esc(x.cust ? x.cust.company : '—')+'</td>'+
+    '<td class="sl-lot">'+lot+'</td>'+
+    '<td class="num sl-n">'+(x.n||'—')+'</td>'+
+    '<td class="code soft sl-nums">'+(r.sampleFrom ? r.sampleFrom+'–'+r.sampleTo : '—')+'</td>'+
+    '<td class="sl-st">'+st+'</td>'+
+    '<td class="sl-act">'+act+'</td>'+
   '</tr>';
 }
 
