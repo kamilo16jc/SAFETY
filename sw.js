@@ -15,7 +15,6 @@ const SHELL = [
   './index.html',
   './css/styles.css','./css/nexora-ui.css',
   './js/core/nexora-ui.js','./js/modules/nexora-insights.js',
-  './assets/nexora-symbol.svg','./assets/nexora-mark.svg',
   './apple-touch-icon.png',
   './assets/caputo.svg',
   './assets/caputo-dark.svg',

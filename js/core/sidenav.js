@@ -14,7 +14,7 @@ function renderSideNav(){
     '<div class="nx-nav-label">Workspaces</div>'+mods.map(function(m){
       return '<div class="nx-nav-group">'+snavTileHTML(m)+(m.id===snavOpen?'<div class="snav-list" id="snav-list-'+m.id+'">'+snavSubHTML(m)+'</div>':'')+'</div>';
     }).join('')+
-    '<div class="nx-nav-bottom"><img data-brand="static" src="assets/caputo.svg" alt="Caputo"><span>Quality control<br>NEXORA workspace</span></div>';
+    '<div class="nx-nav-bottom"><span>Caputo Cheese<br>Quality control</span></div>';
   document.body.classList.toggle('snav-open',!!snavOpen);
   renderIcons(host);
   if(typeof paintBrand==='function') paintBrand(host);
