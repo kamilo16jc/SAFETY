@@ -279,6 +279,8 @@ function saveWeight(cual){
   if(!activePkg()){toast('Select package size');return}
   var vals=st.samples.map(function(v){return parseFloat(v)}).filter(function(v){return !isNaN(v)});
   if(!vals.length){toast('Enter at least one sample');return}
+  // Lot de la bolsa distinto al de la etiqueta: se guarda, pero con comentario
+  if(typeof wpLotBloquea==='function' && wpLotBloquea()) return;
   var d=findRecentWeight();
   if(d){
     showDupModal({title:dupWeightTitle(d), detail:dupWeightDetail(d),

@@ -2431,17 +2431,38 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .nlabel{font-size:13px;font-weight:600;color:var(--text)}
 .nlabel i{font-style:normal;font-weight:400;font-size:12px;color:var(--dim)}
 
-/* La foto de la verificacion de peso (js/modules/weight-photo.js) */
+/* El control del LOT con fotos (js/modules/weight-photo.js): bolsa y etiqueta */
 .wp-opt{font-weight:400;font-size:12px;color:var(--dim)}
-.wp-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wp-slots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wp-slot{display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.wp-tit{font-size:12px;font-weight:700;color:var(--text)}
+.wp-foto{display:flex;align-items:flex-end;gap:8px;min-height:38px}
 .wp-btn{align-self:flex-start}
-.wp-box .cbtn{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm)}
-.wp-box .cbtn:hover{background:var(--surface2)}
-.wp-thumb{width:96px;height:96px;object-fit:cover;border-radius:var(--radius-sm);
-  border:1px solid var(--border);background:var(--surface2)}
-.wp-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.wp-slot .cbtn{border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm)}
+.wp-slot .cbtn:hover{background:var(--surface2)}
+.wp-thumb{width:84px;height:84px;object-fit:cover;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface2);cursor:zoom-in}
 .wp-meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.wp-acts{display:flex;gap:8px;flex-wrap:wrap}
+.wp-acts{display:flex;flex-direction:column;gap:6px}
+.wp-acts .cbtn{width:34px;height:34px;padding:0}
+.wp-lotf{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted)}
+.wp-lotin{height:36px;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.04em}
+.wp-como{font-size:11.5px;color:var(--dim);min-height:15px}
+.wp-como.warn{color:var(--warn);font-weight:600}
+/* el resultado: verde si coinciden, rojo si no */
+.wp-check{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface2);font-size:12.5px;color:var(--muted)}
+.wp-check[hidden]{display:none}
+.wp-check b{color:var(--text);font-weight:700}
+.wp-check.ok{background:var(--pass-tint);border-color:var(--pass)}
+.wp-check.ok b{color:var(--pass)}
+.wp-check.bad{background:var(--fail-tint);border-color:var(--fail)}
+.wp-check.bad b{color:var(--fail)}
+.wp-aviso{color:var(--warn);font-weight:600}
+.wp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.wp-fig{margin:0;display:flex;flex-direction:column;gap:4px}
+.wp-fig figcaption{font-size:11.5px;font-weight:600;color:var(--muted)}
 .wp-pend{font-size:12px;font-weight:600;color:var(--warn)}
 .wp-pend[hidden]{display:none}
 .wp-img{display:block;max-width:100%;max-height:320px;border-radius:var(--radius-sm);

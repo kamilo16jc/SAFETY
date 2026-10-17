@@ -108,6 +108,7 @@ exports.safetyPhotoUpload = onRequest(OPTS, async (req, res) => {
   // NO se manda retestId: EnviroTrack descarta al leer las que no lo traen,
   // asi no le aparecen en sus retests.
   const etiqueta = ["SAFETY weight check",
+    m.kind === "bag" ? "Bag LOT" : m.kind === "label" ? "Label" : "",
     m.line ? "Line " + corto(m.line, 10) : "",
     m.lot ? "LOT " + corto(m.lot, 40) : "",
     m.by ? corto(m.by, 60) : ""].filter(Boolean).join(" · ");

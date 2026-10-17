@@ -3,7 +3,12 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v119';
+const CACHE = 'nexora-qc-v120';
+// Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
+// Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
+// no, cada telefono los volveria a bajar despues de cada actualizacion.
+const CACHE_CDN = 'nexora-cdn-1';
+function inmutable(url){ return url.hostname === 'cdn.jsdelivr.net' && /@\d/.test(url.pathname); }
 
 const SHELL = [
   './',
@@ -16,7 +21,7 @@ const SHELL = [
   './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/sidenav.js','./js/core/utils.js',
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
-  './js/modules/weight.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
+  './js/modules/weight.js','./js/modules/lot-ocr.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
   './js/modules/admin.js','./js/modules/reports.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
   './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',
@@ -58,7 +63,7 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k!==CACHE; })
+      return Promise.all(keys.filter(function(k){ return k!==CACHE && k!==CACHE_CDN; })
                              .map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
@@ -70,6 +75,19 @@ self.addEventListener('fetch', function(e){
 
   var url = new URL(req.url);
   if(NEVER_CACHE.indexOf(url.hostname) > -1) return;     // Firebase API: siempre a la red
+
+  // CDN con version: de la cache si ya esta, sin volver a pedirlo
+  if(inmutable(url)){
+    e.respondWith(caches.open(CACHE_CDN).then(function(c){
+      return c.match(req).then(function(hit){
+        return hit || fetch(req).then(function(res){
+          if(res && (res.ok || res.type === 'opaque')) c.put(req, res.clone());
+          return res;
+        });
+      });
+    }));
+    return;
+  }
 
   // Navegación (abrir la app): red primero, y si no hay señal, el shell cacheado
   if(req.mode === 'navigate'){

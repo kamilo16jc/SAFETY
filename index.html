@@ -684,10 +684,15 @@
                   placeholder="Comments or corrective actions…"></textarea>
       </label>
 
-      <!-- Foto opcional de la bascula y la etiqueta (js/modules/weight-photo.js) -->
+      <!-- Control del LOT: foto del lot en la bolsa y en la etiqueta; se lee
+           el lot de cada una y se comparan (js/modules/weight-photo.js) -->
       <div class="nfield">
-        <span class="nlabel">Photo <span class="wp-opt">· optional: the scale and the label</span></span>
-        <div class="wp-box" id="w-photo-box"></div>
+        <span class="nlabel">LOT check <span class="wp-opt">· photo of the LOT on the bag and on the label: take it close, the LOT should look big</span></span>
+        <div class="wp-slots">
+          <div class="wp-slot" id="w-ph-bag"></div>
+          <div class="wp-slot" id="w-ph-label"></div>
+        </div>
+        <div class="wp-check" id="w-lotcheck" hidden></div>
         <input type="file" id="w-photo-input" accept="image/*" capture="environment" hidden onchange="wpAlElegir(this)">
         <div class="wp-pend" id="w-photo-pend" hidden></div>
       </div>
@@ -2099,6 +2104,7 @@
 <script src="js/integrations/grilling-fill.js"></script>
 <script src="js/export/xlsx-write.js"></script>
 <script src="js/modules/weight.js"></script>
+<script src="js/modules/lot-ocr.js"></script>
 <script src="js/modules/weight-photo.js"></script>
 <script src="js/modules/seal.js"></script>
 <script src="js/modules/kpi.js"></script>
