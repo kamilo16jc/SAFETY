@@ -100,14 +100,16 @@ function slRowHTML(x, i){
           : '<button class="sheet-btn'+(r.collected?' done':'')+'" '+
             'onclick="toggleRunCheck('+r.id+",'collected')"+'">'+
             (r.collected ? '✓ Collected' : 'Mark collected')+'</button>';
-  // El LOT se escribe o se escanea aqui mismo, al recoger la muestra: es el
-  // que despues toma Sample Analysis. Se guarda en la corrida del schedule.
+  // El LOT se escribe aqui mismo, al recoger la muestra: es el que despues
+  // toma Sample Analysis. Se guarda en la corrida del schedule. El boton de al
+  // lado escanea el PRODUCTO y lo marca como recogido (no toca el LOT).
   var lot = '<div class="sl-lotbox">'+
       '<input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
         'autocapitalize="characters" aria-label="LOT" '+
         'onchange="setRunLot('+r.id+', this.value)">'+
-      '<button type="button" class="ico-btn sm sl-scan" title="Scan LOT" aria-label="Scan LOT" '+
-        'onclick="scanRunLot('+r.id+')"><span data-icon="scan"></span></button>'+
+      '<button type="button" class="ico-btn sm sl-scan" title="Scan the product to collect it" '+
+        'aria-label="Scan the product to collect it" '+
+        'onclick="scanRunCollect('+r.id+')"><span data-icon="scan"></span></button>'+
     '</div>';
   return '<tr'+(x.kind==='done'?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+

@@ -199,7 +199,13 @@ function onScanResult(code){
   closeScanner();
   playAlert('pass');
   var screen = scanScreen || 'weight';
-  // LOT de una corrida del Production Schedule: "runlot:<id>"
+  // El producto de una corrida (List Samples / Production Schedule):
+  // "collect:<id>" confirma que es ese producto y lo marca recogido
+  if(screen.indexOf('collect:')===0){
+    collectByScan(parseInt(screen.slice(8)), code);
+    return;
+  }
+  // LOT de una corrida: "runlot:<id>" (ya no lo usa ningun boton)
   if(screen.indexOf('runlot:')===0){
     setRunLot(parseInt(screen.slice(7)), code);
     toast('LOT: '+code);

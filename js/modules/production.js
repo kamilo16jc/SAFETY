@@ -337,7 +337,39 @@ function refreshRunViews(){
   if(sl && sl.classList.contains('active') && typeof renderSampleList==='function') renderSampleList();
 }
 
-function scanRunLot(id){ openScanner('runlot:'+id); }
+// Escanear el producto de una corrida es "ya me lo llevo": confirma que es ese
+// producto y marca la muestra como recogida. El LOT NO se toca: antes el
+// lector escribia el codigo de barras encima del LOT.
+function scanRunCollect(id){ openScanner('collect:'+id); }
+
+function collectByScan(id, code){
+  var run = findRun(id);
+  if(!run) return;
+  var leido = (typeof findProduct==='function') ? findProduct(code) : null;
+  if(leido && normNumber(leido.number) !== normNumber(run.product)){
+    playAlert('fail');
+    toast('That is product '+leido.number+', not '+run.product+'. Not collected.');
+    return;
+  }
+  if(!leido){
+    // Un codigo que el catalogo todavia no conoce: se pregunta si es este
+    // producto, y si lo es se le une para que la proxima vez se reconozca solo
+    var nombre = run.product+(run.productName ? ' — '+run.productName : '');
+    if(!confirm('This barcode is not linked to any product yet.\n\nIs it '+nombre+'?\n'+
+                'It will be linked to it and the sample marked as collected.')){
+      toast('Not collected');
+      return;
+    }
+    var suyo = (typeof findProduct==='function') ? findProduct(run.product) : null;
+    if(suyo && typeof linkBarcode==='function') linkBarcode(suyo, code);
+  }
+  if(runSampleCount(run) <= 0){ toast(run.product+' takes no lab sample'); return; }
+  if(run.collected){ toast('Already collected · '+run.product); return; }
+  toggleRunCheck(id, 'collected');
+  var r2 = findRun(id) || run;
+  toast('✓ Collected · '+run.product+
+        (r2.sampleFrom ? ' · samples '+r2.sampleFrom+'–'+r2.sampleTo : ''));
+}
 
 // ---- Desde la corrida a Hold / CAPA (ya ligados por LOT, producto y línea) ----
 function holdFromRun(id){
@@ -430,7 +462,7 @@ function runRowHTML(r, i){
     '<td class="pr-chk">'+(n>0 ? tog(r.labSent, r.labSent?'Sent':'Send', "toggleRunCheck("+r.id+",'labSent')")
                 : '<span class="soft">\u2014</span>')+'</td>'+
     '<td class="acts pr-acts">'+
-      ico('scan','Scan LOT','scanRunLot('+r.id+')','pr-scan')+
+      ico('scan','Scan the product to collect it','scanRunCollect('+r.id+')','pr-scan')+
       ico('close','Remove from schedule','deleteRun('+r.id+')','pr-del')+
     '</td>'+
   '</tr>';
