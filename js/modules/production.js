@@ -410,28 +410,28 @@ function runRowHTML(r, i){
   var tested = t.auto
     ? '<span class="pill ok" title="Confirmed by analysis #'+(t.seq||'')+'">\u2713 #'+(t.seq||'\u2014')+'</span>'
     : tog(t.manual, t.manual ? 'Marked' : 'Not tested', 'toggleRunTested('+r.id+')');
-  var ico = function(icon, title, onclick){
-    return '<button class="ico-btn sm" title="'+title+'" onclick="'+onclick+'"><span data-icon="'+icon+'"></span></button>';
+  var ico = function(icon, title, onclick, cls){
+    return '<button class="ico-btn sm '+cls+'" title="'+title+'" aria-label="'+title+'" onclick="'+onclick+'"><span data-icon="'+icon+'"></span></button>';
   };
   return '<tr'+(complete?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+
-    '<td class="code">'+esc(r.product||'\u2014')+'</td>'+
-    '<td class="wide">'+esc(r.productName||'\u2014')+
+    '<td class="code pr-code">'+esc(r.product||'\u2014')+'</td>'+
+    '<td class="wide pr-name">'+esc(r.productName||'\u2014')+
       (complete ? ' <span class="tag ok">Complete</span>'
                 : ' <span class="tag warn">Pending</span>')+'</td>'+
-    '<td class="mid">'+esc(String(r.line||'\u2014'))+'</td>'+
-    '<td><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
+    '<td class="mid pr-line">'+esc(String(r.line||'\u2014'))+'</td>'+
+    '<td class="pr-lot"><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
       'onchange="setRunLot('+r.id+', this.value)"></td>'+
-    '<td class="num">'+(n||'\u2014')+
+    '<td class="num pr-n">'+(n||'\u2014')+
       (r.sampleFrom ? ' <span class="soft">('+r.sampleFrom+'\u2013'+r.sampleTo+')</span>' : '')+'</td>'+
-    '<td>'+(n>0 ? tog(r.collected, r.collected?'Collected':'Collect', "toggleRunCheck("+r.id+",'collected')")
+    '<td class="pr-chk">'+(n>0 ? tog(r.collected, r.collected?'Collected':'Collect', "toggleRunCheck("+r.id+",'collected')")
                 : '<span class="soft">\u2014</span>')+'</td>'+
-    '<td>'+tested+'</td>'+
-    '<td>'+(n>0 ? tog(r.labSent, r.labSent?'Sent':'Send', "toggleRunCheck("+r.id+",'labSent')")
+    '<td class="pr-chk">'+tested+'</td>'+
+    '<td class="pr-chk">'+(n>0 ? tog(r.labSent, r.labSent?'Sent':'Send', "toggleRunCheck("+r.id+",'labSent')")
                 : '<span class="soft">\u2014</span>')+'</td>'+
-    '<td class="acts">'+
-      ico('scan','Scan LOT','scanRunLot('+r.id+')')+
-      ico('close','Remove from schedule','deleteRun('+r.id+')')+
+    '<td class="acts pr-acts">'+
+      ico('scan','Scan LOT','scanRunLot('+r.id+')','pr-scan')+
+      ico('close','Remove from schedule','deleteRun('+r.id+')','pr-del')+
     '</td>'+
   '</tr>';
 }

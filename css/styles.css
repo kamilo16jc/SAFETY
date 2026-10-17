@@ -1444,6 +1444,42 @@ body.logged-out .topstack{display:none}
   .sheet td.acts .ico-btn.sm svg{width:16px;height:16px}
   .sheet td input[type=checkbox]{font-size:16px}
 
+  /* --- Production Schedule: cada corrida en tres renglones cortos ---
+     1) el numero del producto grande, el nombre chico, la linea y quitar;
+     2) el LOT con el boton de escanear al lado;
+     3) muestras, recolectada, probada y enviada, en una sola fila.
+     El boton de escanear y el de quitar viven en la misma celda: con
+     display:contents cada uno va a su renglon. */
+  #pr-body tr{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 13px}
+  #pr-body td{border:0;padding:0;min-height:0}
+  #pr-body td::before{content:none}
+  #pr-body td.pr-code{order:1;flex:0 0 auto;font-size:21px;font-weight:700;
+    letter-spacing:-.02em;line-height:1.1;color:var(--text)}
+  #pr-body td.pr-name{order:2;flex:1 1 0;min-width:0;display:block;font-size:11.5px;
+    line-height:1.3;color:var(--muted)}
+  #pr-body td.pr-name .tag{font-size:9.5px;padding:1px 6px;margin-left:2px}
+  #pr-body td.pr-line{order:3;flex:0 0 auto;font-size:11px;font-weight:700;
+    color:var(--muted);background:var(--surface2);border-radius:20px;padding:3px 9px}
+  #pr-body td.pr-line::before{content:'Line\00a0';display:inline;flex:none;
+    font-size:inherit;font-weight:inherit;color:inherit}
+  #pr-body td.pr-acts{display:contents}
+  #pr-body .pr-del{order:4;width:30px;height:30px;min-height:30px;color:var(--dim)}
+  #pr-body .pr-del svg{width:13px;height:13px}
+  #pr-body td.pr-lot{order:5;flex:1 1 calc(100% - 60px)}
+  #pr-body td.pr-lot input.cell{font-size:16px;min-height:42px}
+  #pr-body .pr-scan{order:6;width:42px;height:42px}
+  #pr-body td.pr-n,#pr-body td.pr-chk{order:7;flex:1 1 0;min-width:0;display:flex;
+    flex-direction:column;align-items:stretch;justify-content:space-between;gap:3px;
+    align-self:stretch;text-align:center}
+  #pr-body td.pr-n{flex:0 0 auto;align-items:center;font-size:15px;font-weight:700}
+  #pr-body td.pr-n .soft{font-size:10px;font-weight:500}
+  #pr-body td.pr-n::before,#pr-body td.pr-chk::before{content:attr(data-label);display:block;
+    flex:none;font-size:9px;font-weight:700;color:var(--muted);white-space:nowrap}
+  #pr-body td.pr-chk > *{width:100%;justify-content:center}
+  #pr-body .cell-tog,#pr-body td.pr-chk .pill{padding:8px 4px;font-size:12px;min-height:36px;
+    white-space:nowrap;display:flex;align-items:center;justify-content:center}
+  #pr-body td.pr-n{min-height:51px}
+
   /* --- barra de herramientas: en columna, sin huecos vacíos --- */
   .sheet-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
   .sheet-bar .sb-field{min-width:0}
