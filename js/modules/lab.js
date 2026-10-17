@@ -106,6 +106,7 @@ function hhmm(iso){
 }
 
 function renderLab(){
+  if(typeof fillRunLotsFromAnalyses==='function') fillRunLotsFromAnalyses();
   if(typeof renderLabForms==='function') renderLabForms();
   var host = document.getElementById('lab-sheet');
   if(!host) return;

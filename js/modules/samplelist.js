@@ -36,6 +36,7 @@ function slRow(r){
 }
 
 function renderSampleList(){
+  if(typeof fillRunLotsFromAnalyses==='function') fillRunLotsFromAnalyses();
   slFilters();
   var host = document.getElementById('sl-sheet');
   if(!host) return;

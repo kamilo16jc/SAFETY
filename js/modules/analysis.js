@@ -448,6 +448,8 @@ function saveAnalysis(){
 
   window._anRunId = null;
   window._anRunAuto = false;
+  // el LOT escrito aqui pasa a la corrida de esa muestra si no tenia
+  if(typeof fillRunLotsFromAnalyses==='function') fillRunLotsFromAnalyses();
   resetAnalysisRow();
   var pe=document.getElementById('an-product'); if(pe) pe.focus();
   toast('Analysis #'+rec.seq+' saved');

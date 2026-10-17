@@ -125,6 +125,37 @@ function persistRunEdit(run, db){
   if(run._fbId && window.saveToFirebaseAt) window.saveToFirebaseAt('runs', run._fbId, run);
 }
 
+// El LOT que se escribio en Sample Analysis pasa a la corrida de esa muestra
+// cuando la corrida no tiene: la corrida a la que quedo ligado el analisis, o
+// la del mismo producto y el mismo dia (el LOT es la fecha de produccion, asi
+// que es el mismo). Lo que ya tiene LOT no se toca. Antes el LOT quedaba solo
+// en el analisis y Lab Samples / la forma del lab lo mostraban vacio.
+function fillRunLotsFromAnalyses(){
+  if(typeof getAnalyses !== 'function') return 0;
+  var db = getDB();
+  var sinLot = (db.runs||[]).filter(function(r){ return !String(r.lot||'').trim(); });
+  if(!sinLot.length) return 0;
+  var num = function(v){ return (typeof normNumber==='function') ? normNumber(v) : String(v||'').trim(); };
+  var porRun = {}, porDia = {};
+  getAnalyses().forEach(function(a){
+    var lot = String(a.lot||'').trim();
+    if(!lot) return;
+    if(a.runId) porRun[a.runId] = lot;
+    else porDia[num(a.product)+'|'+String(a.date||'').slice(0,10)] = lot;
+  });
+  var cambiadas = [];
+  sinLot.forEach(function(r){
+    var lot = porRun[r.id] || porDia[num(r.product)+'|'+String(r.date||'').slice(0,10)];
+    if(lot){ r.lot = lot; cambiadas.push(r); }
+  });
+  if(!cambiadas.length) return 0;
+  saveDB(db, 'runs');
+  cambiadas.forEach(function(r){
+    if(r._fbId && window.saveToFirebaseAt) window.saveToFirebaseAt('runs', r._fbId, r);
+  });
+  return cambiadas.length;
+}
+
 function findRun(id){
   return getRuns().filter(function(r){ return r.id===id; })[0] || null;
 }
@@ -397,6 +428,7 @@ function capaFromRun(id){
 }
 
 function renderProduction(){
+  fillRunLotsFromAnalyses();
   prodFilters();
   buildProductionSheet();
   var body = document.getElementById('pr-body');
