@@ -51,6 +51,16 @@ function labTestsOf(p, c){
 // Sin esto no hay nada que pedirle al laboratorio
 function hasLabTests(p, c){ return labTestsOf(p, c).length > 0; }
 
+// La casilla de composite que marco el cliente ("Composite: 2-5 Samples").
+// No es un test, pero va con su X en la forma y se muestra en Lab Samples.
+function labCompositeOf(c){
+  if(!c) return [];
+  if(typeof custGoesToLab==='function' && !custGoesToLab(c)) return [];
+  return (c.tests || []).map(labTestName).filter(function(x){
+    return String(x||'').trim() && labIsComposite(x);
+  });
+}
+
 // ===== CADA TEST, UN PUNTO DE COLOR =====
 // Escribir los nombres completos dentro de la hoja la volvia ilegible: una
 // celda con "Listeria Mono, Salmonella, Coliform & E. coli" tapaba el resto de

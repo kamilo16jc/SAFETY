@@ -74,6 +74,30 @@ function labFormWarnings(group){
   return w;
 }
 
+// Las X de una fila: cada test del cliente en su columna de la forma, y la
+// casilla de composite si el cliente la marco. Lo que la forma no tiene se
+// devuelve en "missing" para avisar antes de generar.
+function labFormMarks(row, formName, customer){
+  var p = (typeof findProduct==='function') ? findProduct(row.run.product) : null;
+  var sel = (typeof productTests==='function') ? productTests(p||{number:row.run.product}, customer) : [];
+  var marks = [], missing = [];
+  sel.forEach(function(t){
+    var col = (typeof labTestColumn==='function') ? labTestColumn(formName, t.sheet, t.label) : null;
+    if(col) marks.push({sheet:t.sheet, col:col, label:t.label});
+    else    missing.push(t.label);
+  });
+  // "Composite: 2-5 Samples" no es un test (no cuenta ni sale como punto),
+  // pero si el cliente lo marco lleva su X: antes se quedaba fuera de la forma.
+  var cc = ((getDB().labTestMap||{}).compositeCol || {})[formName] || '';
+  var comp = (typeof labCompositeOf==='function') ? labCompositeOf(customer) : [];
+  comp.forEach(function(n){
+    var col = ((typeof labTestColumn==='function') ? labTestColumn(formName, 'micro', n) : null) || cc || null;
+    if(col) marks.push({sheet:'micro', col:col, label:n});
+    else    missing.push(n);
+  });
+  return {marks:marks, missing:missing};
+}
+
 // ---- Generación ----
 function generateLabForm(customerKey, date){
   var group = labFormGroups().filter(function(g){
@@ -109,14 +133,8 @@ function generateLabForm(customerKey, date){
       // Los tests son los del cliente de esta forma (todas sus referencias
       // llevan los mismos); se resuelven a columna en su forma.
       rows.forEach(function(row){
-        var p = (typeof findProduct==='function') ? findProduct(row.run.product) : null;
-        var sel = (typeof productTests==='function') ? productTests(p||{number:row.run.product}, group.customer) : [];
-        row.marks = []; row.missing = [];
-        sel.forEach(function(t){
-          var col = (typeof labTestColumn==='function') ? labTestColumn(formName, t.sheet, t.label) : null;
-          if(col) row.marks.push({sheet:t.sheet, col:col, label:t.label});
-          else    row.missing.push(t.label);
-        });
+        var mk = labFormMarks(row, formName, group.customer);
+        row.marks = mk.marks; row.missing = mk.missing;
       });
       var miss = rows.filter(function(r){ return r.missing.length; });
       if(miss.length){

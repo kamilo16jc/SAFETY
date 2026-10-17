@@ -172,6 +172,12 @@ function labRowHTML(r, i){
   var tests = (typeof testDotsHTML==='function')
     ? testDotsHTML(suyos)
     : (suyos.length ? esc(suyos.join(', ')) : '\u2014');
+  // la casilla de composite del cliente (no es un punto: es como se manda)
+  var comp = (typeof labCompositeOf==='function') ? labCompositeOf(c) : [];
+  if(comp.length && suyos.length){
+    tests += ' <span class="tag comp-tag" title="'+esc(comp[0])+'">'+
+             esc(comp[0].replace(/^composite\s*:?\s*/i, 'Composite '))+'</span>';
+  }
   return '<tr'+(r.labSent?' class="done"':'')+'>'+
     '<td class="rn">'+i+'</td>'+
     '<td class="soft">'+esc(fmtDate(r.date))+'</td>'+
