@@ -26,14 +26,67 @@ function initAnalysis(){
   renderAnalysisRows();
 }
 
-// Número correlativo del año (como el ID de la hoja)
+// Número correlativo del año (como el ID de la hoja). Sigue al ULTIMO que se
+// guardo, no al mayor: si QA pone el 10 en la fila nueva, el siguiente es el
+// 11 aunque haya numeros mas altos de antes.
 function nextAnalysisSeq(year){
   var y = String(year||new Date().getFullYear());
-  var max = 0;
+  var ultimo = null;
   getAnalyses().forEach(function(a){
-    if(String(a.date||'').slice(0,4)===y && +a.seq>max) max = +a.seq;
+    if(String(a.date||'').slice(0,4)!==y || !(+a.seq>0)) return;
+    if(!ultimo) { ultimo = a; return; }
+    var ka = String(a.createdAt||''), ku = String(ultimo.createdAt||'');
+    if(ka>ku || (ka===ku && (+a.id||0)>(+ultimo.id||0))) ultimo = a;
   });
-  return max+1;
+  return ultimo ? (+ultimo.seq)+1 : 1;
+}
+
+// El numero que lleva la fila nueva: el que se escribio, o el que sigue
+function anSeqWanted(year){
+  var e = document.getElementById('an-seq');
+  var n = e ? parseInt(String(e.value).trim(), 10) : NaN;
+  return (n > 0 && String(n) === String(e.value).trim()) ? n : nextAnalysisSeq(year);
+}
+
+// Sugiere el siguiente numero, salvo que QA ya haya escrito uno
+function anSuggestSeq(){
+  var e = document.getElementById('an-seq');
+  if(!e || e.dataset.manual) return;
+  var d = (document.getElementById('an-date')||{}).value || localDateStr();
+  e.value = nextAnalysisSeq(String(d).slice(0,4));
+}
+function anSeqTyped(e){ if(e.value.trim()) e.dataset.manual = '1'; else delete e.dataset.manual; }
+function anDateChanged(){ anSuggestSeq(); onAnalysisProduct(); }
+
+// La muestra recolectada de un producto: la de ese mismo dia si la hay; si no,
+// la mas reciente que todavia no tenga analisis. Solo cuentan las corridas con
+// la muestra recogida y su LOT puesto, de la semana anterior al dia del
+// analisis (una muestra de hace un mes no es la que se esta analizando).
+function anCollectedRun(product, day){
+  if(typeof getRuns !== 'function' || !product) return null;
+  day = String(day||'').slice(0,10) || localDateStr();
+  var desde = new Date(day+'T12:00:00'); desde.setDate(desde.getDate()-7);
+  desde = desde.getFullYear()+'-'+('0'+(desde.getMonth()+1)).slice(-2)+'-'+('0'+desde.getDate()).slice(-2);
+  var list = getRuns().filter(function(r){
+    var d = String(r.date||'').slice(0,10);
+    return String(r.product||'')===String(product) && r.collected &&
+           String(r.lot||'').trim() && d<=day && d>=desde;
+  });
+  if(!list.length) return null;
+  var probado = function(r){ return (typeof runTestCount==='function' && runTestCount(r).auto) ? 1 : 0; };
+  list.sort(function(a,b){
+    var da = String(a.date||'').slice(0,10), db = String(b.date||'').slice(0,10);
+    return ((db===day?1:0)-(da===day?1:0)) || (probado(a)-probado(b)) ||
+           db.localeCompare(da) || String(b.collectedAt||'').localeCompare(String(a.collectedAt||''));
+  });
+  return list[0];
+}
+
+// Si QA escribe el LOT a mano, ya no se cambia solo
+function anLotTyped(e){
+  delete e.dataset.auto;
+  e.classList.remove('from-run');
+  e.title = '';
 }
 
 // El LOT del analisis. Si no se escribio, se toma el de la corrida de ese
@@ -122,13 +175,15 @@ function buildAnalysisSheet(){
       '<th>By</th><th>Save</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="an-new"><tr class="newrow">'+
-      '<td class="rn">New</td>'+
-      '<td><input type="date" class="cell" id="an-date"></td>'+
+      '<td class="rn"><input class="cell an-seq" id="an-seq" inputmode="numeric" '+
+        'aria-label="Analysis number" title="Analysis number. Change it to set where the count continues" '+
+        'oninput="anSeqTyped(this)"></td>'+
+      '<td><input type="date" class="cell" id="an-date" onchange="anDateChanged()"></td>'+
       '<td><input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
         'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()"></td>'+
       '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
       '<td class="soft" id="an-customer-cell">—</td>'+
-      '<td><input class="cell" id="an-lot" placeholder="LOT"></td>'+
+      '<td><input class="cell" id="an-lot" placeholder="LOT" oninput="anLotTyped(this)"></td>'+
 
       '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
       '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
@@ -154,6 +209,10 @@ function resetAnalysisRow(){
   var by=document.getElementById('an-by');
   if(by && typeof getInitials==='function') by.textContent = getInitials();
   var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
+  var lt=document.getElementById('an-lot'); if(lt) anLotTyped(lt);
+  var sq=document.getElementById('an-seq'); if(sq) delete sq.dataset.manual;
+  window._anRunAuto = false;
+  anSuggestSeq();
 }
 
 function renderAnalysisRows(){
@@ -232,7 +291,7 @@ function anRowHTML(a, i){
       'onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
   };
   return '<tr>'+
-    '<td class="rn">'+i+'</td>'+
+    '<td class="rn">'+esc(a.seq||i)+'</td>'+
     '<td class="soft">'+esc(fmtDate(a.date))+'</td>'+
     '<td class="code">'+esc(a.product||'—')+'</td>'+
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
@@ -317,6 +376,27 @@ function onAnalysisProduct(){
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
   var el = document.getElementById('an-customer-cell');
   if(el) el.textContent = c ? c.company : '—';
+
+  // El LOT sale de la muestra recolectada de ese producto (Production
+  // Schedule / List Samples). Se pone solo, pero se puede cambiar: si QA lo
+  // escribe a mano, ya no se toca.
+  var lot = document.getElementById('an-lot');
+  if(!lot) return;
+  if(window._anRunAuto){ window._anRunId = null; window._anRunAuto = false; }
+  if(lot.value.trim() && lot.dataset.auto !== lot.value) return;
+  var day = (document.getElementById('an-date')||{}).value || localDateStr();
+  var run = anCollectedRun(num, day);
+  if(run){
+    lot.value = run.lot;
+    lot.dataset.auto = run.lot;
+    lot.classList.add('from-run');
+    lot.title = 'LOT of the collected sample (Line '+(run.line||'—')+', '+
+      fmtDate(String(run.date).slice(0,10))+'). You can change it.';
+    if(!window._anRunId){ window._anRunId = run.id; window._anRunAuto = true; }
+  } else if(lot.dataset.auto){
+    lot.value = '';
+    anLotTyped(lot);
+  }
 }
 
 function saveAnalysis(){
@@ -327,12 +407,19 @@ function saveAnalysis(){
   var moisture=g('an-moisture'), fat=g('an-fat'), ph=g('an-ph');
   if(!moisture && !fat && !ph){ toast('Enter at least one measurement'); return; }
 
+  var seq = anSeqWanted(date.slice(0,4));
+  var repetido = getAnalyses().some(function(a){
+    return String(a.date||'').slice(0,4)===date.slice(0,4) && +a.seq===seq;
+  });
+  if(repetido && !confirm('Analysis #'+seq+' already exists in '+date.slice(0,4)+
+                          '. Save another #'+seq+' anyway?')) return;
+
   var p = findProduct(product);
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
   var db = getDB(); if(!db.analysis) db.analysis = [];
   var rec = {
     id: newRecordId(),
-    seq: nextAnalysisSeq(date.slice(0,4)),
+    seq: seq,
     date: date,
     product: product,
     cheese: g('an-cheese') || (p ? (p.name||'') : ''),
@@ -360,6 +447,7 @@ function saveAnalysis(){
     rec.testedBy||(currentUser?currentUser.name:'—'));
 
   window._anRunId = null;
+  window._anRunAuto = false;
   resetAnalysisRow();
   var pe=document.getElementById('an-product'); if(pe) pe.focus();
   toast('Analysis #'+rec.seq+' saved');
@@ -385,6 +473,8 @@ function analysisFromRun(runId){
   if(!r) return;
   goTo('screen-analysis');
   window._anRunId = runId;
+  window._anRunAuto = false;
+  var lt=document.getElementById('an-lot'); if(lt) anLotTyped(lt);
   var set=function(id,v){ var e=document.getElementById(id); if(e) e.value=v; };
   set('an-date', String(r.date).slice(0,10));
   set('an-product', r.product||'');

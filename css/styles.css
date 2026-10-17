@@ -1293,6 +1293,21 @@ body.logged-out .topstack{display:none}
   box-shadow:0 0 0 2px var(--accent-tint)}
 .sheet input.cell::placeholder{color:var(--dim);font-weight:500}
 .sheet input[type=date].cell{min-width:132px}
+/* Sample Analysis: el # de la fila nueva se puede escribir (de ahi sigue la
+   cuenta) y el LOT que sale de la muestra recolectada se ve teñido */
+.sheet tr.newrow td.rn .an-seq{width:100%;min-width:0;padding:5px 3px;text-align:center;
+  font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent-deep)}
+@media (min-width:761px){
+  #an-sheet .sheet th.rn,#an-sheet .sheet td.rn{width:64px;min-width:64px}
+  #an-new td.rn{padding:4px 6px}
+}
+.sheet input.cell.from-run{background:var(--accent-tint);border-color:var(--accent)}
+@media (max-width:760px){
+  #an-sheet #an-new td.rn{display:flex;width:auto;min-width:0}
+  #an-new td.rn::before{content:'Analysis #'}
+  #an-new td.rn .an-seq{flex:1;text-align:left;font-size:16px;padding:9px 10px}
+}
+
 /* La fila de alta se distingue del historial */
 .sheet tr.newrow td{background:var(--accent-tint)}
 .sheet tr.newrow:hover td{background:var(--accent-tint)}
