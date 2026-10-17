@@ -137,11 +137,14 @@ exports.safetyPhotoGet = onRequest(OPTS, async (req, res) => {
   try {
     const r = await llamarFlujo(url, { fileName: fileName });
     const text = await r.text();
-    if (!r.ok) { res.status(r.status === 404 ? 404 : 502).json({ ok: false, error: "flow returned HTTP " + r.status }); return; }
-    // El flujo devuelve el base64 del archivo, a veces entre comillas (JSON)
-    let c = text || "";
-    if (c[0] === '"') { try { c = JSON.parse(c); } catch (e) { /* se queda como vino */ } }
-    if (c && typeof c === "object") c = c.$content || c.content || "";
+    // Si el archivo no esta, el flujo falla antes de responder (Power Automate
+    // devuelve 502): lo mas probable es que la foto no haya subido todavia.
+    if (!r.ok) { res.status(404).json({ ok: false, error: "not found" }); return; }
+    // El flujo puede devolver el base64 suelto, entre comillas (JSON) o el
+    // contenido del archivo tal cual ({"$content-type":..., "$content":...})
+    let c = (text || "").trim();
+    if (c[0] === '"' || c[0] === "{") { try { c = JSON.parse(c); } catch (e) { /* se queda como vino */ } }
+    if (c && typeof c === "object") c = c.$content || c.content || (c.body && c.body.$content) || "";
     if (!/^\/9j\//.test(String(c))) { res.status(404).json({ ok: false, error: "not found" }); return; }
     res.set("Cache-Control", "private, max-age=86400");
     res.status(200).json({ ok: true, content: c });
