@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Update NEXORA</title>
+<!-- Pagina de rescate: quita la copia vieja de la app (service worker y sus
+     caches) y abre la version publicada. NO toca localStorage ni IndexedDB:
+     los registros, la sesion y la cola de fotos se quedan en el telefono.
+     Sirve tambien de diagnostico: dice que version tiene el servidor y cual
+     tenia el telefono. No va en el SHELL de sw.js: siempre viene de la red. -->
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--text:#1b2430;--dim:#5b6675;--ok:#0f7a4f;--bad:#b42318;--accent:#1f6f5c}
+  @media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2026;--text:#eef1f4;--dim:#9aa5b1;--ok:#4cc38a;--bad:#ff7b72;--accent:#4cc3a5}}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--text);
+    font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .card{width:min(360px,calc(100vw - 32px));background:var(--card);border-radius:16px;padding:24px;
+    box-shadow:0 8px 30px #0000001a}
+  h1{font-size:20px;margin:0 0 14px}
+  dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 16px;font-size:14px}
+  dt{color:var(--dim)} dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+  #msg{font-size:14px;margin:0 0 18px}
+  .ok{color:var(--ok)} .bad{color:var(--bad)}
+  a.btn{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;
+    border-radius:10px;padding:12px;font-weight:600}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>Updating the app</h1>
+  <dl>
+    <dt>Published version</dt><dd id="srv">checking…</dd>
+    <dt>This phone had</dt><dd id="old">checking…</dd>
+  </dl>
+  <p id="msg">Removing the old copy of the app. Your records stay on this phone.</p>
+  <a class="btn" href="./" id="go">Open the app</a>
+</main>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var ver = function(txt){ var m = /nexora-qc-v(\d+)/.exec(txt||''); return m ? 'v'+m[1] : '—'; };
+
+  // La version publicada: el sw.js del servidor, sin cache
+  var srv = fetch('sw.js?ts='+Date.now(), {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(t){ $('srv').textContent = ver(t); return true; })
+    .catch(function(){ $('srv').textContent = 'not reachable'; $('srv').className = 'bad'; return false; });
+
+  // La que tenia el telefono: el nombre de su cache
+  var old = (window.caches && caches.keys) ? caches.keys().then(function(ks){
+    var v = ks.filter(function(k){ return /^nexora-qc-v\d+$/.test(k); }).join(' ');
+    $('old').textContent = v ? ver(v) : 'none';
+    return ks;
+  }) : Promise.resolve([]);
+
+  Promise.all([srv, old]).then(function(r){
+    var enLinea = r[0], ks = r[1];
+    if(!enLinea){
+      $('msg').innerHTML = '<b class="bad">This phone cannot reach the server.</b> '+
+        'Check Wi-Fi or mobile data and open this page again. Nothing was removed.';
+      return;
+    }
+    var quitar = [];
+    if('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations){
+      quitar.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+        return Promise.all(regs.map(function(g){ return g.unregister(); }));
+      }));
+    }
+    ks.forEach(function(k){
+      // la cache del lector de LOT (nexora-cdn-*) se queda: no cambia y pesa varios MB
+      if(/^(nexora-qc-|safety-qc-)/.test(k)) quitar.push(caches.delete(k));
+    });
+    Promise.all(quitar).then(function(){
+      $('msg').innerHTML = '<b class="ok">Done.</b> Opening the new version…';
+      var url = './?updated='+Date.now();
+      $('go').href = url;
+      setTimeout(function(){ location.replace(url); }, 2500);
+    }).catch(function(e){
+      $('msg').innerHTML = '<b class="bad">Could not finish:</b> '+String(e && e.message || e);
+    });
+  });
+})();
+</script>
+</body>
+</html>
