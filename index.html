@@ -6,7 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NEXORA">
-  <meta name="theme-color" content="#f2f2f7">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./apple-touch-icon.png">
 <title>NEXORA | Quality Control</title>
@@ -47,6 +48,7 @@
     <div class="um-head"><b id="um-name"></b><span id="um-role"></span><small id="um-ver" class="um-ver"></small></div>
     <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
     <button class="um-item" onclick="nxOpenCommand()"><span data-icon="grid"></span>Find a module</button>
+    <button class="um-item" id="um-install" hidden onclick="pwaInstall()"><span data-icon="download"></span>Install app</button>
     <button class="um-item" onclick="location.href='update.html'"><span data-icon="download"></span>Update app</button>
     <button class="um-item danger" onclick="logoutUser()"><span data-icon="logout"></span>Log Out</button>
   </div>
