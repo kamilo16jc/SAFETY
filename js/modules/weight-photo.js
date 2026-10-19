@@ -195,11 +195,17 @@ function wpLotCheck(){
   var ref = wpFechaRegistro();
   var base = bag || lab;
   var info = typeof lotInfo === 'function' ? lotInfo(base, ref) : null;
+  // El LOT del registro (el del dia, o el que eligio QA): lo leido en las
+  // fotos tiene que ser ese, no solo coincidir entre si
+  var esperado = lotLimpio((document.getElementById('w-lot')||{}).value);
+  var leidos = [bag, lab].filter(Boolean);
   return {
     bag: bag || null, label: lab || null,
     bagHow: bag ? (wpComo.bag === 'read' ? 'read' : 'typed') : null,
     labelHow: lab ? (wpComo.label === 'read' ? 'read' : 'typed') : null,
     match: (bag && lab) ? bag === lab : null,
+    expected: esperado || null,
+    dayMatch: (esperado && leidos.length) ? leidos.every(function(x){ return x === esperado; }) : null,
     lotDate: info ? info.fechaStr : null,
     days: info ? info.dias : null
   };
@@ -216,14 +222,23 @@ function wpComparar(){
   var cuando = c.lotDate
     ? 'LOT date '+wpFechaCorta(c.lotDate)+(c.days === 0 ? ' (today)' : c.days === 1 ? ' (yesterday)' : c.days < 0 ? ' (after this record)' : ' ('+c.days+' days earlier)')
     : '';
-  var cls, txt;
-  if(c.match === true){
-    cls = 'ok';  txt = 'Bag and label match · LOT '+esc(c.bag);
+  var cls, txt, pista = '';
+  if(c.match === false){
+    cls = 'bad'; txt = 'Bag '+esc(c.bag)+' and label '+esc(c.label)+' do not match. Add a comment to save.';
+  } else if(c.dayMatch === false){
+    var leido = c.bag || c.label;
+    cls = 'bad';
+    txt = (c.match === true ? 'Bag and label read '+esc(leido)
+                            : (c.bag ? 'Bag' : 'Label')+' reads '+esc(leido))+
+          ', but the LOT of the day is '+esc(c.expected)+'. Add a comment to save.';
+    pista = wpPistaLot(leido);
+  } else if(c.match === true){
+    cls = 'ok';
+    txt = c.expected ? 'Bag, label and LOT of the day match · '+esc(c.bag)
+                     : 'Bag and label match · LOT '+esc(c.bag);
     // el LOT del registro sale de aqui si estaba vacio
     var lot = document.getElementById('w-lot');
     if(lot && !lot.value.trim()) lot.value = c.bag;
-  } else if(c.match === false){
-    cls = 'bad'; txt = 'Bag '+esc(c.bag)+' and label '+esc(c.label)+' do not match. Add a comment to save.';
   } else {
     cls = '';    txt = 'Waiting for the '+(c.bag ? 'label' : 'bag')+' LOT';
   }
@@ -232,17 +247,27 @@ function wpComparar(){
   else if(c.days > 1 || c.days < 0) aviso = cuando+': not the production date';
   el.className = 'wp-check '+cls;
   el.innerHTML = '<b>'+txt+'</b>'+
+    (pista ? '<span class="wp-aviso">'+pista+'</span>' : '')+
     (aviso ? '<span class="wp-aviso">'+aviso+'</span>' : (cuando ? '<span>'+cuando+'</span>' : ''));
   el.hidden = false;
+}
+
+// Si lo leido es uno de los otros LOT del dia (el del otro formato o el de
+// manana), se dice cual: suele ser producto adelantado o el formato del cliente
+function wpPistaLot(leido){
+  if(typeof lotOpciones !== 'function' || typeof lotContexto !== 'function') return '';
+  var o = lotOpciones(lotContexto('weight').dia).filter(function(x){ return x.v === leido; })[0];
+  return o ? esc(leido)+' is the '+esc(o.t)+' LOT. If that is right, pick it in Choose.' : '';
 }
 
 // Lo llama saveWeight antes de guardar: si no coinciden, hace falta comentario
 function wpLotBloquea(){
   var c = wpLotCheck();
-  if(!c || c.match !== false) return false;
+  if(!c || (c.match !== false && c.dayMatch !== false)) return false;
   var com = document.getElementById('w-comments');
   if(com && com.value.trim()) return false;
-  toast('Bag and label LOT do not match: add a comment to save');
+  toast(c.match === false ? 'Bag and label LOT do not match: add a comment to save'
+                          : 'The photos do not show the LOT of the day: add a comment to save');
   if(com) com.focus();
   return true;
 }
@@ -342,6 +367,10 @@ function wpBloqueHTML(w){
       'Bag <b class="mono">'+esc(c.bag||'—')+'</b>'+(c.bag?' <span class="soft">('+como(c.bagHow)+')</span>':'')+
       ' · Label <b class="mono">'+esc(c.label||'—')+'</b>'+(c.label?' <span class="soft">('+como(c.labelHow)+')</span>':'')+
       ' · '+est+
+      (c.expected ? '<br>LOT of the day <b class="mono">'+esc(c.expected)+'</b> · '+
+        (c.dayMatch === true ? '<span class="numstate ok">Match</span>'
+         : c.dayMatch === false ? '<span class="numstate bad">Does not match</span>' : '')
+        : '')+
       (c.lotDate ? '<br><span class="soft">LOT date '+wpFechaCorta(c.lotDate)+
         (c.days === 0 ? ', same day as the record' : c.days === 1 ? ', the day before the record' : ', '+c.days+' days from the record')+'</span>' : '')+
       '</div></div>';

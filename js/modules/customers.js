@@ -149,6 +149,18 @@ function custEditorHTML(c, nuevo){
       campo('fax','Fax', c.fax)+
       campo('code','Customer code', c.code)+
     '</div>'+
+    // El formato del LOT de sus productos: Caputo (YYDDD) o dia primero
+    // (DDDYY). Weights y Seal Bags ponen el del dia segun esto.
+    '<div class="sub-label">LOT number</div>'+
+    '<div class="sheet-bar">'+
+      '<div class="sb-field"><label for="cu-lotfmt">LOT format of its products</label>'+
+        '<div class="select-wrap"><select class="field" id="cu-lotfmt">'+
+          '<option value=""'+(c.lotFormat==='dddyy'?'':' selected')+'>Caputo · YYDDD (today '+
+            (typeof lotCodigo==='function' ? lotCodigo(localDateStr(),'yyddd') : '')+')</option>'+
+          '<option value="dddyy"'+(c.lotFormat==='dddyy'?' selected':'')+'>Day first · DDDYY (today '+
+            (typeof lotCodigo==='function' ? lotCodigo(localDateStr(),'dddyy') : '')+')</option>'+
+        '</select></div></div>'+
+    '</div>'+
     // Primero la pregunta: van sus muestras al laboratorio? Solo si van se
     // piden la forma y los tests.
     '<div class="sub-label">Laboratory</div>'+
@@ -238,6 +250,7 @@ function createCustomer(btn){
     form: g('form') || 'general',
     samplesPerOrder: per ? Math.max(1, parseInt(per.value, 10) || 1) : 1,
     numbered: num ? !!num.checked : false,
+    lotFormat: ((document.getElementById('cu-lotfmt')||{}).value === 'dddyy') ? 'dddyy' : '',
     lab: lab.lab,
     tests: lab.tests,
     targets: {},
@@ -315,6 +328,8 @@ function saveCustomerEdit(id, btn){
   if(per) c.samplesPerOrder = Math.max(1, parseInt(per.value, 10) || 1);
   var num = document.getElementById('cu-numbered');
   if(num) c.numbered = !!num.checked;
+  var lf = document.getElementById('cu-lotfmt');
+  if(lf){ if(lf.value === 'dddyy') c.lotFormat = 'dddyy'; else delete c.lotFormat; }
   // Sin catalogo cargado no hay casillas: los tests que ya tenia se conservan
   if(document.getElementById('cu-lab')){
     var lab = custLabRead();

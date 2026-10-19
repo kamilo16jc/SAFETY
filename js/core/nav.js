@@ -327,6 +327,8 @@ function selectShift(n){
   var ws=document.getElementById('wm-shift'); if(ws) ws.textContent=lbl;
   var ss=document.getElementById('sm-shift'); if(ss) ss.textContent=lbl;
   checkReady();
+  // el 2o turno despues de medianoche sigue con el LOT del dia anterior
+  if(typeof lotRefresh==='function'){ lotRefresh('weight'); lotRefresh('seal'); }
 }
 // Selección manual del turno: aplica y avisa si no cuadra con la hora
 function onShiftPick(val){

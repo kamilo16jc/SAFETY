@@ -195,6 +195,7 @@ function commitSeal(){
   document.getElementById('s-lot').value='';
   document.getElementById('s-comments').value='';
   clearProductSelection('seal');
+  if(typeof lotRefresh==='function') lotRefresh('seal');
   document.getElementById('s-initials').value='';
   renderSealToday();
   cbtnSaved('s-save-btn');

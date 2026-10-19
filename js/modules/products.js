@@ -508,6 +508,8 @@ function onProductInput(screen){
   if(p) applyProduct(p, screen);
   else lastAppliedProductId = null;
   renderProductCard(screen, code);
+  // el LOT del dia depende del cliente del producto
+  if(typeof lotRefresh==='function' && (screen==='weight' || screen==='seal')) lotRefresh(screen);
 }
 
 function productIds(screen){

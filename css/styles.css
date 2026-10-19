@@ -1322,6 +1322,46 @@ body.logged-out .topstack{display:none}
 .sl-lotbox input.cell{flex:1;min-width:0}
 .sl-cust-in{display:none}
 
+/* El LOT del dia: el campo y, al lado, el selector (un <select> nativo encima
+   del boton, asi en el telefono abre la lista del sistema) */
+.lot-field{display:flex;align-items:stretch;gap:8px}
+.lot-field > input{flex:1;min-width:0}
+.lot-field > input.lot-auto{background:var(--accent-tint)!important;border-color:var(--accent)}
+.lot-pick{position:relative;display:flex;align-items:center;gap:6px;flex-shrink:0;padding:0 12px;
+  border:1px solid var(--border);border-radius:var(--radius-sm,9px);background:var(--surface);
+  color:var(--accent-deep,var(--accent));font-size:12.5px;font-weight:600;cursor:pointer}
+.lot-pick svg{width:16px;height:16px}
+.lot-pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.lot-pick:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+/* El calendario de LOT */
+.lot-cal-ov{position:fixed;inset:0;z-index:10060;background:#0f1d2a66;display:grid;place-items:center;padding:16px}
+.lot-cal-ov[hidden]{display:none}
+.lot-cal{width:min(560px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);
+  color:var(--text);border-radius:16px;padding:16px;box-shadow:0 18px 50px #0a172433}
+.lc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lc-head b{font-size:16px;flex:1;min-width:0;text-align:center;white-space:nowrap}
+.lc-head .ico-btn{width:34px;height:34px;min-height:34px;flex-shrink:0}
+.lc-head .btn-ghost{min-height:34px;padding:6px 10px;flex-shrink:0}
+.lc-gap{display:none}
+.lc-leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11px;color:var(--muted);margin-bottom:10px}
+.lc-leyenda i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0}
+.lc-a-dot{background:var(--accent)} .lc-b-dot{background:#b45309}
+.lc-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.lc-w{font-size:10px;font-weight:700;color:var(--dim);text-align:center;padding:2px 0}
+.lc-d{border:1px solid var(--border);border-radius:9px;padding:4px 2px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;min-width:0}
+.lc-vacio{border:0}
+.lc-n{font-size:10px;color:var(--dim);line-height:1}
+.lc-d button{border:0;background:none;cursor:pointer;padding:2px 0;width:100%;border-radius:5px;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.lc-a{font-size:12px;font-weight:700;color:var(--text)}
+.lc-b{font-size:10.5px;color:#b45309}
+.lc-d button:hover,.lc-d button:focus-visible{background:var(--accent-tint)}
+.lc-hoy{border-color:var(--accent);background:var(--accent-tint)}
+.lc-marca{box-shadow:inset 0 0 0 2px var(--accent)}
+.lc-pie{font-size:11px;color:var(--dim);margin-top:10px;text-align:center}
+@media (max-width:420px){ .lc-a{font-size:11px} .lc-b{font-size:9.5px} .lot-cal{padding:12px} }
+
 /* La fila de alta se distingue del historial */
 .sheet tr.newrow td{background:var(--accent-tint)}
 .sheet tr.newrow:hover td{background:var(--accent-tint)}

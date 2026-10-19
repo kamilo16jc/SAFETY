@@ -325,6 +325,7 @@ function commitWeight(){
   document.getElementById('w-comments').value='';
   document.getElementById('w-initials').value='';
   clearProductSelection('weight');
+  if(typeof lotRefresh==='function') lotRefresh('weight');
   var rec = db.weights[db.weights.length-1];
   var compliance = rec.compliance!=null
     ? rec.compliance + '% (' + rec.pass + '/' + rec.total + ')'
