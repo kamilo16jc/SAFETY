@@ -8,7 +8,7 @@
 // generar la primera forma, no al abrir la app.
 
 var GMP_PDF_JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-var GMP_PDF_TPL   = 'assets/forms/gmp-audit-form.json?v=1';   // subir v si cambia la plantilla
+var GMP_PDF_TPL   = 'assets/forms/gmp-audit-form.json?v=2';   // subir v si cambia la plantilla
 var _gmpPdfTpl = null;
 
 function _gmpScript(src, listo){
