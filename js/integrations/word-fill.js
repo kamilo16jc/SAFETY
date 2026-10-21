@@ -29,11 +29,22 @@ function _downloadAnchor(blob, filename){
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
 
-// Entrega el archivo de la forma que soporte el dispositivo.
-// iOS/PWA no permite <a download>; ahí se usa el Web Share API (hoja de
-// compartir → "Guardar en Archivos", correo…). El tipo sale de la extension:
-// antes todo iba como Word y un PDF se compartia con el tipo equivocado.
+// iPhone / iPad (el iPad nuevo se presenta como Mac, pero con pantalla tactil)
+function _esIOS(){
+  var ua = navigator.userAgent || '';
+  return /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+// Entrega el archivo: se DESCARGA, en la PC y en Android. Solo en iPhone/iPad,
+// donde la app instalada no deja descargar, se abre la hoja de compartir
+// ("Guardar en Archivos", correo…). Antes se compartia en cualquier equipo que
+// lo permitiera y, con los PDF, Windows abria "Compartir" en vez de descargar.
+// El tipo sale de la extension (antes todo iba como Word).
 function _deliverFile(blob, filename){
+  if(!_esIOS()){
+    _downloadAnchor(blob, filename);
+    return Promise.resolve('downloaded');
+  }
   var file;
   try { file = new File([blob], filename, { type: _fileMime(filename) }); } catch(e){ file = null; }
   if(file && navigator.canShare && navigator.canShare({ files: [file] })){
