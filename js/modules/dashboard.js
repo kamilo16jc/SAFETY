@@ -453,9 +453,10 @@ function renderGmpList(){
         '<button class="tog'+(v==='no'?' fail-active':'')+'" data-i="'+i+'" data-v="no" onclick="setGmpItem(this)">NO</button>' +
       '</div>' +
       // lo que no es aceptable lleva su accion: sale en ese renglon de la forma
-      (v==='no' ? '<input type="text" class="ninput gmp-note" placeholder="Immediate corrective action" '+
+      (v==='no' ? '<label class="gmp-note-box"><span class="gmp-note-lbl">Immediate corrective action / comments</span>'+
+                  '<input type="text" class="ninput gmp-note" placeholder="What was done about it" '+
                   'aria-label="Corrective action for '+esc(item)+'" value="'+esc(gmpNotes[i]||'')+'" '+
-                  'oninput="gmpNotes['+i+']=this.value">' : '') +
+                  'oninput="gmpNotes['+i+']=this.value"></label>' : '') +
     '</div>';
   }).join('');
   gmpSummary();
