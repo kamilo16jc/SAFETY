@@ -7,43 +7,12 @@
 // jsPDF, el motor y la plantilla (casi 500 KB por el logo) se cargan al
 // generar la primera forma, no al abrir la app.
 
-var GMP_PDF_JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-var GMP_PDF_TPL   = 'assets/forms/gmp-audit-form.json?v=2';   // subir v si cambia la plantilla
-var _gmpPdfTpl = null;
+var GMP_PDF_TPL = 'assets/forms/gmp-audit-form.json?v=2';   // subir v si cambia la plantilla
 
-function _gmpScript(src, listo){
-  return new Promise(function(ok, mal){
-    if(listo()) return ok();
-    var s = document.createElement('script');
-    s.src = src;
-    s.onload = function(){ listo() ? ok() : mal(new Error('No se cargó '+src)); };
-    s.onerror = function(){ mal(new Error('No se pudo cargar '+src.split('/').pop()+' (¿sin conexión?)')); };
-    document.head.appendChild(s);
-  });
-}
-function _gmpPdfListo(){
-  return _gmpScript(GMP_PDF_JSPDF, function(){ return !!(window.jspdf && window.jspdf.jsPDF); })
-    .then(function(){ return _gmpScript('js/vendor/pdf-template.js', function(){ return !!window.PdfTemplate; }); })
-    .then(function(){
-      if(_gmpPdfTpl) return _gmpPdfTpl;
-      return fetch(GMP_PDF_TPL).then(function(r){
-        if(!r.ok) throw new Error('No se encontró la plantilla GMP');
-        return r.json();
-      }).then(function(t){ _gmpPdfTpl = t; return t; });
-    });
-}
-
-function _gmpFecha(iso){
-  var p = String(iso||'').slice(0,10).split('-');
-  return p.length === 3 ? p[1]+'/'+p[2]+'/'+p[0] : String(iso||'');
-}
-function _gmpHora(hhmm){
-  var m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm||''));
-  if(!m) return String(hhmm||'');
-  var h = +m[1], ap = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return h+':'+m[2]+' '+ap;
-}
+// La carga (jsPDF, motor, plantilla) y los formatos son de pdf-forms.js
+function _gmpPdfListo(){ return pdfFormListo(GMP_PDF_TPL); }
+function _gmpFecha(iso){ return pdfFecha(iso); }
+function _gmpHora(hhmm){ return pdfHora(hhmm); }
 
 // Los datos con la forma que espera la plantilla (ver sampleData en el JSON)
 function gmpPdfDatos(g, temps){

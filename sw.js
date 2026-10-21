@@ -31,7 +31,7 @@ const SHELL = [
   './js/modules/catalog.js','./js/modules/scanner.js','./js/modules/production.js','./js/modules/samplelist.js','./js/modules/lab.js','./js/modules/analysis.js','./js/modules/yeast.js','./js/modules/lab-tests.js','./js/modules/lab-form.js','./js/modules/coa.js','./js/modules/raw.js','./js/modules/grilling.js','./js/integrations/grilling-fill.js','./js/export/xlsx-write.js','./assets/grilling_form_template.docx','./js/modules/capa.js','./js/modules/shift.js',
   './js/export/pdf-reports.js','./js/export/excel.js','./js/export/dash-pdf.js',
   './js/export/capa-pdf.js','./js/export/shift-pdf.js',
-  './js/integrations/word-fill.js','./js/integrations/gmp-pdf.js',
+  './js/integrations/word-fill.js','./js/integrations/pdf-forms.js','./js/integrations/gmp-pdf.js','./js/integrations/weight-pdf.js',
   './js/integrations/coa-fill.js',
   './assets/coa_form_template.xlsx',
   './assets/coa_view.html','./js/integrations/metal-fill.js',
