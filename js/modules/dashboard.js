@@ -452,6 +452,10 @@ function renderGmpList(){
         '<button class="tog'+(v==='yes'?' pass-active':'')+'" data-i="'+i+'" data-v="yes" onclick="setGmpItem(this)">YES</button>' +
         '<button class="tog'+(v==='no'?' fail-active':'')+'" data-i="'+i+'" data-v="no" onclick="setGmpItem(this)">NO</button>' +
       '</div>' +
+      // lo que no es aceptable lleva su accion: sale en ese renglon de la forma
+      (v==='no' ? '<input type="text" class="ninput gmp-note" placeholder="Immediate corrective action" '+
+                  'aria-label="Corrective action for '+esc(item)+'" value="'+esc(gmpNotes[i]||'')+'" '+
+                  'oninput="gmpNotes['+i+']=this.value">' : '') +
     '</div>';
   }).join('');
   gmpSummary();
@@ -496,8 +500,14 @@ function gmpOutMsg(malas){
 }
 
 function setGmpItem(btn){
-  gmpAnswers[parseInt(btn.getAttribute('data-i'))]=btn.getAttribute('data-v');
+  var i = parseInt(btn.getAttribute('data-i'));
+  gmpAnswers[i]=btn.getAttribute('data-v');
+  if(gmpAnswers[i] !== 'no') delete gmpNotes[i];
   renderGmpList();
+  if(gmpAnswers[i] === 'no'){
+    var n = document.querySelector('#gmp-list .check-item:nth-child('+(i+1)+') .gmp-note');
+    if(n) n.focus();
+  }
 }
 function setGmpShift(n){
   gmpShift=n;
@@ -508,8 +518,19 @@ function setGmpShift(n){
 
 // Dejar la hoja en blanco sin salir de la pantalla: pasa cuando se empieza a
 // auditar un sitio y resulta ser otro.
+// Solo las acciones de los puntos que siguen en "No", sin espacios sobrantes
+function gmpNotasLimpias(){
+  var out = {};
+  Object.keys(gmpNotes).forEach(function(k){
+    var t = String(gmpNotes[k]||'').trim();
+    if(t && gmpAnswers[k] === 'no') out[k] = t;
+  });
+  return out;
+}
+
 function clearGmp(){
   gmpAnswers = {};
+  gmpNotes = {};
   renderGmpList();
   var c = document.getElementById('gmp-comments'); if(c) c.value = '';
   toast('Answers cleared');
@@ -520,6 +541,7 @@ function saveGmp(){
   db.gmps.push({
     id:newRecordId(), date:gv('gmp-date'), location:gv('gmp-loc'),
     shift:gmpShift, answers:Object.assign({},gmpAnswers),
+    notes:gmpNotasLimpias(),
     // temp now in separate db.temps
     comments:gv('gmp-comments'), completedBy:gv('gmp-completed'), verifiedBy:gv('gmp-verified')
   });
@@ -530,7 +552,7 @@ function saveGmp(){
   logActivity('gmp','GMP Audit completed',
     'Location: '+(grec.location||'—')+' · Shift: '+(grec.shift||'—')+' · Completed by: '+(grec.completedBy||'—'),
     grec.completedBy||(currentUser?currentUser.name:'—'));
-  gmpAnswers={}; gmpShift=null;
+  gmpAnswers={}; gmpNotes={}; gmpShift=null;
   ['gmp-loc','gmp-comments','gmp-completed','gmp-verified'].forEach(function(id){document.getElementById(id).value='';});
   // temp fields now in Temp & Humidity module
   setGmpShift(0);

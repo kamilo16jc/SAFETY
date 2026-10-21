@@ -117,6 +117,7 @@ var LOGO_LIGHT='data:image/svg+xml;utf8,'+encodeURIComponent(LOGO_SVG.replace('#
 // customPkg: peso que viene de un producto del catálogo y no está en PKGS
 var st = {line:null, shift:null, pkg:null, customPkg:null, samples:['','','','',''], sealChecks:{}, wIssue:null};
 var gmpAnswers = {};
+var gmpNotes = {};      // accion correctiva de cada punto que salio "No" (va en la forma)
 var gmpShift = null;
 var metalAnswers = {};
 var donutChart = null, trendChart = null;

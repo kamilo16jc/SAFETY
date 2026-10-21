@@ -230,6 +230,9 @@ select.field{appearance:none;-webkit-appearance:none;cursor:pointer;padding-righ
 .check-item.pass{border-color:var(--pass);background:rgba(52,199,89,0.05)}
 .check-item.fail{border-color:var(--fail);background:rgba(255,59,48,0.05)}
 .check-label{font-size:14px;font-weight:500}
+/* GMP: la accion correctiva de un punto "No", debajo de el (va a la forma) */
+.check-item:has(.gmp-note){flex-wrap:wrap}
+.check-item .gmp-note{flex:1 1 100%;margin-top:10px;min-height:40px;font-size:14px}
 .toggle-wrap{display:flex;gap:6px}
 .tog{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer}
 .tog.pass-active{background:var(--pass);color:white;border-color:var(--pass)}
