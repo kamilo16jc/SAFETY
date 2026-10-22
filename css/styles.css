@@ -472,6 +472,12 @@ canvas{width:100%!important}
   border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;
   transition:background .15s,color .15s,border-color .15s}
 .form-ico svg{width:17px;height:17px;display:block}
+.row-icos{display:inline-flex;gap:2px}
+/* Editor del metal detector: cada pregunta en su renglon, con su respuesta */
+.md-preg{display:grid;gap:8px}
+.md-preg .md-q{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center}
+.md-preg .md-q .rec-lbl{text-transform:none;letter-spacing:0;font-size:13px;color:var(--text);font-weight:500}
+@media (max-width:600px){ .md-preg .md-q{grid-template-columns:1fr} }
 .form-ico:hover,.form-ico:focus-visible{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-deep,var(--accent))}
 .form-ico:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .nx-tip{position:fixed;z-index:10070;pointer-events:none;max-width:260px;padding:6px 10px;border-radius:7px;

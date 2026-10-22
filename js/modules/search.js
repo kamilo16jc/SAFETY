@@ -787,7 +787,7 @@ function metalPanel(list){
   var page = list.slice(0, SEARCH_LIMIT);
   var rows = page.map(function(m){
     var c = yesNoCount(m.answers);
-    return '<tr>'+
+    return '<tr class="view-row" onclick="viewMetalRecord(\''+String(m.id)+'\')">'+
       '<td class="mono">'+fmtDate(m.date)+'</td>'+
       '<td>'+esc(m.line||'—')+'</td>'+
       '<td class="mono">'+esc((m.startTime||'—')+(m.endTime ? ' – '+m.endTime : ''))+'</td>'+
@@ -795,14 +795,113 @@ function metalPanel(list){
       '<td class="desc">'+esc(m.corrective||'—')+'</td>'+
       '<td class="soft">'+esc(m.completedBy||'—')+'</td>'+
       '<td class="soft">'+esc(m.verifiedBy||'—')+'</td>'+
-      '<td class="view-cell"><button class="form-ico" type="button" onclick="sendMetalForm(\''+String(m.id)+'\')" '+
-        'data-tip="Official form · metal detector (PDF)" aria-label="Official form, metal detector (PDF)"><span data-icon="pdf"></span></button></td>'+
+      '<td class="view-cell"><span class="row-icos">'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();viewMetalRecord(\''+String(m.id)+'\')" '+
+          'data-tip="View / edit" aria-label="View or edit this check"><span data-icon="search"></span></button>'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();sendMetalForm(\''+String(m.id)+'\')" '+
+          'data-tip="Official form · metal detector (PDF)" aria-label="Official form, metal detector (PDF)"><span data-icon="pdf"></span></button>'+
+      '</span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Metal detector checks', list.length, [
     {t:'Date'},{t:'Line & MD'},{t:'Time'},{t:'Result',num:true},{t:'Corrective action'},
     {t:'Completed by'},{t:'Verified by'},{t:'Form'}
   ], rows, page.length);
+}
+
+// ===== VISOR/EDITOR DEL METAL DETECTOR (admin/supervisor editan; el resto ve) =====
+function _metalRec(id){ return (getDB().metal||[]).filter(function(x){ return String(x.id)===String(id); })[0]; }
+
+function viewMetalRecord(id){
+  var m = _metalRec(id);
+  if(!m){ toast('Record not found'); return; }
+  var edit = canEditRecords();
+  var ans = m.answers || {};
+  var marca = function(v){ return v==='yes' ? '<span class="pill ok">YES</span>'
+                               : v==='no' ? '<span class="pill bad">NO</span>'
+                               : v==='na' ? '<span class="pill">N/A</span>' : '<span class="pill">—</span>'; };
+  var body;
+  if(edit){
+    var preg = MD_QUESTIONS.map(function(q, i){
+      var v = ans[i] || '';
+      return '<div class="rec-field md-q"><div class="rec-lbl">'+(i+1)+'. '+esc(q)+'</div>'+
+        '<div class="rec-edit"><select class="field" id="em-q'+i+'">'+
+          '<option value=""'+(v===''?' selected':'')+'>—</option>'+
+          '<option value="yes"'+(v==='yes'?' selected':'')+'>Yes</option>'+
+          '<option value="no"'+(v==='no'?' selected':'')+'>No</option>'+
+          (i === MD_QUESTIONS.length-1 ? '<option value="na"'+(v==='na'?' selected':'')+'>N/A</option>' : '')+
+        '</select></div></div>';
+    }).join('');
+    body =
+      '<div class="rec-grid">'+
+        recEdit('Date','<input type="date" class="field" id="em-date" value="'+String(m.date||'').slice(0,10)+'">')+
+        recEdit('Line and metal detector','<input type="text" class="field" id="em-line" value="'+esc(m.line||'')+'">')+
+        recEdit('Start time','<input type="time" class="field" id="em-start" value="'+esc(m.startTime||'')+'">')+
+        recEdit('End time','<input type="time" class="field" id="em-end" value="'+esc(m.endTime||'')+'">')+
+        recEdit('Completed by','<input type="text" class="field" id="em-completed" value="'+esc(m.completedBy||'')+'">')+
+        recEdit('Verified by','<input type="text" class="field" id="em-verified" value="'+esc(m.verifiedBy||'')+'">')+
+      '</div>'+
+      '<div class="rec-block md-preg">'+preg+'</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Corrective actions, training, observations</div>'+
+        '<textarea class="field" id="em-corrective" rows="3">'+esc(m.corrective||'')+'</textarea></div>';
+  } else {
+    body =
+      '<div class="rec-grid">'+
+        recRow('Date', fmtDate(m.date))+ recRow('Line and metal detector', esc(m.line||'—'))+
+        recRow('Start', esc(m.startTime||'—'))+ recRow('End', esc(m.endTime||'—'))+
+        recRow('Completed by', esc(m.completedBy||'—'))+ recRow('Verified by', esc(m.verifiedBy||'—'))+
+      '</div>'+
+      '<div class="rec-block md-preg">'+MD_QUESTIONS.map(function(q, i){
+        return '<div class="rec-field md-q"><div class="rec-lbl">'+(i+1)+'. '+esc(q)+'</div><div>'+marca(ans[i])+'</div></div>';
+      }).join('')+'</div>'+
+      recBlock('Corrective actions', m.corrective);
+  }
+  var pdf = '<button class="btn-ghost" onclick="sendMetalForm(\''+String(m.id)+'\')"><span data-icon="pdf"></span>Official form</button>';
+  var actions = edit
+    ? saveBtn("saveMetalEdit('"+String(m.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
+      '<button class="btn-danger" onclick="deleteMetalRecord(\''+String(m.id)+'\')">Delete</button>'+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
+    : pdf + '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Metal detector check · '+esc(m.line||'—'), body, actions);
+}
+
+function saveMetalEdit(id, btn){
+  if(!canEditRecords()){ toast('Only admins and supervisors can edit'); return; }
+  var db = getDB();
+  var m = (db.metal||[]).filter(function(x){ return String(x.id)===String(id); })[0];
+  if(!m) return;
+  var g = function(k){ var e=document.getElementById(k); return e ? e.value.trim() : ''; };
+  if(!g('em-line')){ toast('Enter the line and metal detector'); return; }
+  m.date        = g('em-date') || m.date;
+  m.line        = g('em-line');
+  m.startTime   = g('em-start');
+  m.endTime     = g('em-end');
+  m.completedBy = g('em-completed');
+  m.verifiedBy  = g('em-verified');
+  m.corrective  = g('em-corrective');
+  var ans = {};
+  MD_QUESTIONS.forEach(function(_, i){ var v = g('em-q'+i); if(v) ans[i] = v; });
+  m.answers = ans;
+  m.editedAt = localISOStr();
+  m.editedBy = currentUser ? currentUser.name : '—';
+  persistRecordEdit('metal', m, db);
+  logActivity('metal','Metal detector check edited', 'Line/MD '+m.line+' · '+String(m.date||'').slice(0,10),
+    currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record updated');
+}
+
+function deleteMetalRecord(id){
+  if(!canEditRecords()){ toast('Only admins and supervisors can delete'); return; }
+  var m = _metalRec(id);
+  if(!m) return;
+  if(!confirm('Delete this metal detector check? '+(m.line||'')+' · '+String(m.date||'').slice(0,10)+'. This cannot be undone.')) return;
+  removeRecord('metal', m.id, m._fbId);
+  logActivity('metal','Metal detector check deleted', 'Line/MD '+(m.line||'—'), currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record deleted');
 }
 
 function tempPanel(list){
