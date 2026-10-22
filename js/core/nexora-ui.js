@@ -143,3 +143,37 @@ function nxInitUI(){
   if(d)d.addEventListener('click',function(e){if(e.target===d){var r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)nxCloseCommand();}});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',nxInitUI);else nxInitUI();
+
+// Etiqueta de los botones de solo icono ([data-tip]): sale al pasar el raton o
+// con el teclado, y se pega al body (position:fixed) para que el scroll de una
+// tabla no la corte. Se acomoda para no salirse de la pantalla.
+(function(){
+  var tip = null, dueno = null;
+  function quitar(){ if(tip){ tip.remove(); tip = null; } dueno = null; }
+  function poner(el){
+    var txt = el.getAttribute('data-tip');
+    if(!txt) return;
+    quitar();
+    dueno = el;
+    tip = document.createElement('div');
+    tip.className = 'nx-tip';
+    tip.setAttribute('role', 'tooltip');
+    tip.textContent = txt;
+    document.body.appendChild(tip);
+    var r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), m = 8;
+    var x = Math.min(Math.max(m, r.left + r.width/2 - t.width/2), window.innerWidth - t.width - m);
+    var y = r.top - t.height - 8;
+    if(y < m) y = r.bottom + 8;
+    tip.style.left = Math.round(x) + 'px';
+    tip.style.top = Math.round(y) + 'px';
+  }
+  document.addEventListener('mouseover', function(e){
+    var el = e.target.closest && e.target.closest('[data-tip]');
+    if(el && el !== dueno) poner(el); else if(!el && dueno) quitar();
+  });
+  document.addEventListener('focusin', function(e){
+    var el = e.target.closest && e.target.closest('[data-tip]');
+    if(el && el.matches(':focus-visible')) poner(el);
+  });
+  ['focusout', 'scroll', 'click'].forEach(function(ev){ document.addEventListener(ev, quitar, true); });
+})();

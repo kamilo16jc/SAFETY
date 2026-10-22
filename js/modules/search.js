@@ -708,7 +708,7 @@ function weightPanel(list){
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
     {t:'Samples'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
-  ], rows, page.length, formBtn('searchWeightForm()', 'Official form: weight & bag seal (PDF)'));
+  ], rows, page.length, formBtn('searchWeightForm()', 'Official form · weight & bag seal (PDF)'));
 }
 
 function sealPanel(list){
@@ -737,16 +737,17 @@ function sealPanel(list){
   return tablePanel('Bag seal history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},
     {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'},{t:''}
-  ], rows, page.length, formBtn('searchWeightForm()', 'Official form: weight & bag seal (PDF)'));
+  ], rows, page.length, formBtn('searchWeightForm()', 'Official form · weight & bag seal (PDF)'));
 }
 
 // ===== FORMAS OFICIALES DESDE SEARCH (antes en Reports) =====
 // Pesos y bag seal: una sola forma con lo que muestra la busqueda (una hoja
 // por fecha + turno + linea + LOT). GMP y metal detector: cada registro su
 // forma, con el boton de su fila.
+// Solo el icono; lo que hace se lee al pasar el raton (data-tip, nexora-ui.js)
 function formBtn(onclick, title){
-  return '<button class="btn-solid res-form" type="button" onclick="event.stopPropagation();'+onclick+'" '+
-    'title="'+title+'" aria-label="'+title+'"><span data-icon="pdf"></span>Official form</button>';
+  return '<button class="form-ico" type="button" onclick="event.stopPropagation();'+onclick+'" '+
+    'data-tip="'+title+'" aria-label="'+title+'"><span data-icon="pdf"></span></button>';
 }
 function searchWeightForm(){
   var r = window._srch || {};
@@ -771,8 +772,8 @@ function gmpPanel(list){
       '<td class="num">'+(c.no ? '<span class="pill bad">'+c.no+' NO</span>' : '<span class="pill ok">All yes</span>')+'</td>'+
       '<td class="soft">'+esc(g.completedBy||'—')+'</td>'+
       '<td class="soft">'+esc(g.verifiedBy||'—')+'</td>'+
-      '<td class="view-cell"><button class="view-btn" type="button" onclick="sendGmpForm(\''+String(g.id)+'\')" '+
-        'title="Official form (PDF)" aria-label="Official form (PDF)"><span data-icon="pdf"></span></button></td>'+
+      '<td class="view-cell"><button class="form-ico" type="button" onclick="sendGmpForm(\''+String(g.id)+'\')" '+
+        'data-tip="Official form · GMP audit (PDF)" aria-label="Official form, GMP audit (PDF)"><span data-icon="pdf"></span></button></td>'+
     '</tr>';
   }).join('');
   return tablePanel('GMP audits', list.length, [
@@ -794,8 +795,8 @@ function metalPanel(list){
       '<td class="desc">'+esc(m.corrective||'—')+'</td>'+
       '<td class="soft">'+esc(m.completedBy||'—')+'</td>'+
       '<td class="soft">'+esc(m.verifiedBy||'—')+'</td>'+
-      '<td class="view-cell"><button class="view-btn" type="button" onclick="sendMetalForm(\''+String(m.id)+'\')" '+
-        'title="Official form (PDF)" aria-label="Official form (PDF)"><span data-icon="pdf"></span></button></td>'+
+      '<td class="view-cell"><button class="form-ico" type="button" onclick="sendMetalForm(\''+String(m.id)+'\')" '+
+        'data-tip="Official form · metal detector (PDF)" aria-label="Official form, metal detector (PDF)"><span data-icon="pdf"></span></button></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Metal detector checks', list.length, [
