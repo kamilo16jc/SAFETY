@@ -34,7 +34,7 @@ const SHELL = [
   './js/integrations/word-fill.js','./js/integrations/pdf-forms.js','./js/integrations/gmp-pdf.js','./js/integrations/weight-pdf.js',
   './js/integrations/coa-fill.js',
   './assets/coa_form_template.xlsx',
-  './assets/coa_view.html','./js/integrations/metal-fill.js',
+  './assets/coa_view.html','./js/integrations/metal-pdf.js',
   './js/vendor/jszip.min.js','./js/vendor/zxing.min.js'
 ];
 

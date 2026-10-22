@@ -1,12 +1,7 @@
 // ===== UTILIDADES COMPARTIDAS DE LAS FORMAS =====
-// Antes aqui vivia la forma Word de pesos y bag seal; desde el 21 oct 2026 esa
-// forma es un PDF (weight-pdf.js). Queda lo que usan las demas formas: el
-// escape para XML (metal-fill.js) y la entrega del archivo (todas).
-
-function _xmlEsc(v){
-  return String(v == null ? '' : v)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+// Antes aqui vivia la forma Word de pesos y bag seal; desde el 21 oct 2026 las
+// formas de pesos, GMP y metal detector son PDF (weight-pdf.js, gmp-pdf.js,
+// metal-pdf.js). Queda la entrega del archivo, que usan todas.
 
 var DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 var FILE_MIME = {
