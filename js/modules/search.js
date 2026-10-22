@@ -29,7 +29,10 @@ var SEARCH_TYPES = [
   {v:'hold',     t:'Holds only',            k:'holds'},
   {v:'capa',     t:'CAPA only',             k:'capa'},
   {v:'shift',    t:'Shift reports only',    k:'shifts'},
-  {v:'run',      t:'Production runs only',  k:'runs'}
+  {v:'run',      t:'Production runs only',  k:'runs'},
+  {v:'gmp',      t:'GMP audits only',       k:'gmps'},
+  {v:'metal',    t:'Metal detector only',   k:'metal'},
+  {v:'temp',     t:'Temp & humidity only',  k:'temps'}
 ];
 function fillSearchTypes(){
   var sel = document.getElementById('sf-type');
@@ -208,6 +211,27 @@ function searchResults(){
                  (pnum && String(r.product||'').toLowerCase()===pnum);
                return hitTxt && inDateRange(r.date) && matchLineShift(r);
              }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : [],
+    // GMP, metal detector y temperaturas no llevan LOT ni producto: con un LOT
+    // o producto en la busqueda no salen; el texto busca en lo que si tienen
+    gmps:    (scopeHas('gmps') && (sf.type==='all'||sf.type==='gmp')) ? (db.gmps||[]).filter(function(g){
+               var hitTxt = !l || sf.field==='lot' || sf.field==='product' ? !l :
+                 [g.location, g.completedBy, g.verifiedBy, g.comments].some(function(x){ return String(x||'').toLowerCase().indexOf(l)>-1; });
+               var hitShift = sf.shift==='all' || String(g.shift||'')===sf.shift;
+               return hitTxt && hitShift && inDateRange(g.date);
+             }).sort(byDate) : [],
+    metal:   (scopeHas('metal') && (sf.type==='all'||sf.type==='metal')) ? (db.metal||[]).filter(function(m){
+               var hitTxt = !l || sf.field==='lot' || sf.field==='product' ? !l :
+                 [m.line, m.completedBy, m.verifiedBy, m.corrective].some(function(x){ return String(x||'').toLowerCase().indexOf(l)>-1; });
+               // la linea del metal detector es texto libre ("Line 3 - MD 2")
+               var hitLine = sf.line==='all' || new RegExp('(^|\\D)'+sf.line+'(\\D|$)').test(String(m.line||''));
+               return hitTxt && hitLine && inDateRange(m.date);
+             }).sort(byDate) : [],
+    temps:   (scopeHas('temps') && (sf.type==='all'||sf.type==='temp')) ? (db.temps||[]).filter(function(t){
+               if(l) return false;
+               var hitShift = sf.shift==='all' || String(t.shift||'')===sf.shift;
+               return hitShift && inDateRange(t.date);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')) ||
+                                           String(b.time||'').localeCompare(String(a.time||'')); }) : [],
     shifts:  (scopeHas('shifts') && (sf.type==='all'||sf.type==='shift')) ? (db.shifts||[]).filter(function(s){
                var hitTxt = !l ||
                  String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
@@ -235,7 +259,7 @@ function activeFilterChips(){
   else if(sf.to)            chips.push('Up to '+fmtDate(sf.to));
   if(sf.line!=='all')       chips.push('Line '+sf.line);
   if(sf.shift!=='all')      chips.push((sf.shift==='1'?'1st':'2nd')+' shift');
-  if(sf.type!=='all')       chips.push({weight:'Weight only',seal:'Bag seal only',hold:'Holds only',capa:'CAPA only',shift:'Shift reports only',run:'Production runs only'}[sf.type]);
+  if(sf.type!=='all')       chips.push((SEARCH_TYPES.filter(function(o){ return o.v===sf.type; })[0]||{}).t || sf.type);
   if(!chips.length) return '';
   return '<div class="filter-chips">'+chips.map(function(c){
     return '<span class="fchip">'+esc(c)+'</span>';
@@ -260,8 +284,10 @@ function renderSearch(){
   }
 
   var r = searchResults();
+  window._srch = r;               // lo usan los botones de las formas oficiales
   var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) +
-              (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0) + (r.analysis?r.analysis.length:0);
+              (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0) + (r.analysis?r.analysis.length:0) +
+              r.gmps.length + r.metal.length + r.temps.length;
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -284,6 +310,9 @@ function renderSearch(){
     summaryStrip(r, avg, dates, openHolds) +
     ((scopeHas('weights') && (sf.type==='all'||sf.type==='weight')) ? weightPanel(r.weights) : '') +
     ((scopeHas('seals')   && (sf.type==='all'||sf.type==='seal'))   ? sealPanel(r.seals)     : '') +
+    gmpPanel(r.gmps) +
+    metalPanel(r.metal) +
+    tempPanel(r.temps) +
     analysisPanel(r.analysis) +
     holdPanel(r.holds) +
     capaPanel(r.capa) +
@@ -634,13 +663,14 @@ function summaryStrip(r, avg, dates, openHolds){
 // pintarlos todos deja la pantalla lenta.
 var SEARCH_LIMIT = 100;
 
-function tablePanel(title, count, headers, rows, shown){
+function tablePanel(title, count, headers, rows, shown, botones){
   var extra = (shown!=null && count>shown)
     ? '<div class="table-note">Showing the '+shown+' most recent of <b>'+count+'</b>. Narrow the dates or the line to see the rest.</div>'
     : '';
   return '<div class="panel res-panel">'+
     '<div class="res-head"><span class="res-title">'+title+'</span>'+
-      '<span class="res-count">'+count+' record'+(count===1?'':'s')+'</span></div>'+
+      '<span class="res-count">'+count+' record'+(count===1?'':'s')+'</span>'+
+      (botones && count ? '<span class="res-acts">'+botones+'</span>' : '')+'</div>'+
     (count
       ? '<div class="table-scroll"><table class="cat-table"><thead><tr>'+
           headers.map(function(h){ return '<th'+(h.num?' class="num"':'')+'>'+h.t+'</th>'; }).join('')+
@@ -678,7 +708,7 @@ function weightPanel(list){
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
     {t:'Samples'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
-  ], rows, page.length);
+  ], rows, page.length, formBtn('searchWeightForm()', 'Official form: weight & bag seal (PDF)'));
 }
 
 function sealPanel(list){
@@ -707,7 +737,106 @@ function sealPanel(list){
   return tablePanel('Bag seal history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},
     {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'},{t:''}
+  ], rows, page.length, formBtn('searchWeightForm()', 'Official form: weight & bag seal (PDF)'));
+}
+
+// ===== FORMAS OFICIALES DESDE SEARCH (antes en Reports) =====
+// Pesos y bag seal: una sola forma con lo que muestra la busqueda (una hoja
+// por fecha + turno + linea + LOT). GMP y metal detector: cada registro su
+// forma, con el boton de su fila.
+function formBtn(onclick, title){
+  return '<button class="btn-solid res-form" type="button" onclick="event.stopPropagation();'+onclick+'" '+
+    'title="'+title+'" aria-label="'+title+'"><span data-icon="pdf"></span>Official form</button>';
+}
+function searchWeightForm(){
+  var r = window._srch || {};
+  sendWeightSealForm(r.weights || [], r.seals || []);
+}
+function yesNoCount(ans){
+  var a = ans || {}, n = 0, no = 0;
+  Object.keys(a).forEach(function(k){ if(a[k]){ n++; if(a[k]==='no') no++; } });
+  return {n:n, no:no};
+}
+
+function gmpPanel(list){
+  if(!list.length) return '';
+  var page = list.slice(0, SEARCH_LIMIT);
+  var rows = page.map(function(g){
+    var c = yesNoCount(g.answers);
+    return '<tr>'+
+      '<td class="mono">'+fmtDate(g.date)+'</td>'+
+      '<td>'+(g.shift===1?'1st':g.shift===2?'2nd':'—')+'</td>'+
+      '<td>'+esc(g.location||'—')+'</td>'+
+      '<td class="mono num">'+c.n+' / '+GMP_ITEMS.length+'</td>'+
+      '<td class="num">'+(c.no ? '<span class="pill bad">'+c.no+' NO</span>' : '<span class="pill ok">All yes</span>')+'</td>'+
+      '<td class="soft">'+esc(g.completedBy||'—')+'</td>'+
+      '<td class="soft">'+esc(g.verifiedBy||'—')+'</td>'+
+      '<td class="view-cell"><button class="view-btn" type="button" onclick="sendGmpForm(\''+String(g.id)+'\')" '+
+        'title="Official form (PDF)" aria-label="Official form (PDF)"><span data-icon="pdf"></span></button></td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('GMP audits', list.length, [
+    {t:'Date'},{t:'Shift'},{t:'Location'},{t:'Answered',num:true},{t:'Findings',num:true},
+    {t:'Completed by'},{t:'Verified by'},{t:'Form'}
   ], rows, page.length);
+}
+
+function metalPanel(list){
+  if(!list.length) return '';
+  var page = list.slice(0, SEARCH_LIMIT);
+  var rows = page.map(function(m){
+    var c = yesNoCount(m.answers);
+    return '<tr>'+
+      '<td class="mono">'+fmtDate(m.date)+'</td>'+
+      '<td>'+esc(m.line||'—')+'</td>'+
+      '<td class="mono">'+esc((m.startTime||'—')+(m.endTime ? ' – '+m.endTime : ''))+'</td>'+
+      '<td class="num">'+(c.no ? '<span class="pill bad">'+c.no+' NO</span>' : '<span class="pill ok">All yes</span>')+'</td>'+
+      '<td class="desc">'+esc(m.corrective||'—')+'</td>'+
+      '<td class="soft">'+esc(m.completedBy||'—')+'</td>'+
+      '<td class="soft">'+esc(m.verifiedBy||'—')+'</td>'+
+      '<td class="view-cell"><button class="view-btn" type="button" onclick="sendMetalForm(\''+String(m.id)+'\')" '+
+        'title="Official form (PDF)" aria-label="Official form (PDF)"><span data-icon="pdf"></span></button></td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Metal detector checks', list.length, [
+    {t:'Date'},{t:'Line & MD'},{t:'Time'},{t:'Result',num:true},{t:'Corrective action'},
+    {t:'Completed by'},{t:'Verified by'},{t:'Form'}
+  ], rows, page.length);
+}
+
+function tempPanel(list){
+  if(!list.length) return '';
+  var page = list.slice(0, SEARCH_LIMIT);
+  var CP = {begin:'Beginning', mid:'Middle', end:'End'};
+  var rows = page.map(function(t){
+    return '<tr>'+
+      '<td class="mono">'+fmtDate(t.date)+'</td>'+
+      '<td>'+(t.shift===1?'1st':t.shift===2?'2nd':'—')+'</td>'+
+      '<td>'+esc(CP[t.checkpoint]||t.checkpoint||'—')+'</td>'+
+      '<td class="mono">'+esc(t.time||'—')+'</td>'+
+      '<td class="mono num">'+esc(t.temp||'—')+'</td>'+
+      '<td class="mono num">'+esc(t.chop||'—')+'</td>'+
+      '<td class="mono num">'+esc(t.plat||'—')+'</td>'+
+      '<td class="mono num">'+esc(t.line6||'—')+'</td>'+
+      '<td class="soft">'+esc(t.completedBy||'—')+'</td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Temperature & humidity (1945)', list.length, [
+    {t:'Date'},{t:'Shift'},{t:'Checkpoint'},{t:'Time'},{t:'Temp',num:true},{t:'Chopping %RH',num:true},
+    {t:'Platform %RH',num:true},{t:'Line 6 %RH',num:true},{t:'Initials'}
+  ], rows, page.length);
+}
+
+// "Today's log" de las pantallas de captura: Search con la fecha de hoy y ese tipo
+function openTodayLog(tipo){
+  goTo('screen-lotsearch');
+  var hoy = localDateStr();
+  var set = function(id, v){ var e = document.getElementById(id); if(e) e.value = v; };
+  set('search-input', ''); set('sf-field', 'all'); set('sf-from', hoy); set('sf-to', hoy);
+  set('sf-line', 'all'); set('sf-shift', 'all');
+  var t = document.getElementById('sf-type');
+  if(t){ t.value = tipo || 'all'; if(t.value !== (tipo || 'all')) t.value = 'all'; }
+  runSearch();
 }
 
 // ===== VISOR/EDITOR DE PESO Y SELLO (admin/supervisor editan; el resto solo ve) =====

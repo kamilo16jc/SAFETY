@@ -591,7 +591,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       Clear samples
     </button>
-    <button class="cbtn" onclick="goTo('screen-reports')">
+    <button class="cbtn" onclick="openTodayLog('weight')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       Today’s log
     </button>
@@ -752,7 +752,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       Clear checks
     </button>
-    <button class="cbtn" onclick="goTo('screen-reports')">
+    <button class="cbtn" onclick="openTodayLog('seal')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       Today’s log
     </button>
@@ -1089,7 +1089,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
       Clear fields
     </button>
-    <button class="cbtn" onclick="goTo('screen-reports')">
+    <button class="cbtn" onclick="openTodayLog('temp')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
       Today’s log
     </button>
@@ -1678,126 +1678,6 @@
 </div>
 
 
-<!-- REPORTS -->
-<div class="screen" id="screen-reports">
-  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
-  <div class="pg-head">
-    <h1 class="pg-title" id="title-reports">Reports</h1>
-    <div class="pg-sub">Everything captured on a day, ready to print or export</div>
-  </div>
-
-  <!-- FILTERS -->
-  <div class="gmp-section" style="margin-bottom:18px">
-    <div class="gmp-section-hdr">Filter records</div>
-    <div class="rpt-filters">
-
-      <div>
-        <div class="sec-label" data-t="date">Date</div>
-        <input type="date" class="time-input" id="rpt-date" style="width:100%" oninput="markRptDirty()">
-      </div>
-
-      <div>
-        <div class="sec-label">Line (optional)</div>
-        <div class="select-wrap"><select class="field" id="rpt-line" style="margin-bottom:0" onchange="rptFilters.line=this.value;markRptDirty()">
-          <option value="all">All lines</option>
-          <option value="1">Line 1</option>
-          <option value="2">Line 2</option>
-          <option value="3">Line 3</option>
-          <option value="4">Line 4</option>
-          <option value="5">Line 5</option>
-          <option value="6">Line 6</option>
-        </select></div>
-      </div>
-
-      <div>
-        <div class="sec-label">Shift (optional)</div>
-        <div class="select-wrap"><select class="field" id="rpt-shift" style="margin-bottom:0" onchange="rptFilters.shift=this.value">
-          <option value="all">All shifts</option>
-          <option value="1">1st Shift</option>
-          <option value="2">2nd Shift</option>
-        </select></div>
-      </div>
-
-      <div>
-        <div class="sec-label">Product Number (optional)</div>
-        <input type="text" class="time-input" id="rpt-product" placeholder="Filter by product number" style="width:100%" oninput="markRptDirty()">
-      </div>
-      <button class="main-btn" style="margin:0" id="rpt-go" onclick="applyRptFilters()">Apply Filters</button>
-    </div>
-  </div>
-
-  <!-- DAILY SHIFT REPORT -->
-  <div class="rpt-sec" data-scope="shifts">
-  <div class="sec-label">Daily Shift Report</div>
-  <div class="sheet-bar">
-    <div class="sb-field"><label for="rpt-shift-date">Date</label>
-      <input type="date" class="field" id="rpt-shift-date" onchange="updateRptShiftCount()"></div>
-    <div class="sb-field"><label for="rpt-shift-sel">Shift</label>
-      <div class="select-wrap"><select class="field" id="rpt-shift-sel" onchange="updateRptShiftCount()">
-        <option value="1">1st Shift</option>
-        <option value="2">2nd Shift</option>
-      </select></div></div>
-    <div class="sb-field"><label>&nbsp;</label>
-      <button class="btn-solid" onclick="exportDailyShiftPDF()"><span data-icon="doc"></span>Shift PDF</button></div>
-    <span class="sb-gap"></span>
-  </div>
-  <div class="hint" id="rpt-shift-count" style="margin:-6px 0 18px"></div>
-  </div>
-
-  <!-- LAB RECORDS -->
-  <div class="rpt-sec" data-scope="analysis">
-    <div class="sec-head">
-      <div class="sec-label">Sample Analysis &amp; Plates</div>
-      <div class="ico-row">
-        <button class="ico-btn" onclick="exportAnalysisCSV()" aria-label="Export to Excel" title="Export sample analysis and plates to Excel"><span data-icon="grid"></span></button>
-      </div>
-    </div>
-    <div id="rpt-lab-list" style="margin-bottom:20px"></div>
-  </div>
-
-  <!-- WEIGHT & SEAL RECORDS -->
-  <div class="rpt-sec" data-scope="weights">
-  <div class="sec-head">
-    <div class="sec-label">Weight &amp; Bag Seal Records</div>
-    <div class="ico-row">
-      <button class="ico-btn" onclick="exportRptWeightPDF()" aria-label="Export to PDF" title="Export weight and bag seal to PDF"><span data-icon="pdf"></span></button>
-      <button class="ico-btn" onclick="exportRptExcel()" aria-label="Export to Excel" title="Export weight and bag seal to Excel"><span data-icon="grid"></span></button>
-      <button class="ico-btn" onclick="sendWeightSealForm()" aria-label="Official form" title="Download the official form (PDF)"><span data-icon="seal"></span></button>
-    </div>
-  </div>
-  <div class="sec-sub">Weight</div>
-  <div id="rpt-weight-list" style="margin-bottom:14px"></div>
-  <div class="sec-sub">Bag seal</div>
-  <div id="rpt-seal-list" style="margin-bottom:20px"></div>
-  </div>
-
-  <!-- GMP RECORDS -->
-  <div class="rpt-sec" data-scope="weights">
-  <div class="sec-head">
-    <div class="sec-label">GMP Records</div>
-    <div class="ico-row">
-      <button class="ico-btn" onclick="exportRptGmpPDF()" aria-label="Export to PDF" title="Export GMP records to PDF"><span data-icon="pdf"></span></button>
-      <button class="ico-btn" onclick="exportGmpExcel()" aria-label="Export to Excel" title="Export GMP records to Excel"><span data-icon="grid"></span></button>
-      <button class="ico-btn" onclick="sendGmpForm()" aria-label="Official form" title="Download the official form (PDF)"><span data-icon="seal"></span></button>
-    </div>
-  </div>
-  <div id="rpt-gmp-list" style="margin-bottom:20px"></div>
-  </div>
-
-  <!-- METAL DETECTOR RECORDS -->
-  <div class="rpt-sec" data-scope="weights">
-  <div class="sec-head">
-    <div class="sec-label">Metal Detector Checks</div>
-    <div class="ico-row">
-      <button class="ico-btn" onclick="sendMetalForm()" aria-label="Official form" title="Download the official form (PDF)"><span data-icon="seal"></span></button>
-    </div>
-  </div>
-  <div id="rpt-metal-list" style="margin-bottom:20px"></div>
-  </div>
-</div>
-
-
-<!-- HOLD MANAGEMENT -->
 <div class="screen" id="screen-hold">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
   <div class="pg-head">
@@ -2148,7 +2028,6 @@
 <script src="js/export/shift-pdf.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/modules/admin.js"></script>
-<script src="js/modules/reports.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/modules/holds.js"></script>
 <script src="js/core/theme.js"></script>

@@ -21,18 +21,18 @@ var RIBBON_GROUPS = {
     {n:'Muestras',         s:['screen-samplelist']},
     {n:'Ambiente',         s:['screen-temp','screen-gmp']},
     {n:'Documentos',       s:['screen-capa','screen-hold','screen-shift']},
-    {n:'Consulta',         s:['screen-reports','screen-lotsearch']}
+    {n:'Consulta',         s:['screen-lotsearch']}
   ],
   lab: [
     {n:'Análisis',      s:['screen-analysis','screen-yeast']},
     {n:'Laboratorio',   s:['screen-lab']},
     {n:'Materia prima', s:['screen-raw','screen-dry','screen-formag','screen-rd']},
     {n:'Grilling',      s:['screen-grilling']},
-    {n:'Consulta',      s:['screen-shift','screen-reports','screen-lotsearch']}
+    {n:'Consulta',      s:['screen-shift','screen-lotsearch']}
   ],
   production: [
     {n:'Programación', s:['screen-production']},
-    {n:'Consulta',     s:['screen-reports','screen-lotsearch']}
+    {n:'Consulta',     s:['screen-lotsearch']}
   ],
   products: [
     {n:'Catálogo', s:['screen-products','screen-addproduct']},
@@ -47,7 +47,7 @@ var RIBBON_GROUPS = {
     {n:'Panel',    s:['screen-dashboard']},
     {n:'Personas', s:['screen-admin']},
     {n:'Registro', s:['screen-activity']},
-    {n:'Consulta', s:['screen-reports','screen-lotsearch']}
+    {n:'Consulta', s:['screen-lotsearch']}
   ]
 };
 

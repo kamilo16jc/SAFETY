@@ -70,7 +70,6 @@ function goTo(id){
   if(id==='screen-gmp') initGmp();
   if(id==='screen-metal') initMetal();
   if(id==='screen-admin') initAdmin();
-  if(id==='screen-reports') initReports();
   if(id==='screen-hold') initHold();
   if(id==='screen-activity') initActivity();
   if(id==='screen-products') initCatalog();
@@ -188,7 +187,6 @@ var CRUMBS = {
   'screen-capa':     ['Capture', 'Incident & CAPA'],
   'screen-shift':    ['Capture', 'Shift Reports'],
   'screen-dashboard':['Review', 'Dashboard'],
-  'screen-reports':  ['Review', 'Reports'],
   'screen-lotsearch':['Review', 'Search'],
   'screen-hold':     ['Review', 'Hold Cases'],
   'screen-activity': ['Review', 'Activity Log'],

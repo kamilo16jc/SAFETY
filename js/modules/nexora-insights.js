@@ -89,13 +89,13 @@ function nxComputeInsights(){
   if(w.pct!=null && w.pct<KPI_TARGETS.weight){
     var groups={};records.forEach(function(r){if(r.pass==null||!r.total)return;var key=String(r.line||'Unassigned');if(!groups[key])groups[key]={ok:0,n:0};groups[key].ok+=Number(r.pass);groups[key].n+=Number(r.total);});
     var weakest=Object.keys(groups).sort(function(a,b){return groups[a].ok/groups[a].n-groups[b].ok/groups[b].n;})[0];
-    a.push({title:'Weight compliance is below target',text:w.pct.toFixed(1)+'% of '+w.n+' samples passed. '+(weakest?'Line '+weakest+' has the lowest recorded compliance. ':'' )+'Review the measurements before taking action.',mod:'qa',screen:'screen-reports',action:'Review records'});
+    a.push({title:'Weight compliance is below target',text:w.pct.toFixed(1)+'% of '+w.n+' samples passed. '+(weakest?'Line '+weakest+' has the lowest recorded compliance. ':'' )+'Review the measurements before taking action.',mod:'qa',screen:'screen-lotsearch',action:'Review records'});
   }
-  if(w.pct!=null && p.pct!=null && Math.abs(w.pct-p.pct)>=.1)a.push({title:'Weight compliance '+(w.pct>=p.pct?'improved':'decreased'),text:Math.abs(w.pct-p.pct).toFixed(1)+' percentage points '+(w.pct>=p.pct?'higher':'lower')+' than the prior '+kpiState.days+'-day period. Current sample count: '+w.n+'; prior sample count: '+p.n+'.',mod:'qa',screen:'screen-reports',action:'Explore results'});
+  if(w.pct!=null && p.pct!=null && Math.abs(w.pct-p.pct)>=.1)a.push({title:'Weight compliance '+(w.pct>=p.pct?'improved':'decreased'),text:Math.abs(w.pct-p.pct).toFixed(1)+' percentage points '+(w.pct>=p.pct?'higher':'lower')+' than the prior '+kpiState.days+'-day period. Current sample count: '+w.n+'; prior sample count: '+p.n+'.',mod:'qa',screen:'screen-lotsearch',action:'Explore results'});
   if(!a.length){
     var seals=kpiCompSello(kpiSellos(v));
     if(w.pct==null&&seals.pct==null)a.push({title:'Your next insight starts with a check',text:'There are no scored weight or seal results in this selection. Record a check or choose another period.',mod:'qa',screen:'screen-weight',action:'Open weight log'});
-    else a.push({title:'Review the complete picture',text:'This selection includes '+w.n+' scored weight samples and '+seals.n+' seal checks. Check completion and exceptions alongside compliance.',mod:'qa',screen:'screen-reports',action:'Review records'});
+    else a.push({title:'Review the complete picture',text:'This selection includes '+w.n+' scored weight samples and '+seals.n+' seal checks. Check completion and exceptions alongside compliance.',mod:'qa',screen:'screen-lotsearch',action:'Review records'});
   }
   return a;
 }

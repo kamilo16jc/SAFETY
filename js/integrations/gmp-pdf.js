@@ -64,11 +64,12 @@ function downloadGmpPdf(g, temps){
   });
 }
 
-// ---- Reports: el GMP del día filtrado, con sus lecturas de ese turno ----
-function sendGmpForm(){
-  if(!rptGmpResults.length){ toast('No GMP audits for the selected date'); return; }
-  var g = rptGmpResults[rptGmpResults.length - 1];   // la auditoría más reciente del filtro
-  var dia = String(g.date || rptFilters.date || '').slice(0,10);
+// ---- El botón de la forma (Search, en la fila de cada GMP): ese registro,
+// con las lecturas de Temp & Humidity de su día y turno ----
+function sendGmpForm(id){
+  var g = (getDB().gmps || []).filter(function(x){ return String(x.id) === String(id); })[0];
+  if(!g){ toast('GMP audit not found'); return; }
+  var dia = String(g.date || '').slice(0,10);
   var temps = (getDB().temps || []).filter(function(t){
     return (!dia || String(t.date || '').slice(0,10) === dia) && (g.shift == null || t.shift === g.shift);
   });

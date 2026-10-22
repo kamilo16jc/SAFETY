@@ -24,7 +24,7 @@ const SHELL = [
   './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
   './js/modules/weight.js','./js/modules/lot-ocr.js','./js/core/lot.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
-  './js/modules/admin.js','./js/modules/reports.js','./js/modules/holds.js',
+  './js/modules/admin.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
   './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',
   './js/modules/customers.js',

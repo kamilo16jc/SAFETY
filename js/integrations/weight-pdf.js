@@ -111,12 +111,14 @@ function wsHojas(weights, seals){
   return hojas;
 }
 
+// El nombre dice las fechas y, si es una sola, la linea y el turno
 function _wsNombre(hojas){
-  var h = hojas[0] || {}, d = String(rptFilters.date || '').slice(0,10);
-  if(!d && h.date){ var p = h.date.split('/'); d = p[2]+'-'+p[0]+'-'+p[1]; }
-  var linea = (rptFilters.line && rptFilters.line !== 'all') ? '_L'+rptFilters.line : '';
-  var turno = rptFilters.shift === '1' ? '_1st' : rptFilters.shift === '2' ? '_2nd' : '';
-  return 'Weight_Seal_'+(d || localDateStr())+linea+turno+'.pdf';
+  var iso = function(f){ var p = String(f||'').split('/'); return p.length === 3 ? p[2]+'-'+p[0]+'-'+p[1] : ''; };
+  var fechas = hojas.map(function(h){ return iso(h.date); }).filter(Boolean).sort();
+  var d1 = fechas[0] || localDateStr(), d2 = fechas[fechas.length-1] || d1;
+  var uno = function(k){ var v = hojas.map(function(h){ return h[k]; }).filter(function(x, i, a){ return a.indexOf(x) === i; }); return v.length === 1 ? v[0] : ''; };
+  var linea = uno('line') ? '_L'+uno('line') : '', turno = uno('shift') ? '_'+uno('shift') : '';
+  return 'Weight_Seal_'+d1+(d2 !== d1 ? '_to_'+d2 : '')+linea+turno+'.pdf';
 }
 
 // Genera la forma con lo que muestra Reports (sus filtros) y la entrega
@@ -131,11 +133,14 @@ function downloadWeightSealPdf(weights, seals){
   });
 }
 
-// ---- Reports: el botón de la forma oficial de pesos y bag seal ----
-function sendWeightSealForm(){
-  if(!rptWeightResults.length && !rptSealResults.length){ toast('No records for the selected filters'); return; }
+// ---- El botón de la forma (Search): con los pesos y sellos que muestra ----
+function sendWeightSealForm(weights, seals){
+  weights = weights || []; seals = seals || [];
+  if(!weights.length && !seals.length){ toast('No weight or bag seal records in this search'); return; }
+  var n = wsHojas(weights, seals).length;
+  if(n > 30 && !confirm('This makes '+n+' sheets (one per date, shift, line and LOT). Generate anyway?')) return;
   toast('Building form…');
-  downloadWeightSealPdf(rptWeightResults, rptSealResults).then(function(r){
+  downloadWeightSealPdf(weights, seals).then(function(r){
     toast('Form ready ✓' + (r.hojas > 1 ? ' · '+r.hojas+' sheets' : ''));
     logActivity('form', 'Official form generated', r.nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){

@@ -21,7 +21,6 @@ var NX_SCREEN_NOTES={
  'screen-products':'Find products, specifications and package targets.',
  'screen-customers':'Maintain customer information and product relationships.',
  'screen-addproduct':'Define product information, packaging and quality targets.',
- 'screen-reports':'Review records, apply filters and prepare reports.',
  'screen-hold':'Track held product, corrective actions and dispositions.',
  'screen-lotsearch':'Connect records by product, lot, customer or date.',
  'screen-activity':'Review the history of actions in your workspace.'

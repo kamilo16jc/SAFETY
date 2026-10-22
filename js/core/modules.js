@@ -17,7 +17,6 @@ var MODULES = [
       {screen:'screen-capa',      name:'CAPA Reports',     icon:'alert', color:'#0e7490'},
       {screen:'screen-hold',      name:'Hold Cases',       icon:'lock', color:'#15803d'},
       {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#c2410c'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#6d28d9'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#9d174d'}
   ]},
   { id:'lab', color:'#38bdf8', ink:'#0369a1', name:'QA Laboratory', icon:'droplet', items:[
@@ -30,12 +29,10 @@ var MODULES = [
       {screen:'screen-formag',    name:'Formag',           icon:'factory', color:'#0e7490'},
       {screen:'screen-rd',        name:'R&D',              icon:'scan', color:'#be123c'},
       {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#be123c'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#0e7490'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#15803d'}
   ]},
   { id:'production', color:'#fbbf24', ink:'#b45309', name:'Production', icon:'calendar', items:[
       {screen:'screen-production',name:'Schedule',         icon:'calendar', color:'#047857'},
-      {screen:'screen-reports',   name:'Reports',          icon:'doc', color:'#0369a1'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#b45309'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
@@ -51,7 +48,6 @@ var MODULES = [
   ]},
   { id:'admin', color:'#fb7185', ink:'#be123c', name:'Administrator', icon:'sliders', items:[
       {screen:'screen-dashboard', name:'Dashboard',        icon:'chart', color:'#047857'},
-      {screen:'screen-reports',   name:'Reports · all',    icon:'doc', color:'#0369a1'},
       {screen:'screen-lotsearch', name:'Search · all',     icon:'search', color:'#b45309'},
       {screen:'screen-activity',  name:'Activity Log',     icon:'pulse', color:'#7c3aed'},
       {screen:'screen-admin',     name:'Users & Roles',    icon:'user', color:'#be123c'}
@@ -252,7 +248,7 @@ function moduleOfScreen(screen){
 // 'runs' es la excepcion a proposito: ahi vive si la muestra se recogio de la
 // linea o no, y eso le sirve igual a QA y al laboratorio.
 var MODULE_SCOPE = {
-  qa:         ['weights','seals','holds','capa','shifts','runs'],
+  qa:         ['weights','seals','holds','capa','shifts','runs','gmps','metal','temps'],
   lab:        ['analysis','runs','raw','grilling'],
   coa:        ['analysis','runs'],
   production: ['runs','shifts'],

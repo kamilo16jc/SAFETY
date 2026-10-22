@@ -42,13 +42,15 @@ function downloadMetalPdf(m){
   });
 }
 
-// ---- El botón de la forma: en Reports, el chequeo más reciente del filtro;
-// en la pantalla del Metal Detector ("Export form"), el más reciente de la
-// fecha que está en pantalla (antes tomaba el filtro de Reports también ahí) ----
-function sendMetalForm(){
-  var lista = (typeof rptMetalResults !== 'undefined') ? rptMetalResults : [];
-  var pant = document.getElementById('screen-metal');
-  if(pant && pant.classList.contains('active')){
+// ---- El botón de la forma: en Search, el chequeo de esa fila; en la pantalla
+// del Metal Detector ("Export form"), el más reciente de la fecha en pantalla ----
+function sendMetalForm(id){
+  var lista = [];
+  if(id != null){
+    // desde Search: el registro de esa fila
+    lista = (getDB().metal || []).filter(function(x){ return String(x.id) === String(id); });
+  } else {
+    // desde la pantalla del Metal Detector: el más reciente de la fecha en pantalla
     var dia = (document.getElementById('md-date') || {}).value || localDateStr();
     lista = (getDB().metal || []).filter(function(x){ return String(x.date || '').slice(0,10) === dia; });
   }
