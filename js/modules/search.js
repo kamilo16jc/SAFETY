@@ -904,36 +904,154 @@ function deleteMetalRecord(id){
   toast('Record deleted');
 }
 
+var TEMP_CP = {begin:'Beginning', mid:'Middle', end:'End'};
+
 function tempPanel(list){
   if(!list.length) return '';
   var page = list.slice(0, SEARCH_LIMIT);
-  var CP = {begin:'Beginning', mid:'Middle', end:'End'};
+  var tip = canEditRecords() ? 'View / edit' : 'View';
   var rows = page.map(function(t){
-    return '<tr>'+
+    return '<tr class="view-row" onclick="viewTempRecord(\''+String(t.id)+'\')">'+
       '<td class="mono">'+fmtDate(t.date)+'</td>'+
-      '<td>'+(t.shift===1?'1st':t.shift===2?'2nd':'—')+'</td>'+
-      '<td>'+esc(CP[t.checkpoint]||t.checkpoint||'—')+'</td>'+
+      '<td>'+(+t.shift===1?'1st':+t.shift===2?'2nd':'—')+'</td>'+
+      '<td>'+esc(TEMP_CP[t.checkpoint]||t.checkpoint||'—')+'</td>'+
       '<td class="mono">'+esc(t.time||'—')+'</td>'+
       '<td class="mono num">'+esc(t.temp||'—')+'</td>'+
       '<td class="mono num">'+esc(t.chop||'—')+'</td>'+
       '<td class="mono num">'+esc(t.plat||'—')+'</td>'+
       '<td class="mono num">'+esc(t.line6||'—')+'</td>'+
       '<td class="soft">'+esc(t.completedBy||'—')+'</td>'+
+      '<td class="view-cell"><button class="form-ico" type="button" onclick="event.stopPropagation();viewTempRecord(\''+String(t.id)+'\')" '+
+        'data-tip="'+tip+'" aria-label="'+tip+' this checkpoint"><span data-icon="search"></span></button></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Temperature & humidity (1945)', list.length, [
     {t:'Date'},{t:'Shift'},{t:'Checkpoint'},{t:'Time'},{t:'Temp',num:true},{t:'Chopping %RH',num:true},
-    {t:'Platform %RH',num:true},{t:'Line 6 %RH',num:true},{t:'Initials'}
+    {t:'Platform %RH',num:true},{t:'Line 6 %RH',num:true},{t:'Initials'},{t:'View'}
   ], rows, page.length);
 }
 
-// "Today's log" de las pantallas de captura: Search con la fecha de hoy y ese tipo
-function openTodayLog(tipo){
+// ===== VISOR/EDITOR DE TEMPERATURA Y HUMEDAD =====
+// Un checkpoint ya guardado solo se corrige aqui (admin/supervisor); la
+// pantalla de captura lo deja bloqueado y manda a Search.
+function _tempRec(id){ return (getDB().temps||[]).filter(function(x){ return String(x.id)===String(id); })[0]; }
+
+function viewTempRecord(id){
+  var t = _tempRec(id);
+  if(!t){ toast('Record not found'); return; }
+  var edit = canEditRecords();
+  var turno = +t.shift===1 ? '1st' : +t.shift===2 ? '2nd' : '—';
+  var body;
+  if(edit){
+    var cps = ['begin','mid','end'];
+    if(t.checkpoint && cps.indexOf(t.checkpoint) < 0) cps.push(t.checkpoint);
+    var cpSel = cps.map(function(cp){
+      return '<option value="'+esc(cp)+'"'+(t.checkpoint===cp?' selected':'')+'>'+esc(TEMP_CP[cp]||cp)+'</option>';
+    }).join('');
+    var num = function(id, v, ph){
+      return '<input type="text" class="field mono" id="'+id+'" inputmode="decimal" placeholder="'+ph+'" value="'+esc(v||'')+'">';
+    };
+    body =
+      '<div class="rec-grid">'+
+        recEdit('Date','<input type="date" class="field" id="et-date" value="'+String(t.date||'').slice(0,10)+'">')+
+        recEdit('Shift','<select class="field" id="et-shift">'+shiftOpts(+t.shift)+'</select>')+
+        recEdit('Checkpoint','<select class="field" id="et-cp">'+cpSel+'</select>')+
+        recEdit('Time','<input type="time" class="field" id="et-time" value="'+esc(t.time||'')+'">')+
+        recEdit('Temperature · °F', num('et-temp', t.temp, '°F'))+
+        recEdit('Chopping area · %RH', num('et-chop', t.chop, '%'))+
+        recEdit('Under platform · %RH', num('et-plat', t.plat, '%'))+
+        recEdit('Line 6 &amp; grilling · %RH', num('et-line6', t.line6, '%'))+
+        recEdit('Completed by','<input type="text" class="field" id="et-completed" value="'+esc(t.completedBy||'')+'">')+
+      '</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Comments · corrective actions</div>'+
+        '<textarea class="field" id="et-comments" rows="2">'+esc(t.comments||'')+'</textarea></div>';
+  } else {
+    body =
+      '<div class="rec-grid">'+
+        recRow('Date', fmtDate(t.date))+ recRow('Shift', turno)+
+        recRow('Checkpoint', esc(TEMP_CP[t.checkpoint]||t.checkpoint||'—'))+ recRow('Time', esc(t.time||'—'))+
+        recRow('Temperature', t.temp ? esc(t.temp)+' °F' : '—')+
+        recRow('Chopping area', t.chop ? esc(t.chop)+' %' : '—')+
+        recRow('Under platform', t.plat ? esc(t.plat)+' %' : '—')+
+        recRow('Line 6 &amp; grilling', t.line6 ? esc(t.line6)+' %' : '—')+
+        recRow('Completed by', esc(t.completedBy||'—'))+
+      '</div>'+
+      recBlock('Comments', t.comments);
+  }
+  var borrar = (typeof canDeleteRecords==='function') ? canDeleteRecords() : edit;
+  var actions = edit
+    ? saveBtn("saveTempEdit('"+String(t.id)+"',this)", {texto:'Save changes', grande:true})+
+      (borrar ? '<button class="btn-danger" onclick="deleteTempRecord(\''+String(t.id)+'\')">Delete</button>' : '')+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
+    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Temperature &amp; humidity · '+esc(TEMP_CP[t.checkpoint]||t.checkpoint||'—')+' · '+turno+' shift', body, actions);
+}
+
+function saveTempEdit(id, btn){
+  if(!canEditRecords()){ toast('Only admins and supervisors can edit'); return; }
+  var db = getDB();
+  var t = (db.temps||[]).filter(function(x){ return String(x.id)===String(id); })[0];
+  if(!t) return;
+  var g = function(k){ var e=document.getElementById(k); return e ? e.value.trim() : ''; };
+  var date = g('et-date') || t.date, shift = parseInt(g('et-shift')) || t.shift, cp = g('et-cp') || t.checkpoint;
+
+  // Un checkpoint por fecha y turno: no se puede mover encima de otro ya tomado
+  var otro = db.temps.filter(function(x){
+    return String(x.id)!==String(t.id) && x.date===date && +x.shift===+shift && x.checkpoint===cp;
+  })[0];
+  if(otro){ toast((TEMP_CP[cp]||cp)+' is already recorded for '+fmtDate(date)+', '+(shift===1?'1st':'2nd')+' shift'); return; }
+
+  // Las lecturas son numeros (con coma o punto); vacias se permiten
+  var lect = {temp:'Temperature', chop:'Chopping area', plat:'Under platform', line6:'Line 6 & grilling'}, vals = {};
+  for(var k in lect){
+    var v = g('et-'+k).replace(',', '.');
+    if(v && isNaN(Number(v))){ toast(lect[k]+' must be a number'); return; }
+    vals[k] = v;
+  }
+
+  t.date        = date;
+  t.shift       = shift;
+  t.checkpoint  = cp;
+  t.time        = g('et-time');
+  t.temp        = vals.temp;
+  t.chop        = vals.chop;
+  t.plat        = vals.plat;
+  t.line6       = vals.line6;
+  t.completedBy = g('et-completed');
+  t.comments    = g('et-comments');
+  t.editedAt = localISOStr();
+  t.editedBy = currentUser ? currentUser.name : '—';
+  persistRecordEdit('temps', t, db);
+  logActivity('temp','Temp & Humidity edited',
+    (TEMP_CP[cp]||cp)+' · Shift '+(shift===1?'1st':'2nd')+' · '+date, currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record updated');
+}
+
+function deleteTempRecord(id){
+  if(typeof canDeleteRecords==='function' ? !canDeleteRecords() : !canEditRecords()){
+    toast('You are not allowed to delete records'); return; }
+  var t = _tempRec(id);
+  if(!t) return;
+  if(!confirm('Delete this temperature & humidity checkpoint? '+(TEMP_CP[t.checkpoint]||t.checkpoint||'')+' · '+
+              String(t.date||'').slice(0,10)+'. This cannot be undone.')) return;
+  removeRecord('temps', t.id, t._fbId);
+  logActivity('temp','Temp & Humidity deleted', (TEMP_CP[t.checkpoint]||t.checkpoint||'—')+' · '+String(t.date||'').slice(0,10),
+    currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record deleted');
+}
+
+// "Today's log" de las pantallas de captura: Search con la fecha de hoy y ese
+// tipo (o con la fecha y el turno que se le pasen)
+function openTodayLog(tipo, fecha, turno){
   goTo('screen-lotsearch');
-  var hoy = localDateStr();
+  var dia = fecha || localDateStr();
   var set = function(id, v){ var e = document.getElementById(id); if(e) e.value = v; };
-  set('search-input', ''); set('sf-field', 'all'); set('sf-from', hoy); set('sf-to', hoy);
-  set('sf-line', 'all'); set('sf-shift', 'all');
+  set('search-input', ''); set('sf-field', 'all'); set('sf-from', dia); set('sf-to', dia);
+  set('sf-line', 'all'); set('sf-shift', turno ? String(turno) : 'all');
   var t = document.getElementById('sf-type');
   if(t){ t.value = tipo || 'all'; if(t.value !== (tipo || 'all')) t.value = 'all'; }
   runSearch();

@@ -564,7 +564,7 @@ function saveGmp(){
 // ===== TEMP & HUMIDITY =====
 var thShift = null;
 var thCheckpoint = null; // 'begin' | 'mid' | 'end'
-var thEditing = false;   // true sólo si el usuario pidió corregir un checkpoint ya guardado
+// Un checkpoint ya guardado no se corrige aqui: solo en Search (viewTempRecord)
 
 var TH_FIELDS = ['th-time','th-temp','th-chop','th-plat','th-line6','th-comments','th-completed'];
 var TH_CP_LABEL = {begin:'Beginning', mid:'Middle', end:'End'};
@@ -578,8 +578,8 @@ function initTempScreen(){
   // Fecha LOCAL: con toISOString() la app saltaba al día siguiente por la tarde
   document.getElementById('th-date').value = localDateStr();
   var d = document.getElementById('th-date');
-  d.onchange = function(){ thCheckpoint=null; thEditing=false; clearThFields(); renderThUI(); };
-  thShift = null; thCheckpoint = null; thEditing = false;
+  d.onchange = function(){ thCheckpoint=null; clearThFields(); renderThUI(); };
+  thShift = null; thCheckpoint = null;
   document.querySelectorAll('#th-shift .seg').forEach(function(b){ b.classList.remove('on'); });
   clearThFields();
   renderThUI();
@@ -621,7 +621,7 @@ function thRecordSummary(r){
 
 function setThShift(n){
   thShift = n;
-  thCheckpoint = null; thEditing = false;
+  thCheckpoint = null;
   document.querySelectorAll('#th-shift .seg').forEach(function(b,i){
     b.classList.toggle('on', i === n-1);
   });
@@ -631,10 +631,9 @@ function setThShift(n){
 
 function setThCheckpoint(cp){
   thCheckpoint = cp;
-  thEditing = false;
   var existing = thRecordFor(cp);
   if(existing){
-    // Ya registrado: se muestra en solo lectura, no se puede sobreescribir sin pedirlo
+    // Ya registrado: se muestra en solo lectura; se corrige en Search
     document.getElementById('th-time').value      = existing.time   || '';
     document.getElementById('th-temp').value      = existing.temp   || '';
     document.getElementById('th-chop').value      = existing.chop   || '';
@@ -666,38 +665,31 @@ function renderThUI(){
     btn.innerHTML = TH_CP_LABEL[cp]+(saved?' <span class="seg-dot" title="Already recorded">\u25cf</span>':'');
   });
 
-  var locked = !!(thCheckpoint && thRecordFor(thCheckpoint) && !thEditing);
+  var locked = !!(thCheckpoint && thRecordFor(thCheckpoint));
   thFieldsDisabled(locked);
 
   var nota = document.getElementById('th-state');
   if(nota){
     if(locked){
-      nota.textContent = TH_CP_LABEL[thCheckpoint]+' already recorded \u00b7 '+
-                         thRecordSummary(thRecordFor(thCheckpoint));
-      nota.className = 'cbar-note';
-    } else if(thEditing && thCheckpoint){
-      nota.textContent = 'Editing '+TH_CP_LABEL[thCheckpoint]+' \u2014 saving replaces it';
-      nota.className = 'cbar-note bad';
+      nota.innerHTML = esc(TH_CP_LABEL[thCheckpoint]+' already recorded \u00b7 '+
+                           thRecordSummary(thRecordFor(thCheckpoint)))+
+        ' \u00b7 <a href="#" onclick="thOpenInSearch();return false">correct it in Search</a>';
     } else {
-      nota.textContent = ''; nota.className = 'cbar-note';
+      nota.textContent = '';
     }
+    nota.className = 'cbar-note';
   }
 
   var btn = document.getElementById('th-save-btn');
-  if(btn){
-    var lbl = btn.querySelector('.cb-lbl');
-    if(lbl) lbl.textContent = thEditing ? 'Update checkpoint' : 'Save checkpoint';
-    btn.disabled = locked;
-  }
+  if(btn) btn.disabled = locked;
   renderThSummary();
 }
 
-// Desbloquea un checkpoint ya guardado para corregirlo (desde el modal)
-function thEditExisting(){
+// Corregir un checkpoint ya guardado se hace en Search: se abre con la fecha
+// y el turno de esta pantalla
+function thOpenInSearch(){
   closeDupModal();
-  thEditing = true;
-  renderThUI();
-  toast('Editing '+TH_CP_LABEL[thCheckpoint]+' — save to update');
+  openTodayLog('temp', document.getElementById('th-date').value, thShift);
 }
 
 function thPickAnother(){
@@ -738,30 +730,25 @@ function saveTempHumidity(){
   var date = document.getElementById('th-date').value;
   if(!date){ toast('Select a date'); return; }
 
-  // No sobreescribir un checkpoint ya guardado salvo que se pida explícitamente
+  // Un checkpoint ya guardado no se sobreescribe aqui: se corrige en Search
   var existing = thRecordFor(thCheckpoint);
-  if(existing && !thEditing){
+  if(existing){
     showGuardModal({
       title: TH_CP_LABEL[thCheckpoint]+' is already recorded for '+(thShift===1?'1st':'2nd')+' shift',
       detail: thRecordSummary(existing),
-      ask: 'Pick the checkpoint you are actually taking, or edit the saved one.',
+      ask: 'Pick the checkpoint you are actually taking. To correct the saved one, open it in Search.',
       primaryLabel:'Pick another checkpoint', onPrimary:thPickAnother,
-      secondaryLabel:'Edit this record',      onSecondary:thEditExisting
+      secondaryLabel:'Correct it in Search',  onSecondary:thOpenInSearch
     });
     return;
   }
 
-  commitTempHumidity(date, existing);
+  commitTempHumidity(date);
 }
 
-function commitTempHumidity(date, existing){
+function commitTempHumidity(date){
   var db = getDB();
   if(!db.temps) db.temps = [];
-
-  // Remove existing record for same date+shift+checkpoint (update it)
-  db.temps = db.temps.filter(function(t){
-    return !(t.date===date && t.shift===thShift && t.checkpoint===thCheckpoint);
-  });
 
   var cpLabel = TH_CP_LABEL;
   var rec = {
@@ -778,29 +765,18 @@ function commitTempHumidity(date, existing){
     completedBy: document.getElementById('th-completed').value
   };
   db.temps.push(rec);
-  // Al corregir, se reescribe el MISMO documento en Firestore; si no, el viejo
-  // volvería en la próxima sincronización y desharía la corrección.
-  if(existing && existing._fbId && window.saveToFirebaseAt){
-    rec._fbId = existing._fbId;
-    saveDB(db,'temps');
-    window.saveToFirebaseAt('temps', existing._fbId, rec);
-  } else {
-    saveDB(db,'temps');
-    if(window.saveToFirebase) window.saveToFirebase('temps', rec);
-  }
-  var wasEdit = !!existing;
-  cbtnSaved('th-save-btn', wasEdit ? 'Updated' : 'Saved');
-  logActivity('temp', wasEdit ? 'Temp & Humidity updated' : 'Temp & Humidity recorded',
-    cpLabel[thCheckpoint]+' · Shift '+(thShift===1?'1st':'2nd')+' · '+date+
-    (wasEdit?' · corrected an existing checkpoint':''),
+  saveDB(db,'temps');
+  if(window.saveToFirebase) window.saveToFirebase('temps', rec);
+  cbtnSaved('th-save-btn', 'Saved');
+  logActivity('temp', 'Temp & Humidity recorded',
+    cpLabel[thCheckpoint]+' · Shift '+(thShift===1?'1st':'2nd')+' · '+date,
     rec.completedBy||(currentUser?currentUser.name:'—'));
 
-  toast(cpLabel[thCheckpoint]+(wasEdit?' checkpoint updated':' checkpoint saved'));
+  toast(cpLabel[thCheckpoint]+' checkpoint saved');
 
   // El checkpoint queda sin seleccionar a propósito: así el siguiente registro
   // obliga a elegir cuál se está tomando y no cae sobre el anterior.
   thCheckpoint = null;
-  thEditing = false;
   clearThFields();
   renderThUI();
 }
