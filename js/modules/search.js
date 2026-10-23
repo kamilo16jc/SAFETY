@@ -529,11 +529,15 @@ function capaPanel(list){
       '<td class="mono code">'+esc(c.lot||'—')+'</td>'+
       '<td>'+fmtDate(c.capaDate)+'</td>'+
       '<td class="soft">'+esc(c.completedBy||'—')+'</td>'+
-      '<td class="view-cell"><span class="view-btn" title="View report" data-icon="search"></span></td>'+
+      '<td class="view-cell"><span class="row-icos">'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();viewCapaReport('+c.id+')" '+
+          'data-tip="View report" aria-label="View this report"><span data-icon="search"></span></button>'+
+        formBtn('exportCapaPDF('+c.id+')', 'Official form · Incident &amp; CAPA (PDF)')+
+      '</span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Incident & CAPA reports', list.length, [
-    {t:'Report #'},{t:'Severity'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Date'},{t:'By'},{t:''}
+    {t:'Report #'},{t:'Severity'},{t:'Status'},{t:'Product'},{t:'LOT'},{t:'Date'},{t:'By'},{t:'Form'}
   ], rows);
 }
 
@@ -593,7 +597,7 @@ function viewCapaReport(id){
 
   var canEdit = currentUser;
   var actions =
-    '<button class="btn-solid" onclick="exportCapaPDF('+c.id+')"><span data-icon="doc"></span>Export PDF</button>'+
+    '<button class="btn-solid" onclick="exportCapaPDF('+c.id+')"><span data-icon="pdf"></span>Official form</button>'+
     (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-capa\');editCapa('+c.id+')">Open to edit</button>':'')+
     '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
 

@@ -142,7 +142,7 @@ function capaCloseMsg(ver){
   if(m) m.classList.toggle('show', !!ver);
 }
 function printCapa(){
-  if(!capaEditingId){ toast('Open a report first to print it'); return; }
+  if(!capaEditingId){ toast('Save or open a report first to export its form'); return; }
   if(typeof exportCapaPDF === 'function') exportCapaPDF(capaEditingId);
 }
 

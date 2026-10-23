@@ -2,7 +2,8 @@
 // Cada forma es un JSON en assets/forms/ que dibuja su propio motor
 // (js/vendor/pdf-template.js) con jsPDF 2.5.1. jsPDF, el motor y la plantilla
 // se cargan al generar la primera forma, no al abrir la app.
-// Las formas: GMP (gmp-pdf.js) y pesos + bag seal (weight-pdf.js).
+// Las formas: GMP (gmp-pdf.js), pesos + bag seal (weight-pdf.js), metal
+// detector (metal-pdf.js) y CAPA (js/export/capa-pdf.js).
 
 var PDF_FORMS_JSPDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 var _pdfFormsTpl = {};
