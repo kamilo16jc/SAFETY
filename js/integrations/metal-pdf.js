@@ -3,7 +3,7 @@
 // (assets/forms/metal-detector-form.json). Reemplaza a la forma Word
 // (metal_form_template.docx). La carga y los formatos son de pdf-forms.js.
 
-var METAL_PDF_TPL = 'assets/forms/metal-detector-form.json?v=2';   // subir v si cambia la plantilla
+var METAL_PDF_TPL = 'assets/forms/metal-detector-form.json?v=3';   // subir v si cambia la plantilla
 
 // Los datos con la forma que espera la plantilla (ver sampleData en el JSON):
 // a[i] es la respuesta de la pregunta i ('yes' | 'no' | 'na')

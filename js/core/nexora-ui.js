@@ -17,6 +17,7 @@ var NX_SCREEN_NOTES={
  'screen-grilling':'Record grilling tests and product performance.',
  'screen-temp':'Record environmental conditions at each checkpoint.',
  'screen-gmp':'Review operating practices and document findings.',
+ 'screen-preop':'Inspect the plant after sanitation, before the next production.',
  'screen-dashboard':'Explore quality performance across the selected period.',
  'screen-products':'Find products, specifications and package targets.',
  'screen-customers':'Maintain customer information and product relationships.',

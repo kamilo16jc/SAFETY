@@ -14,6 +14,7 @@ var MODULES = [
       {screen:'screen-temp',      name:'Temperatures',     icon:'thermo', color:'#b45309'},
       {screen:'screen-gmp',       name:'GMP Audit',        icon:'clipboard', color:'#7c3aed'},
       {screen:'screen-metal',     name:'Metal Detector',   icon:'magnet', color:'#be123c'},
+      {screen:'screen-preop',     name:'Pre-Op Inspection',icon:'check', color:'#4d7c0f'},
       {screen:'screen-capa',      name:'CAPA Reports',     icon:'alert', color:'#0e7490'},
       {screen:'screen-hold',      name:'Hold Cases',       icon:'lock', color:'#15803d'},
       {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#c2410c'},
@@ -248,7 +249,7 @@ function moduleOfScreen(screen){
 // 'runs' es la excepcion a proposito: ahi vive si la muestra se recogio de la
 // linea o no, y eso le sirve igual a QA y al laboratorio.
 var MODULE_SCOPE = {
-  qa:         ['weights','seals','holds','capa','shifts','runs','gmps','metal','temps'],
+  qa:         ['weights','seals','holds','capa','shifts','runs','gmps','metal','temps','preop'],
   lab:        ['analysis','runs','raw','grilling'],
   coa:        ['analysis','runs'],
   production: ['runs','shifts'],

@@ -22,7 +22,7 @@ function _pdfScript(src, listo){
 // Deja listo todo para dibujar la plantilla de esa direccion y la devuelve
 function pdfFormListo(url){
   return _pdfScript(PDF_FORMS_JSPDF, function(){ return !!(window.jspdf && window.jspdf.jsPDF); })
-    .then(function(){ return _pdfScript('js/vendor/pdf-template.js', function(){ return !!window.PdfTemplate; }); })
+    .then(function(){ return _pdfScript('js/vendor/pdf-template.js?v=1.2.0', function(){ return !!window.PdfTemplate; }); })
     .then(function(){
       if(_pdfFormsTpl[url]) return _pdfFormsTpl[url];
       return fetch(url).then(function(r){

@@ -32,7 +32,8 @@ var SEARCH_TYPES = [
   {v:'run',      t:'Production runs only',  k:'runs'},
   {v:'gmp',      t:'GMP audits only',       k:'gmps'},
   {v:'metal',    t:'Metal detector only',   k:'metal'},
-  {v:'temp',     t:'Temp & humidity only',  k:'temps'}
+  {v:'temp',     t:'Temp & humidity only',  k:'temps'},
+  {v:'preop',    t:'Pre-Op inspections only', k:'preop'}
 ];
 function fillSearchTypes(){
   var sel = document.getElementById('sf-type');
@@ -232,6 +233,17 @@ function searchResults(){
                return hitShift && inDateRange(t.date);
              }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')) ||
                                            String(b.time||'').localeCompare(String(a.time||'')); }) : [],
+    // El Pre-Op es del 2o turno y su linea/area es texto libre ("Line 3")
+    preop:   (scopeHas('preop') && (sf.type==='all'||sf.type==='preop')) ? (db.preop||[]).filter(function(p){
+               var notas = Object.keys(p.notes||{}).map(function(k){ return p.notes[k]; });
+               var hitTxt = !l || sf.field==='lot' || sf.field==='product' ? !l :
+                 [p.area, p.completedBy, p.verifiedBy, p.comments].concat(notas)
+                   .some(function(x){ return String(x||'').toLowerCase().indexOf(l)>-1; });
+               var hitLine = sf.line==='all' || new RegExp('(^|\\D)'+sf.line+'(\\D|$)').test(String(p.area||''));
+               var hitShift = sf.shift==='all' || String(p.shift||2)===sf.shift;
+               return hitTxt && hitLine && hitShift && inDateRange(p.date);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')) ||
+                                           String(a.area||'').localeCompare(String(b.area||'')); }) : [],
     shifts:  (scopeHas('shifts') && (sf.type==='all'||sf.type==='shift')) ? (db.shifts||[]).filter(function(s){
                var hitTxt = !l ||
                  String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
@@ -287,7 +299,7 @@ function renderSearch(){
   window._srch = r;               // lo usan los botones de las formas oficiales
   var total = r.weights.length + r.seals.length + r.holds.length + (r.capa?r.capa.length:0) +
               (r.shifts?r.shifts.length:0) + (r.runs?r.runs.length:0) + (r.analysis?r.analysis.length:0) +
-              r.gmps.length + r.metal.length + r.temps.length;
+              r.gmps.length + r.metal.length + r.temps.length + (r.preop?r.preop.length:0);
   if(!total && !r.product){
     el.innerHTML = activeFilterChips()+'<div class="panel"><div class="cd-empty">No records match these filters.</div></div>';
     return;
@@ -312,6 +324,7 @@ function renderSearch(){
     ((scopeHas('seals')   && (sf.type==='all'||sf.type==='seal'))   ? sealPanel(r.seals)     : '') +
     gmpPanel(r.gmps) +
     metalPanel(r.metal) +
+    preopPanel(r.preop) +
     tempPanel(r.temps) +
     analysisPanel(r.analysis) +
     holdPanel(r.holds) +
@@ -1043,6 +1056,155 @@ function deleteTempRecord(id){
   removeRecord('temps', t.id, t._fbId);
   logActivity('temp','Temp & Humidity deleted', (TEMP_CP[t.checkpoint]||t.checkpoint||'—')+' · '+String(t.date||'').slice(0,10),
     currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record deleted');
+}
+
+// ===== PRE-OP 2nd SHIFT (SQF # 11.2.E.A.1) =====
+function _preopMalas(p){ return PREOP_ITEMS.filter(function(_, i){ return (p.answers||{})[i] === 'no'; }).length; }
+function _preopRespondidas(p){ return PREOP_ITEMS.filter(function(_, i){ return (p.answers||{})[i]; }).length; }
+var _PO_DIA = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function _preopDia(iso){ var d = new Date(String(iso||'').slice(0,10)+'T12:00:00'); return isNaN(d) ? '—' : _PO_DIA[d.getDay()]; }
+
+function preopPanel(list){
+  if(!list || !list.length) return '';
+  var page = list.slice(0, SEARCH_LIMIT);
+  var tip = canEditRecords() ? 'View / edit' : 'View';
+  var rows = page.map(function(p){
+    var malas = _preopMalas(p), nota = (p.answers||{})[PREOP_RATE];
+    return '<tr class="view-row" onclick="viewPreopRecord(\''+String(p.id)+'\')">'+
+      '<td class="mono">'+fmtDate(p.date)+'</td>'+
+      '<td>'+_preopDia(p.date)+'</td>'+
+      '<td>'+esc(p.area||'—')+'</td>'+
+      '<td class="mono num">'+_preopRespondidas(p)+' / '+PREOP_ITEMS.length+'</td>'+
+      '<td class="num">'+(malas ? '<span class="pill bad">'+malas+' NO</span>' : '<span class="pill ok">All OK</span>')+'</td>'+
+      '<td class="mono num">'+(nota ? (nota==='na' ? 'N/A' : esc(nota)) : '—')+'</td>'+
+      '<td class="soft">'+esc(p.completedBy||'—')+'</td>'+
+      '<td class="soft">'+esc(p.verifiedBy||'—')+'</td>'+
+      '<td class="view-cell"><span class="row-icos">'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();viewPreopRecord(\''+String(p.id)+'\')" '+
+          'data-tip="'+tip+'" aria-label="'+tip+' this inspection"><span data-icon="search"></span></button>'+
+        formBtn("preopFormFor('"+String(p.id)+"')", 'Official form · that week (PDF)')+
+      '</span></td>'+
+    '</tr>';
+  }).join('');
+  return tablePanel('Pre-Op inspections · 2nd shift', list.length, [
+    {t:'Date'},{t:'Day'},{t:'Line / area'},{t:'Answered',num:true},{t:'Findings',num:true},
+    {t:'Waste (1-10)',num:true},{t:'Completed by'},{t:'QA'},{t:'Form'}
+  ], rows, page.length, formBtn('searchPreopForm()', 'Official form · every week shown (PDF)'));
+}
+
+// ===== VISOR/EDITOR DEL PRE-OP (admin/supervisor editan; el resto ve) =====
+// Como las temperaturas: una inspeccion guardada solo se corrige aqui.
+function _preopRec(id){ return (getDB().preop||[]).filter(function(x){ return String(x.id)===String(id); })[0]; }
+
+function viewPreopRecord(id){
+  var p = _preopRec(id);
+  if(!p){ toast('Record not found'); return; }
+  var edit = canEditRecords();
+  var ans = p.answers || {}, notes = p.notes || {};
+  var marca = function(i, v){
+    if(i === PREOP_RATE) return v ? '<span class="pill">'+(v==='na' ? 'N/A' : esc(v)+' / 10')+'</span>' : '<span class="pill">—</span>';
+    return v==='yes' ? '<span class="pill ok">YES</span>' : v==='no' ? '<span class="pill bad">NO</span>'
+         : v==='na' ? '<span class="pill">N/A</span>' : '<span class="pill">—</span>';
+  };
+  var body;
+  if(edit){
+    var preg = PREOP_ITEMS.map(function(q, i){
+      var v = ans[i] || '', ops;
+      if(i === PREOP_RATE){
+        ops = '<option value="">—</option>';
+        for(var n = 10; n >= 1; n--) ops += '<option value="'+n+'"'+(v===String(n)?' selected':'')+'>'+n+'</option>';
+        ops += '<option value="na"'+(v==='na'?' selected':'')+'>N/A</option>';
+      } else {
+        ops = '<option value=""'+(v===''?' selected':'')+'>—</option>'+
+              '<option value="yes"'+(v==='yes'?' selected':'')+'>Yes</option>'+
+              '<option value="no"'+(v==='no'?' selected':'')+'>No</option>'+
+              '<option value="na"'+(v==='na'?' selected':'')+'>N/A</option>';
+      }
+      return '<div class="rec-field md-q"><div class="rec-lbl">'+(i+1)+'. '+esc(q)+'</div>'+
+        '<div class="rec-edit"><select class="field" id="ep-q'+i+'">'+ops+'</select></div>'+
+        (i === PREOP_RATE ? '' : '<input type="text" class="field po-ed-note" id="ep-n'+i+'" placeholder="Corrective action (if NO)" value="'+esc(notes[i]||'')+'">')+
+      '</div>';
+    }).join('');
+    body =
+      '<div class="rec-grid">'+
+        recEdit('Date','<input type="date" class="field" id="ep-date" value="'+String(p.date||'').slice(0,10)+'">')+
+        recEdit('Line / area','<input type="text" class="field" id="ep-area" value="'+esc(p.area||'')+'">')+
+        recEdit('Completed by','<input type="text" class="field" id="ep-completed" value="'+esc(p.completedBy||'')+'">')+
+        recEdit('QA daily verification (initials)','<input type="text" class="field" id="ep-verified" value="'+esc(p.verifiedBy||'')+'">')+
+      '</div>'+
+      '<div class="rec-block md-preg">'+preg+'</div>'+
+      '<div class="rec-block"><div class="rec-lbl">Comments</div>'+
+        '<textarea class="field" id="ep-comments" rows="2">'+esc(p.comments||'')+'</textarea></div>';
+  } else {
+    body =
+      '<div class="rec-grid">'+
+        recRow('Date', fmtDate(p.date)+' · '+_preopDia(p.date))+ recRow('Line / area', esc(p.area||'—'))+
+        recRow('Completed by', esc(p.completedBy||'—'))+ recRow('QA verification', esc(p.verifiedBy||'—'))+
+      '</div>'+
+      '<div class="rec-block md-preg">'+PREOP_ITEMS.map(function(q, i){
+        return '<div class="rec-field md-q"><div class="rec-lbl">'+(i+1)+'. '+esc(q)+
+          (notes[i] ? '<div class="rec-hint">'+esc(notes[i])+'</div>' : '')+'</div><div>'+marca(i, ans[i])+'</div></div>';
+      }).join('')+'</div>'+
+      recBlock('Comments', p.comments);
+  }
+  var pdf = '<button class="btn-ghost" onclick="preopFormFor(\''+String(p.id)+'\')"><span data-icon="pdf"></span>Official form (week)</button>';
+  var borrar = (typeof canDeleteRecords==='function') ? canDeleteRecords() : edit;
+  var actions = edit
+    ? saveBtn("savePreopEdit('"+String(p.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
+      (borrar ? '<button class="btn-danger" onclick="deletePreopRecord(\''+String(p.id)+'\')">Delete</button>' : '')+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
+    : pdf + '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  openRecordModal('Pre-Op inspection · '+esc(p.area||'—')+' · '+fmtDate(p.date), body, actions);
+}
+
+function savePreopEdit(id, btn){
+  if(!canEditRecords()){ toast('Only admins and supervisors can edit'); return; }
+  var db = getDB();
+  var p = (db.preop||[]).filter(function(x){ return String(x.id)===String(id); })[0];
+  if(!p) return;
+  var g = function(k){ var e=document.getElementById(k); return e ? e.value.trim() : ''; };
+  var fecha = g('ep-date') || p.date, area = g('ep-area');
+  if(!area){ toast('Enter the line / area'); return; }
+  // Una inspeccion por dia y area: no se puede mover encima de otra
+  var otra = db.preop.filter(function(x){
+    return String(x.id)!==String(p.id) && String(x.date||'').slice(0,10)===fecha && _poArea(x.area)===_poArea(area);
+  })[0];
+  if(otra){ toast('There is already a Pre-Op for '+area+' on '+fmtDate(fecha)); return; }
+  var ans = {}, notes = {}, sinNota = 0;
+  PREOP_ITEMS.forEach(function(_, i){
+    var v = g('ep-q'+i);
+    if(v) ans[i] = v;
+    var n = g('ep-n'+i);
+    if(v === 'no'){ if(n) notes[i] = n; else sinNota++; }
+  });
+  if(sinNota){ toast('Write the corrective action for every item answered NO'); return; }
+  p.date        = fecha;
+  p.area        = area;
+  p.answers     = ans;
+  p.notes       = notes;
+  p.completedBy = g('ep-completed');
+  p.verifiedBy  = g('ep-verified');
+  p.comments    = g('ep-comments');
+  p.editedAt = localISOStr();
+  p.editedBy = currentUser ? currentUser.name : '—';
+  persistRecordEdit('preop', p, db);
+  logActivity('preop','Pre-Op inspection edited', area+' · '+fecha, currentUser?currentUser.name:'—');
+  closeRecordModal();
+  runSearch();
+  toast('Record updated');
+}
+
+function deletePreopRecord(id){
+  if(typeof canDeleteRecords==='function' ? !canDeleteRecords() : !canEditRecords()){
+    toast('You are not allowed to delete records'); return; }
+  var p = _preopRec(id);
+  if(!p) return;
+  if(!confirm('Delete this Pre-Op inspection? '+(p.area||'')+' · '+String(p.date||'').slice(0,10)+'. This cannot be undone.')) return;
+  removeRecord('preop', p.id, p._fbId);
+  logActivity('preop','Pre-Op inspection deleted', (p.area||'—')+' · '+String(p.date||'').slice(0,10), currentUser?currentUser.name:'—');
   closeRecordModal();
   runSearch();
   toast('Record deleted');

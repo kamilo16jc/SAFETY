@@ -19,7 +19,7 @@ var RIBBON_GROUPS = {
   qa: [
     {n:'Captura en línea', s:['screen-weight','screen-seal','screen-metal']},
     {n:'Muestras',         s:['screen-samplelist']},
-    {n:'Ambiente',         s:['screen-temp','screen-gmp']},
+    {n:'Ambiente',         s:['screen-temp','screen-gmp','screen-preop']},
     {n:'Documentos',       s:['screen-capa','screen-hold','screen-shift']},
     {n:'Consulta',         s:['screen-lotsearch']}
   ],

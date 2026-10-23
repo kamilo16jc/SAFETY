@@ -25,7 +25,7 @@
 })(typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.2.0';
   var FORMAT = 'taller-pdf/v1';
   var PT = 25.4 / 72;              // mm por punto
   var ASC = 0.718, DESC = 0.207;   // métrica de Helvetica por em (sirve para centrar la línea)
@@ -525,6 +525,7 @@
     truncate: function (v, a, loc) { var s = toText(v, loc), n = +a[0]; return n > 0 && s.length > n ? s.slice(0, Math.max(0, n - 1)) + '…' : s; },
     prefix: function (v, a, loc) { return isEmpty(v) ? '' : String(a[0] == null ? '' : a[0]) + toText(v, loc); },
     suffix: function (v, a, loc) { return isEmpty(v) ? '' : toText(v, loc) + String(a[0] == null ? '' : a[0]); },
+    check: function (v, a) { return truthy(v) ? (a[0] != null && a[0] !== '' ? a[0] : '✓') : (a[1] != null ? a[1] : '✗'); },
     yesno: function (v, a, loc) { return truthy(v) ? (a[0] != null ? a[0] : loc.lang === 'en' ? 'Yes' : 'Sí') : (a[1] != null ? a[1] : 'No'); },
     replace: function (v, a, loc) { return toText(v, loc).split(String(a[0] == null ? '' : a[0])).join(String(a[1] == null ? '' : a[1])); },
     count: function (v) { return Array.isArray(v) ? v.length : v == null || v === '' ? 0 : 1; },
@@ -545,11 +546,111 @@
   var CP1252 = { 8364: 1, 8218: 1, 402: 1, 8222: 1, 8230: 1, 8224: 1, 8225: 1, 710: 1, 8240: 1, 352: 1, 8249: 1, 338: 1, 381: 1, 8216: 1, 8217: 1,
     8220: 1, 8221: 1, 8226: 1, 8211: 1, 8212: 1, 732: 1, 8482: 1, 353: 1, 8250: 1, 339: 1, 382: 1, 376: 1 };
   // Las fuentes estándar del PDF sólo traen el juego Windows-1252; lo demás sale como "?".
+  /* Símbolos y emojis que se DIBUJAN (líneas y figuras), así salen con cualquier letra y sin archivos de fuente.
+     Cada uno ocupa "adv" em de ancho y se dibuja en un cuadro de 0..1 (y hacia abajo). */
+  var C_GREEN = '#1e9e4a', C_RED = '#d93025', C_YELLOW = '#f5b301', C_BLUE = '#1a73e8';
+  function starPts(cx, cy, ro, ri) {
+    var pts = [];
+    for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? ri : ro; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+    return pts;
+  }
+  var CHECK = [[0.13, 0.54], [0.4, 0.8], [0.88, 0.22]], XA = [[0.2, 0.2], [0.8, 0.8]], XB = [[0.8, 0.2], [0.2, 0.8]];
+  var SYM = {
+    '✓': { adv: 0.8, sh: [{ pl: CHECK, sw: 0.11 }], name: 'Palomita' },
+    '✔': { adv: 0.8, sh: [{ pl: CHECK, sw: 0.18 }], name: 'Palomita gruesa' },
+    '✅': { adv: 0.95, sh: [{ box: 1, fill: C_GREEN, r: 0.2 }, { pl: [[0.22, 0.52], [0.42, 0.72], [0.78, 0.3]], sw: 0.13, color: '#ffffff' }], name: 'Palomita verde' },
+    '☑': { adv: 0.95, sh: [{ box: 0.9, sw: 0.07 }, { pl: [[0.24, 0.52], [0.43, 0.72], [0.78, 0.28]], sw: 0.1 }], name: 'Casilla con palomita' },
+    '✗': { adv: 0.8, sh: [{ ln: XA, sw: 0.11 }, { ln: XB, sw: 0.11 }], name: 'Equis' },
+    '✘': { adv: 0.8, sh: [{ ln: XA, sw: 0.18 }, { ln: XB, sw: 0.18 }], name: 'Equis gruesa' },
+    '✕': { adv: 0.8, sh: [{ ln: [[0.25, 0.25], [0.75, 0.75]], sw: 0.09 }, { ln: [[0.75, 0.25], [0.25, 0.75]], sw: 0.09 }], name: 'Por' },
+    '✖': { adv: 0.8, sh: [{ ln: [[0.22, 0.22], [0.78, 0.78]], sw: 0.17 }, { ln: [[0.78, 0.22], [0.22, 0.78]], sw: 0.17 }], name: 'Por grueso' },
+    '❌': { adv: 0.95, sh: [{ ln: [[0.17, 0.17], [0.83, 0.83]], sw: 0.2, color: C_RED }, { ln: [[0.83, 0.17], [0.17, 0.83]], sw: 0.2, color: C_RED }], name: 'Equis roja' },
+    '❎': { adv: 0.95, sh: [{ box: 1, fill: C_GREEN, r: 0.2 }, { ln: [[0.3, 0.3], [0.7, 0.7]], sw: 0.12, color: '#ffffff' }, { ln: [[0.7, 0.3], [0.3, 0.7]], sw: 0.12, color: '#ffffff' }], name: 'Equis verde' },
+    '☒': { adv: 0.95, sh: [{ box: 0.9, sw: 0.07 }, { ln: [[0.27, 0.27], [0.73, 0.73]], sw: 0.09 }, { ln: [[0.73, 0.27], [0.27, 0.73]], sw: 0.09 }], name: 'Casilla con X' },
+    '☐': { adv: 0.95, sh: [{ box: 0.9, sw: 0.07 }], name: 'Casilla vacía' },
+    '★': { adv: 0.95, sh: [{ pg: starPts(0.5, 0.53, 0.5, 0.21), fill: true }], name: 'Estrella' },
+    '☆': { adv: 0.95, sh: [{ pg: starPts(0.5, 0.53, 0.48, 0.2), sw: 0.06 }], name: 'Estrella vacía' },
+    '⭐': { adv: 0.95, sh: [{ pg: starPts(0.5, 0.53, 0.5, 0.21), fill: C_YELLOW }], name: 'Estrella amarilla' },
+    '⚠': { adv: 0.95, sh: [{ pg: [[0.5, 0.06], [0.97, 0.9], [0.03, 0.9]], sw: 0.07 }, { ln: [[0.5, 0.36], [0.5, 0.62]], sw: 0.09 }, { dot: [0.5, 0.76], r: 0.055 }], name: 'Atención' },
+    '⚠️': { adv: 0.95, sh: [{ pg: [[0.5, 0.06], [0.97, 0.9], [0.03, 0.9]], fill: C_YELLOW, sw: 0.05, color: '#3a3000' }, { ln: [[0.5, 0.36], [0.5, 0.62]], sw: 0.09, color: '#141414' }, { dot: [0.5, 0.76], r: 0.055, color: '#141414' }], name: 'Atención amarilla' },
+    '→': { adv: 1, sh: [{ ln: [[0.08, 0.5], [0.86, 0.5]], sw: 0.08 }, { pl: [[0.6, 0.24], [0.88, 0.5], [0.6, 0.76]], sw: 0.08 }], name: 'Flecha derecha' },
+    '←': { adv: 1, sh: [{ ln: [[0.92, 0.5], [0.14, 0.5]], sw: 0.08 }, { pl: [[0.4, 0.24], [0.12, 0.5], [0.4, 0.76]], sw: 0.08 }], name: 'Flecha izquierda' },
+    '↑': { adv: 0.7, sh: [{ ln: [[0.5, 0.95], [0.5, 0.12]], sw: 0.08 }, { pl: [[0.24, 0.38], [0.5, 0.1], [0.76, 0.38]], sw: 0.08 }], name: 'Flecha arriba' },
+    '↓': { adv: 0.7, sh: [{ ln: [[0.5, 0.05], [0.5, 0.88]], sw: 0.08 }, { pl: [[0.24, 0.62], [0.5, 0.9], [0.76, 0.62]], sw: 0.08 }], name: 'Flecha abajo' },
+    '●': { adv: 0.85, sh: [{ dot: [0.5, 0.5], r: 0.34 }], name: 'Círculo' },
+    '○': { adv: 0.85, sh: [{ ring: [0.5, 0.5], r: 0.33, sw: 0.07 }], name: 'Círculo vacío' },
+    '■': { adv: 0.85, sh: [{ box: 0.66, fill: true }], name: 'Cuadro' },
+    '□': { adv: 0.85, sh: [{ box: 0.66, sw: 0.07 }], name: 'Cuadro vacío' },
+    '▲': { adv: 0.85, sh: [{ pg: [[0.5, 0.16], [0.86, 0.82], [0.14, 0.82]], fill: true }], name: 'Triángulo arriba' },
+    '▼': { adv: 0.85, sh: [{ pg: [[0.14, 0.2], [0.86, 0.2], [0.5, 0.86]], fill: true }], name: 'Triángulo abajo' },
+    '🟢': { adv: 0.95, sh: [{ dot: [0.5, 0.5], r: 0.44, color: C_GREEN }], name: 'Verde' },
+    '🔴': { adv: 0.95, sh: [{ dot: [0.5, 0.5], r: 0.44, color: C_RED }], name: 'Rojo' },
+    '🟡': { adv: 0.95, sh: [{ dot: [0.5, 0.5], r: 0.44, color: C_YELLOW }], name: 'Amarillo' },
+    '🔵': { adv: 0.95, sh: [{ dot: [0.5, 0.5], r: 0.44, color: C_BLUE }], name: 'Azul' },
+    '≥': { adv: 0.6, sh: [{ pl: [[0.15, 0.12], [0.85, 0.4], [0.15, 0.68]], sw: 0.09 }, { ln: [[0.15, 0.88], [0.85, 0.88]], sw: 0.09 }], name: 'Mayor o igual' },
+    '≤': { adv: 0.6, sh: [{ pl: [[0.85, 0.12], [0.15, 0.4], [0.85, 0.68]], sw: 0.09 }, { ln: [[0.15, 0.88], [0.85, 0.88]], sw: 0.09 }], name: 'Menor o igual' },
+    '≠': { adv: 0.6, sh: [{ ln: [[0.12, 0.36], [0.88, 0.36]], sw: 0.08 }, { ln: [[0.12, 0.64], [0.88, 0.64]], sw: 0.08 }, { ln: [[0.68, 0.08], [0.32, 0.92]], sw: 0.08 }], name: 'Distinto' }
+  };
+  // Las versiones "emoji" de Windows/teléfono (con selector de variante) se tratan igual
+  SYM['✔️'] = SYM['✔']; SYM['✖️'] = SYM['✖']; SYM['☑️'] = SYM['☑']; SYM['☐️'] = SYM['☐'];
+  SYM['⬆'] = SYM['↑']; SYM['⬇'] = SYM['↓']; SYM['➡'] = SYM['→']; SYM['⬅'] = SYM['←']; SYM['➡️'] = SYM['→']; SYM['⬅️'] = SYM['←']; SYM['⬆️'] = SYM['↑']; SYM['⬇️'] = SYM['↓'];
+  SYM['✗️'] = SYM['✗'];
+  var SYM_KEYS = Object.keys(SYM).sort(function (a, b) { return b.length - a.length; });
+  function reEsc(c) { return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  var SYM_SPLIT = new RegExp('(' + SYM_KEYS.map(reEsc).join('|') + ')', 'u');
+  var SYM_TEST = new RegExp(SYM_KEYS.map(reEsc).join('|'), 'u');
+
+  // Dibuja un símbolo con su caja a partir de x (inicio) y la línea base
+  function drawSym(out, ch, x, base, sizeMM, color) {
+    var sym = SYM[ch], adv = sym.adv * sizeMM, side = sizeMM * 0.8;
+    var x0 = x + (adv - side) / 2, y0 = base - 0.36 * sizeMM - side / 2;
+    function P(q) { return [r3(x0 + q[0] * side), r3(y0 + q[1] * side)]; }
+    sym.sh.forEach(function (sh) {
+      var col = sh.color || color;
+      if (sh.pl) out.push({ t: 'poly', pts: sh.pl.map(P), closed: false, stroke: col, lw: sh.sw * side, cap: 'round', join: 'round' });
+      else if (sh.ln) { var a = P(sh.ln[0]), b = P(sh.ln[1]); out.push({ t: 'line', x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: col, lw: sh.sw * side, cap: 'round' }); }
+      else if (sh.pg) out.push({ t: 'poly', pts: sh.pg.map(P), closed: true, fill: sh.fill ? (sh.fill === true ? col : sh.fill) : '', stroke: sh.sw ? (sh.fill && sh.fill !== true ? sh.color || '#000000' : col) : '', lw: (sh.sw || 0) * side, join: 'round' });
+      else if (sh.box) {
+        var inset = (1 - sh.box) / 2;
+        out.push({ t: 'rect', x: r3(x0 + inset * side), y: r3(y0 + inset * side), w: r3(sh.box * side), h: r3(sh.box * side), r: (sh.r || 0.06) * side,
+          fill: sh.fill ? (sh.fill === true ? col : sh.fill) : '', stroke: sh.sw ? col : '', lw: (sh.sw || 0) * side });
+      } else if (sh.dot) { var c = P(sh.dot); out.push({ t: 'ellipse', cx: c[0], cy: c[1], rx: sh.r * side, ry: sh.r * side, fill: col, stroke: '', lw: 0 }); }
+      else if (sh.ring) { var c2 = P(sh.ring); out.push({ t: 'ellipse', cx: c2[0], cy: c2[1], rx: sh.r * side, ry: sh.r * side, fill: '', stroke: col, lw: sh.sw * side }); }
+    });
+    return adv;
+  }
+  // Pone un texto que puede traer símbolos: el texto va como letra y cada símbolo como dibujo
+  function pushText(out, s, x, y, f, size, color, cs, ctx) {
+    cs = cs || 0;
+    if (!SYM_TEST.test(s)) {
+      out.push({ t: 'text', x: x, y: y, s: s, w: ctx.tw(s, f, size, cs), fam: f.fam, style: f.style, css: f.css, size: size, color: color, cs: cs });
+      return;
+    }
+    var cx = x, sizeMM = size * PT;
+    s.split(SYM_SPLIT).forEach(function (part) {
+      if (!part) return;
+      if (SYM[part]) { cx += drawSym(out, part, cx, y, sizeMM, color) + cs; return; }
+      // los espacios de las orillas se miden y se saltan (así el PDF y el lienzo los cuentan igual)
+      var w = ctx.tw(part, f, size, cs), core = part.trim();
+      if (core) {
+        var lead = part.slice(0, part.indexOf(core));
+        out.push({ t: 'text', x: cx + (lead ? ctx.tw(lead, f, size, cs) + cs : 0), y: y, s: core, w: ctx.tw(core, f, size, cs), fam: f.fam, style: f.style, css: f.css, size: size, color: color, cs: cs });
+      }
+      cx += w + cs;
+    });
+  }
+
   function stdSafe(s) {
     var out = '', bad = false;
     for (var i = 0; i < s.length; i++) {
       var c = s.charCodeAt(i);
-      if (c >= 0xD800 && c <= 0xDBFF) { out += '?'; i++; bad = true; continue; }
+      if (c === 0xFE0F || c === 0x200D) { out += s.charAt(i); continue; }
+      if (c >= 0xD800 && c <= 0xDBFF) {
+        var pair = s.substr(i, 2);
+        if (SYM[pair]) { out += pair; i++; continue; }
+        out += '?'; i++; bad = true; continue;
+      }
+      if (SYM[s.charAt(i)]) { out += s.charAt(i); continue; }
       if ((c >= 32 && c <= 126) || (c >= 160 && c <= 255) || CP1252[c] || c === 10 || c === 13) out += s.charAt(i);
       else if (c === 9) out += ' ';
       else if (c === 0x2009 || c === 0x202F || c === 0x2002 || c === 0x2003) out += ' ';
@@ -598,7 +699,7 @@
       if (u === undefined) {
         var fk = fam + '|' + style;
         if (fk !== current) { doc.setFont(fam, style); current = fk; }
-        u = doc.getStringUnitWidth(str);
+        u = doc.getStringUnitWidth(str, { doKerning: false });   // el PDF se escribe sin kerning: se mide igual
         if (cache.size > 40000) cache.clear();
         cache.set(k, u);
       }
@@ -637,13 +738,23 @@
       return f;
     };
     ctx.clean = function (s, f) {
+      s = String(s);
+      // quita el selector de variante de emoji cuando no forma parte de un símbolo conocido
+      if (s.indexOf('\uFE0F') >= 0) s = s.replace(/(.)\uFE0F/gu, function (m, ch) { return SYM[m] ? m : ch; });
       if (!f.std) return s;
       var r = stdSafe(s);
-      if (r.bad) warn({ ctx: ctx }, 'Hay caracteres que Helvetica/Times/Courier no tienen (se ven como "?"). Carga una fuente TTF para usarlos.');
+      if (r.bad) warn({ ctx: ctx }, 'Hay caracteres que las letras del PDF no tienen y salen como "?". Los símbolos ✓ ✗ ☐ ★ ⚠ → sí se dibujan (botón ✓); para otros alfabetos carga una fuente TTF.');
       return r.s;
     };
     ctx.tw = function (s, f, size, cs) {
-      return m.unit(s, f.fam, f.style) * size * PT + (cs && s.length > 1 ? cs * (s.length - 1) : 0);
+      if (!SYM_TEST.test(s)) return m.unit(s, f.fam, f.style) * size * PT + (cs && s.length > 1 ? cs * (s.length - 1) : 0);
+      var w = 0, n = 0;
+      s.split(SYM_SPLIT).forEach(function (part) {
+        if (!part) return;
+        if (SYM[part]) { w += SYM[part].adv * size * PT; n += 1; }
+        else { w += m.unit(part, f.fam, f.style) * size * PT; n += Array.from(part).length; }
+      });
+      return w + (cs && n > 1 ? cs * (n - 1) : 0);
     };
     ctx.image = function (src) {
       if (!src) return null;
@@ -735,19 +846,191 @@
         var words = L.s.split(' '), ws = words.map(function (wd) { return ctx.tw(wd, st.f, st.size, st.cs); });
         var gap = (box.w - ws.reduce(function (a, b) { return a + b; }, 0)) / (words.length - 1), x = box.x;
         for (var k = 0; k < words.length; k++) {
-          out.push({ t: 'text', x: x, y: by, s: words[k], w: ws[k], fam: st.f.fam, style: st.f.style, css: st.f.css, size: st.size, color: st.color, cs: st.cs || 0 });
+          pushText(out, words[k], x, by, st.f, st.size, st.color, st.cs, ctx);
           x += ws[k] + gap;
         }
         x0 = box.x; x1 = box.x + box.w;
       } else {
         x0 = st.align === 'center' ? box.x + (box.w - L.w) / 2 : st.align === 'right' ? box.x + box.w - L.w : box.x;
         x1 = x0 + L.w;
-        out.push({ t: 'text', x: x0, y: by, s: L.s, w: L.w, fam: st.f.fam, style: st.f.style, css: st.f.css, size: st.size, color: st.color, cs: st.cs || 0 });
+        pushText(out, L.s, x0, by, st.f, st.size, st.color, st.cs, ctx);
       }
       if (st.underline) out.push({ t: 'line', x1: x0, y1: by + sizeMM * 0.12, x2: x1, y2: by + sizeMM * 0.12, stroke: st.color, lw: Math.max(0.1, sizeMM * 0.06) });
       if (st.strike) out.push({ t: 'line', x1: x0, y1: by - sizeMM * 0.27, x2: x1, y2: by - sizeMM * 0.27, stroke: st.color, lw: Math.max(0.1, sizeMM * 0.06) });
     }
     return bh;
+  }
+
+  /* ------------------------------------------------------------------ texto con formato por partes
+     <b>negrita</b> <i>cursiva</i> <u>subrayado</u> <s>tachado</s> <color=#c00>…</color> <size=14>…</size>
+     <font=times>…</font> <bg=#fff3a0>resaltado</bg>. Lo de adentro de {{ }} no se toca. */
+  var RICH_TAG = /<(\/?)(b|i|u|s|color|size|font|bg)(?:=([^>]*))?>/g;
+  var RICH_TEST = /<\/?(b|i|u|s|color|size|font|bg)(=[^>]*)?>/;
+  function hasRich(str) { return typeof str === 'string' && str.indexOf('<') >= 0 && RICH_TEST.test(str.replace(TOKEN_RE, '')); }
+  function parseRich(str) {
+    var runs = [], stack = [];
+    function cur() { var st = {}; stack.forEach(function (e) { st[e.tag] = e.val; }); return st; }
+    function push(t) {
+      if (!t) return;
+      var st = cur(), prev = runs[runs.length - 1];
+      if (prev && JSON.stringify(prev.st) === JSON.stringify(st)) prev.t += t; else runs.push({ t: t, st: st });
+    }
+    String(str).split(/(\{\{[\s\S]+?\}\})/).forEach(function (part, pi) {
+      if (pi % 2 === 1) { push(part); return; }
+      var last = 0, m;
+      RICH_TAG.lastIndex = 0;
+      while ((m = RICH_TAG.exec(part))) {
+        if (m.index > last) push(part.slice(last, m.index));
+        if (m[1]) { for (var k = stack.length - 1; k >= 0; k--) if (stack[k].tag === m[2]) { stack.splice(k, 1); break; } }
+        else stack.push({ tag: m[2], val: m[3] == null ? true : m[3].trim().replace(/^["']|["']$/g, '') });
+        last = RICH_TAG.lastIndex;
+      }
+      if (last < part.length) push(part.slice(last));
+    });
+    return runs;
+  }
+  // Quita las marcas y deja el texto (para medir o describir)
+  function stripRich(str) {
+    return String(str).split(/(\{\{[\s\S]+?\}\})/).map(function (part, i) { return i % 2 ? part : part.replace(RICH_TAG, ''); }).join('');
+  }
+
+  // Acomoda y dibuja un texto con partes de distinto estilo dentro de la caja b
+  function richText(out, el, scope, ctx, b, info) {
+    var base = { font: el.font, bold: !!el.bold, italic: !!el.italic, size: num0(el.size, 10), color: el.color || '#000000', u: !!el.underline, s: !!el.strike };
+    var cs = num0(el.letterSpacing, 0), lhK = num0(el.lineHeight, 1.2), fit = el.fit || 'wrap', align = el.align || 'left';
+    var runs = parseRich(el.text).map(function (r) {
+      var st = r.st;
+      var f = ctx.font(st.font || base.font, st.b ? true : base.bold, st.i ? true : base.italic);
+      return {
+        f: f, size: st.size ? num0(st.size, base.size) : base.size, color: typeof st.color === 'string' ? st.color : base.color,
+        u: !!st.u || base.u, s: !!st.s || base.s, bg: typeof st.bg === 'string' ? st.bg : '',
+        t: ctx.clean(interpolate(r.t, scope), f).replace(/\r\n?/g, '\n').replace(/\t/g, ' ')
+      };
+    });
+    function seg(r, text, k) { var size = r.size * k; return { s: text, f: r.f, size: size, color: r.color, u: r.u, st: r.s, bg: r.bg, w: ctx.tw(text, r.f, size, cs) }; }
+    // palabras (pueden mezclar estilos), espacios y saltos de línea
+    function items(k, oneLine) {
+      var list = [], cur = null;
+      runs.forEach(function (r) {
+        r.t.split(/(\n| +)/).forEach(function (piece) {
+          if (!piece) return;
+          if (piece === '\n' && !oneLine) { cur = null; list.push({ nl: true, size: r.size * k }); return; }
+          if (piece === '\n' || /^ +$/.test(piece)) { cur = null; list.push({ sp: true, w: ctx.tw(' ', r.f, r.size * k, cs) + cs, run: r, k: k }); return; }
+          var sg = seg(r, piece, k);
+          if (cur) { cur.w += sg.w + cs; cur.segs.push(sg); } else { cur = { segs: [sg], w: sg.w }; list.push(cur); }
+        });
+      });
+      return list;
+    }
+    // palabra más ancha que la caja: se corta letra por letra
+    function splitWord(word, maxW) {
+      var outW = [], curW = { segs: [], w: 0 };
+      word.segs.forEach(function (sg) {
+        var acc = '';
+        Array.from(sg.s).forEach(function (ch) {
+          var test = acc + ch, tw = ctx.tw(test, sg.f, sg.size, cs);
+          if (curW.w + tw > maxW + 1e-6 && (acc || curW.segs.length)) {
+            if (acc) { var p0 = Object.assign({}, sg, { s: acc, w: ctx.tw(acc, sg.f, sg.size, cs) }); curW.segs.push(p0); curW.w += p0.w; }
+            outW.push(curW); curW = { segs: [], w: 0 }; acc = ch;
+          } else acc = test;
+        });
+        if (acc) { var p1 = Object.assign({}, sg, { s: acc, w: ctx.tw(acc, sg.f, sg.size, cs) }); curW.segs.push(p1); curW.w += p1.w; }
+      });
+      if (curW.segs.length) outW.push(curW);
+      return outW;
+    }
+    function wrap(k, maxW) {
+      var lines = [], line, broken = false, pend = null;
+      function newLine() { line = { parts: [], w: 0, size: 0, end: false }; lines.push(line); pend = null; }
+      function place(word) {
+        if (line.parts.length && pend) { line.parts.push(pend); line.w += pend.w; }
+        pend = null;
+        line.parts.push(word); line.w += word.w;
+        word.segs.forEach(function (sg) { if (sg.size > line.size) line.size = sg.size; });
+      }
+      newLine();
+      items(k, false).forEach(function (it) {
+        if (it.nl) { line.end = true; if (!line.size) line.size = it.size; newLine(); return; }
+        if (it.sp) { if (line.parts.length) pend = it; return; }
+        if (line.parts.length && line.w + (pend ? pend.w : 0) + it.w > maxW + 1e-6) { line.end = false; newLine(); }
+        if (!line.parts.length && it.w > maxW + 1e-6) {
+          broken = true;
+          var pieces = splitWord(it, maxW);
+          pieces.forEach(function (pw, i) { if (i) newLine(); place(pw); });
+          return;
+        }
+        place(it);
+      });
+      line.end = true;
+      lines.forEach(function (l) { if (!l.size) l.size = base.size * k; });
+      return { lines: lines, broken: broken };
+    }
+    function height(lines) { return lines.reduce(function (h, l) { return h + l.size * PT * lhK; }, 0); }
+    var k = 1, res;
+    if (fit === 'ellipsis') {
+      // una sola línea: lo que no cabe se corta con "…"
+      var flat = items(1, true), line1 = { parts: [], w: 0, size: 0, end: true }, full = false;
+      for (var fi = 0; fi < flat.length && !full; fi++) {
+        var it = flat[fi];
+        if (it.sp) { if (line1.parts.length) { line1.parts.push(it); line1.w += it.w; } continue; }
+        if (line1.w + it.w <= b.w + 1e-6) { line1.parts.push(it); line1.w += it.w; continue; }
+        var segs = [], wsum = 0;
+        for (var si = 0; si < it.segs.length; si++) {
+          var sg = it.segs[si], ell = ctx.tw('…', sg.f, sg.size, cs), acc = '';
+          var chars = Array.from(sg.s);
+          for (var ci = 0; ci < chars.length; ci++) { if (line1.w + wsum + ctx.tw(acc + chars[ci], sg.f, sg.size, cs) + ell > b.w) break; acc += chars[ci]; }
+          var cut = acc.length < sg.s.length;
+          var piece = Object.assign({}, sg, { s: acc + (cut ? '…' : '') });
+          piece.w = ctx.tw(piece.s, sg.f, sg.size, cs);
+          segs.push(piece); wsum += piece.w;
+          if (cut) break;
+        }
+        while (line1.parts.length && line1.parts[line1.parts.length - 1].sp) { line1.w -= line1.parts.pop().w; }
+        if (segs.length) { line1.parts.push({ segs: segs, w: wsum }); line1.w += wsum; }
+        full = true;
+      }
+      line1.parts.forEach(function (pt) { (pt.segs || []).forEach(function (sg2) { if (sg2.size > line1.size) line1.size = sg2.size; }); });
+      if (!line1.size) line1.size = base.size;
+      res = { lines: [line1] };
+    } else if (fit === 'shrink') {
+      for (;;) {
+        res = wrap(k, b.w);
+        if ((height(res.lines) <= b.h + 0.01 && !res.broken) || base.size * k <= 4) break;
+        k = Math.max(4 / base.size, k - 0.04);
+      }
+    } else res = wrap(1, b.w);
+
+    var total = height(res.lines);
+    var y = el.valign === 'middle' ? b.y + (b.h - total) / 2 : el.valign === 'bottom' ? b.y + b.h - total : b.y;
+    res.lines.forEach(function (L) {
+      var sizeMM = L.size * PT, lh = sizeMM * lhK, base0 = y + (lh - (ASC + DESC) * sizeMM) / 2 + ASC * sizeMM;
+      // sin espacios sueltos al final de la línea
+      while (L.parts.length && L.parts[L.parts.length - 1].sp) L.w -= L.parts.pop().w;
+      var nsp = L.parts.filter(function (pt) { return pt.sp; }).length;
+      var extra = align === 'justify' && !L.end && nsp ? (b.w - L.w) / nsp : 0;
+      var x = align === 'center' ? b.x + (b.w - L.w) / 2 : align === 'right' ? b.x + b.w - L.w : b.x;
+      L.parts.forEach(function (pt, pi) {
+        if (pt.sp) {
+          var w = pt.w + extra, prev = L.parts[pi - 1], next = L.parts[pi + 1];
+          var ps = prev && prev.segs && prev.segs[prev.segs.length - 1], ns = next && next.segs && next.segs[0];
+          if (ps && ns && ps.u && ns.u) out.push({ t: 'line', x1: x, y1: base0 + ps.size * PT * 0.12, x2: x + w, y2: base0 + ps.size * PT * 0.12, stroke: ps.color, lw: Math.max(0.1, ps.size * PT * 0.06) });
+          if (ps && ns && ps.bg && ps.bg === ns.bg) out.push({ t: 'rect', x: x, y: base0 - ASC * ps.size * PT - 0.3, w: w, h: (ASC + DESC) * ps.size * PT + 0.6, r: 0, fill: ps.bg });
+          x += w;
+          return;
+        }
+        pt.segs.forEach(function (sg) {
+          var sm = sg.size * PT;
+          if (sg.bg) out.push({ t: 'rect', x: x, y: base0 - ASC * sm - 0.3, w: sg.w + cs, h: (ASC + DESC) * sm + 0.6, r: 0, fill: sg.bg });
+          pushText(out, sg.s, x, base0, sg.f, sg.size, sg.color, cs, ctx);
+          if (sg.u) out.push({ t: 'line', x1: x, y1: base0 + sm * 0.12, x2: x + sg.w, y2: base0 + sm * 0.12, stroke: sg.color, lw: Math.max(0.1, sm * 0.06) });
+          if (sg.st) out.push({ t: 'line', x1: x, y1: base0 - sm * 0.27, x2: x + sg.w, y2: base0 - sm * 0.27, stroke: sg.color, lw: Math.max(0.1, sm * 0.06) });
+          x += sg.w + cs;
+        });
+      });
+      y += lh;
+    });
+    if (ctx.design && total > b.h + 0.5 && fit === 'wrap') info.overflow = true;
+    info.fontSize = base.size * k;
   }
 
   /* ------------------------------------------------------------------ elementos */
@@ -800,6 +1083,8 @@
       else if (p.t === 'rect') {
         q = { t: 'poly', closed: true, pts: [R(p.x, p.y), R(p.x + p.w, p.y), R(p.x + p.w, p.y + p.h), R(p.x, p.y + p.h)], fill: p.fill, stroke: p.stroke, lw: p.lw, dash: p.dash, op: p.op };
       }
+      else if (p.t === 'poly') q.pts = p.pts.map(function (pt) { return R(pt[0], pt[1]); });
+      else if (p.t === 'ellipse') { var ce = R(p.cx, p.cy); q.cx = ce[0]; q.cy = ce[1]; }
       return q;
     });
   }
@@ -811,6 +1096,15 @@
       case 'text': {
         boxFill(out, el, el.x, el.y, el.w, el.h);
         b = inner(el);
+        if (hasRich(el.text)) {
+          richText(out, el, scope, ctx, b, info);
+          boxBorder(out, el, el.x, el.y, el.w, el.h);
+          if (num0(el.rotate, 0)) {
+            var rotR = rotatePrims(out.splice(start), el.x + el.w / 2, el.y + el.h / 2, num0(el.rotate, 0));
+            for (var rr = 0; rr < rotR.length; rr++) out.push(rotR[rr]);
+          }
+          break;
+        }
         var st = textStyle(el, ctx);
         var str = ctx.clean(interpolate(el.text, scope), st.f);
         var fl = fitLines(str, b.w, b.h, st, ctx);
@@ -840,7 +1134,7 @@
         var baseY = function (i) { return lineY(i) - Math.max(0.6, Math.min(sizeMM * 0.32, rowH * 0.25)) - lw / 2; };
         if (label) {
           var lab = fitLines(label, Math.max(1, labelW - num0(el.gap, 2) * 0.5), 1e6, Object.assign({}, lst, { fit: 'ellipsis' }), ctx);
-          out.push({ t: 'text', x: b.x, y: baseY(0), s: lab.lines[0].s, w: lab.lines[0].w, fam: lst.f.fam, style: lst.f.style, css: lst.f.css, size: lst.size, color: lst.color, cs: lst.cs });
+          pushText(out, lab.lines[0].s, b.x, baseY(0), lst.f, lst.size, lst.color, lst.cs, ctx);
         }
         var vx = b.x + labelW, vw = Math.max(1, b.w - labelW);
         if (value) {
@@ -851,7 +1145,7 @@
             vst.size = sz;
             var vl = fitLines(value, vw, 1e6, vst, ctx).lines[0];
             var vx0 = fst.align === 'center' ? vx + (vw - vl.w) / 2 : fst.align === 'right' ? vx + vw - vl.w : vx + 0.5;
-            out.push({ t: 'text', x: vx0, y: baseY(0), s: vl.s, w: vl.w, fam: fst.f.fam, style: fst.f.style, css: fst.f.css, size: sz, color: fst.color, cs: fst.cs });
+            pushText(out, vl.s, vx0, baseY(0), fst.f, sz, fst.color, fst.cs, ctx);
             if (fst.underline) out.push({ t: 'line', x1: vx0, y1: baseY(0) + sizeMM * 0.12, x2: vx0 + vl.w, y2: baseY(0) + sizeMM * 0.12, stroke: fst.color, lw: Math.max(0.1, sizeMM * 0.06) });
           } else {
             // primera fila junto a la etiqueta, las demás a todo el ancho
@@ -859,7 +1153,7 @@
             var outLines = wrapText(value, function (k) { return k === 0 ? vw - 0.5 : b.w; }, meas).lines;
             for (var li = 0; li < Math.min(rows, outLines.length); li++) {
               var L = outLines[li], lx = li === 0 ? vx + 0.5 : b.x;
-              if (L.s) out.push({ t: 'text', x: lx, y: baseY(li), s: L.s, w: L.w, fam: fst.f.fam, style: fst.f.style, css: fst.f.css, size: fst.size, color: fst.color, cs: fst.cs });
+              if (L.s) pushText(out, L.s, lx, baseY(li), fst.f, fst.size, fst.color, fst.cs, ctx);
             }
             if (outLines.length > rows) info.overflow = true;
           }
@@ -1688,6 +1982,21 @@
     compile: compile,
     variables: variables,
     code128: code128,
+    parseRich: parseRich,
+    stripRich: stripRich,
+    hasRich: hasRich,
+    // Símbolos que se dibujan solos (sin repetir los alias como ✔️ = ✔)
+    symbols: function () {
+      var seen = [];
+      return Object.keys(SYM).filter(function (k) { if (seen.indexOf(SYM[k]) >= 0) return false; seen.push(SYM[k]); return true; })
+        .map(function (k) { return { ch: k, name: SYM[k].name }; });
+    },
+    symbolSVG: function (ch, px, color) {
+      if (!SYM[ch]) return '';
+      var out = [], size = 10, sizeMM = size * PT, adv = SYM[ch].adv * sizeMM;
+      drawSym(out, ch, 0, sizeMM * 0.86, sizeMM, color || '#141414');
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + r3(adv) + ' ' + r3(sizeMM) + '" width="' + (px || 22) * SYM[ch].adv + '" height="' + (px || 22) + '">' + primsToSVG(out) + '</svg>';
+    },
     formatDate: fmtDate,
     formatNumber: function (n, dec, locale) { return fmtNum(n, dec, deepMerge(LOCALE, locale)); }
   };

@@ -48,6 +48,22 @@ var MD_QUESTIONS = [
   'Was the learn process performed correctly or not needed as the machine was functional?',
   'Did the operator perform a routine check after the learn process?'
 ];
+// Daily Pre-Operational Inspection, 2nd shift (SQF # 11.2.E.A.1, 1945). El
+// texto es el de la forma; solo se corrigen los errores de dedo. El punto 5 no
+// es aceptable / no aceptable: se califica de 1 a 10 (PREOP_RATE).
+var PREOP_ITEMS = [
+  'Food Processing Areas, Product Contact Surfaces, and Equipment Clean? (Dry Cleaning)',
+  'Processing Lines Free of Debris? Standing water and Drains Not Overflowing and Backing Up?',
+  'Equipment, Packing & Raw Materials, and Product Intact? Reitz & Mixers',
+  'Staff Amenities Free of Debris? No signs of Pest Activity? Garbage Cans Cleaned/Empty?',
+  'Rate the effectiveness of the waste disposal (1-10, 10 being most effective)',
+  'Sanitary Facilities Free of Debris and Hygiene Items Available? (Soap, Towels, Hot Water)',
+  'Clothing, including Shoes Clean, gloves and Maintained in a Serviceable Condition?',
+  'Correct Lot # and printing on the package clear and readable?',
+  'Scale is leveled and calibration current with sticker affixed on the scale?',
+  'Are Packaging Materials Properly Stored and Protected in the warehouse at both sides of the hallway?'
+];
+var PREOP_RATE = 4;
 // Turno según la hora. 2do turno: 3:30 PM – 2:00 AM. 1er turno: 2:00 AM – 3:30 PM.
 var SECOND_SHIFT_START = 15*60 + 30;  // 15:30
 var SECOND_SHIFT_END   = 2*60;        // 02:00 (madrugada)
@@ -130,6 +146,8 @@ var gmpAnswers = {};
 var gmpNotes = {};      // accion correctiva de cada punto que salio "No" (va en la forma)
 var gmpShift = null;
 var metalAnswers = {};
+var preopAnswers = {};   // 'yes' | 'no' | 'na'; el punto 5 guarda '1'..'10' o 'na'
+var preopNotes = {};     // accion correctiva de cada punto no aceptable (va en la forma)
 var donutChart = null, trendChart = null;
 
 // ===== DB =====

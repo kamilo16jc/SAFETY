@@ -69,6 +69,7 @@ function goTo(id){
   if(id==='screen-temp') initTempScreen();
   if(id==='screen-gmp') initGmp();
   if(id==='screen-metal') initMetal();
+  if(id==='screen-preop') initPreop();
   if(id==='screen-admin') initAdmin();
   if(id==='screen-hold') initHold();
   if(id==='screen-activity') initActivity();
@@ -184,6 +185,7 @@ var CRUMBS = {
   'screen-gmp':      ['Capture', 'GMP Audit'],
   'screen-temp':     ['Capture', 'Temp & Humidity'],
   'screen-metal':    ['Capture', 'Metal Detector'],
+  'screen-preop':    ['Capture', 'Pre-Op Inspection'],
   'screen-capa':     ['Capture', 'Incident & CAPA'],
   'screen-shift':    ['Capture', 'Shift Reports'],
   'screen-dashboard':['Review', 'Dashboard'],

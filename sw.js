@@ -26,7 +26,7 @@ const SHELL = [
   './js/modules/weight.js','./js/modules/lot-ocr.js','./js/core/lot.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
   './js/modules/admin.js','./js/modules/holds.js',
   './js/modules/check-timer.js','./js/modules/search.js','./js/modules/activity.js',
-  './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/products.js',
+  './js/modules/hold-notify.js','./js/modules/metal.js','./js/modules/preop.js','./js/integrations/preop-pdf.js','./js/modules/products.js',
   './js/modules/customers.js',
   './js/modules/catalog.js','./js/modules/scanner.js','./js/modules/production.js','./js/modules/samplelist.js','./js/modules/lab.js','./js/modules/analysis.js','./js/modules/yeast.js','./js/modules/lab-tests.js','./js/modules/lab-form.js','./js/modules/coa.js','./js/modules/raw.js','./js/modules/grilling.js','./js/integrations/grilling-fill.js','./js/export/xlsx-write.js','./assets/grilling_form_template.docx','./js/modules/capa.js','./js/modules/shift.js',
   './js/export/pdf-reports.js','./js/export/excel.js','./js/export/dash-pdf.js',
