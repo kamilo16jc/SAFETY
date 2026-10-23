@@ -1502,14 +1502,8 @@
           <input type="date" class="ninput" id="po-date" onchange="renderPreopWeek()">
         </label>
         <label class="nfield">
-          <span class="nlabel">Line / area</span>
-          <input type="text" class="ninput" id="po-area" list="po-area-list" placeholder="e.g. Line 3"
-                 oninput="renderPreopWeek()">
-          <datalist id="po-area-list">
-            <option value="Line 1"><option value="Line 2"><option value="Line 3">
-            <option value="Line 4"><option value="Line 5"><option value="Line 6">
-            <option value="Warehouse">
-          </datalist>
+          <span class="nlabel">Line / area <i>&middot; always this department</i></span>
+          <input type="text" class="ninput" id="po-area" value="Department 1945" readonly tabindex="-1">
         </label>
       </div>
     </section>

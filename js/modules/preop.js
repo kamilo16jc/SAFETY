@@ -1,8 +1,8 @@
 // ===== DAILY PRE-OPERATIONAL INSPECTION · 2nd SHIFT (SQF # 11.2.E.A.1, 1945) =====
-// Se hace a diario, despues de la limpieza y antes de la siguiente produccion.
-// Cada dia se guarda un registro por linea/area en db.preop + coleccion
-// Firestore 'preop'. La forma oficial es SEMANAL (lunes a sabado): la arma
-// js/integrations/preop-pdf.js con los registros de esa semana y esa area.
+// Se hace a diario, despues de la limpieza y antes de la siguiente produccion,
+// y siempre en el departamento 1945 (PREOP_AREA). Cada dia se guarda un
+// registro en db.preop + coleccion Firestore 'preop'. La forma oficial es
+// SEMANAL (lunes a sabado): la arma js/integrations/preop-pdf.js.
 //
 // Un registro ya guardado no se sobreescribe aqui: se corrige en Search, igual
 // que las temperaturas.
@@ -14,12 +14,13 @@ function initPreop(){
   if(d && !d.value) d.value = (typeof lotDiaProduccion === 'function') ? lotDiaProduccion(localDateStr(), 2) : localDateStr();
   var c = document.getElementById('po-completed');
   if(c && !c.value && currentUser) c.value = currentUser.name;
+  var a = document.getElementById('po-area');
+  if(a) a.value = PREOP_AREA;
   renderPreopItems();
   renderPreopWeek();
 }
 
 function _poVal(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; }
-function _poArea(a){ return String(a || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 
 // Los puntos, en la misma caja de verificaciones que el GMP y el metal
 // detector. El 5 se califica de 1 a 10; los demas son si / no / N/A.
@@ -111,18 +112,14 @@ function clearPreop(){
   toast('Answers cleared');
 }
 
-// ---- La semana de esa area: que dias ya estan y cuales faltan ----
-function preopDeArea(area){
-  var a = _poArea(area);
-  return (getDB().preop || []).filter(function(r){ return _poArea(r.area) === a; });
-}
+// ---- La semana: que dias ya estan y cuales faltan ----
 function renderPreopWeek(){
   var el = document.getElementById('po-week');
   if(!el) return;
-  var fecha = _poVal('po-date'), area = _poVal('po-area');
+  var fecha = _poVal('po-date');
   if(!fecha){ el.innerHTML = ''; return; }
   var lunes = preopLunes(fecha);
-  var recs = area ? preopDeArea(area) : [];
+  var recs = getDB().preop || [];
   el.innerHTML = '<div class="po-week">' + PREOP_DIAS.map(function(d, j){
     var iso = lotMasDias(lunes, j);
     var r = recs.filter(function(x){ return String(x.date || '').slice(0,10) === iso; })[0];
@@ -132,12 +129,12 @@ function renderPreopWeek(){
       '<span class="po-d">'+d.label+'</span>'+
       '<span class="po-s">'+(!r ? '—' : malas ? malas+' NO' : '✓')+'</span></div>';
   }).join('') + '</div>' +
-  '<div class="ncard-sub">'+(area ? 'Week of '+pdfFecha(lunes)+' · '+esc(area) : 'Enter the line/area to see its week')+'</div>';
+  '<div class="ncard-sub">Week of '+pdfFecha(lunes)+' · '+esc(PREOP_AREA)+'</div>';
 }
 
-// Ya hay inspeccion de ese dia y esa area
-function preopExistente(fecha, area){
-  return preopDeArea(area).filter(function(r){ return String(r.date || '').slice(0,10) === fecha; })[0] || null;
+// Ya hay inspeccion de ese dia
+function preopExistente(fecha){
+  return (getDB().preop || []).filter(function(r){ return String(r.date || '').slice(0,10) === fecha; })[0] || null;
 }
 
 // Corregir una inspeccion ya guardada se hace en Search
@@ -147,22 +144,21 @@ function preopOpenInSearch(fecha){
 }
 
 function savePreop(){
-  var fecha = _poVal('po-date'), area = _poVal('po-area');
+  var fecha = _poVal('po-date'), area = PREOP_AREA;
   if(!fecha){ toast('Select the date'); return; }
-  if(!area){ toast('Enter the line / area'); return; }
   var hechas = PREOP_ITEMS.filter(function(_, i){ return preopAnswers[i]; }).length;
   if(hechas < PREOP_ITEMS.length){ toast('Answer all ' + PREOP_ITEMS.length + ' items (use N/A if it does not apply)'); return; }
   var notas = preopNotasLimpias();
   var sinNota = PREOP_ITEMS.filter(function(_, i){ return preopAnswers[i] === 'no' && !notas[i]; }).length;
   if(sinNota){ toast('Write the corrective action for every item not acceptable'); return; }
 
-  var ya = preopExistente(fecha, area);
+  var ya = preopExistente(fecha);
   if(ya){
     showGuardModal({
-      title: 'Pre-Op for ' + area + ' is already recorded on ' + pdfFecha(fecha),
+      title: 'Pre-Op is already recorded on ' + pdfFecha(fecha),
       detail: 'Completed by ' + (ya.completedBy || '—'),
-      ask: 'Check the date and the line/area. To correct the saved inspection, open it in Search.',
-      primaryLabel: 'Change date or area', onPrimary: closeDupModal,
+      ask: 'Check the date. To correct the saved inspection, open it in Search.',
+      primaryLabel: 'Change the date', onPrimary: closeDupModal,
       secondaryLabel: 'Correct it in Search', onSecondary: function(){ preopOpenInSearch(fecha); }
     });
     return;
@@ -186,12 +182,12 @@ function savePreop(){
 
   var malas = PREOP_ITEMS.filter(function(_, i){ return rec.answers[i] === 'no'; }).length;
   logActivity('preop', 'Pre-Op inspection saved',
-    area + ' · ' + fecha + ' · ' + (malas ? malas + ' item(s) not acceptable' : 'all acceptable'),
+    fecha + ' · ' + (malas ? malas + ' item(s) not acceptable' : 'all acceptable'),
     rec.completedBy || (currentUser ? currentUser.name : '—'));
   if(typeof playAlert === 'function') playAlert(malas ? 'fail' : 'pass');
 
-  // La fecha, el area y quien la hizo se quedan: la siguiente suele ser de la
-  // misma persona. Las respuestas y las iniciales de QA vuelven a empezar.
+  // La fecha y quien la hizo se quedan: la siguiente suele ser de la misma
+  // persona. Las respuestas y las iniciales de QA vuelven a empezar.
   preopAnswers = {}; preopNotes = {};
   ['po-comments', 'po-verified'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
   renderPreopItems();

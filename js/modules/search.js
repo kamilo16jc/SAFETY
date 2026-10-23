@@ -233,17 +233,15 @@ function searchResults(){
                return hitShift && inDateRange(t.date);
              }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')) ||
                                            String(b.time||'').localeCompare(String(a.time||'')); }) : [],
-    // El Pre-Op es del 2o turno y su linea/area es texto libre ("Line 3")
+    // El Pre-Op es del 2o turno y de todo el departamento 1945: no va por linea
     preop:   (scopeHas('preop') && (sf.type==='all'||sf.type==='preop')) ? (db.preop||[]).filter(function(p){
                var notas = Object.keys(p.notes||{}).map(function(k){ return p.notes[k]; });
                var hitTxt = !l || sf.field==='lot' || sf.field==='product' ? !l :
                  [p.area, p.completedBy, p.verifiedBy, p.comments].concat(notas)
                    .some(function(x){ return String(x||'').toLowerCase().indexOf(l)>-1; });
-               var hitLine = sf.line==='all' || new RegExp('(^|\\D)'+sf.line+'(\\D|$)').test(String(p.area||''));
                var hitShift = sf.shift==='all' || String(p.shift||2)===sf.shift;
-               return hitTxt && hitLine && hitShift && inDateRange(p.date);
-             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')) ||
-                                           String(a.area||'').localeCompare(String(b.area||'')); }) : [],
+               return hitTxt && hitShift && inDateRange(p.date);
+             }).sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }) : [],
     shifts:  (scopeHas('shifts') && (sf.type==='all'||sf.type==='shift')) ? (db.shifts||[]).filter(function(s){
                var hitTxt = !l ||
                  String(s.reportNumber||'').toLowerCase().indexOf(l)>-1 ||
@@ -1076,7 +1074,6 @@ function preopPanel(list){
     return '<tr class="view-row" onclick="viewPreopRecord(\''+String(p.id)+'\')">'+
       '<td class="mono">'+fmtDate(p.date)+'</td>'+
       '<td>'+_preopDia(p.date)+'</td>'+
-      '<td>'+esc(p.area||'—')+'</td>'+
       '<td class="mono num">'+_preopRespondidas(p)+' / '+PREOP_ITEMS.length+'</td>'+
       '<td class="num">'+(malas ? '<span class="pill bad">'+malas+' NO</span>' : '<span class="pill ok">All OK</span>')+'</td>'+
       '<td class="mono num">'+(nota ? (nota==='na' ? 'N/A' : esc(nota)) : '—')+'</td>'+
@@ -1090,7 +1087,7 @@ function preopPanel(list){
     '</tr>';
   }).join('');
   return tablePanel('Pre-Op inspections · 2nd shift', list.length, [
-    {t:'Date'},{t:'Day'},{t:'Line / area'},{t:'Answered',num:true},{t:'Findings',num:true},
+    {t:'Date'},{t:'Day'},{t:'Answered',num:true},{t:'Findings',num:true},
     {t:'Waste (1-10)',num:true},{t:'Completed by'},{t:'QA'},{t:'Form'}
   ], rows, page.length, formBtn('searchPreopForm()', 'Official form · every week shown (PDF)'));
 }
@@ -1131,7 +1128,7 @@ function viewPreopRecord(id){
     body =
       '<div class="rec-grid">'+
         recEdit('Date','<input type="date" class="field" id="ep-date" value="'+String(p.date||'').slice(0,10)+'">')+
-        recEdit('Line / area','<input type="text" class="field" id="ep-area" value="'+esc(p.area||'')+'">')+
+        recRow('Line / area', esc(PREOP_AREA))+
         recEdit('Completed by','<input type="text" class="field" id="ep-completed" value="'+esc(p.completedBy||'')+'">')+
         recEdit('QA daily verification (initials)','<input type="text" class="field" id="ep-verified" value="'+esc(p.verifiedBy||'')+'">')+
       '</div>'+
@@ -1141,7 +1138,7 @@ function viewPreopRecord(id){
   } else {
     body =
       '<div class="rec-grid">'+
-        recRow('Date', fmtDate(p.date)+' · '+_preopDia(p.date))+ recRow('Line / area', esc(p.area||'—'))+
+        recRow('Date', fmtDate(p.date)+' · '+_preopDia(p.date))+ recRow('Line / area', esc(PREOP_AREA))+
         recRow('Completed by', esc(p.completedBy||'—'))+ recRow('QA verification', esc(p.verifiedBy||'—'))+
       '</div>'+
       '<div class="rec-block md-preg">'+PREOP_ITEMS.map(function(q, i){
@@ -1157,7 +1154,7 @@ function viewPreopRecord(id){
       (borrar ? '<button class="btn-danger" onclick="deletePreopRecord(\''+String(p.id)+'\')">Delete</button>' : '')+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
     : pdf + '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
-  openRecordModal('Pre-Op inspection · '+esc(p.area||'—')+' · '+fmtDate(p.date), body, actions);
+  openRecordModal('Pre-Op inspection · '+fmtDate(p.date), body, actions);
 }
 
 function savePreopEdit(id, btn){
@@ -1166,13 +1163,12 @@ function savePreopEdit(id, btn){
   var p = (db.preop||[]).filter(function(x){ return String(x.id)===String(id); })[0];
   if(!p) return;
   var g = function(k){ var e=document.getElementById(k); return e ? e.value.trim() : ''; };
-  var fecha = g('ep-date') || p.date, area = g('ep-area');
-  if(!area){ toast('Enter the line / area'); return; }
-  // Una inspeccion por dia y area: no se puede mover encima de otra
+  var fecha = g('ep-date') || p.date;
+  // Una inspeccion por dia: no se puede mover encima de otra
   var otra = db.preop.filter(function(x){
-    return String(x.id)!==String(p.id) && String(x.date||'').slice(0,10)===fecha && _poArea(x.area)===_poArea(area);
+    return String(x.id)!==String(p.id) && String(x.date||'').slice(0,10)===fecha;
   })[0];
-  if(otra){ toast('There is already a Pre-Op for '+area+' on '+fmtDate(fecha)); return; }
+  if(otra){ toast('There is already a Pre-Op on '+fmtDate(fecha)); return; }
   var ans = {}, notes = {}, sinNota = 0;
   PREOP_ITEMS.forEach(function(_, i){
     var v = g('ep-q'+i);
@@ -1182,7 +1178,7 @@ function savePreopEdit(id, btn){
   });
   if(sinNota){ toast('Write the corrective action for every item answered NO'); return; }
   p.date        = fecha;
-  p.area        = area;
+  p.area        = PREOP_AREA;
   p.answers     = ans;
   p.notes       = notes;
   p.completedBy = g('ep-completed');
@@ -1191,7 +1187,7 @@ function savePreopEdit(id, btn){
   p.editedAt = localISOStr();
   p.editedBy = currentUser ? currentUser.name : '—';
   persistRecordEdit('preop', p, db);
-  logActivity('preop','Pre-Op inspection edited', area+' · '+fecha, currentUser?currentUser.name:'—');
+  logActivity('preop','Pre-Op inspection edited', fecha, currentUser?currentUser.name:'—');
   closeRecordModal();
   runSearch();
   toast('Record updated');
@@ -1202,9 +1198,9 @@ function deletePreopRecord(id){
     toast('You are not allowed to delete records'); return; }
   var p = _preopRec(id);
   if(!p) return;
-  if(!confirm('Delete this Pre-Op inspection? '+(p.area||'')+' · '+String(p.date||'').slice(0,10)+'. This cannot be undone.')) return;
+  if(!confirm('Delete the Pre-Op inspection of '+String(p.date||'').slice(0,10)+'? This cannot be undone.')) return;
   removeRecord('preop', p.id, p._fbId);
-  logActivity('preop','Pre-Op inspection deleted', (p.area||'—')+' · '+String(p.date||'').slice(0,10), currentUser?currentUser.name:'—');
+  logActivity('preop','Pre-Op inspection deleted', String(p.date||'').slice(0,10), currentUser?currentUser.name:'—');
   closeRecordModal();
   runSearch();
   toast('Record deleted');

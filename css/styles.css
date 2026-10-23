@@ -2788,6 +2788,10 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .po-day.on{box-shadow:0 0 0 2px var(--accent) inset}
 .md-preg .md-q .po-ed-note{grid-column:1 / -1;margin:0}
 #screen-preop .nstats{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* La linea/area del Pre-Op es fija: se ve, pero no se escribe */
+/* (con .nfield input delante: la regla general de nexora-ui.css usa :is() y pesa mas) */
+.nfield input.ninput[readonly],body.ui-fluent .nfield input.ninput[readonly]{background:var(--surface2);color:var(--muted);cursor:default}
+body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);box-shadow:none}
 #po-week .ncard-sub{margin-top:4px}
 /* En el telefono el texto del punto va arriba y los botones debajo, a lo ancho */
 @media (max-width:600px){

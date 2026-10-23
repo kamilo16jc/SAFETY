@@ -64,6 +64,10 @@ var PREOP_ITEMS = [
   'Are Packaging Materials Properly Stored and Protected in the warehouse at both sides of the hallway?'
 ];
 var PREOP_RATE = 4;
+// La inspeccion es siempre del departamento 1945: la linea/area no se escribe.
+// En la forma va abreviada porque el campo "Line/Area" es corto.
+var PREOP_AREA = 'Department 1945';
+var PREOP_AREA_PDF = 'Dept. 1945';
 // Turno según la hora. 2do turno: 3:30 PM – 2:00 AM. 1er turno: 2:00 AM – 3:30 PM.
 var SECOND_SHIFT_START = 15*60 + 30;  // 15:30
 var SECOND_SHIFT_END   = 2*60;        // 02:00 (madrugada)

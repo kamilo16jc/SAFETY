@@ -1,8 +1,9 @@
 // ===== FORMA OFICIAL DEL PRE-OP 2nd SHIFT — PDF (SQF # 11.2.E.A.1, 1945) =====
 // "Daily Pre-Operational Inspection 2nd Shift", diseñada en Taller PDF
 // (assets/forms/preop-2nd-form.json). La hoja es SEMANAL: columnas de lunes a
-// sabado, una hoja por semana y linea/area. La hoja 2 (Change Log) va fija al
-// final. La carga y los formatos son de pdf-forms.js.
+// sabado, una hoja por semana; la linea/area es siempre el departamento 1945.
+// La hoja 2 (Change Log) va fija al final. La carga y los formatos son de
+// pdf-forms.js.
 
 var PREOP_PDF_TPL = 'assets/forms/preop-2nd-form.json?v=1';   // subir v si cambia la plantilla
 var PREOP_DIAS = [{k:'m', label:'M'}, {k:'t', label:'T'}, {k:'w', label:'W'},
@@ -34,21 +35,18 @@ function _poIniciales(s){
   return s.split(/\s+/).map(function(p){ return p.charAt(0).toUpperCase(); }).join('');
 }
 
-// Arma las hojas: una por semana + linea/area, en orden de semana y area
+// Arma las hojas: una por semana, en orden
 function preopHojas(lista){
   var grupos = {}, orden = [], domingos = 0;
   (lista || []).forEach(function(r){
     var dia = String(r.date || '').slice(0,10);
     if(!dia) return;
     if(preopDiaCol(dia) < 0){ domingos++; return; }
-    var k = preopLunes(dia) + '|' + _poArea(r.area);
-    if(!grupos[k]){ grupos[k] = {lunes: preopLunes(dia), area: String(r.area || '').trim(), recs: []}; orden.push(k); }
+    var k = preopLunes(dia);
+    if(!grupos[k]){ grupos[k] = {lunes: k, recs: []}; orden.push(k); }
     grupos[k].recs.push(r);
   });
-  orden.sort(function(a, b){
-    var x = grupos[a], y = grupos[b];
-    return x.lunes.localeCompare(y.lunes) || x.area.localeCompare(y.area, undefined, {numeric:true});
-  });
+  orden.sort();
   var hojas = orden.map(function(k){
     var g = grupos[k], c = [], obs = [], nombres = [], porDia = {};
     // si un dia quedo dos veces, manda el ultimo guardado
@@ -79,7 +77,7 @@ function preopHojas(lista){
     return {
       completedBy: nombres.join(', '),
       dates: pdfFecha(g.lunes) + ' - ' + pdfFecha(lotMasDias(g.lunes, 5)),
-      area: g.area, c: c, obs: obs
+      area: PREOP_AREA_PDF, c: c, obs: obs
     };
   });
   return {hojas: hojas, domingos: domingos, claves: orden.map(function(k){ return grupos[k]; })};
@@ -87,10 +85,8 @@ function preopHojas(lista){
 
 function _poNombre(arm){
   var lunes = arm.claves.map(function(g){ return g.lunes; }).sort();
-  var areas = arm.claves.map(function(g){ return g.area; }).filter(function(a, i, l){ return l.indexOf(a) === i; });
   var d1 = lunes[0] || localDateStr(), d2 = lunes[lunes.length - 1] || d1;
-  var area = areas.length === 1 ? '_' + areas[0].replace(/[^A-Za-z0-9]+/g, '') : '';
-  return 'PreOp_2nd_week_' + d1 + (d2 !== d1 ? '_to_' + d2 : '') + area + '.pdf';
+  return 'PreOp_2nd_week_' + d1 + (d2 !== d1 ? '_to_' + d2 : '') + '.pdf';
 }
 
 // Genera la forma con esas inspecciones y la entrega (descarga; compartir en iPhone)
@@ -113,7 +109,7 @@ function sendPreopForm(lista){
   lista = lista || [];
   if(!lista.length){ toast('No Pre-Op inspections for that week'); return; }
   var n = preopHojas(lista).hojas.length;
-  if(n > 30 && !confirm('This makes ' + n + ' sheets (one per week and line/area). Generate anyway?')) return;
+  if(n > 30 && !confirm('This makes ' + n + ' sheets (one per week). Generate anyway?')) return;
   toast('Building form…');
   downloadPreopPdf(lista).then(function(r){
     toast('Form ready ✓' + (r.hojas > 1 ? ' · ' + r.hojas + ' sheets' : '') +
@@ -124,22 +120,19 @@ function sendPreopForm(lista){
     toast('Could not build the form: ' + e.message);
   });
 }
-// Pantalla de captura: la semana de la fecha en pantalla (y su area, si hay)
-function preopFormFromScreen(){
-  var fecha = _poVal('po-date') || localDateStr(), area = _poVal('po-area');
+// La semana de esa fecha
+function _preopSemana(fecha){
   var lunes = preopLunes(fecha);
-  sendPreopForm((getDB().preop || []).filter(function(r){
-    return preopLunes(r.date || '') === lunes && (!area || _poArea(r.area) === _poArea(area));
-  }));
+  return (getDB().preop || []).filter(function(r){ return preopLunes(r.date || '') === lunes; });
 }
-// Search: la semana y el area de esa fila
+// Pantalla de captura: la semana de la fecha en pantalla
+function preopFormFromScreen(){
+  sendPreopForm(_preopSemana(_poVal('po-date') || localDateStr()));
+}
+// Search: la semana de esa fila
 function preopFormFor(id){
   var r = (getDB().preop || []).filter(function(x){ return String(x.id) === String(id); })[0];
-  if(!r) return;
-  var lunes = preopLunes(r.date);
-  sendPreopForm((getDB().preop || []).filter(function(x){
-    return preopLunes(x.date || '') === lunes && _poArea(x.area) === _poArea(r.area);
-  }));
+  if(r) sendPreopForm(_preopSemana(r.date));
 }
 // Search: todo lo que muestra la busqueda
 function searchPreopForm(){
