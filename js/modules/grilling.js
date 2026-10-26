@@ -17,14 +17,13 @@
 // Aqui aparece todo lo que en Raw sea grilling cheese; no hay que volver a
 // registrar el lote.
 
+// Los limites de la forma, revision 10/09/2026 (antes pH 5.90-6.3 y Fat
+// 47.70-50.60%). Fat ">40" no incluye el 40.
 var GC_SPEC = {
-  ph:       {t:'pH', spec:'5.90-6.3',        min:5.90,  max:6.30},
-  fat:      {t:'Fat by Dry Matter', spec:'47.70-50.60%', min:47.70, max:50.60},
+  ph:       {t:'pH', spec:'6.05-6.5',          min:6.05,  max:6.50},
+  fat:      {t:'Fat by Dry Matter', spec:'>40', min:40, minExcl:true},
   moisture: {t:'Moisture', spec:'≤ 42%',              max:42}
 };
-// La nota larga que la forma imprime pegada al renglon del pH
-var GC_PH_NOTA = 'If pH is more than 0.25 outside SPEC (6.3-6.1) HOLD and test 3 more samples '+
-                 '(top, middle, bottom)';
 
 var gcView = 'all';     // all | lab | sensory | done
 var gcDirty = false;
@@ -65,14 +64,16 @@ function gcEnsure(db, rawId){
 function gcNum(v){ var n=parseFloat(v); return isNaN(n) ? null : n; }
 function gcHas(v){ return v!=null && String(v).trim()!==''; }
 
-// El pH tiene dos niveles, como la forma: el rango impreso manda para pasar o
-// no, y la nota del 0.25 sobre 6.1-6.3 es la que obliga a poner en HOLD y
-// sacar tres muestras mas.
+// El pH tiene dos niveles: el rango impreso manda para pasar o no, y a mas
+// de 0.25 fuera de el se pone en HOLD y se sacan tres muestras mas. Esa nota
+// era de la forma anterior (sobre 6.1-6.3); la revision 10/09/2026 ya no la
+// imprime, y aqui se sigue aplicando sobre el rango nuevo.
 function gcPhState(v){
   var n = gcNum(v);
   if(n==null) return '';
-  if(n >= 5.90 && n <= 6.30) return 'ok';
-  if(n >= 6.1-0.25 && n <= 6.3+0.25) return 'out';   // 5.85 a 6.55
+  var s = GC_SPEC.ph;
+  if(n >= s.min && n <= s.max) return 'ok';
+  if(n >= s.min-0.25 && n <= s.max+0.25) return 'out';   // 5.80 a 6.75
   return 'hold';
 }
 function gcState(campo, v){
@@ -80,7 +81,7 @@ function gcState(campo, v){
   var n = gcNum(v);
   if(n==null) return '';
   var s = GC_SPEC[campo];
-  if(s.min!=null && n < s.min) return 'out';
+  if(s.min!=null && (s.minExcl ? n <= s.min : n < s.min)) return 'out';
   if(s.max!=null && n > s.max) return 'out';
   return 'ok';
 }
@@ -254,8 +255,8 @@ function gcRowHTML(r, i){
     '<td id="gc-ap-'+r.id+'">'+gcApproveHTML(r, g)+'</td>'+
     '<td id="gc-st-'+r.id+'">'+gcStageHTML(r, g)+'</td>'+
     '<td>'+saveBtn("saveGcRow("+r.id+",this)")+'</td>'+
-    '<td><button class="ico-btn sm" onclick="downloadGrillingDoc('+r.id+')" aria-label="Download the form"'+
-      ' title="Fill SQF 2.4.D.3.A and download it in Word"><span data-icon="doc"></span></button></td>'+
+    '<td><button class="ico-btn sm" onclick="downloadGrillingPdf('+r.id+')" aria-label="Official form, SQF 2.4.D.3.A (PDF)"'+
+      ' data-tip="Official form · SQF 2.4.D.3.A (PDF)"><span data-icon="pdf"></span></button></td>'+
   '</tr>';
 }
 
@@ -339,5 +340,5 @@ function exportGrillingCSV(){
   downloadCSV('grilling-cheese-'+localDateStr()+'.csv', out);
 }
 
-// La forma se rellena y se descarga en Word, lista para imprimir. Eso vive
-// en js/integrations/grilling-fill.js.
+// La forma oficial sale en PDF, lista para imprimir. Eso vive en
+// js/integrations/grilling-pdf.js.
