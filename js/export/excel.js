@@ -10,7 +10,9 @@ function exportDashExcel() {
   var seals = filterByDays(db.seals);
   var periodLabel = dashDays ? 'Last '+dashDays+' days' : 'All Time';
 
-  var wb = XLSX.utils.book_new();
+  // El libro se arma con xlsx-write.js, como las listas: los pesos con
+  // decimales salen con punto en cualquier equipo
+  var hojas = [];
 
   // ---- SHEET 1: All Weight Records ----
   var wHeaders = ['Date','Time','Line','Shift','Package','Target Range','Product #','Description','Bags/Case','LOT',
@@ -28,9 +30,7 @@ function exportDashExcel() {
       r.initials||'', r.comments||''
     ];
   });
-  var wsW = XLSX.utils.aoa_to_sheet([wHeaders].concat(wRows));
-  wsW['!cols'] = wHeaders.map(function(h,i){ return {wch: i===7?22:i<10?12:i<16?10:14}; });
-  XLSX.utils.book_append_sheet(wb, wsW, 'Weight Records');
+  hojas.push({nombre:'Weight Records', filas:[wHeaders].concat(wRows)});
 
   // ---- SHEET 2: All Bag Seal Records ----
   var sHeaders = ['Date','Time','Line','Shift','Product #','Description','Bags/Case','LOT','Visual','Dunk Tank','Printing','Initials','Comments'];
@@ -45,9 +45,7 @@ function exportDashExcel() {
       r.initials||'', r.comments||''
     ];
   });
-  var wsS = XLSX.utils.aoa_to_sheet([sHeaders].concat(sRows));
-  wsS['!cols'] = sHeaders.map(function(){return {wch:12}});
-  XLSX.utils.book_append_sheet(wb, wsS, 'Bag Seal Records');
+  hojas.push({nombre:'Bag Seal Records', filas:[sHeaders].concat(sRows)});
 
   // ---- SHEET 3: All GMP Records ----
   var gHeaders = ['Date','Location','Shift','GMP Compliance %','Items Failed','Completed By','Comments'];
@@ -58,9 +56,7 @@ function exportDashExcel() {
     var gcomp  = total ? Math.round(((total-failed)/total)*100) : 0;
     return [dt, r.location||'', (r.shift?(r.shift===1?'1st':'2nd')+' Shift':''), gcomp+'%', failed, r.completedBy||'', r.comments||''];
   });
-  var wsG = XLSX.utils.aoa_to_sheet([gHeaders].concat(gRows));
-  wsG['!cols'] = [{wch:12},{wch:15},{wch:10},{wch:16},{wch:12},{wch:15},{wch:25}];
-  XLSX.utils.book_append_sheet(wb, wsG, 'GMP Records');
+  hojas.push({nombre:'GMP Records', filas:[gHeaders].concat(gRows)});
 
   // ---- SHEET 4: Dashboard Summary ----
   var tBags = w.reduce(function(a,r){return a+r.total},0);
@@ -138,12 +134,11 @@ function exportDashExcel() {
     summaryData.push([item, itemFails[item]]);
   });
 
-  var wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  wsSummary['!cols'] = [{wch:35},{wch:20},{wch:20},{wch:15}];
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Dashboard Summary');
+  // el resumen no es una tabla: va sin cabecera ni filtro
+  hojas.push({nombre:'Dashboard Summary', filas:summaryData, cabecera:false});
 
   var dateLabel = localDateStr();
-  XLSX.writeFile(wb, 'Caputo_Dashboard_'+periodLabel.replace(' ','_')+'_'+dateLabel+'.xlsx');
+  downloadBook('Caputo_Dashboard_'+periodLabel.replace(' ','_')+'_'+dateLabel+'.xlsx', hojas);
   toast('Dashboard Excel exported');
 }
 

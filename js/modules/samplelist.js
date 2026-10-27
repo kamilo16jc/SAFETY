@@ -141,10 +141,6 @@ function exportSampleListCSV(){
   slFilters();
   var rows = runsFor(slDate, slShift).map(slRow);
   if(!rows.length){ toast('Nothing scheduled for that day and shift'); return; }
-  var cell = function(v){
-    v = String(v==null?'':v);
-    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
-  };
   var out = [['Line','Time','Product','Description','Customer','LOT','Samples','Sample #s','Status']];
   rows.forEach(function(x){
     out.push([x.run.line||'', x.run.time||'', x.run.product||'', x.run.productName||'',
@@ -152,10 +148,7 @@ function exportSampleListCSV(){
       x.run.sampleFrom ? x.run.sampleFrom+'-'+x.run.sampleTo : '',
       x.kind==='none' ? 'No sample' : (x.run.collected ? 'Collected' : 'Pending')]);
   });
-  var csv = out.map(function(r){ return r.map(cell).join(','); }).join('\r\n');
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'}));
-  a.download = 'sample-list-'+slDate+'-shift'+slShift+'.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  // un .xlsx como las demas listas (el CSV con comas se abria corrido en una
+  // sola celda en los equipos con Windows en español)
+  downloadCSV('sample-list-'+slDate+'-shift'+slShift+'.csv', out);
 }

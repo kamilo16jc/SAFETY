@@ -652,15 +652,12 @@ function exportDestroyCert(id) {
 function exportHoldExcel() {
   var holds = getHolds();
   if(!holds.length){ toast('No hold cases to export'); return; }
-  var wb = XLSX.utils.book_new();
+  // con xlsx-write.js, como las demas listas (decimales con punto)
   var headers = ['Case #','Product','LOT','Quantity','Line','Reason','Status','Initiated By','Created Date'];
   var rows = holds.map(function(h){
     return [h.caseNumber,h.product,h.lot||'',h.quantity,h.line?'Line '+h.line:'',h.reason,h.status.toUpperCase(),h.initiatedBy,
       h.createdAt?new Date(h.createdAt).toLocaleDateString('en-US'):''];
   });
-  var ws1 = XLSX.utils.aoa_to_sheet([headers].concat(rows));
-  ws1['!cols'] = [{wch:10},{wch:20},{wch:12},{wch:15},{wch:8},{wch:30},{wch:12},{wch:15},{wch:14}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'Hold Cases');
 
   var hHeaders = ['Case #','Product','Date','Status','Comment','By'];
   var hRows = [];
@@ -669,11 +666,10 @@ function exportHoldExcel() {
       hRows.push([h.caseNumber,h.product,e.date?new Date(e.date).toLocaleDateString('en-US'):'',e.status.toUpperCase(),e.comment,e.by]);
     });
   });
-  var ws2 = XLSX.utils.aoa_to_sheet([hHeaders].concat(hRows));
-  ws2['!cols'] = [{wch:10},{wch:20},{wch:14},{wch:12},{wch:40},{wch:15}];
-  XLSX.utils.book_append_sheet(wb, ws2, 'Status History');
-
-  XLSX.writeFile(wb, 'Caputo_HoldLog_'+localDateStr()+'.xlsx');
+  downloadBook('Caputo_HoldLog_'+localDateStr()+'.xlsx', [
+    {nombre:'Hold Cases', filas:[headers].concat(rows)},
+    {nombre:'Status History', filas:[hHeaders].concat(hRows)}
+  ]);
   toast('Excel exported');
 }
 
