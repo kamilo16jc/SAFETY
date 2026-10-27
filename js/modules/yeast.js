@@ -263,7 +263,7 @@ function ymRefreshCounts(){
 
 // ---- Exportar la hoja tal como se ve ----
 function exportYeastCSV(){
-  var list = ymRows().filter(function(a){ return ymView==='all' || ymState(a)===ymView; });
+  var list = xlEntryOrder(ymRows().filter(function(a){ return ymView==='all' || ymState(a)===ymView; }));
   if(!list.length){ toast('Nothing to export for this view'); return; }
   var out = [['ID','Sampled','Reads on','Status','Product','Cheese','Customer',
               'Prod. date','Order','Yeast','Mold','Read by','Read on']];

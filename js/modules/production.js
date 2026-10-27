@@ -503,7 +503,7 @@ function runRowHTML(r, i){
 // La hoja del dia, tal como se ve
 function exportScheduleCSV(){
   prodFilters();
-  var list = runsFor(prodDate, prodShift);
+  var list = xlEntryOrder(runsFor(prodDate, prodShift));   // en el orden en que se capturo
   if(!list.length){ toast('Nothing scheduled for that day and shift'); return; }
   var out = [['Product','Description','Line','LOT','Samples','Sample #s','Collected','Tested','Sent to lab']];
   list.forEach(function(r){

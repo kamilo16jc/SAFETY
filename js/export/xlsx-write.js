@@ -213,6 +213,27 @@ function xlNameFromFile(archivo){
     || 'Data';
 }
 
+// ---- El orden de las filas ----
+// Todo lo que se baja a Excel sale en el orden en que se capturo: lo primero
+// arriba y lo ultimo abajo (si se iba en la G y despues la H, la G va arriba).
+// No es el orden de la pantalla, que pone lo mas nuevo primero.
+//
+// El id de cada registro es el momento en que se creo (newRecordId: ms*4096;
+// los de antes, ms a secas). Sin id numerico, createdAt y despues la fecha.
+// Lo que no trae nada de eso es de antes de que se guardara: va primero, en
+// el orden en que esta.
+function xlEntryTime(r){
+  var id = r && r.id;
+  if(typeof id === 'number' && id > 1e11) return id > 1e14 ? id / 4096 : id;
+  var t = Date.parse((r && (r.createdAt || r.date)) || '');
+  return isNaN(t) ? -Infinity : t;
+}
+function xlEntryOrder(list){
+  return (list || []).map(function(x, i){ return {x:x, i:i, t:xlEntryTime(x)}; })
+    .sort(function(a, b){ return (a.t - b.t) || (a.i - b.i); })
+    .map(function(o){ return o.x; });
+}
+
 // Baja la lista como Excel. El nombre puede venir con .csv de antes: se cambia.
 function downloadSheet(name, rows, hoja){
   var archivo = String(name||'export').replace(/\.(csv|xlsx)$/i, '') + '.xlsx';

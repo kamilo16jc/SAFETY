@@ -584,7 +584,7 @@ function saveRawItem(btn){
 
 // ---- Exportar lo que esta en pantalla ----
 function exportRawCSV(){
-  var list = rawRows();
+  var list = xlEntryOrder(rawRows());           // en el orden en que se capturo
   if(!list.length){ toast('Nothing to export for these filters'); return; }
   var c = rawColumns();
   var cab = [c.cfg.fecha].concat(c.ident.map(function(x){ return x.t; }))

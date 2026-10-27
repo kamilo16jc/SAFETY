@@ -202,7 +202,7 @@ function labRowHTML(r, i){
 
 // La lista tal como se ve, para Excel
 function exportLabCSV(){
-  var list = labSamples();
+  var list = xlEntryOrder(labSamples());        // en el orden en que se capturo
   if(!list.length){ toast('No lab samples for these filters'); return; }
   var out = [['Date','Shift','Line','Product','Description','Customer','Lab code','Tests',
               'LOT','Samples','Collected','Sent']];

@@ -514,7 +514,7 @@ function downloadCSVRaw(name, rows){
   URL.revokeObjectURL(a.href);
 }
 function exportAnalysisCSV(){
-  var list = analysisResults();
+  var list = xlEntryOrder(analysisResults());   // en el orden en que se capturo
   if(!list.length){ toast('Nothing to export for these filters'); return; }
   var out = [['ID','Date','Product','Cheese','Customer','LOT','Prod. date','Order','PO',
               'Moisture','Fat','pH','Tested by','Yeast','Mold','Plate read']];

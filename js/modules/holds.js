@@ -650,7 +650,7 @@ function exportDestroyCert(id) {
 
 // ===== HOLD EXPORTS (Excel & PDF list) =====
 function exportHoldExcel() {
-  var holds = getHolds();
+  var holds = xlEntryOrder(getHolds());          // en el orden en que se abrieron
   if(!holds.length){ toast('No hold cases to export'); return; }
   // con xlsx-write.js, como las demas listas (decimales con punto)
   var headers = ['Case #','Product','LOT','Quantity','Line','Reason','Status','Initiated By','Created Date'];
@@ -662,7 +662,7 @@ function exportHoldExcel() {
   var hHeaders = ['Case #','Product','Date','Status','Comment','By'];
   var hRows = [];
   holds.forEach(function(h){
-    (h.history||[]).forEach(function(e){
+    xlEntryOrder(h.history).forEach(function(e){
       hRows.push([h.caseNumber,h.product,e.date?new Date(e.date).toLocaleDateString('en-US'):'',e.status.toUpperCase(),e.comment,e.by]);
     });
   });

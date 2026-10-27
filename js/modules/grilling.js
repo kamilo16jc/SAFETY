@@ -365,7 +365,7 @@ function approveGrilling(rawId){
 }
 
 function exportGrillingCSV(){
-  var list = gcRows();
+  var list = xlEntryOrder(gcRows());            // en el orden en que se capturo
   if(!list.length){ toast('Nothing to export for these filters'); return; }
   var out = [['Batch ID / Lot','Date received','Received by','Date tested','pH','Fat','Moisture',
               'Performed by','Appearance','Appearance comments','Texture','Texture comments',

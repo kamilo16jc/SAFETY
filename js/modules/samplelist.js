@@ -139,7 +139,7 @@ function fmtSheetDate(iso){
 // La hoja se baja tal cual se ve, para pasarla a Excel o imprimirla
 function exportSampleListCSV(){
   slFilters();
-  var rows = runsFor(slDate, slShift).map(slRow);
+  var rows = xlEntryOrder(runsFor(slDate, slShift)).map(slRow);   // en el orden en que se capturo
   if(!rows.length){ toast('Nothing scheduled for that day and shift'); return; }
   var out = [['Line','Time','Product','Description','Customer','LOT','Samples','Sample #s','Status']];
   rows.forEach(function(x){

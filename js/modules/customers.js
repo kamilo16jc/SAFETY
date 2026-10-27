@@ -465,7 +465,7 @@ function exportCustomersCSV(){
   var out = [['Customer','ID','Code','Contact','Email','Phone','Fax',
               'Target moisture','Target fat','Target pH','Target yeast','Target mold',
               'External lab','Lab tests','Products']];
-  getCustomers().forEach(function(c){
+  xlEntryOrder(getCustomers()).forEach(function(c){   // en el orden en que se dieron de alta
     var t = c.targets || {};
     var lab = custGoesToLab(c);
     out.push([c.company||'', c.customerId||'', c.code||'', c.contact||'', c.email||'',

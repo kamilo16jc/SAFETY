@@ -5,9 +5,10 @@ function targetLabel(r){ var t=recTarget(r); return t ? t.min+' - '+t.max : 'not
 
 function exportDashExcel() {
   var db   = getDB();
-  var w    = filterByDays(db.weights).filter(function(r){ return !r.issue; });  // issues fuera del Dashboard
-  var gmps = filterByDays(db.gmps);
-  var seals = filterByDays(db.seals);
+  // en el orden en que se capturaron (xlEntryOrder, xlsx-write.js)
+  var w    = xlEntryOrder(filterByDays(db.weights).filter(function(r){ return !r.issue; }));  // issues fuera del Dashboard
+  var gmps = xlEntryOrder(filterByDays(db.gmps));
+  var seals = xlEntryOrder(filterByDays(db.seals));
   var periodLabel = dashDays ? 'Last '+dashDays+' days' : 'All Time';
 
   // El libro se arma con xlsx-write.js, como las listas: los pesos con

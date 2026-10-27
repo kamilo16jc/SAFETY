@@ -237,7 +237,7 @@ function lrRefreshCounts(){
 }
 
 function exportLabResultsCSV(){
-  var list = lrRows();
+  var list = xlEntryOrder(lrRows());            // en el orden en que se capturo
   if(!list.length){ toast('Nothing to export for these filters'); return; }
   var out = [['ID','Date','Customer','Product','Cheese','Production date','Order','PO',
     'Moisture','Matrix moisture','Fat','Matrix fat','pH','Matrix pH','Tested by',
@@ -775,7 +775,7 @@ function stRowHTML(a, i){
 }
 
 function exportCoaStatusCSV(){
-  var list = stRows().filter(function(a){ return stView==='all' || stState(a)===stView; });
+  var list = xlEntryOrder(stRows().filter(function(a){ return stView==='all' || stState(a)===stView; }));
   if(!list.length){ toast('Nothing to export for this view'); return; }
   var label = {qa:'Pending QA Lab', lab:'Pending Lab', done:'Complete'};
   var out = [['LOT','Customer','PO','Order','Plate read','Plate due','Lab report','Status']];
@@ -791,7 +791,7 @@ function exportCoaStatusCSV(){
 
 
 function exportCoaCSV(){
-  var list = coaRows().filter(function(a){ return coaView==='all' || coaState(a)===coaView; });
+  var list = xlEntryOrder(coaRows().filter(function(a){ return coaView==='all' || coaState(a)===coaView; }));
   if(!list.length){ toast('Nothing to export for this view'); return; }
   var out = [['ID','Date','Customer','Product','Cheese','Order','PO','Result',
               'COA','Revision','Issued','Issued by','Status','Changed after COA']];
