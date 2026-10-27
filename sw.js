@@ -3,7 +3,7 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v149';
+const CACHE = 'nexora-qc-v150';
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
 // no, cada telefono los volveria a bajar despues de cada actualizacion.
