@@ -8,7 +8,7 @@
 // Analysis; lo demas, de la ficha de grilling del lote. Lo que todavia no se
 // ha hecho se queda en blanco, igual que la forma en papel para el que grilla.
 
-var GRILLING_PDF_TPL = 'assets/forms/grilling-form.json?v=1';   // subir v si cambia la plantilla
+var GRILLING_PDF_TPL = 'assets/forms/grilling-form.json?v=2';   // subir v si cambia la plantilla
 
 // Las correctivas tienen dos renglones: lo que cabe junto al rotulo, y el
 // resto en el renglon de abajo. Se mide con las letras del PDF (sin kerning,
