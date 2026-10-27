@@ -110,6 +110,42 @@ function gcStageHTML(r, g){
       ? '<div class="gc-hold">HOLD · test 3 more samples (top, middle, bottom)</div>' : '');
 }
 
+// ---- La forma impresa ----
+// El navegador no sabe si la hoja salio de la impresora: lo confirma quien
+// imprime (grilling-pdf.js) y queda quien, cuando y con que datos. Si despues
+// cambia algo de lo que va en la forma —se completa el sensory, se aprueba—
+// lo impreso ya no es lo de hoy y la marca pide reimprimir.
+function gcPrintSig(r, g){
+  var s = [r.code||r.sample, r.date, r.ph, r.fat, r.moisture, r.testedBy,
+           g.receivedDate, g.receivedBy, g.appearance, g.appearanceNote, g.texture, g.textureNote,
+           g.corrective, g.sensoryDate, g.sensoryBy, g.approvedBy, g.approvedAt]
+    .map(function(x){ return String(x==null ? '' : x).replace(/\s+/g,' ').trim(); }).join('|');
+  var h = 5381;
+  for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+// 'ok' impresa con lo de hoy · 'old' impresa antes de un cambio · '' nunca
+function gcPrintState(r, g){
+  if(!g || !g.printedAt) return '';
+  return g.printedSig === gcPrintSig(r, g) ? 'ok' : 'old';
+}
+function gcPrintedHTML(r, g){
+  var st = gcPrintState(r, g);
+  if(!st) return '';
+  var d = new Date(g.printedAt);
+  var cuando = fmtDate(g.printedAt) + (isNaN(d) ? '' :
+               ' ' + d.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}));
+  var quien = g.printedBy ? ' by ' + g.printedBy : '';
+  return st === 'ok'
+    ? '<span class="pill ok gc-printed" data-tip="Printed OK · '+esc(cuando+quien)+'">✓ Printed</span>'
+    : '<span class="pill warn gc-printed" data-tip="Printed '+esc(cuando+quien)+
+        ', before the last changes · print it again">Reprint</span>';
+}
+function gcRefreshPrinted(rawId, r, g){
+  var el = document.getElementById('gc-pr-'+rawId);
+  if(el) el.innerHTML = gcPrintedHTML(r, g);
+}
+
 // ============================================================
 // PANTALLA
 // ============================================================
@@ -255,8 +291,12 @@ function gcRowHTML(r, i){
     '<td id="gc-ap-'+r.id+'">'+gcApproveHTML(r, g)+'</td>'+
     '<td id="gc-st-'+r.id+'">'+gcStageHTML(r, g)+'</td>'+
     '<td>'+saveBtn("saveGcRow("+r.id+",this)")+'</td>'+
-    '<td><button class="ico-btn sm" onclick="downloadGrillingPdf('+r.id+')" aria-label="Official form, SQF 2.4.D.3.A (PDF)"'+
-      ' data-tip="Official form · SQF 2.4.D.3.A (PDF)"><span data-icon="pdf"></span></button></td>'+
+    '<td class="gc-form"><div class="row-icos">'+
+      '<button class="ico-btn sm" onclick="printGrillingPdf('+r.id+')" aria-label="Print the official form now"'+
+        ' data-tip="Print now · SQF 2.4.D.3.A"><span data-icon="print"></span></button>'+
+      '<button class="ico-btn sm" onclick="downloadGrillingPdf('+r.id+')" aria-label="Official form, SQF 2.4.D.3.A (PDF)"'+
+        ' data-tip="Official form · SQF 2.4.D.3.A (PDF)"><span data-icon="pdf"></span></button>'+
+    '</div><div id="gc-pr-'+r.id+'">'+gcPrintedHTML(r, g)+'</div></td>'+
   '</tr>';
 }
 
@@ -299,6 +339,7 @@ function saveGcRow(rawId, btn){
   if(st) st.innerHTML = gcStageHTML(r, g);
   var ap = document.getElementById('gc-ap-'+rawId);
   if(ap) ap.innerHTML = gcApproveHTML(r, g);
+  gcRefreshPrinted(rawId, r, g);
   if(btn && btn.classList && btn.classList.contains('sheet-btn')) flashSaved(btn);
 }
 

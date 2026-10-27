@@ -1446,6 +1446,9 @@ body.logged-out .topstack{display:none}
 /* aviso de HOLD bajo el pH del grilling cheese */
 .gc-hold{font-size:9.5px;font-weight:700;color:var(--fail);white-space:normal;
   max-width:170px;margin-top:3px;line-height:1.3}
+/* la forma del grilling: imprimir, PDF y la marca de impresa debajo */
+.gc-form{white-space:nowrap}
+.gc-printed{margin-top:3px;cursor:default}
 /* casilla suelta dentro de una barra de hoja */
 .sheet-bar .chk{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
   color:var(--text);padding:8px 0;white-space:nowrap}

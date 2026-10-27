@@ -32,6 +32,7 @@ var ICONS = {
   plus:      _IC('<path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/>'),
   // Exportar: hoja con flecha (PDF), tabla (Excel) y sello (forma oficial)
   pdf:       _IC('<path d="M7.5 3.5h6.3L18.5 8v11a1.5 1.5 0 0 1-1.5 1.5H7.5A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1.5-1.5Z"/><path d="M13.5 3.8V8h4.4"/><path d="M12 11.4v5"/><path d="m9.9 14.3 2.1 2.1 2.1-2.1"/>'),
+  print:     _IC('<path d="M7 8.5V4.2a.7.7 0 0 1 .7-.7h8.6a.7.7 0 0 1 .7.7v4.3"/><path d="M7 16.5H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 8.5h14a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-2"/><path d="M7 13.5h10v6.3a.7.7 0 0 1-.7.7H7.7a.7.7 0 0 1-.7-.7Z"/><circle cx="17" cy="11.2" r=".9" fill="currentColor" stroke="none"/>'),
   grid:      _IC('<rect x="3.5" y="5.5" width="17" height="13" rx="1.8"/><path d="M3.5 10.2h17"/><path d="M10 10.2v8.3"/>'),
   seal:      _IC('<circle cx="12" cy="9.3" r="4.8"/><path d="m8.7 13.3-1.2 6.2 4.5-2.4 4.5 2.4-1.2-6.2"/>'),
   download:  _IC('<path d="M12 3.8v11"/><path d="m7.8 10.8 4.2 4 4.2-4"/><path d="M4.5 19.5h15"/>'),

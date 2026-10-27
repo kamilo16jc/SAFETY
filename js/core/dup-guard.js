@@ -39,7 +39,7 @@ function renderDupHint(elId, title, detail){
 }
 
 // Modal genérico de aviso.
-// opts: {title, detail, primaryLabel, onPrimary, secondaryLabel, onSecondary}
+// opts: {title, detail, ask, primaryLabel, onPrimary, secondaryLabel, onSecondary, icon}
 function showGuardModal(opts){
   var m = document.getElementById('dup-modal');
   if(!m){
@@ -48,6 +48,9 @@ function showGuardModal(opts){
     } else if(opts.onPrimary) opts.onPrimary();
     return;
   }
+  // el icono de arriba: el triangulo de aviso, salvo que se pida otro
+  var ico = m.querySelector('.dup-ico');
+  if(ico && typeof ICONS !== 'undefined') ico.innerHTML = ICONS[opts.icon || 'alert'] || ICONS.alert;
   document.getElementById('dup-modal-title').textContent  = opts.title;
   document.getElementById('dup-modal-detail').textContent = opts.detail;
   document.getElementById('dup-modal-ask').textContent =
