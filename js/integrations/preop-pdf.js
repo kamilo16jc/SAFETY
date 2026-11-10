@@ -5,7 +5,7 @@
 // La hoja 2 (Change Log) va fija al final. La carga y los formatos son de
 // pdf-forms.js.
 
-var PREOP_PDF_TPL = 'assets/forms/preop-2nd-form.json?v=2';   // subir v si cambia la plantilla
+var PREOP_PDF_TPL = 'assets/forms/preop-2nd-form.json?v=3';   // subir v si cambia la plantilla
 var PREOP_DIAS = [{k:'m', label:'M'}, {k:'t', label:'T'}, {k:'w', label:'W'},
                   {k:'th', label:'Th'}, {k:'f', label:'F'}, {k:'s', label:'S'}];
 
