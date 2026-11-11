@@ -111,12 +111,24 @@ function analysisFor(product, day){
   });
 }
 
-// ¿Tiene las tres mediciones? Eso es lo que cuenta como analizado
+// ¿Tiene las tres mediciones? Eso es lo que cuenta como analizado (y lo que
+// pide el COA para certificar)
 function analysisComplete(a){
   return a && a.moisture!=='' && a.moisture!=null &&
              a.fat!=='' && a.fat!=null &&
              a.ph!=='' && a.ph!=null;
 }
+// Producto marcado SIN "Plate" en Products: no se le toma Moisture, Fat ni pH
+// (regla del usuario, 10 nov 2026). Su fila no queda pendiente.
+function analysisNoTests(a){
+  var p = (a && typeof findProduct==='function') ? findProduct(a.product) : null;
+  return !!(p && p.plate === false);
+}
+function anHasResults(a){
+  return ['moisture','fat','ph'].some(function(f){ return a && a[f]!=null && String(a[f]).trim()!==''; });
+}
+// Lo que ya no espera nada en esta hoja: las tres medidas, o un producto que no se testea
+function analysisDone(a){ return analysisComplete(a) || analysisNoTests(a); }
 
 // ===== FILTROS =====
 // El texto filtra al instante (es la lista que ya está en memoria); el rango
@@ -150,7 +162,7 @@ function anFilters(){
 function analysisResults(){
   anFilters();
   return getAnalyses().filter(function(a){
-    if(!inScope(a.date, anFrom, anTo, !analysisComplete(a))) return false;
+    if(!inScope(a.date, anFrom, anTo, !analysisDone(a))) return false;
     if(anQuery){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' #'+String(a.seq||'')).toLowerCase();
@@ -213,6 +225,10 @@ function resetAnalysisRow(){
   set('an-date', localDateStr());
   ['an-product','an-cheese','an-lot','an-order','an-po','an-moisture','an-fat','an-ph']
     .forEach(function(id){ set(id,''); });
+  // las medidas vuelven a pedir % / pH (un producto sin Plate las dejaba en n/a)
+  [['an-moisture','%'], ['an-fat','%'], ['an-ph','pH']].forEach(function(x){
+    var e = document.getElementById(x[0]); if(e){ e.placeholder = x[1]; e.title = ''; }
+  });
   var by=document.getElementById('an-by');
   if(by && typeof getInitials==='function') by.textContent = getInitials();
   var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
@@ -231,7 +247,7 @@ function renderAnalysisRows(){
 
   var sum = document.getElementById('an-summary');
   if(sum){
-    var full = list.filter(analysisComplete).length;
+    var full = list.filter(analysisDone).length;
     var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
     var k = function(v, n, rot, tono, icono){
       return kpiCard(n, rot, {tono:tono, icono:icono, on:anView===v,
@@ -251,8 +267,8 @@ function renderAnalysisRows(){
     return;
   }
   var vista = list.filter(function(a){
-    if(anView === 'complete') return analysisComplete(a);
-    if(anView === 'partial')  return !analysisComplete(a);
+    if(anView === 'complete') return analysisDone(a);
+    if(anView === 'partial')  return !analysisDone(a);
     if(anView === 'plates')   return typeof ymDone === 'function' && ymDone(a);
     return true;
   });
@@ -291,9 +307,11 @@ function anRowHTML(a, i){
   // Lo que se sale del objetivo del producto se pinta al escribirlo, no al
   // guardarlo: quien teclea 6.0 en un pH de 4.9 a 5.5 lo ve en ese momento.
   var prod = (typeof findProduct==='function') ? findProduct(a.product) : null;
+  var sinTest = !!(prod && prod.plate === false);
   var cell = function(field, val, ph){
     var fuera = (typeof outOfTarget==='function') && outOfTarget(prod, field, val);
-    return '<input class="cell num'+(fuera?' out':'')+'" inputmode="decimal" placeholder="'+ph+'" '+
+    return '<input class="cell num'+(fuera?' out':'')+'" inputmode="decimal" placeholder="'+(sinTest ? 'n/a' : ph)+'" '+
+      (sinTest && !fuera ? 'title="No plate: Moisture, Fat and pH are not tested for this product" ' : '')+
       'data-f="'+field+'" value="'+esc(val==null?'':val)+'" '+
       (fuera ? 'title="Out of the product target" ' : '')+
       'oninput="anMarkTarget(this,'+a.id+',\''+field+'\')" '+
@@ -311,7 +329,7 @@ function anRowHTML(a, i){
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
     '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
     '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
-    '<td class="soft">'+esc(a.testedBy||'\u2014')+'</td>'+
+    '<td class="soft" id="an-by-'+a.id+'">'+esc(a.testedBy||'\u2014')+'</td>'+
     '<td>'+saveBtn("saveAnRow("+a.id+",this)")+'</td>'+
     '<td><button class="run-del" onclick="deleteAnalysis('+a.id+')" title="Delete">'+
       '<span data-icon="close"></span></button></td>'+
@@ -329,6 +347,7 @@ function saveAnalysisFields(id, obj){
     if(typeof logAnalysisChange==='function') logAnalysisChange(a, f, a[f], nv);
     a[f] = nv;
   });
+  anStampTester(a);
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '\u2014';
   saveDB(db,'analysis');
@@ -345,6 +364,7 @@ function setAnalysisCell(id, field, value){
   var nv = String(value==null?'':value).trim();
   if(typeof logAnalysisChange==='function') logAnalysisChange(a, field, a[field], nv);
   a[field] = nv;
+  anStampTester(a);
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db,'analysis');
@@ -353,11 +373,20 @@ function setAnalysisCell(id, field, value){
   if(typeof refreshRunViews==='function') refreshRunViews();
 }
 
+// La fila se puede cargar sin resultados y testearse despues: quien testea es
+// el que pone el primer resultado, no quien cargo el producto
+function anStampTester(a){
+  if(!a || a.testedBy || !anHasResults(a) || typeof getInitials!=='function') return;
+  a.testedBy = getInitials();
+  var c = document.getElementById('an-by-'+a.id);
+  if(c) c.textContent = a.testedBy;
+}
+
 function anRefreshCounts(){
   var sum = document.getElementById('an-summary');
   if(!sum || !sum.children.length) return;
   var list = analysisResults();
-  var full = list.filter(analysisComplete).length;
+  var full = list.filter(analysisDone).length;
   var plate = (typeof ymDone==='function') ? list.filter(ymDone).length : 0;
   var vals = [list.length, full, list.length-full, plate];
   for(var i=0;i<vals.length;i++){
@@ -380,6 +409,13 @@ function saveAnRow(id, btn){
 function onAnalysisProduct(){
   var num = normNumber(document.getElementById('an-product').value);
   var p = findProduct(num);
+  var sinTest = !!(p && p.plate === false);
+  [['an-moisture','%'], ['an-fat','%'], ['an-ph','pH']].forEach(function(x){
+    var e = document.getElementById(x[0]); if(!e) return;
+    e.placeholder = sinTest ? 'n/a' : x[1];
+    if(sinTest) e.title = 'No plate: Moisture, Fat and pH are not tested for this product';
+    else if(e.title.indexOf('No plate') === 0) e.title = '';
+  });
   var ch = document.getElementById('an-cheese');
   if(p && ch && !ch.value) ch.value = p.name || '';
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
@@ -413,8 +449,9 @@ function saveAnalysis(){
   var date = g('an-date') || localDateStr();
   var product = normNumber(g('an-product'));
   if(!product){ toast('Enter the product number'); return; }
+  // Los resultados NO son obligatorios: muchas veces se cargan primero los
+  // productos y se testean despues, en la misma fila (pedido del usuario)
   var moisture=g('an-moisture'), fat=g('an-fat'), ph=g('an-ph');
-  if(!moisture && !fat && !ph){ toast('Enter at least one measurement'); return; }
 
   var seq = anSeqWanted(date.slice(0,4));
   var repetido = getAnalyses().some(function(a){
@@ -443,7 +480,7 @@ function saveAnalysis(){
     po: g('an-po'),
     moisture: moisture, fat: fat, ph: ph,
     yeast: '', mold: '',                 // los llena Yeast & Mold a los 5 días
-    testedBy: (typeof getInitials==='function') ? getInitials() : '',
+    testedBy: (moisture || fat || ph) && typeof getInitials==='function' ? getInitials() : '',
     runId: window._anRunId || null,
     createdAt: localISOStr(),
     createdBy: currentUser ? currentUser.name : '—'
@@ -462,7 +499,8 @@ function saveAnalysis(){
   if(typeof fillRunLotsFromAnalyses==='function') fillRunLotsFromAnalyses();
   resetAnalysisRow();
   var pe=document.getElementById('an-product'); if(pe) pe.focus();
-  toast('Analysis #'+rec.seq+' saved');
+  toast('Analysis #'+rec.seq+' saved'+
+        (anHasResults(rec) || analysisNoTests(rec) ? '' : ' · add the results when it is tested'));
   renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
   if(codigoNuevo && p) anOfferLink(p, codigoNuevo);
