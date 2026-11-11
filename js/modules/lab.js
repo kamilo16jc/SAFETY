@@ -162,20 +162,22 @@ function labRowHTML(r, i){
   var ready = labReady(r);
   var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
   var suyos = (typeof labTestsOf==='function') ? labTestsOf(p, c) : ((c && c.tests) || []);
-  // Sin tests no hay nada que mandar, y el operador tiene que saber por que
+  // la casilla de composite del cliente (no es un punto: es como se manda).
+  // Hay clientes que SOLO piden Composite (Litehouse, 11 nov 2026): tambien van al lab.
+  var comp = (typeof labCompositeOf==='function') ? labCompositeOf(c) : [];
+  var vaAlLab = suyos.length > 0 || comp.length > 0;
+  // Sin nada que pedir no hay que mandar, y el operador tiene que saber por que
   // esa fila no le saca forma
-  var status = !suyos.length ? '<span class="soft">No lab tests</span>'
+  var status = !vaAlLab ? '<span class="soft">No lab tests</span>'
              : r.labSent ? '<span class="pill ok">Sent</span>'
              : !r.lot ? '<span class="pill bad">Pending · LOT missing</span>'
              : !r.collected ? '<span class="pill bad">Pending · not collected</span>'
              : '<span class="pill warn">Pending</span>';
-  var tests = (typeof testDotsHTML==='function')
-    ? testDotsHTML(suyos)
-    : (suyos.length ? esc(suyos.join(', ')) : '\u2014');
-  // la casilla de composite del cliente (no es un punto: es como se manda)
-  var comp = (typeof labCompositeOf==='function') ? labCompositeOf(c) : [];
-  if(comp.length && suyos.length){
-    tests += ' <span class="tag comp-tag" title="'+esc(comp[0])+'">'+
+  var tests = suyos.length
+    ? ((typeof testDotsHTML==='function') ? testDotsHTML(suyos) : esc(suyos.join(', ')))
+    : (comp.length ? '' : '—');
+  if(comp.length){
+    tests += (suyos.length ? ' ' : '')+'<span class="tag comp-tag" title="'+esc(comp[0])+'">'+
              esc(comp[0].replace(/^composite\s*:?\s*/i, 'Composite '))+'</span>';
   }
   return '<tr'+(r.labSent?' class="done"':'')+'>'+
