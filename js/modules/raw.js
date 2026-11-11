@@ -3,8 +3,9 @@
 // una fecha, de que es la muestra, Moisture / Fat / pH / aw, Yeast / Mold y
 // quien lo hizo. Lo que cambia es el encabezado de cada una.
 //
-//   raw     Queso que llega de proveedores. La muestra del dia se enumera con
-//           letra (A, B, C...) y el codigo es el que viene en el material.
+//   raw     Queso que llega de proveedores. Cada muestra lleva una letra que
+//           sigue a la ultima capturada (M, N, O...) y el codigo es el que
+//           viene en el material.
 //   dry     Producto seco del edificio 1935, por secador.
 //   formag  Produccion propia, por lote.
 //   rd      Muestras de proveedores y competencia, para desarrollo.
@@ -226,18 +227,23 @@ function toggleRawExtra(){
   renderRawRows();
 }
 
-// La letra que sigue para la muestra del dia (A, B, C...)
-function nextSampleLetter(day){
-  var usadas = {};
+// La letra que sigue para la muestra RAW: la siguiente a la ULTIMA que se
+// capturo (orden de captura, no alfabetico). La letra de arranque la elige el
+// operador: si empieza en la M, la que sigue es la N, luego la O... y si
+// escribe otra a mano, la cuenta sigue desde esa. Despues de la Z, la A.
+function rawLetterAfter(s){
+  var t = String(s==null?'':s).trim().toUpperCase();
+  if(!/^[A-Z]$/.test(t)) return '';
+  return t==='Z' ? 'A' : String.fromCharCode(t.charCodeAt(0)+1);
+}
+function nextSampleLetter(){
+  var ultimo = null, tUlt = -Infinity;
   getRawRecords().forEach(function(r){
-    if(r.section==='raw' && String(r.date||'').slice(0,10)===day && r.sample)
-      usadas[String(r.sample).trim().toUpperCase()] = 1;
+    if(!r || r.section!=='raw' || !rawLetterAfter(r.sample)) return;
+    var t = xlEntryTime(r);
+    if(t >= tUlt){ tUlt = t; ultimo = r; }
   });
-  for(var i=0;i<26;i++){
-    var L = String.fromCharCode(65+i);
-    if(!usadas[L]) return L;
-  }
-  return 'A'+Object.keys(usadas).length;
+  return ultimo ? rawLetterAfter(ultimo.sample) : 'A';
 }
 
 function rawFilters(){
@@ -328,8 +334,8 @@ function resetRawRow(){
   c.medidas.forEach(function(x){ set('rw-n-'+x.f, ''); });
   RAW_EXTRA.forEach(function(x){ set('rw-n-'+x.f, ''); });
   set('rw-n-notes','');
-  // En RAW las muestras del dia van por letra, asi que se propone la siguiente
-  if(rawSection==='raw') set('rw-n-sample', nextSampleLetter(hoy));
+  // En RAW las muestras van por letra: se propone la que sigue a la ultima
+  if(rawSection==='raw') set('rw-n-sample', nextSampleLetter());
   var by = document.getElementById('rw-n-by');
   if(by && typeof getInitials==='function') by.textContent = getInitials();
   renderRawDatalists();
@@ -428,6 +434,7 @@ function saveRawRecord(){
     createdAt: localISOStr()
   };
   c.ident.forEach(function(x){ rec[x.f] = g(x.f); });
+  if(rawSection==='raw' && /^[a-z]$/.test(rec.sample)) rec.sample = rec.sample.toUpperCase();
   c.medidas.forEach(function(x){ rec[x.f] = g(x.f); });
   if(rawExtra) c.extra.forEach(function(x){ var val = g(x.f); if(val) rec[x.f] = val; });
   if(c.cfg.notas) rec.notes = g('notes');
