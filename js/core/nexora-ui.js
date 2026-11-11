@@ -193,3 +193,106 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
   ['focusout', 'scroll', 'click'].forEach(function(ev){ document.addEventListener(ev, quitar, true); });
 })();
+
+// ===== HOJAS COMO EXCEL (pedido del usuario, 10 nov 2026) =====
+// Las flechas del teclado se mueven de celda en celda en todas las hojas:
+//   ↑ ↓   a la celda de arriba / abajo en la misma columna
+//   ← →   a la de al lado, cuando el cursor ya esta en la orilla del texto
+//   Enter en una fila guardada: a la de abajo (y se guarda, como en Excel)
+// Al llegar a una celda se selecciona lo que tiene: lo que se escriba lo
+// reemplaza. Las fechas y las listas desplegables conservan sus flechas.
+// Un clic en una parte de la hoja donde no se escribe: las flechas mueven la hoja.
+(function(){
+  function editable(el){
+    return !!el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && !el.disabled && !el.readOnly &&
+           el.type !== 'hidden' && el.type !== 'checkbox' && el.type !== 'radio' && el.offsetParent !== null;
+  }
+  function celdaDe(el){
+    var td = el && el.closest ? el.closest('td') : null;
+    return (td && td.closest('table.sheet')) ? td : null;
+  }
+  // La columna "de verdad" de una celda (las de la fila nueva pueden abarcar varias)
+  function colDe(td){
+    var c = 0, x = td.previousElementSibling;
+    while(x){ c += x.colSpan || 1; x = x.previousElementSibling; }
+    return c;
+  }
+  function tdEnCol(tr, col){
+    var c = 0;
+    for(var i = 0; i < tr.cells.length; i++){
+      var td = tr.cells[i], n = td.colSpan || 1;
+      if(col >= c && col < c + n) return td;
+      c += n;
+    }
+    return null;
+  }
+  function controlDe(td){
+    if(!td) return null;
+    var l = td.querySelectorAll('input,select,textarea');
+    for(var i = 0; i < l.length; i++) if(editable(l[i])) return l[i];
+    return null;
+  }
+  function ir(el){
+    el.focus({preventScroll:true});
+    try { el.scrollIntoView({block:'nearest', inline:'nearest'}); } catch(e){}
+    try { if(el.select && el.tagName !== 'SELECT') el.select(); } catch(e){}
+  }
+  function vertical(el, dir){
+    var td = celdaDe(el), tabla = td.closest('table'), col = colDe(td), filas = [];
+    for(var b = 0; b < tabla.tBodies.length; b++)
+      for(var r = 0; r < tabla.tBodies[b].rows.length; r++) filas.push(tabla.tBodies[b].rows[r]);
+    for(var j = filas.indexOf(td.parentElement) + dir; j >= 0 && j < filas.length; j += dir){
+      var c = controlDe(tdEnCol(filas[j], col));
+      if(c){ ir(c); return true; }
+    }
+    return false;
+  }
+  function horizontal(el, dir){
+    var tr = celdaDe(el).parentElement, l = [];
+    var todos = tr.querySelectorAll('input,select,textarea');
+    for(var i = 0; i < todos.length; i++) if(editable(todos[i])) l.push(todos[i]);
+    var n = l[l.indexOf(el) + dir];
+    if(n){ ir(n); return true; }
+    return false;
+  }
+  // ← → mueven de celda solo en la orilla del texto (o si todo esta seleccionado)
+  function enOrilla(el, dir){
+    if(el.tagName === 'SELECT') return true;
+    try {
+      var s = el.selectionStart, e = el.selectionEnd, L = String(el.value || '').length;
+      if(s == null) return true;
+      if(s === 0 && e === L) return true;
+      return dir < 0 ? (s === 0 && e === 0) : (s === L && e === L);
+    } catch(x){ return true; }
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    var el = e.target;
+    if(!editable(el) || !celdaDe(el)) return;
+    var t = String(el.type || '').toLowerCase();
+    if(t === 'date' || t === 'time' || t === 'datetime-local' || t === 'month' || t === 'week') return;
+    var k = e.key;
+    if(k === 'ArrowUp' || k === 'ArrowDown'){
+      if(el.tagName === 'SELECT') return;                         // escogen la opcion
+      if(el.getAttribute('list') && el.value) return;             // sugerencias (catalogo, ordenes)
+      if(vertical(el, k === 'ArrowDown' ? 1 : -1)) e.preventDefault();
+    } else if(k === 'ArrowLeft' || k === 'ArrowRight'){
+      var d = k === 'ArrowRight' ? 1 : -1;
+      if(enOrilla(el, d) && horizontal(el, d)) e.preventDefault();
+    } else if(k === 'Enter'){
+      var tr = el.closest('tr');
+      if(!tr || tr.classList.contains('newrow') || el.hasAttribute('onkeydown') || el.tagName === 'TEXTAREA') return;
+      if(vertical(el, 1)) e.preventDefault();
+    }
+  });
+  // Clic en una parte de la hoja donde no se escribe: la hoja toma el teclado
+  // y las flechas la mueven (a lo ancho y a lo alto)
+  document.addEventListener('mousedown', function(e){
+    var t = e.target;
+    var w = t && t.closest ? t.closest('.sheet-wrap,.table-scroll') : null;
+    if(!w || t.closest('input,select,textarea,button,a,label,summary,[onclick],[contenteditable]')) return;
+    if(!w.hasAttribute('tabindex')) w.setAttribute('tabindex', '-1');
+    setTimeout(function(){ w.focus({preventScroll:true}); }, 0);
+  });
+})();
+
