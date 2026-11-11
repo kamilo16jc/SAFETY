@@ -463,3 +463,79 @@ body.ui-fluent .splash.on :is(#sp-c-green,#sp-c-white,#sp-c-red,#sp-c-reg) {anim
 @media (max-width:1399px) and (min-width:1024px){
  body.ui-fluent.nx-nav-auto .screen,body.ui-fluent.nx-nav-auto.snav-open .screen {padding-left:24px}
 }
+
+/* ===== Bitacora de una muestra (COA › Status, js/modules/coa-log.js) =====
+   Panel que entra por la derecha, con la misma piel del sistema */
+.st-row{cursor:pointer}
+.st-row:hover td{background:var(--surface2)}
+.st-cheese{font-size:11.5px}
+.st-exp{white-space:nowrap}
+.st-exp .pill{margin-left:4px}
+.st-lupa{width:30px;height:30px}
+body.nx-log-abierto{overflow:hidden}
+.nx-log-ov{position:fixed;inset:0;z-index:9000}
+.nx-log-ov[hidden]{display:none}
+.nx-log-scrim{position:absolute;inset:0;background:#132b4240;backdrop-filter:blur(2px);animation:nxlog-in .2s ease}
+.nx-log{position:absolute;top:0;right:0;bottom:0;width:min(580px,100%);display:flex;flex-direction:column;
+  background:var(--bg);border-left:1px solid var(--border);box-shadow:-18px 0 50px #132b4224;
+  font-family:var(--font);color:var(--text);animation:nxlog-slide .28s var(--nx-ease)}
+.nx-log:focus{outline:none}
+.nx-log-head{display:flex;gap:14px;align-items:flex-start;padding:22px 24px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.nx-log-who{flex:1;min-width:0}
+.nx-log-eyebrow{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);font-weight:600}
+.nx-log-head h2{margin:4px 0 10px;font-size:21px;font-weight:600;letter-spacing:-.4px;line-height:1.25}
+.nx-log-head h2 small{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0}
+.nx-log-chips{display:flex;flex-wrap:wrap;gap:6px}
+.nx-log-chips span{font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--surface2);color:var(--muted)}
+.nx-log-chips b{color:var(--text);font-weight:600}
+.nx-log-x{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0}
+.nx-log-x:hover{color:var(--text);background:var(--surface2)}
+.nx-log-body{flex:1;overflow-y:auto;padding:18px 24px 32px;scrollbar-width:thin}
+.nx-log-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.nx-log-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;min-width:0}
+.nx-log-card small{display:block;font-size:10.5px;color:var(--dim);margin-bottom:5px;letter-spacing:.2px}
+.nx-log-card b{display:block;font-size:14.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nx-log-card em{display:block;font-style:normal;font-size:11px;margin-top:3px;color:var(--muted);line-height:1.35}
+.nx-log-card.ok{border-color:color-mix(in srgb,var(--pass) 30%,var(--border))}
+.nx-log-card.ok b{color:var(--pass)}
+.nx-log-card.bad b{color:var(--fail)}
+.nx-log-card.warn b{color:var(--warn)}
+.nx-log-coa{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:12px 14px;margin-bottom:22px}
+.nx-log-coa .txt{flex:1;min-width:200px;font-size:12.5px;color:var(--muted);line-height:1.45}
+.nx-log-coa .txt b{color:var(--text)}
+.nx-log-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:9px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);font:600 12px var(--font);cursor:pointer}
+.nx-log-btn:hover{background:var(--surface2)}
+.nx-log-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.nx-log-btn.pri:hover{background:var(--accent-deep)}
+.nx-log-btn svg{width:15px;height:15px}
+.nx-log-h{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);font-weight:600;margin:4px 0 12px}
+.nx-tl{list-style:none;margin:0 0 20px;padding:0}
+.nx-tl li{position:relative;padding:0 0 18px 44px;min-height:34px}
+.nx-tl li::before{content:'';position:absolute;left:15px;top:34px;bottom:2px;width:2px;border-radius:2px;background:var(--border)}
+.nx-tl li:last-child::before{display:none}
+.nx-tl-dot{position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent-tint);color:var(--accent)}
+.nx-tl-dot svg{width:15px;height:15px}
+.nx-tl li.ok .nx-tl-dot{background:var(--accent);color:var(--accent-fg)}
+.nx-tl li.warn .nx-tl-dot{background:var(--warn-tint);color:var(--warn)}
+.nx-tl li.pend .nx-tl-dot{background:var(--surface);border:1.5px dashed var(--border);color:var(--dim)}
+.nx-tl li.late .nx-tl-dot{background:var(--fail-tint);border:0;color:var(--fail)}
+.nx-tl li.pend .nx-tl-t{color:var(--muted)}
+.nx-tl li.late .nx-tl-d span:last-child{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 35%,var(--border))}
+.nx-tl-t{font-size:13.5px;font-weight:600;padding-top:6px;line-height:1.3}
+.nx-tl-m{font-size:11.5px;color:var(--dim);margin-top:2px}
+.nx-tl-d{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.nx-tl-d span{font-size:11px;padding:2px 8px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.nx-log-nota{font-size:11.5px;color:var(--dim);margin:0;line-height:1.5}
+@keyframes nxlog-slide{from{transform:translateX(36px);opacity:0}to{transform:none;opacity:1}}
+@keyframes nxlog-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.nx-log,.nx-log-scrim{animation:none}}
+@media (max-width:700px){
+  .nx-log-sum{grid-template-columns:1fr 1fr}
+  .nx-log-head,.nx-log-body{padding-left:16px;padding-right:16px}
+}
+@media print{.nx-log-ov{display:none!important}}
+

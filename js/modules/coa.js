@@ -745,11 +745,12 @@ function renderCoaStatus(){
 
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
-      '<th class="rn">#</th><th>LOT</th><th>Customer</th><th>PO</th><th>Order</th>'+
-      '<th>Plate</th><th>Lab report</th><th>Status</th>'+
+      '<th class="rn">#</th><th>LOT</th><th>Product</th><th>Customer</th><th>PO</th><th>Order</th>'+
+      '<th>Expected</th><th>Status</th><th></th>'+
     '</tr></thead><tbody>'+
     list.map(function(a,i){ return stRowHTML(a,i+1); }).join('')+
     '</tbody></table></div>';
+  renderIcons(host);
 }
 
 function stRowHTML(a, i){
@@ -777,15 +778,20 @@ function stRowHTML(a, i){
              : st==='qa'   ? '<span class="pill warn">Pending QA Lab</span>'
              : '<span class="pill bad">Pending Lab</span>';
 
-  return '<tr'+(st==='done'?' class="done"':'')+'>'+
+  // La placa y el reporte ya no van en celdas: estan en la bitacora (la lupa)
+  void plate; void lab;
+  return '<tr class="st-row'+(st==='done'?' done':'')+'" onclick="stLogOpen('+a.id+')">'+
     '<td class="rn">'+i+'</td>'+
     '<td class="code">'+v(analysisLot(a))+'</td>'+
+    '<td><span class="code">'+v(a.product)+'</span>'+(a.cheese ? ' <span class="soft st-cheese">'+esc(a.cheese)+'</span>' : '')+'</td>'+
     '<td>'+v(a.customer)+'</td>'+
     '<td class="soft">'+v(a.po)+'</td>'+
     '<td class="soft">'+v(a.order)+'</td>'+
-    '<td>'+plate+'</td>'+
-    '<td>'+lab+'</td>'+
+    '<td class="st-exp">'+(typeof stExpectedHTML==='function' ? stExpectedHTML(a) : '\u2014')+'</td>'+
     '<td>'+status+'</td>'+
+    '<td><button class="ico-btn sm st-lupa" type="button" data-tip="Open the sample log" '+
+      'aria-label="Open the log of '+esc(a.product||'this sample')+'" onclick="event.stopPropagation();stLogOpen('+a.id+')">'+
+      '<span data-icon="search"></span></button></td>'+
   '</tr>';
 }
 
@@ -793,12 +799,14 @@ function exportCoaStatusCSV(){
   var list = xlEntryOrder(stRows().filter(function(a){ return stView==='all' || stState(a)===stView; }));
   if(!list.length){ toast('Nothing to export for this view'); return; }
   var label = {qa:'Pending QA Lab', lab:'Pending Lab', done:'Complete'};
-  var out = [['LOT','Customer','PO','Order','Plate read','Plate due','Lab report','Status']];
+  var out = [['LOT','Product','Customer','PO','Order','Expected','Plate read','Plate due','Lab report','COA','Status']];
   list.forEach(function(a){
-    out.push([analysisLot(a), a.customer||'', a.po||'', a.order||'',
+    var ex = (typeof stExpected==='function') ? stExpected(a) : null;
+    out.push([analysisLot(a), a.product||'', a.customer||'', a.po||'', a.order||'', ex ? ex.fecha : '',
       stPlateDone(a) ? String(a.ymAt||'').slice(0,10) : '',
       stPlateDone(a) ? '' : (typeof ymDueDate==='function' ? ymDueDate(a) : ''),
       stLabDone(a) ? (a.result||'in') : '',
+      a.coaNo ? a.coaNo+(a.coaRev ? ' R'+a.coaRev : '') : '',
       label[stState(a)]]);
   });
   downloadCSV('coa-status-'+localDateStr()+'.csv', out);
