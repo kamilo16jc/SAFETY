@@ -1345,6 +1345,14 @@ body.logged-out .topstack{display:none}
 
 /* List Samples: el LOT se escribe o se escanea en la misma celda */
 .sl-lotbox{display:flex;align-items:center;gap:6px;min-width:150px}
+/* Sample Analysis: el numero de producto con la camara que lee la etiqueta */
+.an-prodbox{display:flex;align-items:center;gap:6px;min-width:150px}
+.an-prodbox input.cell{flex:1;min-width:0}
+.an-prodbox .ico-btn{width:32px;height:32px}
+.an-prodbox .ico-btn.busy{cursor:progress;animation:an-cam-pulso 1s ease-in-out infinite}
+@keyframes an-cam-pulso{50%{opacity:.3}}
+.sheet input.cell.from-label{background:var(--accent-tint);border-color:var(--accent)}
+.sheet input.cell.lr-check{background:var(--warn-tint);border-color:var(--warn)}
 .sl-lotbox input.cell{flex:1;min-width:0}
 .sl-cust-in{display:none}
 

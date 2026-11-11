@@ -199,6 +199,13 @@ function onScanResult(code){
   closeScanner();
   playAlert('pass');
   var screen = scanScreen || 'weight';
+  // Codigo GS1 de caja (GTIN + lote + fechas): el producto es el GTIN. Antes
+  // se guardaba la cadena completa y al dia siguiente, con otro lote, ya no
+  // se reconocia. La busqueda sigue recibiendo el codigo tal cual.
+  if(screen!=='search' && typeof lrGS1==='function'){
+    var gs1 = lrGS1(code);
+    if(gs1 && gs1['01']) code = gs1['01'];
+  }
   // El producto de una corrida (List Samples / Production Schedule):
   // "collect:<id>" confirma que es ese producto y lo marca recogido
   if(screen.indexOf('collect:')===0){

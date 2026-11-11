@@ -86,6 +86,7 @@ function anCollectedRun(product, day){
 function anLotTyped(e){
   delete e.dataset.auto;
   e.classList.remove('from-run');
+  anLabelMark(e, false);
   e.title = '';
 }
 
@@ -179,8 +180,13 @@ function buildAnalysisSheet(){
         'aria-label="Analysis number" title="Analysis number. Change it to set where the count continues" '+
         'oninput="anSeqTyped(this)"></td>'+
       '<td><input type="date" class="cell" id="an-date" onchange="anDateChanged()"></td>'+
-      '<td><input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
-        'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()"></td>'+
+      '<td><div class="an-prodbox">'+
+        '<input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
+          'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()">'+
+        '<button type="button" class="ico-btn an-cam" id="an-cam" data-tip="Read the label from a photo" '+
+          'aria-label="Read the label from a photo" onclick="anLabelPick()"><span data-icon="camera"></span></button>'+
+        '<input type="file" id="an-label-input" accept="image/*" capture="environment" hidden onchange="anLabelRead(this)">'+
+      '</div></td>'+
       '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
       '<td class="soft" id="an-customer-cell">—</td>'+
       '<td><input class="cell" id="an-lot" placeholder="LOT" oninput="anLotTyped(this)"></td>'+
@@ -197,6 +203,7 @@ function buildAnalysisSheet(){
       '<td></td>'+
     '</tr></tbody>'+
     '<tbody id="an-body"></tbody></table></div>';
+  if(typeof renderIcons==='function') renderIcons(host);
   resetAnalysisRow();
 }
 
@@ -210,6 +217,8 @@ function resetAnalysisRow(){
   if(by && typeof getInitials==='function') by.textContent = getInitials();
   var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
   var lt=document.getElementById('an-lot'); if(lt) anLotTyped(lt);
+  ['an-product','an-order'].forEach(function(id){ var e=document.getElementById(id); if(e) anLabelMark(e, false); });
+  anLabelCode = '';
   var sq=document.getElementById('an-seq'); if(sq) delete sq.dataset.manual;
   window._anRunAuto = false;
   anSuggestSeq();
@@ -416,6 +425,7 @@ function saveAnalysis(){
 
   var p = findProduct(product);
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
+  var codigoNuevo = anLabelCode;
   var db = getDB(); if(!db.analysis) db.analysis = [];
   var rec = {
     id: newRecordId(),
@@ -455,6 +465,95 @@ function saveAnalysis(){
   toast('Analysis #'+rec.seq+' saved');
   renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
+  if(codigoNuevo && p) anOfferLink(p, codigoNuevo);
+}
+
+// ---- Leer la etiqueta con la camara (js/modules/label-read.js) ----
+// Una foto de la etiqueta llena Product (y con el Cheese y Customer), LOT y
+// Order. No guarda nada: QA revisa la fila y escribe los resultados. Lo que
+// llena la foto queda teñido; al escribir encima se quita.
+var anLabelCode = '';          // codigo de barras de la foto que no esta en el catalogo
+function anLabelMark(el, on, tip, revisar){
+  el.classList.toggle('from-label', !!on && !revisar);
+  el.classList.toggle('lr-check', !!on && !!revisar);
+  if(on) el.title = tip || ''; else el.removeAttribute('title');
+}
+function anLabelPick(){
+  var i = document.getElementById('an-label-input');
+  if(i){ i.value = ''; i.click(); }
+}
+function anLabelBusy(on){
+  var b = document.getElementById('an-cam');
+  if(!b) return;
+  b.classList.toggle('busy', on); b.disabled = on;
+  b.setAttribute('aria-busy', String(on));
+}
+function anLabelRead(input){
+  var f = input && input.files && input.files[0];
+  if(!f) return;
+  if(typeof leerEtiqueta !== 'function'){ toast('The label reader is not available'); return; }
+  anLabelBusy(true);
+  toast('Reading the label…');
+  var day = (document.getElementById('an-date')||{}).value || localDateStr();
+  wpCargarImagen(f).then(function(img){
+    return leerEtiqueta(img, day).then(function(r){ if(img.close) img.close(); return r; });
+  }).then(anLabelFill).catch(function(){
+    toast('The reader could not open that photo. Type the data instead.');
+  }).then(function(){ anLabelBusy(false); });
+}
+function anLabelFill(r){
+  var prod = document.getElementById('an-product'), lot = document.getElementById('an-lot'),
+      ord = document.getElementById('an-order');
+  var dice = [];
+  anLabelCode = '';
+  if(r.numero && prod){
+    prod.value = r.numero;
+    onAnalysisProduct();                 // Cheese, Customer y el LOT de la muestra recolectada
+    anLabelMark(prod, true, r.comoProducto === 'text' ? 'Product read from the label text' :
+                            'Product from the barcode on the label');
+    prod.addEventListener('input', function(){ anLabelMark(prod, false); }, {once:true});
+    dice.push('Product '+r.numero+(r.producto ? '' : ' (not in the catalog)'));
+  } else if(r.codigo){
+    // un codigo que el catalogo no conoce: se liga al guardar con el producto que escriba QA
+    anLabelCode = r.codigo;
+    dice.push('barcode '+r.codigo+' is not in the catalog, type the product');
+  }
+  if(r.lot && lot){
+    var run = (lot.dataset.auto && lot.classList.contains('from-run')) ? lot.dataset.auto : '';
+    lot.value = r.lot;
+    delete lot.dataset.auto;
+    lot.classList.remove('from-run');
+    var f = (r.lotInfo && r.lotInfo.fechaStr) ? fmtDate(r.lotInfo.fechaStr) : '';
+    var tip = r.lotRevisar
+      ? 'Read from the photo: '+r.lot+' is the LOT of '+f+', not today, yesterday or the next day. Check it against the label.'
+      : 'LOT read from the label'+(f ? ' ('+f+')' : '');
+    if(run && run !== r.lot) tip += ' The collected sample had LOT '+run+'.';
+    anLabelMark(lot, true, tip, r.lotRevisar);
+    dice.push('LOT '+r.lot+(r.lotRevisar ? ' (check it)' : ''));
+  }
+  if(r.order && ord){
+    ord.value = r.order;
+    anLabelMark(ord, true, 'Order number printed next to the LOT');
+    ord.addEventListener('input', function(){ anLabelMark(ord, false); }, {once:true});
+    dice.push('Order '+r.order);
+  }
+  if(!dice.length){ toast('Nothing could be read on that label. Take it closer, with the barcode, or type it.'); return; }
+  toast('Label: '+dice.join(' · '));
+  anMarkNewRow();
+}
+// Un codigo de barras nuevo: con permiso de QA queda ligado al producto y la
+// proxima foto de esa etiqueta ya trae el producto sola
+function anOfferLink(p, codigo){
+  if(typeof showGuardModal !== 'function' || typeof linkBarcode !== 'function') return;
+  showGuardModal({
+    icon:'barcode',
+    title:'Link this barcode to '+p.number+'?',
+    detail:'The label photo had barcode '+codigo+', which is not in the catalog yet.',
+    ask:'If '+p.number+(p.name ? ' · '+p.name : '')+' is the product on that label, the next photo fills it by itself.',
+    primaryLabel:'Not now', onPrimary:closeDupModal,
+    secondaryLabel:'Link barcode',
+    onSecondary:function(){ closeDupModal(); linkBarcode(p, codigo); toast('Barcode linked to '+p.number); }
+  });
 }
 
 function deleteAnalysis(id){

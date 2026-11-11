@@ -473,6 +473,11 @@ function findProduct(code){
   var list = getProducts();
   return list.find(function(p){ return normNumber(p.number)===c; }) ||
          list.find(function(p){ return (p.barcodes||[]).some(function(b){ return normNumber(b)===c; }); }) ||
+         // codigos GS1 guardados completos (con lote y fechas) antes de que el
+         // escaner se quedara solo con el GTIN: valen por su GTIN
+         (typeof lrGS1==='function' ? list.find(function(p){
+           return (p.barcodes||[]).some(function(b){ var g = lrGS1(b); return !!(g && g['01'] && normNumber(g['01'])===c); });
+         }) : null) ||
          null;
 }
 
