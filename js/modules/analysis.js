@@ -203,8 +203,8 @@ function buildAnalysisSheet(){
       '<td class="soft" id="an-customer-cell">—</td>'+
       '<td><input class="cell" id="an-lot" placeholder="LOT" oninput="anLotTyped(this)"></td>'+
 
-      '<td><input class="cell" id="an-order" placeholder="Order"></td>'+
-      '<td><input class="cell" id="an-po" placeholder="PO"></td>'+
+      '<td><input class="cell" id="an-order" placeholder="Order" oninput="anOrdenEscrita(this)"></td>'+
+      '<td><input class="cell" id="an-po" placeholder="PO" oninput="anOrdenEscrita(this)"></td>'+
       '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
       '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
       '<td class="num"><input class="cell num" id="an-ph" inputmode="decimal" placeholder="pH" oninput="anMarkNewRow()"></td>'+
@@ -234,6 +234,7 @@ function resetAnalysisRow(){
   var c=document.getElementById('an-customer-cell'); if(c) c.textContent='—';
   var lt=document.getElementById('an-lot'); if(lt) anLotTyped(lt);
   ['an-product','an-order'].forEach(function(id){ var e=document.getElementById(id); if(e) anLabelMark(e, false); });
+  ['an-order','an-po'].forEach(function(id){ var e=document.getElementById(id); if(e) anOrdenEscrita(e); });
   anLabelCode = '';
   var sq=document.getElementById('an-seq'); if(sq) delete sq.dataset.manual;
   window._anRunAuto = false;
@@ -308,6 +309,11 @@ function anRowHTML(a, i){
   // guardarlo: quien teclea 6.0 en un pH de 4.9 a 5.5 lo ve en ese momento.
   var prod = (typeof findProduct==='function') ? findProduct(a.product) : null;
   var sinTest = !!(prod && prod.plate === false);
+  // Order y PO: se pueden poner despues (muchas veces llegan cuando ya se cargo el producto)
+  var txt = function(field, val, ph){
+    return '<input class="cell" placeholder="'+ph+'" data-f="'+field+'" value="'+esc(val==null?'':val)+'" '+
+      'onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
+  };
   var cell = function(field, val, ph){
     var fuera = (typeof outOfTarget==='function') && outOfTarget(prod, field, val);
     return '<input class="cell num'+(fuera?' out':'')+'" inputmode="decimal" placeholder="'+(sinTest ? 'n/a' : ph)+'" '+
@@ -324,8 +330,8 @@ function anRowHTML(a, i){
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
     '<td class="soft">'+esc(a.customer||'—')+'</td>'+
     '<td class="code">'+esc(analysisLot(a)||'—')+'</td>'+
-    '<td class="soft">'+esc(a.order||'—')+'</td>'+
-    '<td class="soft">'+esc(a.po||'—')+'</td>'+
+    '<td>'+txt('order', a.order, 'Order')+'</td>'+
+    '<td>'+txt('po', a.po, 'PO')+'</td>'+
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
     '<td class="num">'+cell('fat', a.fat, '%')+'</td>'+
     '<td class="num">'+cell('ph', a.ph, 'pH')+'</td>'+
@@ -369,6 +375,7 @@ function setAnalysisCell(id, field, value){
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  if(field === 'order' || field === 'po') anShareOrder(a);
   anRefreshCounts();
   if(typeof refreshRunViews==='function') refreshRunViews();
 }
@@ -400,11 +407,95 @@ function anRefreshCounts(){
 function saveAnRow(id, btn){
   var vals = readRowFields(btn);
   if(!vals) return;
-  saveAnalysisFields(id, vals);
+  var a = saveAnalysisFields(id, vals);
+  if(a && ('order' in vals || 'po' in vals)) anShareOrder(a);
   anRefreshCounts();
   if(typeof refreshRunViews==='function') refreshRunViews();
   flashSaved(btn);
 }
+
+// ===== ORDER Y PO DEL CLIENTE =====
+// El Order y el PO son de la orden del cliente, no del producto: los productos
+// de un mismo cliente testeados el mismo dia van en la misma orden (pedido del
+// usuario, 10 nov 2026). Al ponerlos en uno pasan a los demas, SOLO donde estan
+// vacios: lo que ya tiene su propio numero o un COA emitido no se toca.
+function anMismoCliente(a, b){
+  if(a.customerKey && b.customerKey) return a.customerKey === b.customerKey;
+  var n = function(x){ return String(x.customer || '').trim().toLowerCase(); };
+  return !!n(a) && n(a) === n(b);
+}
+function anTieneCliente(a){ return !!(a && (a.customerKey || String(a.customer || '').trim())); }
+function anShareOrder(a){
+  if(!anTieneCliente(a)) return 0;
+  var order = String(a.order || '').trim(), po = String(a.po || '').trim();
+  if(!order && !po) return 0;
+  var day = String(a.date || '').slice(0,10);
+  var db = getDB(), n = 0, quien = currentUser ? currentUser.name : '—';
+  (db.analysis || []).forEach(function(x){
+    if(!x || x.id === a.id || x.coaNo) return;
+    if(String(x.date || '').slice(0,10) !== day || !anMismoCliente(a, x)) return;
+    var cambio = false;
+    [['order', order], ['po', po]].forEach(function(f){
+      if(!f[1] || String(x[f[0]] || '').trim()) return;
+      if(typeof logAnalysisChange==='function') logAnalysisChange(x, f[0], x[f[0]], f[1]);
+      x[f[0]] = f[1]; cambio = true;
+      anPintarCelda(x.id, f[0], f[1]);
+    });
+    if(!cambio) return;
+    x.editedAt = localISOStr(); x.editedBy = quien;
+    if(window.saveToFirebase) window.saveToFirebase('analysis', x);
+    n++;
+  });
+  if(n){
+    saveDB(db, 'analysis');
+    toast((order ? 'Order '+order : '')+(order && po ? ' and ' : '')+(po ? 'PO '+po : '')+
+          ' also set on '+n+' more '+(n === 1 ? 'product' : 'products')+' of '+(a.customer || 'this customer')+
+          ' tested that day');
+  }
+  return n;
+}
+// La celda en pantalla, sin repintar la hoja (no se pierde el foco)
+function anPintarCelda(id, field, val){
+  var e = document.querySelector('#an-body input[data-f="'+field+'"][onchange*="('+id+',"]');
+  if(e && e !== document.activeElement) e.value = val;
+}
+// La orden de ese cliente ese dia, si es una sola (para la fila nueva)
+function anOrdenDelDia(c, day){
+  if(!c) return {};
+  var ref = {customerKey: typeof custKey==='function' ? custKey(c) : '', customer: c.company};
+  var hoy = getAnalyses().filter(function(x){
+    return String(x.date || '').slice(0,10) === day && anMismoCliente(ref, x);
+  });
+  var una = function(f){
+    var v = hoy.map(function(x){ return String(x[f] || '').trim(); }).filter(Boolean)
+               .filter(function(x, i, l){ return l.indexOf(x) === i; });
+    return v.length === 1 ? v[0] : '';
+  };
+  return {order:una('order'), po:una('po')};
+}
+
+// Order y PO de la fila nueva: si ese cliente ya tiene orden ese dia, se trae.
+// Lo que QA escribio no se toca; lo que se trajo cambia si cambia el cliente.
+function anPonerOrdenDelDia(c){
+  var day = (document.getElementById('an-date') || {}).value || localDateStr();
+  var o = anOrdenDelDia(c, day);
+  [['an-order', 'order'], ['an-po', 'po']].forEach(function(x){
+    var e = document.getElementById(x[0]);
+    if(!e) return;
+    var puesto = e.dataset.auto != null && e.value === e.dataset.auto;
+    if(e.value.trim() && !puesto) return;
+    if(e.classList.contains('from-label') || e.classList.contains('lr-check')) return;
+    var v = o[x[1]] || '';
+    e.value = v;
+    if(v){
+      e.dataset.auto = v; e.classList.add('from-run');
+      e.title = 'Same '+(x[1] === 'po' ? 'PO' : 'Order')+' as the other products of '+c.company+' that day. You can change it.';
+    } else {
+      delete e.dataset.auto; e.classList.remove('from-run'); e.title = '';
+    }
+  });
+}
+function anOrdenEscrita(e){ delete e.dataset.auto; e.classList.remove('from-run'); e.title = ''; }
 
 function onAnalysisProduct(){
   var num = normNumber(document.getElementById('an-product').value);
@@ -421,6 +512,7 @@ function onAnalysisProduct(){
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
   var el = document.getElementById('an-customer-cell');
   if(el) el.textContent = c ? c.company : '—';
+  anPonerOrdenDelDia(c);
 
   // El LOT sale de la muestra recolectada de ese producto (Production
   // Schedule / List Samples). Se pone solo, pero se puede cambiar: si QA lo
@@ -503,6 +595,7 @@ function saveAnalysis(){
         (anHasResults(rec) || analysisNoTests(rec) ? '' : ' · add the results when it is tested'));
   renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
+  anShareOrder(rec);
   if(codigoNuevo && p) anOfferLink(p, codigoNuevo);
 }
 
@@ -557,6 +650,7 @@ function anReaderApply(ev){
     dice.push('LOT '+ev.lot+(ev.lotRevisar ? ' (check it)' : ''));
   }
   if(ev.order && ord){
+    anOrdenEscrita(ord);                 // la etiqueta manda sobre la orden traida del cliente
     ord.value = ev.order;
     anLabelMark(ord, true, 'Order number printed next to the LOT, read by the phone');
     ord.addEventListener('input', function(){ anLabelMark(ord, false); }, {once:true});
