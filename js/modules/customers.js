@@ -62,6 +62,9 @@ function custGoesToLab(c){
   if(c.lab != null) return !!c.lab;
   return (c.tests||[]).length > 0 || !!c.prefix;
 }
+// ¿Este cliente pide certificado (COA)? No todos (pedido del usuario, 11 nov
+// 2026). Los clientes de antes no tienen la casilla: siguen pidiendolo.
+function custNeedsCOA(c){ return !c || c.coa !== false; }
 function custLabToggle(on){
   var box = document.getElementById('cu-lab-box');
   if(box) box.hidden = !on;
@@ -102,7 +105,7 @@ function renderCustomers(){
   host.innerHTML = alta +
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Customer</th><th>ID</th><th>Contact</th><th>Phone</th>'+
-      '<th class="num">Products</th><th>Lab tests</th><th></th><th></th>'+
+      '<th class="num">Products</th><th>Lab tests</th><th>COA</th><th></th><th></th>'+
     '</tr></thead><tbody>'+
     list.map(function(c, i){
       var tests = custGoesToLab(c) ? (c.tests||[]).length : 0;
@@ -117,11 +120,12 @@ function renderCustomers(){
         '<td>'+(tests
           ? '<span class="pill warn" title="'+esc((c.tests||[]).join(' · '))+'">'+tests+'</span>'
           : '<span class="soft">—</span>')+'</td>'+
+        '<td>'+(custNeedsCOA(c) ? '<span class="pill ok">Yes</span>' : '<span class="soft">No</span>')+'</td>'+
         '<td><button class="sheet-btn" onclick="editCustomer(\''+esc(k)+'\')">Edit</button></td>'+
         '<td><button class="run-del" title="Delete customer" '+
           'onclick="deleteCustomer(\''+esc(k)+'\')">×</button></td>'+
       '</tr>'+
-      (custOpen===k ? '<tr><td colspan="9">'+custEditorHTML(c)+'</td></tr>' : '');
+      (custOpen===k ? '<tr><td colspan="10">'+custEditorHTML(c)+'</td></tr>' : '');
     }).join('')+
     '</tbody></table></div>';
   renderIcons(host);
@@ -160,6 +164,13 @@ function custEditorHTML(c, nuevo){
           '<option value="dddyy"'+(c.lotFormat==='dddyy'?' selected':'')+'>Day first · DDDYY (today '+
             (typeof lotCodigo==='function' ? lotCodigo(localDateStr(),'dddyy') : '')+')</option>'+
         '</select></div></div>'+
+    '</div>'+
+    // ¿Pide certificado? Si no, sus muestras no salen en COA Generator ni en COA Status
+    '<div class="sub-label">Certificate (COA)</div>'+
+    '<div class="sheet-bar">'+
+      '<label class="lab-check cu-lab-ask"><input type="checkbox" id="cu-coa"'+(custNeedsCOA(c)?' checked':'')+'>'+
+        '<span><b>This customer needs a COA</b><br>'+
+        'Unchecked: its samples are still tested, but they do not show up in COA Generator.</span></label>'+
     '</div>'+
     // Primero la pregunta: van sus muestras al laboratorio? Solo si van se
     // piden la forma y los tests.
@@ -253,6 +264,7 @@ function createCustomer(btn){
     lotFormat: ((document.getElementById('cu-lotfmt')||{}).value === 'dddyy') ? 'dddyy' : '',
     lab: lab.lab,
     tests: lab.tests,
+    coa: (document.getElementById('cu-coa') || {checked:true}).checked !== false,
     targets: {},
     createdBy: currentUser ? currentUser.name : '—',
     createdAt: localISOStr()
@@ -330,6 +342,8 @@ function saveCustomerEdit(id, btn){
   if(num) c.numbered = !!num.checked;
   var lf = document.getElementById('cu-lotfmt');
   if(lf){ if(lf.value === 'dddyy') c.lotFormat = 'dddyy'; else delete c.lotFormat; }
+  var co = document.getElementById('cu-coa');
+  if(co) c.coa = !!co.checked;
   // Sin catalogo cargado no hay casillas: los tests que ya tenia se conservan
   if(document.getElementById('cu-lab')){
     var lab = custLabRead();

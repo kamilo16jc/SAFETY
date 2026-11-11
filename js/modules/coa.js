@@ -312,9 +312,18 @@ function applyCoaFilters(){
 }
 function setCoaView(v){ coaView = v; renderCoa(); }
 
+// ¿Esta muestra lleva certificado? Solo si su cliente lo pide (Customers ›
+// "This customer needs a COA"). Lo que ya se emitio se sigue viendo.
+var coaSinCOA = 0;           // cuantas se dejaron fuera en la ultima consulta
+function coaLleva(a){
+  if(a && a.coaNo) return true;
+  var c = coaCustomerOf(a);
+  return (typeof custNeedsCOA === 'function') ? custNeedsCOA(c && c.company ? c : null) : true;
+}
 function coaRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('coa-from'), to=g('coa-to'), q=(g('coa-search')||'').trim().toLowerCase();
+  coaSinCOA = 0;
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
     // Pendiente aqui es "medido y sin certificar", aunque el dictamen no haya
     // llegado: si solo se salvara lo que ya esta listo, la cola de espera
@@ -322,6 +331,7 @@ function coaRows(){
     var pendiente = !a.coaNo &&
       (typeof analysisComplete!=='function' || analysisComplete(a));
     if(!inScope(a.date, from, to, pendiente)) return false;
+    if(!coaLleva(a)){ coaSinCOA++; return false; }
     if(q){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' '+String(a.coaNo||'')+
@@ -369,7 +379,7 @@ function renderCoa(){
   }
 
   if(!list.length){
-    host.innerHTML = '<div class="sheet-empty">'+
+    host.innerHTML = coaNotaSinCOA() + '<div class="sheet-empty">'+
       (all.length ? 'Nothing in this view for the dates selected.'
                   : 'No records in range. A record can be certified once it has Moisture, Fat '+
                     'and pH captured and a verdict in Lab Results.')+
@@ -377,7 +387,7 @@ function renderCoa(){
     return;
   }
 
-  host.innerHTML =
+  host.innerHTML = coaNotaSinCOA() +
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th></th><th>ID</th><th>Date</th><th>Customer</th><th>Product</th>'+
       '<th class="wide">Cheese</th><th>Order</th><th>PO</th><th>Result</th>'+
@@ -388,6 +398,10 @@ function renderCoa(){
   renderIcons(host);
 }
 
+function coaNotaSinCOA(){
+  return coaSinCOA ? '<div class="sub-label soft coa-nota">'+coaSinCOA+' sample'+(coaSinCOA===1?'':'s')+
+    ' from customers that do not need a COA '+(coaSinCOA===1?'is':'are')+' not listed (Customers › COA).</div>' : '';
+}
 function coaRowHTML(a, i){
   var v = function(x){ return (x==null || x==='') ? '—' : esc(x); };
   var st = coaState(a);
@@ -686,6 +700,7 @@ function stRows(){
   var from=g('st-from'), to=g('st-to'), q=(g('st-search')||'').trim().toLowerCase();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
     if(!inScope(a.date, from, to, stState(a)!=='done')) return false;
+    if(!coaLleva(a)) return false;                // su cliente no pide COA
     if(q){
       var hay=(String(analysisLot(a)||'')+' '+String(a.customer||'')+' '+String(a.po||'')+' '+
                String(a.order||'')+' '+String(a.product||'')).toLowerCase();
