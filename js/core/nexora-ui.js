@@ -38,6 +38,19 @@ function nxTogglePassword(){
   var show=p.type==='password';p.type=show?'text':'password';
   b.setAttribute('aria-pressed',String(show));b.setAttribute('aria-label',show?'Hide password':'Show password');
 }
+// Pantallas de tabla (hoja de captura): en escritorio el menu de la izquierda
+// se esconde solo para que la tabla use todo el ancho y no haya que correr la
+// barra para llegar a las columnas. El boton de arriba lo abre encima, igual
+// que en el telefono; al elegir otra funcion se vuelve a cerrar.
+var NX_SHEET_SCREENS={
+ 'screen-analysis':1,'screen-yeast':1,'screen-lab':1,'screen-raw':1,'screen-dry':1,
+ 'screen-formag':1,'screen-rd':1,'screen-grilling':1,'screen-production':1,
+ 'screen-samplelist':1,'screen-coa':1,'screen-labresults':1,'screen-coastatus':1,
+ 'screen-customers':1,'screen-products':1,'screen-hold':1,'screen-admin':1,'screen-lotsearch':1
+};
+function nxNavAuto(){return document.body.classList.contains('nx-nav-auto');}
+function nxNavDrawer(){return window.innerWidth<1024||nxNavAuto();}
+function nxSheetMode(id){document.body.classList.toggle('nx-nav-auto',!!NX_SHEET_SCREENS[id]);}
 function nxToggleNav(force){
   var open=typeof force==='boolean'?force:!document.body.classList.contains('nx-nav-open');
   document.body.classList.toggle('nx-nav-open',open);
@@ -47,7 +60,7 @@ function nxToggleNav(force){
   if(trigger)trigger.setAttribute('aria-expanded',String(open));
   if(open){
     var first=document.querySelector('#snav button');if(first)first.focus();
-  } else if(trigger && window.innerWidth<1024){trigger.focus({preventScroll:true});}
+  } else if(trigger && nxNavDrawer()){trigger.focus({preventScroll:true});}
 }
 function nxFocusContent(e){
   if(e)e.preventDefault();
@@ -115,6 +128,7 @@ function nxEnhanceScreen(id){
 window.addEventListener('nexora:screen',function(e){
   var open=document.body.classList.contains('nx-nav-open');
   if(open)nxToggleNav(false);
+  nxSheetMode(e.detail);
   nxEnhanceScreen(e.detail);
   if(e.detail==='screen-login'){
     var menu=document.getElementById('user-menu');if(menu)menu.classList.remove('open');
@@ -130,13 +144,13 @@ document.addEventListener('keydown',function(e){
     if(document.body.classList.contains('nx-nav-open'))nxToggleNav(false);
     var m=document.getElementById('user-menu');if(m)m.classList.remove('open');
   }
-  if(e.key==='Tab' && document.body.classList.contains('nx-nav-open') && window.innerWidth<1024){
+  if(e.key==='Tab' && document.body.classList.contains('nx-nav-open') && nxNavDrawer()){
     var buttons=document.querySelectorAll('#snav button'),first=buttons[0],last=buttons[buttons.length-1];
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
   }
 });
-window.addEventListener('resize',function(){if(window.innerWidth>=1024 && document.body.classList.contains('nx-nav-open'))nxToggleNav(false);});
+window.addEventListener('resize',function(){if(!nxNavDrawer() && document.body.classList.contains('nx-nav-open'))nxToggleNav(false);});
 function nxInitUI(){
   nxEnhanceScreen('screen-login');
   var modal=document.getElementById('nx-command');if(modal)renderIcons(modal);
