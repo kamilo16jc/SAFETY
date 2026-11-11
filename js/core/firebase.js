@@ -1,6 +1,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, query, orderBy, where, onSnapshot, deleteField, writeBatch, doc, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously, signOut, connectAuthEmulator } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD2QOrY7TyeYCcHE14hXoQ3nCsC4nozL-8",
@@ -36,20 +36,94 @@
     db = getFirestore(app);
   }
   const auth = getAuth(app);
+  // Pruebas en esta PC (servidor de diseño con ?emu): los emuladores de Firebase
+  if(window.NEXORA_EMULATORS){
+    try { connectAuthEmulator(auth, 'http://127.0.0.1:9099', {disableWarnings:true}); } catch(e){}
+    try { connectFirestoreEmulator(db, '127.0.0.1', 8085); } catch(e){}
+  }
 
-  // Sesión anónima: cuando las reglas exijan request.auth != null, la app ya
-  // llega con una sesión. Es tolerante a fallos — si Anonymous Auth todavía no
-  // está habilitado, se registra el error pero la app no se bloquea.
-  var authReady = new Promise(function(resolve){
-    var done = false;
-    var finish = function(){ if(!done){ done = true; resolve(); } };
-    onAuthStateChanged(auth, function(user){ if(user) finish(); });
-    signInAnonymously(auth).catch(function(e){
-      console.warn('Anonymous sign-in unavailable:', e && e.code);
-      finish(); // no bloquear la app aunque falle
-    });
-    setTimeout(finish, 4000); // red de seguridad
+  // ===== LA SESION (seguridad, 10 nov 2026) =====
+  // Ya no hay sesion anonima (con ella cualquiera con la direccion de la app
+  // leia y borraba todo). Firestore solo deja pasar a quien entro con su
+  // usuario y contraseña: la revisa la funcion safetyLogin y da un pase
+  // firmado con su numero de operador (js/core/auth.js). La sesion queda
+  // guardada en el equipo: al volver a abrir la app los datos se sincronizan,
+  // y se puede entrar sin señal.
+  var _authOk = null;
+  var authReady = new Promise(function(resolve){ _authOk = resolve; });
+  window._nxClaims = null;
+  onAuthStateChanged(auth, function(user){
+    // la sesion anonima de antes: mientras se estrena el login nuevo sigue
+    // sirviendo (reglas abiertas); despues ya no abre nada y se cierra
+    if(user && user.isAnonymous){
+      if(window.NX_TRANSICION){ _authOk(); return; }
+      signOut(auth).catch(function(){}); return;
+    }
+    if(!user){ window._nxClaims = null; return; }
+    user.getIdTokenResult().then(function(t){
+      if(t && t.claims && t.claims.op){ window._nxClaims = t.claims; _authOk(); vigilarAcceso(t.claims.op); }
+    }).catch(function(){});
   });
+  // Despues de que safetyLogin acepto la contraseña
+  window.nxSignInWithToken = function(token){
+    return signInWithCustomToken(auth, token)
+      .then(function(cred){ return cred.user.getIdTokenResult(true); })
+      .then(function(t){
+        window._nxClaims = t.claims;
+        _authOk();
+        vigilarUsuarios(!!t.claims.admin);
+        vigilarAcceso(t.claims.op);
+        return t.claims;
+      });
+  };
+  // Estreno (js/core/auth.js, NX_TRANSICION): si el servidor de login no
+  // responde se entra como antes, con sesion anonima
+  window.nxSesionAnonima = function(){
+    if(!window.NX_TRANSICION) return Promise.resolve();
+    if(auth.currentUser) { _authOk(); return Promise.resolve(); }
+    return signInAnonymously(auth).then(function(){ _authOk(); }).catch(function(e){ console.warn('anon', e && e.code); });
+  };
+  // El pase para las funciones (fotos)
+  window.nxIdToken = function(){
+    var u = auth.currentUser;
+    return (u && !u.isAnonymous) ? u.getIdToken().catch(function(){ return ''; }) : Promise.resolve('');
+  };
+
+  // La lista de usuarios (con las contraseñas en hash) solo la recibe el
+  // administrador, que es el unico que la puede leer y cambiar
+  var _quitarUsuarios = null;
+  function vigilarUsuarios(esAdmin){
+    if(_quitarUsuarios){ try { _quitarUsuarios(); } catch(e){} _quitarUsuarios = null; }
+    window._opsFull = false;
+    if(!esAdmin) return;
+    _quitarUsuarios = onSnapshot(doc(db,'config','operators'), function(d){
+      if(d.exists()){
+        var list = d.data().list || [];
+        if(list.length){
+          var ldb = getDB(); ldb.operators = list; saveDB(ldb); window._opsFull = true;
+          if(window.nxHuellaOps) window._opsHuella = window.nxHuellaOps(list);
+        }
+      }
+    }, function(){ window._opsFull = false; });
+  }
+  // El acceso propio: si el administrador lo quita, este equipo lo sabe al
+  // momento (los listeners ya abiertos no siempre se cortan solos)
+  var _quitarAcceso = null;
+  function vigilarAcceso(op){
+    if(_quitarAcceso){ try { _quitarAcceso(); } catch(e){} _quitarAcceso = null; }
+    if(!op) return;
+    _quitarAcceso = onSnapshot(doc(db, 'access', String(op)), function(d){
+      if(d.metadata.fromCache) return;                 // lo del disco no cuenta: solo lo del servidor
+      if(!d.exists() || d.data().active !== true){ if(window.nxSesionPerdida) window.nxSesionPerdida(); }
+    }, function(e){
+      if(e && e.code === 'permission-denied' && window.nxSesionPerdida) window.nxSesionPerdida();
+    });
+  }
+  // Quitar la entrada de alguien al momento (panel de Admin): tiene que volver
+  // a entrar con su contraseña, y entra con lo que el administrador cambio
+  window.revokeAccess = async function(opId){
+    try { await deleteDoc(doc(db, 'access', String(opId))); } catch(e){ console.warn('revoke', e && e.code); }
+  };
 
   // ============================================================
   //  SYNC EN TIEMPO REAL — solo la ventana reciente en vivo.
@@ -117,7 +191,10 @@
   }
 
   function onSyncOk(){ showSyncStatus('Synced'); setTimeout(hideSyncStatus, 1500); }
-  function onSyncErr(e){ showSyncStatus('Offline'); setTimeout(hideSyncStatus, 2500); if(e) console.error('Sync error:', e && e.code); }
+  function onSyncErr(e){
+    if(e && e.code === 'permission-denied'){ if(window.nxSesionPerdida) window.nxSesionPerdida(); return; }
+    showSyncStatus('Offline'); setTimeout(hideSyncStatus, 2500); if(e) console.error('Sync error:', e && e.code);
+  }
 
   function setupRealtime(){
     if(listenersUp) return;
@@ -159,10 +236,6 @@
     onSnapshot(doc(db,'config','roles'), function(d){
       if(d.exists()){ var l=d.data().list||[]; if(l.length){ var rdb=getDB(); rdb.roles=l; saveDB(rdb,'roles'); } }
     }, function(){});
-    onSnapshot(doc(db,'config','operators'), function(d){
-      if(d.exists()){ var list=d.data().list||[]; if(list.length){ var ldb=getDB(); ldb.operators=list; saveDB(ldb); } }
-      if(window.initLogin) window.initLogin();
-    }, function(){ if(window.initLogin) window.initLogin(); });
     // Activity log: solo lo reciente (2 dias) para el home; el resto lo carga
     // la pantalla de Activity con sus propios cargadores.
     onSnapshot(query(collection(db,'activityLog'), where('date','>=', daysAgoISO(2)), orderBy('date','asc')),
@@ -284,6 +357,8 @@
       await setDoc(doc(db, colName, fid), payload);
       stampFbId(colName, record.id, fid);
     } catch(e) {
+      // sin permiso: le quitaron la entrada; el registro se queda en el equipo
+      if(e && e.code === 'permission-denied' && window.nxSesionPerdida) window.nxSesionPerdida();
       console.error('Firebase save error:', e);
     }
   };

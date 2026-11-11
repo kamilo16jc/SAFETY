@@ -6,12 +6,38 @@ function getOperators() {
   var db = getDB();
   return db.operators || [];
 }
+// Lo que decide que alguien tenga que volver a entrar: rol, funciones, contraseña
+function nxHuellaOps(list){
+  var m = {};
+  (list || []).forEach(function(o){ if(o) m[o.id] = JSON.stringify([o.role, o.screens || [], o.passHash || '', o.pin || '']); });
+  return m;
+}
 function saveOperators(ops) {
+  // La lista de usuarios con contraseñas solo la tiene el administrador con
+  // sesion (js/core/firebase.js). Guardar sin ella borraria las contraseñas de
+  // todos: sin la lista completa no se guarda.
+  if(!window.NEXORA_DESIGN_LOCAL && window._opsFull !== true){
+    toast('Connect to the internet and sign in again to change users');
+    return false;
+  }
   var db = getDB();
+  // Lo que habia guardado (las pantallas de Admin cambian la lista en el sitio,
+  // asi que se compara contra la ultima version guardada, no contra db.operators)
+  var antes = window._opsHuella || nxHuellaOps(db.operators);
   db.operators = ops;
   saveDB(db);
-  // Sync each operator to Firebase
   if(window.saveOperatorsToFirebase) window.saveOperatorsToFirebase(ops);
+  // A quien se le cambio el rol, las funciones o la contraseña (o se borro)
+  // se le quita la entrada al momento: vuelve a entrar con lo nuevo
+  var ahora = nxHuellaOps(ops);
+  window._opsHuella = ahora;
+  if(window.revokeAccess){
+    Object.keys(antes).forEach(function(id){
+      if(currentUser && String(currentUser.id) === String(id)) return;
+      if(ahora[id] !== antes[id]) window.revokeAccess(id);
+    });
+  }
+  return true;
 }
 
 // ---- Hash de contraseñas ----
@@ -84,17 +110,8 @@ function verifyPassword(op, password){
 }
 
 function initLogin() {
-  var ops = getOperators();
-  if(!ops.length) {
-    // First run on a fresh device: create a local default admin (admin / admin123).
-    // Local only — never pushed to Firebase, so a fresh browser can't overwrite real users.
-    hashPassword('admin','admin123').then(function(h){
-      var db = getDB();
-      if(db.operators && db.operators.length) return; // Firebase sync won the race
-      db.operators = [{id:newRecordId(), name:'Administrator', username:'admin', email:'', passHash:h, role:'admin'}];
-      saveDB(db);
-    });
-  }
+  // Ya no se crea el admin de fabrica (admin / admin123) en un equipo nuevo:
+  // la contraseña la revisa el servidor, que conoce a los usuarios reales.
   var u = document.getElementById('login-user');
   var p = document.getElementById('login-pass');
   var err = document.getElementById('login-error');
@@ -108,57 +125,154 @@ function showLoginError(msg) {
   if(err) { err.textContent = msg; err.style.display = 'block'; }
 }
 
+// ===== ENTRAR (seguridad, 10 nov 2026) =====
+// La contraseña la revisa el servidor (funcion safetyLogin), que devuelve un
+// pase de Firebase: sin el, Firestore no deja leer ni escribir nada. Sin señal
+// (o con el servidor caido) se entra con lo de ESTE equipo: la credencial de
+// quien ya entro aqui con internet, solo la suya.
+// ESTRENO: mientras las reglas de Firestore sigan abiertas, si el servidor de
+// login no responde se entra como antes (la contraseña revisada en el equipo y
+// sesion anonima): si algo falla el primer dia, nadie se queda afuera. El dia
+// que se cierran las reglas esto pasa a false (ver SECURITY.md).
+var NX_TRANSICION = true;
+window.NX_TRANSICION = NX_TRANSICION;
+
+var NX_LOGIN_URL = window.NEXORA_EMULATORS
+  ? 'http://127.0.0.1:5001/caputo-cheese/us-central1/safetyLogin'
+  : 'https://us-central1-envirotrack-5173f.cloudfunctions.net/safetyLogin';
+
+function nxCreds(){
+  try { return JSON.parse(localStorage.getItem('nx_creds') || '{}') || {}; } catch(e){ return {}; }
+}
+function nxGuardarCred(me){
+  try {
+    var c = nxCreds(), cred = me.cred || {}, op = Object.assign({}, me);
+    delete op.cred;
+    c[String(op.id)] = {op:op, passHash:cred.passHash || '', pin:cred.pin || '', at:Date.now()};
+    localStorage.setItem('nx_creds', JSON.stringify(c));
+  } catch(e){}
+}
+function nxCredDe(id){
+  var c = nxCreds(), k = Object.keys(c);
+  for(var i=0;i<k.length;i++){
+    var o = (c[k[i]] || {}).op || {};
+    if((o.username && String(o.username).toLowerCase()===id) ||
+       (o.email && String(o.email).toLowerCase()===id) ||
+       (o.name && String(o.name).toLowerCase()===id)) return c[k[i]];
+  }
+  return null;
+}
+// La lista de usuarios de este equipo: sin contraseñas (la completa solo la
+// recibe el administrador, js/core/firebase.js)
+function nxPonerEquipo(staff){
+  if(!staff || !staff.length || window._opsFull === true) return;
+  var db = getDB();
+  db.operators = staff;
+  saveDB(db);
+}
+function nxLoginServidor(id, pass){
+  var ctl = window.AbortController ? new AbortController() : null;
+  var t = ctl ? setTimeout(function(){ ctl.abort(); }, 25000) : null;    // primera vez del dia: ~5-10 s
+  return fetch(NX_LOGIN_URL, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:id, password:pass}), signal: ctl ? ctl.signal : undefined
+  }).then(function(r){
+    return r.json().catch(function(){ return {}; }).then(function(j){ j.status = r.status; return j; });
+  }).catch(function(){ return {ok:false, error:'offline', status:0}; })
+    .then(function(j){ if(t) clearTimeout(t); return j; });
+}
+// Contraseña contra una credencial guardada (hash PBKDF2/viejo, o PIN)
+function nxVerificarLocal(c, pass){
+  if(!c) return Promise.resolve(false);
+  if(c.passHash) return verifyPassword({passHash:c.passHash, username:c.op && c.op.username, name:c.op && c.op.name}, pass)
+    .then(function(r){ return r === 'ok' || r === 'upgrade'; });
+  return Promise.resolve(!!c.pin && String(pass) === String(c.pin));
+}
+
 function doLogin() {
   if(window.nxLoginBusy) return;
   var id = (document.getElementById('login-user').value||'').trim().toLowerCase();
   var pass = document.getElementById('login-pass').value||'';
   if(!id || !pass) { showLoginError('Enter your username and password'); return; }
 
-  var ops = getOperators();
-  var op = ops.find(function(o){
-    return (o.username && o.username.toLowerCase()===id) ||
-           (o.email && o.email.toLowerCase()===id) ||
-           (o.name && o.name.toLowerCase()===id);
-  });
-  if(!op) { showLoginError('User not found'); return; }
-
   if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(true);
-  var finish = function(ok){
-    if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(false);
-    if(ok) {
-      document.getElementById('login-pass').value = '';
-      currentUser = op;
-      loginSuccess();
-    } else {
-      showLoginError('Incorrect password');
-    }
+  var listo = function(){ if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(false); };
+  var entrar = function(op){
+    listo();
+    document.getElementById('login-pass').value = '';
+    currentUser = op;
+    loginSuccess();
   };
+  var error = function(m){ listo(); showLoginError(m); };
 
-  if(op.passHash) {
-    verifyPassword(op, pass).then(function(res){
-      if(res==='upgrade'){
-        // Hash viejo válido: se re-guarda con PBKDF2 (best-effort, no bloquea)
-        hashPasswordSecure(pass).then(function(nh){
-          try {
-            var ops2 = getOperators();
-            var t = ops2.find(function(o){ return o.id===op.id; });
-            if(t){ t.passHash = nh; saveOperators(ops2); }
-          } catch(e){}
-        });
-      }
-      finish(res==='ok' || res==='upgrade');
-    }).catch(function(){
-      if(typeof nxSetLoginBusy==='function') nxSetLoginBusy(false);
-      showLoginError('Unable to sign in. Please try again.');
+  // Copia de diseño sin Firebase: los usuarios de prueba de este equipo
+  if(window.NEXORA_DESIGN_LOCAL && !window.NEXORA_EMULATORS){
+    var op0 = getOperators().find(function(o){
+      return (o.username && o.username.toLowerCase()===id) || (o.name && o.name.toLowerCase()===id);
     });
-  } else if(op.pin) {
-    // Legacy operator (created in the PIN era): PIN works as password
-    // until an admin sets a real one in the Admin panel.
-    finish(pass===op.pin);
-  } else {
-    finish(false);
+    if(!op0) return error('Incorrect username or password');
+    return nxVerificarLocal({passHash:op0.passHash, pin:op0.pin, op:op0}, pass)
+      .then(function(ok){ ok ? entrar(op0) : error('Incorrect username or password'); });
   }
+
+  // Estreno: como entraba antes, con la lista de usuarios que ya tiene el equipo
+  var comoAntes = function(){
+    var op0 = getOperators().find(function(o){
+      return (o.username && o.username.toLowerCase()===id) || (o.email && o.email.toLowerCase()===id) ||
+             (o.name && o.name.toLowerCase()===id);
+    });
+    if(!op0 || !(op0.passHash || op0.pin)) return error('No connection. The first time you sign in on this device you need internet.');
+    nxVerificarLocal({passHash:op0.passHash, pin:op0.pin, op:op0}, pass).then(function(ok){
+      if(!ok) return error('Incorrect username or password');
+      if(window.nxSesionAnonima) window.nxSesionAnonima();
+      entrar(op0);
+    }).catch(function(){ error('Unable to sign in. Please try again.'); });
+  };
+  var sinRed = function(){
+    var c = nxCredDe(id);
+    if(!c && NX_TRANSICION) return comoAntes();
+    if(!c) return error('No connection. The first time you sign in on this device you need internet.');
+    nxVerificarLocal(c, pass).then(function(ok){
+      if(!ok) return error('Incorrect username or password');
+      entrar(c.op);
+      toast('Signed in without internet. Your records sync when the connection is back.');
+    }).catch(function(){ error('Unable to sign in. Please try again.'); });
+  };
+  if(navigator.onLine === false || typeof window.nxSignInWithToken !== 'function') return sinRed();
+
+  nxLoginServidor(id, pass).then(function(j){
+    if(j.ok && j.token){
+      return window.nxSignInWithToken(j.token).then(function(){
+        nxGuardarCred(j.me);
+        nxPonerEquipo(j.staff);
+        var op = Object.assign({}, j.me); delete op.cred;
+        entrar(op);
+      }, function(){ sinRed(); });
+    }
+    if(j.status === 401) return error('Incorrect username or password');
+    if(j.status === 429) return error('Too many attempts. Wait 15 minutes and try again.');
+    sinRed();     // sin red, o el servidor no responde: lo de este equipo
+  });
 }
+
+// Le quitaron la entrada (el administrador cambio su usuario) o vencio: lo que
+// escriba se queda en el telefono hasta que vuelva a entrar
+var _nxAvisoSesion = false;
+function nxSesionPerdida(){
+  if(_nxAvisoSesion || !currentUser) return;
+  _nxAvisoSesion = true;
+  setTimeout(function(){ _nxAvisoSesion = false; }, 60000);
+  if(typeof showGuardModal === 'function'){
+    showGuardModal({
+      icon:'lock', title:'Sign in again',
+      detail:'Your access changed or expired, so this device stopped syncing. What you record stays on this device until you sign in again.',
+      ask:'Sign in with your username and password to keep going.',
+      primaryLabel:'Later', onPrimary:closeDupModal,
+      secondaryLabel:'Sign in', onSecondary:function(){ closeDupModal(); currentUser = null; goTo('screen-login'); initLogin(); }
+    });
+  } else toast('Sign in again to keep syncing');
+}
+window.nxSesionPerdida = nxSesionPerdida;
 
 function loginSuccess() {
   // Update user badge

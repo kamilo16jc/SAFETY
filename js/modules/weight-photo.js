@@ -303,6 +303,12 @@ function wpAdjuntar(rec){
 
 // ---- Subir lo pendiente ----
 var _wpSubiendo = false;
+// Las funciones de fotos piden la sesion de quien entro (js/core/firebase.js)
+function wpPase(){
+  var h = {'Content-Type':'application/json'};
+  if(typeof window.nxIdToken !== 'function') return Promise.resolve(h);
+  return window.nxIdToken().then(function(t){ if(t) h.Authorization = 'Bearer '+t; return h; });
+}
 function wpSubir(){
   if(_wpSubiendo || navigator.onLine === false){ wpAviso(); return Promise.resolve(); }
   _wpSubiendo = true;
@@ -312,10 +318,10 @@ function wpSubir(){
     var siguiente = function(){
       if(i >= items.length) return;
       var it = items[i++];
-      return fetch(WP_UPLOAD, {
-        method:'POST', headers:{'Content-Type':'application/json'},
+      return wpPase().then(function(h){ return fetch(WP_UPLOAD, {
+        method:'POST', headers:h,
         body: JSON.stringify({fileName:it.fileName, contentBase64:it.b64, meta:it.meta})
-      }).then(function(r){
+      }); }).then(function(r){
         return r.json().catch(function(){ return {}; }).then(function(j){ return {s:r.status, j:j}; });
       }).then(function(x){
         if(x.s === 200 && x.j.ok) return wpColaDel(it.fileName).then(siguiente);
@@ -401,9 +407,9 @@ function wpTraer(fn){
   return wpColaGet(fn).catch(function(){ return null; }).then(function(it){
     // Si todavia no subio, la tiene este telefono
     if(it && it.b64) return 'data:image/jpeg;base64,'+it.b64;
-    return fetch(WP_GET, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({fileName:fn})
-    }).then(function(r){
+    return wpPase().then(function(h){ return fetch(WP_GET, {
+      method:'POST', headers:h, body: JSON.stringify({fileName:fn})
+    }); }).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){ return {s:r.status, j:j}; });
     }, function(){ throw 'No connection: the photo shows when you are online.'; })
     .then(function(x){

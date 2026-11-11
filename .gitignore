@@ -19,3 +19,7 @@ functions/node_modules/
 functions/.env
 functions/.env.*
 firebase-debug.log
+
+# registros de los emuladores de Firebase
+firestore-debug.log
+ui-debug.log

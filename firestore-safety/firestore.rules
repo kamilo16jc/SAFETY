@@ -1,0 +1,51 @@
+rules_version = '2';
+// ===== REGLAS DE FIRESTORE DE NEXORA (proyecto caputo-cheese) =====
+// Antes: cualquiera con sesion anonima (o sea, cualquiera con la direccion de
+// la app) leia y escribia todo. Ahora solo entra quien trae el pase que da la
+// funcion safetyLogin (functions/index.js) despues de revisar su contraseña,
+// y solo mientras su acceso este activo en access/{operador}.
+//
+// Se publican SOLO desde esta carpeta y SOLO a caputo-cheese:
+//   cd firestore-safety
+//   firebase deploy --only firestore:rules --project caputo-cheese
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function op() { return request.auth.token.op; }
+    function conPase() { return request.auth != null && request.auth.token.op is string; }
+    function acceso() { return /databases/$(database)/documents/access/$(op()); }
+    // Activo: su acceso existe y no se lo quito el administrador
+    function activo() { return conPase() && exists(acceso()) && get(acceso()).data.active == true; }
+    function admin() { return activo() && get(acceso()).data.admin == true; }
+
+    // Los datos de la planta: cualquier usuario activo
+    match /{col}/{id} {
+      allow read, write: if activo() && !(col in ['config', 'access', 'reader']);
+    }
+
+    // Configuracion: la ven todos; usuarios y roles solo los toca Admin.
+    // config/operators lleva las contraseñas (hash): ni leerla puede otro.
+    match /config/{id} {
+      allow read: if activo() && id != 'operators';
+      allow write: if activo() && !(id in ['operators', 'roles']);
+    }
+    match /config/operators {
+      allow read, write: if admin();
+    }
+    match /config/roles {
+      allow write: if admin();
+    }
+
+    // Quien puede entrar: lo escribe la funcion de login (que no pasa por estas
+    // reglas). El panel de Admin lo quita para sacar a alguien en el momento.
+    match /access/{who} {
+      allow read: if activo() && (who == op() || admin());
+      allow delete, update: if admin();
+    }
+
+    // El celular-lector: cada usuario solo su propio canal
+    match /reader/{who} {
+      allow read, write: if activo() && who == op();
+    }
+  }
+}

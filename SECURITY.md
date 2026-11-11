@@ -5,15 +5,63 @@ sobre la copia local. No se alteró, borró ni exfiltró ningún dato de producc
 
 ---
 
+## Noviembre 2026 — login por servidor y reglas cerradas
+
+**Confirmado el 10 nov 2026** (lectura de las reglas publicadas): Firestore
+dejaba leer y escribir TODO a cualquier sesión, y la app abría una sesión
+anónima para cualquiera. Con la dirección pública de la app se podía bajar o
+borrar la base completa (clientes incluidos).
+
+**Cómo quedó:**
+- La contraseña la revisa el servidor: función `safetyLogin`
+  (`functions/index.js`, proyecto envirotrack-5173f, codebase `safety`). Usa los
+  mismos esquemas de siempre (PBKDF2, SHA-256 viejo —que re-guarda con PBKDF2—
+  y PIN), frena la fuerza bruta (8 intentos por usuario / 15 min, 30 por
+  dirección / 10 min) y entrega un pase de Firebase (custom token) de
+  caputo-cheese con el número de operador. Escribe `access/{operador}`.
+- Las reglas (`firestore-safety/firestore.rules`): solo entra quien trae el
+  pase y tiene `access/{operador}` activo. `config/operators` (los hashes) solo
+  la lee y escribe un administrador; `config/roles` solo la escribe él;
+  `access` solo lo crea la función; `reader/{operador}` es de cada uno.
+- Al cambiar el rol, las funciones o la contraseña de alguien (o borrarlo), el
+  panel de Admin borra su `access`: tiene que volver a entrar y entra con lo
+  nuevo. El teléfono lo nota al momento y le pide entrar otra vez.
+- Sin señal se entra con la credencial que ESE teléfono guardó la última vez
+  que esa persona entró con internet (solo la suya). La primera vez en un
+  teléfono hace falta internet.
+- Las funciones de fotos piden el pase (con `SAFETY_STRICT=1`).
+- Ya no existe el admin de fábrica `admin / admin123`.
+- La llave de caputo-cheese vive en Secret Manager (`CAPUTO_SA`), nunca en git.
+
+**Estreno sin riesgo (`NX_TRANSICION = true` en `js/core/auth.js`):** mientras
+las reglas sigan abiertas, si el servidor de login no responde se entra como
+antes. Así, si algo falla el primer día, nadie se queda afuera.
+
+**Pasos (en orden):**
+1. *(Dueño del proyecto)* Firebase → caputo-cheese → Project settings →
+   Service accounts → Generate new private key; luego
+   `firebase functions:secrets:set CAPUTO_SA --data-file <llave.json> --project envirotrack-5173f`
+   y borrar el archivo.
+2. Publicar las funciones: `firebase deploy --only functions:safety --project envirotrack-5173f`.
+3. Publicar la app (subir `CACHE` en sw.js) y probar en un teléfono.
+4. Esperar a que todos los teléfonos tengan la versión nueva (menú → App version).
+5. **Cerrar la puerta:** `NX_TRANSICION = false` + publicar la app;
+   `cd firestore-safety && firebase deploy --only firestore:rules --project caputo-cheese`;
+   `SAFETY_STRICT=1` en `functions/.env` y volver a publicar las funciones.
+
+**Pruebas** (emuladores de Firebase, datos sintéticos): `firestore-safety/tests/`.
+
+---
+
 ## Resumen
 
 | # | Hallazgo | Severidad | Estado |
 |---|----------|-----------|--------|
 | 1 | XSS almacenado en campos de texto libre (producto, comentarios, LOT, razón de hold…) | **Alta** | ✅ Corregido en código |
 | 2 | Hash de contraseñas débil (SHA-256 simple, sin iteraciones) | Media | ✅ Corregido (PBKDF2) |
-| 3 | Firestore sin autenticación: config pública + posibles reglas abiertas | **Crítica** | ⚠️ Requiere acción tuya en Firebase |
-| 4 | Autorización sólo del lado del cliente (roles en JS) | Media | ⚠️ Inherente a la arquitectura — ver #3 |
-| 5 | Admin por defecto `admin` / `admin123` en dispositivo nuevo | Baja | ⚠️ Documentado abajo |
+| 3 | Firestore sin autenticación: config pública + posibles reglas abiertas | **Crítica** | 🔧 Corregido en código (nov 2026) — falta cerrar las reglas, ver abajo |
+| 4 | Autorización sólo del lado del cliente (roles en JS) | Media | 🔧 Usuarios/roles los hace cumplir Firestore (nov 2026) |
+| 5 | Admin por defecto `admin` / `admin123` en dispositivo nuevo | Baja | ✅ Eliminado (nov 2026) |
 
 ---
 

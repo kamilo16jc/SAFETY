@@ -39,7 +39,7 @@ function addOperator() {
   hashPassword(username, pass).then(function(h){
     ops.push({id:newRecordId(), name:name, username:username, email:email, passHash:h,
               role:rol, createdAt:localDateStr()});
-    saveOperators(ops);
+    if(saveOperators(ops) === false) return;
     ['admin-name','admin-username','admin-email','admin-pass'].forEach(function(id){
       document.getElementById(id).value = '';
     });
@@ -61,7 +61,7 @@ function setUserRole(id, key){
     currentUser.role = key;
   }
   u.role = key;
-  saveOperators(ops);
+  if(saveOperators(ops) === false) return;
   logActivity('admin','Role assigned', u.name+' · '+roleName(key), currentUser?currentUser.name:'—');
   initAdmin();
   toast(u.name+' is now '+roleName(key));
@@ -77,7 +77,7 @@ function resetPassword(id) {
   if(!op.username) op.username = op.name.toLowerCase();
   hashPassword(op.username, np).then(function(h){
     op.passHash = h;
-    saveOperators(ops);
+    if(saveOperators(ops) === false) return;
     initAdmin();
     toast('Password updated');
   });
@@ -87,7 +87,7 @@ function deleteOperator(id) {
   var op = getOperators().filter(function(o){ return o.id===id; })[0];
   if(currentUser && currentUser.id===id){ toast('You cannot delete yourself'); return; }
   if(!confirm('Delete this user?')) return;
-  saveOperators(getOperators().filter(function(o){return o.id!==id}));
+  if(saveOperators(getOperators().filter(function(o){return o.id!==id})) === false) return;
   if(op) logActivity('admin','User deleted', op.name, currentUser?currentUser.name:'—');
   initAdmin();
   toast('User deleted');
