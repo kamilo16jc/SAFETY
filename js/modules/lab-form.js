@@ -24,8 +24,10 @@ function labFormDate(d){
 }
 
 // Grupos listos para enviar: mismo cliente + mismo día.
-// Solo entran los productos que llevan algun test: al cliente al que nunca se
-// le eligio ninguno no se le arma forma, aunque se le haya recogido muestra.
+// Solo entran los productos que llevan algo que pedirle al laboratorio: algun
+// test, o la casilla "Composite: 2-5 Samples". Hay clientes que SOLO piden
+// Composite (Litehouse, 11 nov 2026): su forma lleva nada mas esa X. Al cliente
+// al que no se le eligio nada no se le arma forma, aunque se le haya recogido muestra.
 function labFormGroups(){
   var groups = {};
   getRuns().forEach(function(r){
@@ -34,7 +36,8 @@ function labFormGroups(){
     if(!c) return;
     if(typeof hasLabTests === 'function'){
       var p = (typeof findProduct==='function') ? findProduct(r.product) : null;
-      if(!hasLabTests(p, c)) return;
+      var soloComposite = (typeof labCompositeOf === 'function') && labCompositeOf(c).length > 0;
+      if(!hasLabTests(p, c) && !soloComposite) return;
     }
     var day = String(r.date).slice(0,10);
     // por la llave del cliente: dos clientes pueden compartir Customer ID
