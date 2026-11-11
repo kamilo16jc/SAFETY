@@ -183,9 +183,9 @@ function buildAnalysisSheet(){
       '<td><div class="an-prodbox">'+
         '<input class="cell" id="an-product" list="an-product-list" placeholder="Product #" '+
           'autocomplete="off" autocapitalize="characters" oninput="onAnalysisProduct()">'+
-        '<button type="button" class="ico-btn an-cam" id="an-cam" data-tip="Read the label from a photo" '+
-          'aria-label="Read the label from a photo" onclick="anLabelPick()"><span data-icon="camera"></span></button>'+
-        '<input type="file" id="an-label-input" accept="image/*" capture="environment" hidden onchange="anLabelRead(this)">'+
+        // el celular como lector (js/modules/phone-reader.js): verde si esta conectado
+        '<button type="button" class="ico-btn an-phone" id="an-phone" data-tip="Phone reader" '+
+          'aria-label="Phone reader" onclick="prComoConectar()"><span data-icon="phone"></span></button>'+
       '</div></td>'+
       '<td><input class="cell" id="an-cheese" placeholder="Description"></td>'+
       '<td class="soft" id="an-customer-cell">—</td>'+
@@ -468,77 +468,64 @@ function saveAnalysis(){
   if(codigoNuevo && p) anOfferLink(p, codigoNuevo);
 }
 
-// ---- Leer la etiqueta con la camara (js/modules/label-read.js) ----
-// Una foto de la etiqueta llena Product (y con el Cheese y Customer), LOT y
-// Order. No guarda nada: QA revisa la fila y escribe los resultados. Lo que
-// llena la foto queda teñido; al escribir encima se quita.
-var anLabelCode = '';          // codigo de barras de la foto que no esta en el catalogo
+// ---- Lo que manda el celular-lector (js/modules/phone-reader.js) ----
+// El codigo de barras llena Product (y con el Cheese y Customer); la foto de
+// la etiqueta, el LOT y el Order. No guarda nada: QA revisa la fila y escribe
+// los resultados. Lo que puso el celular queda enmarcado; al escribir encima
+// se quita.
+var anLabelCode = '';          // codigo de barras leido que no esta en el catalogo
 function anLabelMark(el, on, tip, revisar){
   el.classList.toggle('from-label', !!on && !revisar);
   el.classList.toggle('lr-check', !!on && !!revisar);
   if(on) el.title = tip || ''; else el.removeAttribute('title');
 }
-function anLabelPick(){
-  var i = document.getElementById('an-label-input');
-  if(i){ i.value = ''; i.click(); }
-}
-function anLabelBusy(on){
-  var b = document.getElementById('an-cam');
-  if(!b) return;
-  b.classList.toggle('busy', on); b.disabled = on;
-  b.setAttribute('aria-busy', String(on));
-}
-function anLabelRead(input){
-  var f = input && input.files && input.files[0];
-  if(!f) return;
-  if(typeof leerEtiqueta !== 'function'){ toast('The label reader is not available'); return; }
-  anLabelBusy(true);
-  toast('Reading the label…');
-  var day = (document.getElementById('an-date')||{}).value || localDateStr();
-  wpCargarImagen(f).then(function(img){
-    return leerEtiqueta(img, day).then(function(r){ if(img.close) img.close(); return r; });
-  }).then(anLabelFill).catch(function(){
-    toast('The reader could not open that photo. Type the data instead.');
-  }).then(function(){ anLabelBusy(false); });
-}
-function anLabelFill(r){
+function anDelLector(el){ return el.classList.contains('from-label') || el.classList.contains('lr-check'); }
+// ev: {t:'product'|'code'|'label', numero, nombre, codigo, como, lot, lotRevisar, lotFecha, order}
+function anReaderApply(ev){
   var prod = document.getElementById('an-product'), lot = document.getElementById('an-lot'),
       ord = document.getElementById('an-order');
+  if(!prod) return;
   var dice = [];
-  anLabelCode = '';
-  if(r.numero && prod){
-    prod.value = r.numero;
-    onAnalysisProduct();                 // Cheese, Customer y el LOT de la muestra recolectada
-    anLabelMark(prod, true, r.comoProducto === 'text' ? 'Product read from the label text' :
-                            'Product from the barcode on the label');
+  if(ev.numero){
+    if(normNumber(prod.value) !== normNumber(ev.numero)){
+      // Otra etiqueta: el LOT y el Order que puso la anterior ya no son de esta
+      [lot, ord].forEach(function(e){ if(e && anDelLector(e)){ e.value = ''; anLabelMark(e, false); } });
+      if(lot && !lot.value.trim()) anLotTyped(lot);
+      var ch = document.getElementById('an-cheese'); if(ch) ch.value = '';   // la descripcion es del producto nuevo
+      prod.value = ev.numero;
+      onAnalysisProduct();               // Cheese, Customer y el LOT de la muestra recolectada
+      dice.push('Product '+ev.numero+(ev.nombre ? ' · '+ev.nombre : ' (not in the catalog)'));
+    }
+    anLabelCode = '';
+    anLabelMark(prod, true, ev.como === 'text' ? 'Product read by the phone from the label text'
+                                             : 'Product from the barcode, read by the phone');
     prod.addEventListener('input', function(){ anLabelMark(prod, false); }, {once:true});
-    dice.push('Product '+r.numero+(r.producto ? '' : ' (not in the catalog)'));
-  } else if(r.codigo){
-    // un codigo que el catalogo no conoce: se liga al guardar con el producto que escriba QA
-    anLabelCode = r.codigo;
-    dice.push('barcode '+r.codigo+' is not in the catalog, type the product');
+  } else if(ev.codigo){
+    // un codigo que el catalogo no conoce: al guardar se ofrece ligarlo al producto que escriba QA
+    anLabelCode = ev.codigo;
+    dice.push('barcode '+ev.codigo+' is not in the catalog: type the product');
   }
-  if(r.lot && lot){
+  if(ev.lot && lot){
     var run = (lot.dataset.auto && lot.classList.contains('from-run')) ? lot.dataset.auto : '';
-    lot.value = r.lot;
+    lot.value = ev.lot;
     delete lot.dataset.auto;
     lot.classList.remove('from-run');
-    var f = (r.lotInfo && r.lotInfo.fechaStr) ? fmtDate(r.lotInfo.fechaStr) : '';
-    var tip = r.lotRevisar
-      ? 'Read from the photo: '+r.lot+' is the LOT of '+f+', not today, yesterday or the next day. Check it against the label.'
-      : 'LOT read from the label'+(f ? ' ('+f+')' : '');
-    if(run && run !== r.lot) tip += ' The collected sample had LOT '+run+'.';
-    anLabelMark(lot, true, tip, r.lotRevisar);
-    dice.push('LOT '+r.lot+(r.lotRevisar ? ' (check it)' : ''));
+    var f = ev.lotFecha ? fmtDate(ev.lotFecha) : '';
+    var tip = ev.lotRevisar
+      ? 'Read by the phone: '+ev.lot+' is the LOT of '+f+', not today, yesterday or the next day. Check it against the label.'
+      : 'LOT read by the phone from the label'+(f ? ' ('+f+')' : '');
+    if(run && run !== ev.lot) tip += ' The collected sample had LOT '+run+'.';
+    anLabelMark(lot, true, tip, ev.lotRevisar);
+    dice.push('LOT '+ev.lot+(ev.lotRevisar ? ' (check it)' : ''));
   }
-  if(r.order && ord){
-    ord.value = r.order;
-    anLabelMark(ord, true, 'Order number printed next to the LOT');
+  if(ev.order && ord){
+    ord.value = ev.order;
+    anLabelMark(ord, true, 'Order number printed next to the LOT, read by the phone');
     ord.addEventListener('input', function(){ anLabelMark(ord, false); }, {once:true});
-    dice.push('Order '+r.order);
+    dice.push('Order '+ev.order);
   }
-  if(!dice.length){ toast('Nothing could be read on that label. Take it closer, with the barcode, or type it.'); return; }
-  toast('Label: '+dice.join(' · '));
+  if(!dice.length) return;
+  toast('Phone: '+dice.join(' · '));
   anMarkNewRow();
 }
 // Un codigo de barras nuevo: con permiso de QA queda ligado al producto y la

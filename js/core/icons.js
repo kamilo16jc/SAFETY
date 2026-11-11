@@ -41,6 +41,7 @@ var ICONS = {
   clock:     _IC('<circle cx="12" cy="12" r="8.3"/><path d="M12 7.4V12l3.1 2"/>'),
   back:      _IC('<path d="M19 12H5.5"/><path d="m11 5.5-5.5 6.5 5.5 6.5"/>'),
   chevron:   _IC('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
+  phone:     _IC('<rect x="6.8" y="2.8" width="10.4" height="18.4" rx="2.4"/><path d="M10.6 18h2.8"/>'),
   barcode:   _IC('<path d="M4 6v12"/><path d="M7.3 6v12"/><path d="M10.6 6v12"/><path d="M14.4 6v12"/><path d="M17.2 6v12"/><path d="M20 6v12"/>'),
   factory:   _IC('<path d="M3.5 20.5h17"/><path d="M4.5 20.5V11l5 3.2V11l5 3.2V6.5h5v14"/>'),
   history:   _IC('<path d="M3.8 12a8.2 8.2 0 1 0 2.6-6"/><path d="M3.6 3.9v4.4h4.4"/><path d="M12 7.6V12l3 1.9"/>'),

@@ -463,6 +463,23 @@
     }
   };
 
+  // ---- EL CELULAR COMO LECTOR: reader/{usuario} (js/modules/phone-reader.js) ----
+  // El celular escribe lo que lee; la PC del mismo usuario lo escucha.
+  window.readerWrite = async function(key, campos){
+    await authReady;
+    await setDoc(doc(db, 'reader', String(key)), campos, {merge: true});
+  };
+  window.readerWatch = function(key, cb){
+    var quitar = null, vivo = true;
+    authReady.then(function(){
+      if(!vivo) return;
+      quitar = onSnapshot(doc(db, 'reader', String(key)),
+        function(d){ cb(d.exists() ? d.data() : {}); },
+        function(e){ console.error('Reader sync error:', e && e.code); });
+    });
+    return function(){ vivo = false; if(quitar) quitar(); };
+  };
+
   // Arranca los listeners en tiempo real cuando la sesión anónima esté lista.
   // Ya no hay polling cada 60s: onSnapshot trae solo los cambios.
   authReady.then(function(){
