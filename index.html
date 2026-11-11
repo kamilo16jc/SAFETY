@@ -93,6 +93,35 @@
   <datalist id="pr-product-list"></datalist>
 </div>
 
+<!-- COA ORDERS (Production): las ordenes de papel con su PO y sus productos -->
+<div class="screen" id="screen-orders">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">COA Orders</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="or-search">Search</label>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.3"/><path d="m15.7 15.7 4.6 4.6"/></svg>
+        <input type="search" id="or-search" placeholder="Order, PO, customer, product…" autocomplete="off"
+               onkeydown="orOnKey(event)">
+      </div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="or-go" aria-label="Apply filters" title="Apply filters" onclick="orFiltrar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,exportOrdersCSV)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="or-kpis"></div>
+  <div id="or-sheet"></div>
+  <datalist id="or-product-list"></datalist>
+</div>
+
 <!-- LIST SAMPLES -->
 <div class="screen" id="screen-samplelist">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
@@ -2105,6 +2134,7 @@
 <script src="js/modules/catalog.js"></script>
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>
+<script src="js/modules/orders.js"></script>
 <script src="js/modules/samplelist.js"></script>
 <script src="js/modules/lab.js"></script>
 <script src="js/modules/analysis.js"></script>

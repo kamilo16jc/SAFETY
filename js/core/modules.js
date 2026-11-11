@@ -34,6 +34,7 @@ var MODULES = [
   ]},
   { id:'production', color:'#fbbf24', ink:'#b45309', name:'Production', icon:'calendar', items:[
       {screen:'screen-production',name:'Schedule',         icon:'calendar', color:'#047857'},
+      {screen:'screen-orders',    name:'COA Orders',       icon:'doc', color:'#a21caf'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#b45309'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[

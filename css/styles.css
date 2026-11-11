@@ -1346,6 +1346,24 @@ body.logged-out .topstack{display:none}
 /* List Samples: el LOT se escribe o se escanea en la misma celda */
 .sl-lotbox{display:flex;align-items:center;gap:6px;min-width:150px}
 /* Sample Analysis: el numero de producto con la camara que lee la etiqueta */
+/* COA Orders: los productos de cada orden, con su estado */
+.or-picks{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.or-picks:empty{display:none}
+.or-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 4px 3px 9px;border-radius:999px;
+  background:var(--surface2);color:var(--text);font-size:11.5px;font-weight:600;white-space:nowrap}
+.or-chip small{font-weight:400;color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.or-chip b{font-weight:600;font-size:10.5px;padding:1px 7px;border-radius:999px;background:var(--surface);color:var(--muted)}
+.or-chip button{border:0;background:none;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:0 5px}
+.or-chip.done{background:var(--accent-tint)}
+.or-chip.done b{color:var(--accent-deep,#065f46)}
+.or-chip.testing b{color:var(--warn)}
+.or-chip.pending b{color:var(--bad,#b91c1c)}
+.or-acts{white-space:nowrap}
+.or-acts-in{display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
+.or-acts-in .ico-btn.sm,.or-acts-in .run-del{flex-shrink:0;margin:0}
+.or-acts .ico-btn.sm{width:28px;height:28px;margin-right:3px;vertical-align:middle}
+.or-acts .ico-btn.sm svg{width:14px;height:14px}
+#or-n-cust.warn{color:var(--warn);font-weight:600}
 .an-prodbox{display:flex;align-items:center;gap:6px;min-width:150px}
 .an-prodbox input.cell{flex:1;min-width:0}
 .an-prodbox .ico-btn{width:32px;height:32px;position:relative;color:var(--muted)}

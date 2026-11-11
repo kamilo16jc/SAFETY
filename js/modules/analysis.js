@@ -88,6 +88,7 @@ function anLotTyped(e){
   e.classList.remove('from-run');
   anLabelMark(e, false);
   e.title = '';
+  if(typeof anCheckLotOrden === 'function') setTimeout(anCheckLotOrden, 0);
 }
 
 // El LOT del analisis. Si no se escribio, se toma el de la corrida de ese
@@ -203,7 +204,8 @@ function buildAnalysisSheet(){
       '<td class="soft" id="an-customer-cell">—</td>'+
       '<td><input class="cell" id="an-lot" placeholder="LOT" oninput="anLotTyped(this)"></td>'+
 
-      '<td><input class="cell" id="an-order" placeholder="Order" oninput="anOrdenEscrita(this)"></td>'+
+      '<td><input class="cell" id="an-order" placeholder="Order" list="an-order-list" autocomplete="off" '+
+        'oninput="anOrdenEscrita(this); anOrdenTecleada()"><datalist id="an-order-list"></datalist></td>'+
       '<td><input class="cell" id="an-po" placeholder="PO" oninput="anOrdenEscrita(this)"></td>'+
       '<td class="num"><input class="cell num" id="an-moisture" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
       '<td class="num"><input class="cell num" id="an-fat" inputmode="decimal" placeholder="%" oninput="anMarkNewRow()"></td>'+
@@ -235,6 +237,9 @@ function resetAnalysisRow(){
   var lt=document.getElementById('an-lot'); if(lt) anLotTyped(lt);
   ['an-product','an-order'].forEach(function(id){ var e=document.getElementById(id); if(e) anLabelMark(e, false); });
   ['an-order','an-po'].forEach(function(id){ var e=document.getElementById(id); if(e) anOrdenEscrita(e); });
+  window._anOrderId = null;
+  var dlo = document.getElementById('an-order-list'); if(dlo) dlo.innerHTML = '';
+  var lto = document.getElementById('an-lot'); if(lto) lto.classList.remove('or-check');
   anLabelCode = '';
   var sq=document.getElementById('an-seq'); if(sq) delete sq.dataset.manual;
   window._anRunAuto = false;
@@ -354,6 +359,7 @@ function saveAnalysisFields(id, obj){
     a[f] = nv;
   });
   anStampTester(a);
+  if('order' in (obj||{})) anVincularOrden(a);
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '\u2014';
   saveDB(db,'analysis');
@@ -371,6 +377,7 @@ function setAnalysisCell(id, field, value){
   if(typeof logAnalysisChange==='function') logAnalysisChange(a, field, a[field], nv);
   a[field] = nv;
   anStampTester(a);
+  if(field === 'order') anVincularOrden(a);
   a.editedAt = localISOStr();
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db,'analysis');
@@ -431,9 +438,13 @@ function anShareOrder(a){
   if(!order && !po) return 0;
   var day = String(a.date || '').slice(0,10);
   var db = getDB(), n = 0, quien = currentUser ? currentUser.name : '—';
+  // Si la muestra es de una orden de COA Orders, solo los productos de esa orden
+  var ordenCOA = (a.orderId != null && typeof orderById === 'function') ? orderById(a.orderId) : null;
+  var deLaOrden = ordenCOA ? (ordenCOA.products || []).map(normNumber) : null;
   (db.analysis || []).forEach(function(x){
     if(!x || x.id === a.id || x.coaNo) return;
     if(String(x.date || '').slice(0,10) !== day || !anMismoCliente(a, x)) return;
+    if(deLaOrden && deLaOrden.indexOf(normNumber(x.product)) < 0) return;
     var cambio = false;
     [['order', order], ['po', po]].forEach(function(f){
       if(!f[1] || String(x[f[0]] || '').trim()) return;
@@ -497,6 +508,84 @@ function anPonerOrdenDelDia(c){
 }
 function anOrdenEscrita(e){ delete e.dataset.auto; e.classList.remove('from-run'); e.title = ''; }
 
+// ===== COA ORDERS (js/modules/orders.js) =====
+// La orden de papel que se subio en Production > COA Orders: la abierta que
+// lleva este producto y aun no tiene su muestra pone el Order y el PO.
+// Varias: se escoge de la lista del campo Order. Ninguna: la del cliente ese dia.
+function anLibre(e){ return !e.value.trim() || (e.dataset.auto != null && e.value === e.dataset.auto); }
+function anPonerOrdenCOA(num, day){
+  window._anOrderId = null;
+  var dl = document.getElementById('an-order-list');
+  if(typeof ordersForProduct !== 'function'){ if(dl) dl.innerHTML = ''; return false; }
+  var cands = num ? ordersForProduct(num, day) : [];
+  if(dl) dl.innerHTML = cands.map(function(o){
+    return '<option value="'+esc(o.order)+'">'+esc((o.po ? 'PO '+o.po : '')+(o.customer ? ' · '+o.customer : ''))+'</option>';
+  }).join('');
+  if(!cands.length) return false;
+  var mismoDia = cands.filter(function(o){ return String(o.prodDate || '').slice(0,10) === day; });
+  var o = cands.length === 1 ? cands[0] : (mismoDia.length === 1 ? mismoDia[0] : null);
+  if(!o){
+    // varias ordenes abiertas: que escoja QA (lo traido antes se quita)
+    ['an-order', 'an-po'].forEach(function(id){
+      var e = document.getElementById(id);
+      if(e && e.dataset.auto != null && e.value === e.dataset.auto){ e.value = ''; anOrdenEscrita(e); }
+    });
+    toast(cands.length+' open orders have this product: pick one in Order');
+    return true;
+  }
+  anAplicarOrden(o);
+  return true;
+}
+function anAplicarOrden(o){
+  [['an-order', o.order, 'Order'], ['an-po', o.po, 'PO']].forEach(function(x){
+    var e = document.getElementById(x[0]);
+    if(!e || !x[1]) return;
+    if(!anLibre(e) || e.classList.contains('from-label') || e.classList.contains('lr-check')) return;
+    e.value = x[1]; e.dataset.auto = x[1]; e.classList.add('from-run');
+    e.title = x[2]+' of COA order '+o.order+(o.customer ? ' ('+o.customer+')' : '')+'. You can change it.';
+  });
+  window._anOrderId = o.id;
+}
+// Escribio (o escogio de la lista) un Order: si es una orden de COA Orders, trae su PO
+function anOrdenTecleada(){
+  var e = document.getElementById('an-order');
+  if(!e || typeof orderByNumber !== 'function') return;
+  var num = normNumber((document.getElementById('an-product')||{}).value || '');
+  var o = e.value.trim() ? orderByNumber(e.value, num) : null;
+  window._anOrderId = o ? o.id : null;
+  var p = document.getElementById('an-po');
+  if(o && o.po && p && anLibre(p)){
+    p.value = o.po; p.dataset.auto = o.po; p.classList.add('from-run');
+    p.title = 'PO of COA order '+o.order+'. You can change it.';
+  }
+  anCheckLotOrden();
+}
+// La orden con fecha de produccion dice que LOT debe tener: si no es ese, ambar
+function anCheckLotOrden(){
+  var lot = document.getElementById('an-lot');
+  if(!lot) return;
+  var o = (window._anOrderId != null && typeof orderById === 'function') ? orderById(window._anOrderId) : null;
+  var num = normNumber((document.getElementById('an-product')||{}).value || '');
+  var esp = (o && typeof orderExpectedLot === 'function') ? orderExpectedLot(o, num) : '';
+  var v = lot.value.trim();
+  var limpio = (typeof lotLimpio === 'function') ? lotLimpio(v) : v;
+  var malo = !!(esp && v && limpio !== esp);
+  lot.classList.toggle('or-check', malo);
+  if(malo) lot.title = 'COA order '+o.order+' expects LOT '+esp+' (production date '+fmtDate(String(o.prodDate).slice(0,10))+'). Check it.';
+  else if(String(lot.title || '').indexOf('COA order') === 0) lot.title = '';
+}
+// Una muestra guardada con su Order: se liga a la orden y, si le falta, trae el PO
+function anVincularOrden(a){
+  if(!a || typeof orderByNumber !== 'function') return;
+  var o = String(a.order || '').trim() ? orderByNumber(a.order, a.product) : null;
+  a.orderId = o ? o.id : null;
+  if(o && o.po && !String(a.po || '').trim()){
+    if(typeof logAnalysisChange==='function') logAnalysisChange(a, 'po', a.po, o.po);
+    a.po = o.po;
+    anPintarCelda(a.id, 'po', o.po);
+  }
+}
+
 function onAnalysisProduct(){
   var num = normNumber(document.getElementById('an-product').value);
   var p = findProduct(num);
@@ -512,7 +601,9 @@ function onAnalysisProduct(){
   var c = (p && typeof productCustomer==='function') ? productCustomer(p) : null;
   var el = document.getElementById('an-customer-cell');
   if(el) el.textContent = c ? c.company : '—';
-  anPonerOrdenDelDia(c);
+  var diaOrden = (document.getElementById('an-date')||{}).value || localDateStr();
+  if(!anPonerOrdenCOA(num, diaOrden)) anPonerOrdenDelDia(c);
+  setTimeout(anCheckLotOrden, 0);
 
   // El LOT sale de la muestra recolectada de ese producto (Production
   // Schedule / List Samples). Se pone solo, pero se puede cambiar: si QA lo
@@ -574,6 +665,12 @@ function saveAnalysis(){
     yeast: '', mold: '',                 // los llena Yeast & Mold a los 5 días
     testedBy: (moisture || fat || ph) && typeof getInitials==='function' ? getInitials() : '',
     runId: window._anRunId || null,
+    orderId: (function(){
+      var o = (window._anOrderId != null && typeof orderById === 'function') ? orderById(window._anOrderId) : null;
+      if(o && orNum(o.order) === orNum(g('an-order'))) return o.id;
+      var o2 = (g('an-order') && typeof orderByNumber === 'function') ? orderByNumber(g('an-order'), product) : null;
+      return o2 ? o2.id : null;
+    })(),
     createdAt: localISOStr(),
     createdBy: currentUser ? currentUser.name : '—'
   };
@@ -587,6 +684,7 @@ function saveAnalysis(){
 
   window._anRunId = null;
   window._anRunAuto = false;
+  window._anOrderId = null;
   // el LOT escrito aqui pasa a la corrida de esa muestra si no tenia
   if(typeof fillRunLotsFromAnalyses==='function') fillRunLotsFromAnalyses();
   resetAnalysisRow();
@@ -652,6 +750,7 @@ function anReaderApply(ev){
   if(ev.order && ord){
     anOrdenEscrita(ord);                 // la etiqueta manda sobre la orden traida del cliente
     ord.value = ev.order;
+    anOrdenTecleada();                   // si esta en COA Orders, trae el PO
     anLabelMark(ord, true, 'Order number printed next to the LOT, read by the phone');
     ord.addEventListener('input', function(){ anLabelMark(ord, false); }, {once:true});
     dice.push('Order '+ev.order);

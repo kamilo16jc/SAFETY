@@ -3,6 +3,7 @@ var nxLoginBusy=false;
 var nxCommandTrigger=null;
 var NX_SCREEN_NOTES={
  'screen-production':'Plan the shift. Keep every line and sample connected.',
+ 'screen-orders':'Enter each order once: its PO and its products. Sample Analysis fills them in by itself.',
  'screen-coa':'Prepare certificates from completed laboratory results.',
  'screen-labresults':'Review external laboratory reports and final results.',
  'screen-coastatus':'Follow each sample from collection to certificate.',
@@ -44,7 +45,7 @@ function nxTogglePassword(){
 // que en el telefono; al elegir otra funcion se vuelve a cerrar.
 var NX_SHEET_SCREENS={
  'screen-analysis':1,'screen-yeast':1,'screen-lab':1,'screen-raw':1,'screen-dry':1,
- 'screen-formag':1,'screen-rd':1,'screen-grilling':1,'screen-production':1,
+ 'screen-formag':1,'screen-rd':1,'screen-grilling':1,'screen-production':1,'screen-orders':1,
  'screen-samplelist':1,'screen-coa':1,'screen-labresults':1,'screen-coastatus':1,
  'screen-customers':1,'screen-products':1,'screen-hold':1,'screen-admin':1,'screen-lotsearch':1
 };
