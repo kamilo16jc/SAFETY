@@ -88,6 +88,7 @@ function goTo(id){
   if(id==='screen-coa') initCoa();
   if(id==='screen-labresults') initLabResults();
   if(id==='screen-coastatus') initCoaStatus();
+  if(id==='screen-coastock') initStock();
   if(id==='screen-raw') initRawSection('raw');
   if(id==='screen-dry') initRawSection('dry');
   if(id==='screen-formag') initRawSection('formag');
@@ -182,6 +183,7 @@ var CRUMBS = {
   'screen-coa':      ['COA', 'COA Generator'],
   'screen-labresults':['COA', 'Lab Results'],
   'screen-coastatus':['COA', 'Status'],
+  'screen-coastock':['COA', 'Stock Customers'],
   'screen-weight':   ['Capture', 'Weight Log'],
   'screen-seal':     ['Capture', 'Bag Seal'],
   'screen-gmp':      ['Capture', 'GMP Audit'],

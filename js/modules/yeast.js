@@ -27,6 +27,8 @@ function initYeast(){
 // antes que la fecha de la muestra.
 function ymPlateDay(a){
   if(!a) return '';
+  // un cliente asignado desde stock: la placa es la de su muestra
+  if(a.stockOf != null && typeof stockFuenteDe === 'function'){ var s = stockFuenteDe(a); if(s) return ymPlateDay(s); }
   var minimo = String(a.date||'').slice(0,10);
   var dias = [];
   ['moisture','fat','ph'].forEach(function(f){
@@ -100,6 +102,7 @@ function ymRows(){
 
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
     if(!ymPlate(a.product)) return false;
+    if(a.stockOf != null) return false;              // cliente de stock: la placa es la de su muestra
     if(!ymDone(a) && !ymPlateDay(a)) return false;   // aun no se testea: no hay placa
     var abierta = !ymDone(a) || String(a.ymAt||'').slice(0,10) === localDateStr();
     if(!inScope(a.date, ymFrom, ymTo, abierta)) return false;
@@ -216,6 +219,7 @@ function setYM(id, field, value){
   }
   saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  if(typeof stockSync === 'function') stockSync(a);
 
   if(!before && ymDone(a)){
     logActivity('analysis','Yeast & mold plate read',
@@ -248,6 +252,7 @@ function saveYmRow(id, btn){
         if(!rec.ymBy && currentUser && typeof getInitials==='function') rec.ymBy = getInitials();
         saveDB(db);
         if(window.saveToFirebase) window.saveToFirebase('analysis', rec);
+        if(typeof stockSync === 'function') stockSync(rec);
         a = rec;
       }
     }

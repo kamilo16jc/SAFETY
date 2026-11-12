@@ -349,7 +349,7 @@ function ribbonPendientes(){
   }
   if(typeof ymDone === 'function' && typeof ymDueDate === 'function'){
     var placas = (getDB().analysis || []).filter(function(a){
-      return !ymDone(a) && ymDueDate(a) && ymDueDate(a) <= hoy;
+      return a.stockOf == null && !ymDone(a) && ymDueDate(a) && ymDueDate(a) <= hoy;
     }).length;
     out.push({n:placas, t:'Placas listas para leer', s:'screen-yeast', m:'lab'});
   }

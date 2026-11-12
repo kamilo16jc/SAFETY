@@ -36,7 +36,7 @@ function anSeqEdit(id, el){
   if(n === antes) return;
 
   var dia = String(a.date||'').slice(0, 10);
-  var orden = anCapturaOrden(getAnalyses().filter(function(x){ return String(x.date||'').slice(0, 10) === dia; }));
+  var orden = anCapturaOrden(getAnalyses().filter(function(x){ return x.stockOf == null && String(x.date||'').slice(0, 10) === dia; }));
   var pos = orden.indexOf(a);
   var previos = orden.slice(0, pos);
   var cambios = [], k = n;
@@ -81,6 +81,7 @@ function anRenumerar(lista){
   if(!hechos.length) return;
   saveDB(db, 'analysis');
   if(window.saveToFirebase) hechos.forEach(function(a){ window.saveToFirebase('analysis', a); });
+  if(typeof stockSync === 'function') hechos.forEach(function(a){ stockSync(a); });
   var p = lista[0];
   if(typeof logActivity === 'function')
     logActivity('analysis', 'Analysis number changed', '#'+p.de+' → #'+p.a+

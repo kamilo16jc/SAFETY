@@ -34,6 +34,10 @@ function setAnalysisValue(id, field, value){
   var db = getDB();
   var a = (db.analysis||[]).filter(function(x){ return x.id===id; })[0];
   if(!a) return null;
+  if(a.stockOf != null && typeof stockCompartido === 'function' && stockCompartido(field)){
+    var src = stockFuenteDe(a);
+    if(src){ setAnalysisValue(src.id, field, value); return a; }
+  }
   var v = String(value==null?'':value).trim();
   logAnalysisChange(a, field, a[field], v);
   a[field] = v;
@@ -41,6 +45,7 @@ function setAnalysisValue(id, field, value){
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  if(typeof stockSync === 'function') stockSync(a);
   return a;
 }
 
@@ -324,7 +329,9 @@ function coaRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('coa-from'), to=g('coa-to'), q=(g('coa-search')||'').trim().toLowerCase();
   coaSinCOA = 0;
+  if(typeof stockSyncAll === 'function') stockSyncAll();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
+    if(typeof stockSinCliente === 'function' && stockSinCliente(a) && !a.coaNo) return false;   // stock: COA › Stock Customers
     // Pendiente aqui es "medido y sin certificar", aunque el dictamen no haya
     // llegado: si solo se salvara lo que ya esta listo, la cola de espera
     // desapareceria de la pantalla en cuanto pasara el dia.
@@ -467,6 +474,7 @@ function clearCoaPicks(){ coaPicks = {}; renderCoa(); }
 
 // Emite el certificado de lo seleccionado. Si ya estaba emitido, sube revisión.
 function generateCoa(){
+  if(typeof stockSyncAll === 'function') stockSyncAll();
   var db = getDB();
   var list = (db.analysis||[]).filter(function(a){ return coaPicks[a.id]; });
   if(!list.length){ toast('Select at least one record'); return; }
@@ -698,7 +706,9 @@ function stState(a){
 function stRows(){
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var from=g('st-from'), to=g('st-to'), q=(g('st-search')||'').trim().toLowerCase();
+  if(typeof stockSyncAll === 'function') stockSyncAll();
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
+    if(typeof stockSinCliente === 'function' && stockSinCliente(a) && !a.coaNo) return false;   // stock sin cliente
     if(!inScope(a.date, from, to, stState(a)!=='done')) return false;
     if(!coaLleva(a)) return false;                // su cliente no pide COA
     if(q){

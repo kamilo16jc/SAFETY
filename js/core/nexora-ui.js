@@ -7,6 +7,7 @@ var NX_SCREEN_NOTES={
  'screen-coa':'Prepare certificates from completed laboratory results.',
  'screen-labresults':'Review external laboratory reports and final results.',
  'screen-coastatus':'Follow each sample from collection to certificate.',
+ 'screen-coastock':'Give a customer to a product made for stock, by its LOT and date.',
  'screen-admin':'Manage people, roles and workspace permissions.',
  'screen-analysis':'Capture moisture, fat, pH and microbiological results.',
  'screen-yeast':'Track incubation dates, plate readings and pending samples.',
@@ -46,7 +47,7 @@ function nxTogglePassword(){
 var NX_SHEET_SCREENS={
  'screen-analysis':1,'screen-yeast':1,'screen-lab':1,'screen-raw':1,'screen-dry':1,
  'screen-formag':1,'screen-rd':1,'screen-grilling':1,'screen-production':1,'screen-orders':1,
- 'screen-samplelist':1,'screen-coa':1,'screen-labresults':1,'screen-coastatus':1,
+ 'screen-samplelist':1,'screen-coa':1,'screen-labresults':1,'screen-coastatus':1,'screen-coastock':1,
  'screen-customers':1,'screen-products':1,'screen-hold':1,'screen-admin':1,'screen-lotsearch':1
 };
 function nxNavAuto(){return document.body.classList.contains('nx-nav-auto');}

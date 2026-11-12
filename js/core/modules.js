@@ -46,6 +46,7 @@ var MODULES = [
       {screen:'screen-coa',        name:'COA Generator',   icon:'doc', color:'#047857'},
       {screen:'screen-lotsearch',  name:'Search',          icon:'search', color:'#0369a1'},
       {screen:'screen-coastatus',  name:'Status',          icon:'pulse', color:'#b45309'},
+      {screen:'screen-coastock',   name:'Stock Customers', icon:'box', color:'#0e7490'},
       {screen:'screen-labresults', name:'Lab Results',     icon:'droplet', color:'#a21caf'}
   ]},
   { id:'admin', color:'#fb7185', ink:'#be123c', name:'Administrator', icon:'sliders', items:[

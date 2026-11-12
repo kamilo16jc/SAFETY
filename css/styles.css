@@ -3207,3 +3207,23 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 #pr-body .pr-cancel:hover{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 45%,var(--border))}
 #pr-body tr.pr-cancelled .pr-cancel:hover{color:var(--accent);border-color:var(--accent)}
 
+/* ===== COA › Stock Customers (js/modules/stock.js) ===== */
+.sk-chips{display:flex;flex-wrap:wrap;gap:5px}
+.sk-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border-radius:999px;
+  background:var(--accent-tint);color:var(--text);font-size:11.5px;font-weight:600;white-space:nowrap}
+.sk-chip small{font-weight:400;color:var(--muted)}
+.sk-chip b{font-weight:600;font-size:10.5px;padding:1px 7px;border-radius:999px;background:var(--surface);color:var(--warn)}
+.sk-chip b.ok{color:var(--accent-deep,#065f46)}
+.sk-chip button{border:0;background:none;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:0 5px}
+.sk-chip button:hover{color:var(--fail)}
+#sk-sheet tr.sk-edit td{background:var(--surface2)}
+.sk-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;padding:6px 2px}
+.sk-form label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:700;color:var(--muted)}
+.sk-form label input.cell{min-width:170px;border-color:var(--border);background:var(--surface)}
+.sk-form .sheet-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg,#fff)}
+@media (max-width:760px){
+  .sk-form{flex-direction:column;align-items:stretch}
+  .sk-form label input.cell{min-width:0;width:100%}
+  .sk-chip{white-space:normal;flex-wrap:wrap;border-radius:12px;max-width:100%}
+}
+

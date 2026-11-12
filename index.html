@@ -217,6 +217,35 @@
   <div id="lr-sheet"></div>
 </div>
 
+<div class="screen" id="screen-coastock">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">Stock Customers</div>
+
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="sk-lot">LOT</label>
+      <input class="field" id="sk-lot" placeholder="LOT" autocomplete="off" autocapitalize="characters"
+             onkeydown="if(event.key==='Enter')skBuscar()"></div>
+    <div class="sb-field"><label for="sk-date">Production date</label>
+      <input type="date" class="field" id="sk-date"></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="sk-go" aria-label="Search" title="Search" onclick="skBuscar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+  </div>
+
+  <div class="legend">
+    <div><span class="pill">Stock</span>
+      Products made for stock have no customer, so they cannot get a COA. Find the sample by its LOT and
+      production date, add the customer with its Order and PO, and it shows up in COA Generator.</div>
+    <div><span class="pill ok">Several</span>
+      One LOT can be sold to several customers: each one gets its own COA with the same results. A customer
+      can be removed while its COA has not been issued.</div>
+  </div>
+
+  <div class="kpi-row" id="sk-kpis"></div>
+  <div id="sk-sheet"></div>
+  <datalist id="sk-cust-list"></datalist>
+</div>
+
 <div class="screen" id="screen-coastatus">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
   <div class="form-title">Status</div>
@@ -2143,6 +2172,7 @@
 <script src="js/modules/lab-form.js"></script>
 <script src="js/modules/coa.js"></script>
 <script src="js/modules/coa-log.js"></script>
+<script src="js/modules/stock.js"></script>
 <script src="js/modules/raw.js"></script>
 <script src="js/modules/renumber.js"></script>
 <script src="js/modules/grilling.js"></script>

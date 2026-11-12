@@ -33,7 +33,7 @@ function nextAnalysisSeq(day){
   var d = String(day||localDateStr()).slice(0,10);
   var ultimo = null;
   getAnalyses().forEach(function(a){
-    if(String(a.date||'').slice(0,10)!==d || !(+a.seq>0)) return;
+    if(a.stockOf != null || String(a.date||'').slice(0,10)!==d || !(+a.seq>0)) return;
     if(!ultimo) { ultimo = a; return; }
     var ka = String(a.createdAt||''), ku = String(ultimo.createdAt||'');
     if(ka>ku || (ka===ku && (+a.id||0)>(+ultimo.id||0))) ultimo = a;
@@ -107,7 +107,7 @@ function analysisLot(a){
 
 function analysisFor(product, day){
   return getAnalyses().filter(function(a){
-    return String(a.product||'')===String(product||'') &&
+    return a.stockOf == null && String(a.product||'')===String(product||'') &&
            String(a.date||'').slice(0,10)===String(day||'').slice(0,10);
   });
 }
@@ -163,6 +163,7 @@ function anFilters(){
 function analysisResults(){
   anFilters();
   return getAnalyses().filter(function(a){
+    if(a.stockOf != null) return false;     // cliente asignado desde stock (js/modules/stock.js)
     // Sin fechas se ve SOLO el dia de hoy: una muestra de ayer sin resultados
     // ya no se cuela (pedido del usuario, 11 nov 2026). Se busca con las fechas.
     if(!inScope(a.date, anFrom, anTo, false)) return false;
@@ -339,7 +340,10 @@ function anRowHTML(a, i){
     '<td class="soft">'+esc(fmtDate(a.date))+'</td>'+
     '<td class="code">'+esc(a.product||'—')+'</td>'+
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
-    '<td class="soft">'+esc(a.customer||'—')+'</td>'+
+    '<td class="soft">'+(a.customer ? esc(a.customer)
+      : (typeof stockHijos === 'function' && stockHijos(a).length)
+        ? '<span class="tag">Stock</span> '+esc(stockHijos(a).map(function(k){ return k.customer; }).join(', '))
+        : '—')+'</td>'+
     '<td class="code">'+esc(analysisLot(a)||'—')+'</td>'+
     '<td>'+txt('order', a.order, 'Order')+'</td>'+
     '<td>'+txt('po', a.po, 'PO')+'</td>'+
@@ -370,6 +374,7 @@ function saveAnalysisFields(id, obj){
   a.editedBy = currentUser ? currentUser.name : '\u2014';
   saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  if(typeof stockSync === 'function') stockSync(a);
   return a;
 }
 
@@ -388,6 +393,7 @@ function setAnalysisCell(id, field, value){
   a.editedBy = currentUser ? currentUser.name : '—';
   saveDB(db,'analysis');
   if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  if(typeof stockSync === 'function') stockSync(a);
   if(field === 'order' || field === 'po') anShareOrder(a);
   anRefreshCounts();
   if(typeof refreshRunViews==='function') refreshRunViews();
@@ -448,7 +454,7 @@ function anShareOrder(a){
   var ordenCOA = (a.orderId != null && typeof orderById === 'function') ? orderById(a.orderId) : null;
   var deLaOrden = ordenCOA ? (ordenCOA.products || []).map(normNumber) : null;
   (db.analysis || []).forEach(function(x){
-    if(!x || x.id === a.id || x.coaNo) return;
+    if(!x || x.id === a.id || x.coaNo || x.stockOf != null) return;
     if(String(x.date || '').slice(0,10) !== day || !anMismoCliente(a, x)) return;
     if(deLaOrden && deLaOrden.indexOf(normNumber(x.product)) < 0) return;
     var cambio = false;
@@ -481,7 +487,7 @@ function anOrdenDelDia(c, day){
   if(!c) return {};
   var ref = {customerKey: typeof custKey==='function' ? custKey(c) : '', customer: c.company};
   var hoy = getAnalyses().filter(function(x){
-    return String(x.date || '').slice(0,10) === day && anMismoCliente(ref, x);
+    return x.stockOf == null && String(x.date || '').slice(0,10) === day && anMismoCliente(ref, x);
   });
   var una = function(f){
     var v = hoy.map(function(x){ return String(x[f] || '').trim(); }).filter(Boolean)
@@ -785,11 +791,16 @@ function anOfferLink(p, codigo){
 function deleteAnalysis(id){
   var a = getAnalyses().filter(function(x){ return x.id===id; })[0];
   if(!a) return;
-  if(!confirm('Delete analysis #'+a.seq+'?')) return;
+  var hijos = (typeof stockHijos === 'function') ? stockHijos(a) : [];
+  var conCoa = hijos.filter(function(k){ return k.coaNo; })[0];
+  if(conCoa){ toast('This stock sample has COA '+conCoa.coaNo+' for '+conCoa.customer+': it cannot be deleted'); return; }
+  if(!confirm('Delete analysis #'+a.seq+'?'+(hijos.length ? '\nIts '+hijos.length+' stock customer(s) will be removed too.' : ''))) return;
   var db = getDB();
-  db.analysis = (db.analysis||[]).filter(function(x){ return x.id!==id; });
+  var fuera = [id].concat(hijos.map(function(k){ return k.id; }));
+  db.analysis = (db.analysis||[]).filter(function(x){ return fuera.indexOf(x.id) < 0; });
   saveDB(db,'analysis');
   if(a._fbId && window.deleteFromFirebase) window.deleteFromFirebase('analysis', a._fbId);
+  hijos.forEach(function(k){ if(k._fbId && window.deleteFromFirebase) window.deleteFromFirebase('analysis', k._fbId); });
   renderAnalysisRows();
   if(typeof refreshRunViews==='function') refreshRunViews();
 }

@@ -88,9 +88,13 @@ function stEventos(a){
       d:[run.lot ? 'LOT '+run.lot : '', run.sampleFrom ? 'Samples '+run.sampleFrom+'–'+run.sampleTo : '']});
     if(run.labSent) poner({at:run.labSentAt, icon:'factory', t:'Sent to the external lab'});
   }
-  poner({at:a.createdAt, icon:'clipboard', t:'Registered in Sample Analysis'+(a.seq ? ' #'+a.seq : ''), by:a.createdBy});
+  // un cliente asignado desde stock: lo de la muestra viene de la muestra
+  var m = (a.stockOf != null && typeof stockFuenteDe === 'function' && stockFuenteDe(a)) || a;
+  poner({at:m.createdAt, icon:'clipboard', t:'Registered in Sample Analysis'+(m.seq ? ' #'+m.seq : ''), by:m.createdBy});
+  if(m !== a) poner({at:a.stockAt, icon:'user', t:'Assigned to '+(a.customer || 'a customer')+' from stock',
+    d:[a.order ? 'Order '+a.order : '', a.po ? 'PO '+a.po : ''], by:a.stockBy});
   // si se le cambio el numero (js/modules/renumber.js), tambien se ve
-  (a.changes || []).filter(function(c){ return c.field === 'seq'; }).forEach(function(c){
+  (m.changes || []).filter(function(c){ return c.field === 'seq'; }).forEach(function(c){
     poner({at:c.at, icon:'history', t:'Analysis number changed', d:['#'+(c.from || '\u2014')+' \u2192 #'+c.to], by:c.by});
   });
 
@@ -98,10 +102,10 @@ function stEventos(a){
   var medidas = [a.moisture ? 'Moisture '+a.moisture+'%' : '', a.fat ? 'Fat '+a.fat+'%' : '', a.ph ? 'pH '+a.ph : ''];
   var sinTest = (typeof analysisNoTests === 'function') && analysisNoTests(a);
   if(typeof anHasResults === 'function' ? anHasResults(a) : !!(a.moisture || a.fat || a.ph)){
-    var c1 = stCambio(a, ['moisture', 'fat', 'ph']);
-    poner({at:c1 ? c1.at : a.createdAt, icon:'check', t:'Tested', d:medidas, by:a.testedBy || (c1 && c1.by)});
+    var c1 = stCambio(m, ['moisture', 'fat', 'ph']);
+    poner({at:c1 ? c1.at : m.createdAt, icon:'check', t:'Tested', d:medidas, by:a.testedBy || (c1 && c1.by)});
   } else if(sinTest){
-    poner({at:a.createdAt, icon:'note', t:'No Moisture, Fat or pH', d:['The product has no plate: not tested']});
+    poner({at:m.createdAt, icon:'note', t:'No Moisture, Fat or pH', d:['The product has no plate: not tested']});
   } else {
     falta.push({icon:'check', t:'Moisture, Fat and pH', d:['Not tested yet']});
   }
@@ -125,8 +129,8 @@ function stEventos(a){
   // El reporte del laboratorio de fuera
   var necesitaLab = (typeof coaNeedsLab === 'function') ? coaNeedsLab(a) : false;
   if(a.result && String(a.result).trim()){
-    var cr = stCambio(a, ['result'], true);
-    poner({at:cr ? cr.at : (a.editedAt || a.createdAt), icon:'doc', t:'Lab report in',
+    var cr = stCambio(m, ['result'], true);
+    poner({at:cr ? cr.at : (m.editedAt || m.createdAt), icon:'doc', t:'Lab report in',
       d:['Verdict: '+a.result], by:a.resultBy || (cr && cr.by)});
   } else if(necesitaLab){
     falta.push({icon:'doc', t:'Lab report', d:['Waiting for the external lab']});

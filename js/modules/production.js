@@ -79,6 +79,7 @@ function runsFor(date, shift, conCanceladas){
 function runTestCount(run){
   var day = String(run.date).slice(0,10);
   var list = (typeof getAnalyses==='function') ? getAnalyses().filter(function(a){
+    if(a.stockOf != null) return false;     // cliente de stock: no es otra muestra
     if(a.runId && a.runId===run.id) return true;
     return String(a.product||'')===String(run.product||'') &&
            String(a.date||'').slice(0,10)===day;
