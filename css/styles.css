@@ -1703,6 +1703,9 @@ body.pr-abierto{overflow:hidden}
     font-size:inherit;font-weight:inherit;color:inherit}
   #pr-body td.pr-acts{display:contents}
   #pr-body .pr-del{order:4;width:30px;height:30px;min-height:30px;color:var(--dim)}
+  #pr-body .pr-cancel{order:4;width:30px;height:30px;min-height:30px;color:var(--dim)}
+  #pr-body .pr-cancel svg{width:14px;height:14px}
+  #pr-body tr.pr-cancelled td.pr-cx{order:5;flex:1 1 100%;display:block;text-align:left;font-size:12px}
   #pr-body .pr-del svg{width:13px;height:13px}
   #pr-body td.pr-lot{order:5;flex:1 1 calc(100% - 60px)}
   #pr-body td.pr-lot input.cell{font-size:16px;min-height:42px}
@@ -3195,3 +3198,12 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 @keyframes nxq-pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.nx-q-box .legend{animation:none}}
 @media (max-width:1023px){ .sheet-bar .nx-bar-end{justify-self:end;grid-column:-2/-1} }
+
+/* Production Schedule: la corrida cancelada se queda, tachada y apagada */
+#pr-body tr.pr-cancelled td{color:var(--dim)}
+#pr-body tr.pr-cancelled td.pr-code,#pr-body tr.pr-cancelled .pr-tachado{text-decoration:line-through;
+  text-decoration-color:color-mix(in srgb,var(--fail) 55%,transparent)}
+#pr-body tr.pr-cancelled td.pr-cx{font-size:12px}
+#pr-body .pr-cancel:hover{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 45%,var(--border))}
+#pr-body tr.pr-cancelled .pr-cancel:hover{color:var(--accent);border-color:var(--accent)}
+

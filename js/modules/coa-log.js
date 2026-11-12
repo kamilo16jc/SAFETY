@@ -29,7 +29,7 @@ function stRunOf(a){
   }
   var dia = String(a.date || '').slice(0, 10);
   return runs.filter(function(x){
-    return String(x.product || '') === String(a.product || '') && String(x.date || '').slice(0, 10) === dia;
+    return !x.cancelled && String(x.product || '') === String(a.product || '') && String(x.date || '').slice(0, 10) === dia;
   })[0] || null;
 }
 function stIsoMas(iso, n){

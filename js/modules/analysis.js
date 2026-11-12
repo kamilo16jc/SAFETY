@@ -69,7 +69,7 @@ function anCollectedRun(product, day){
   desde = desde.getFullYear()+'-'+('0'+(desde.getMonth()+1)).slice(-2)+'-'+('0'+desde.getDate()).slice(-2);
   var list = getRuns().filter(function(r){
     var d = String(r.date||'').slice(0,10);
-    return String(r.product||'')===String(product) && r.collected &&
+    return !r.cancelled && String(r.product||'')===String(product) && r.collected &&
            String(r.lot||'').trim() && d<=day && d>=desde;
   });
   if(!list.length) return null;
@@ -99,7 +99,7 @@ function analysisLot(a){
   if(typeof getRuns !== 'function') return '';
   var day = String(a.date||'').slice(0,10);
   var run = getRuns().filter(function(r){
-    return String(r.product||'')===String(a.product||'') &&
+    return !r.cancelled && String(r.product||'')===String(a.product||'') &&
            String(r.date||'').slice(0,10)===day && r.lot;
   })[0];
   return run ? run.lot : '';

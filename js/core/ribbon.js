@@ -285,7 +285,7 @@ function ribbonLineas(){
   // lo programado: una linea sin un solo peso es justo la que hay que ver
   if(typeof getRuns === 'function'){
     getRuns().forEach(function(r){
-      if(String(r.date||'').slice(0,10) !== hoy) return;
+      if(r.cancelled || String(r.date||'').slice(0,10) !== hoy) return;
       var L = toca(r.line); if(!L) return;
       L.runs++;
       if(!L.prod && r.product) L.prod = String(r.product);

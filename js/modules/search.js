@@ -337,7 +337,7 @@ function renderSearch(){
 // sobre todo, señala los HUECOS (lo que falta), que es lo que busca un auditor.
 function traceCard(r){
   if(!searchQuery) return '';
-  var runs=r.runs||[], w=r.weights||[], s=r.seals||[], holds=r.holds||[], capa=r.capa||[];
+  var runs=(r.runs||[]).filter(function(x){ return !x.cancelled; }), w=r.weights||[], s=r.seals||[], holds=r.holds||[], capa=r.capa||[];
   if(!(runs.length+w.length+s.length+holds.length+capa.length)) return '';
 
   var scored = w.filter(function(x){ return x.compliance!=null; });
@@ -452,7 +452,7 @@ function runPanel(list){
       '<td>'+(r.shift===1?'1st':'2nd')+'</td>'+
       '<td>Line '+esc(r.line)+'</td>'+
       '<td class="mono">'+esc(r.product||'—')+'</td>'+
-      '<td>'+esc(r.productName||'—')+(runSampleCount(r)>0?' <span class="tag">LAB</span>':'')+'</td>'+
+      '<td>'+esc(r.productName||'—')+(r.cancelled ? ' <span class="tag bad">Cancelled</span>' : runSampleCount(r)>0?' <span class="tag">LAB</span>':'')+'</td>'+
       '<td class="mono code">'+esc(r.lot||'—')+'</td>'+
       '<td>'+yn(r.collected)+'</td>'+
       '<td>'+yn(t.tested)+'</td>'+

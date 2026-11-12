@@ -60,8 +60,11 @@ function prodFilters(){
   prodShift = String((s && s.value) ? s.value : expectedShift());
 }
 
-function runsFor(date, shift){
+// Las canceladas no cuentan para nada (List Samples, reporte del turno...):
+// solo la hoja del schedule las pide, para verlas y poder restaurarlas.
+function runsFor(date, shift, conCanceladas){
   return getRuns().filter(function(r){
+    if(r.cancelled && !conCanceladas) return false;
     return String(r.date).slice(0,10)===String(date) && String(r.shift)===String(shift);
   }).sort(function(a,b){
     // Sin hora, el orden es el de captura: como viene el papel de produccion
@@ -120,6 +123,32 @@ function runComplete(run){
 // Nuevo: push + saveToFirebase (es el último del array, el _fbId cae bien).
 // Edición: saveToFirebaseAt sobre el mismo doc; si aún no tiene _fbId (creado
 // sin señal) se queda local y lo sube flushPending.
+// ---- Cancelar una orden (pedido del usuario, 11 nov 2026) ----
+// La orden de papel cambio y ese producto no se va a correr. La corrida se
+// queda en la hoja, tachada y con boton para restaurarla, pero ya no pide
+// muestra (runSampleCount = 0) ni cuenta en List Samples, Lab Samples, los
+// avisos, los KPI ni el reporte del turno.
+function toggleRunCancel(id){
+  var db = getDB();
+  var run = (db.runs||[]).filter(function(r){ return r.id===id; })[0];
+  if(!run) return;
+  if(!run.cancelled){
+    var ya = run.labSent ? 'sent to the lab' : run.collected ? 'collected' : '';
+    if(!confirm('Cancel '+(run.product||'this run')+' on line '+(run.line||'—')+'?\n'+
+      (ya ? 'Its sample is already marked as '+ya+'.\n' : '')+
+      'It stays on the sheet, crossed out, and stops asking for a lab sample.')) return;
+  }
+  run.cancelled   = !run.cancelled;
+  run.cancelledAt = run.cancelled ? localISOStr() : '';
+  run.cancelledBy = run.cancelled ? (currentUser ? currentUser.name : '\u2014') : '';
+  persistRunEdit(run, db);
+  logActivity('production', run.cancelled ? 'Run cancelled' : 'Run restored',
+    'Line '+run.line+' \u00b7 '+(run.product||'\u2014')+' \u00b7 '+String(run.date).slice(0,10),
+    currentUser?currentUser.name:'\u2014');
+  toast((run.product||'Run')+(run.cancelled ? ' cancelled' : ' restored'));
+  refreshRunViews();
+}
+
 function persistRunEdit(run, db){
   saveDB(db,['runs','labCounters']);
   if(run._fbId && window.saveToFirebaseAt) window.saveToFirebaseAt('runs', run._fbId, run);
@@ -133,7 +162,7 @@ function persistRunEdit(run, db){
 function fillRunLotsFromAnalyses(){
   if(typeof getAnalyses !== 'function') return 0;
   var db = getDB();
-  var sinLot = (db.runs||[]).filter(function(r){ return !String(r.lot||'').trim(); });
+  var sinLot = (db.runs||[]).filter(function(r){ return !r.cancelled && !String(r.lot||'').trim(); });
   if(!sinLot.length) return 0;
   var num = function(v){ return (typeof normNumber==='function') ? normNumber(v) : String(v||'').trim(); };
   var porRun = {}, porDia = {};
@@ -224,6 +253,7 @@ function copySchedule(){
       id: now + i,
       date: prodDate, shift: parseInt(prodShift),
       lot:'', collected:false, labSent:false, notes:'',
+      cancelled:false, cancelledAt:'', cancelledBy:'',
       createdBy: currentUser ? currentUser.name : '—',
       createdAt: localISOStr()
     });
@@ -253,6 +283,7 @@ function toggleRunCheck(id, field){
   var db = getDB();
   var run = (db.runs||[]).filter(function(r){ return r.id===id; })[0];
   if(!run) return;
+  if(run.cancelled){ toast('This run is cancelled. Restore it first.'); return; }
   run[field] = !run[field];
   // Se guarda la hora: la de recolección la pide la forma del laboratorio
   if(field==='collected') run.collectedAt = run.collected ? localISOStr() : '';
@@ -321,6 +352,7 @@ function setLabCounter(customerId, week, next, db){
 // Cuantos samples pide esta corrida: lo dice el producto (Products), y si es
 // un producto viejo sin el campo, su cliente.
 function runSampleCount(run){
+  if(run && run.cancelled) return 0;                    // cancelada: ya no pide muestra
   var p = (typeof findProduct==='function') ? findProduct(run.product) : null;
   if(p && typeof productSampleCount==='function') return productSampleCount(p);
   var c = runCustomer(run);
@@ -376,6 +408,7 @@ function scanRunCollect(id){ openScanner('collect:'+id); }
 function collectByScan(id, code){
   var run = findRun(id);
   if(!run) return;
+  if(run.cancelled){ playAlert('fail'); toast(run.product+' is cancelled. Not collected.'); return; }
   var leido = (typeof findProduct==='function') ? findProduct(code) : null;
   if(leido && normNumber(leido.number) !== normNumber(run.product)){
     playAlert('fail');
@@ -433,10 +466,11 @@ function renderProduction(){
   buildProductionSheet();
   var body = document.getElementById('pr-body');
   if(!body) return;
-  var list = runsFor(prodDate, prodShift);
+  var list = runsFor(prodDate, prodShift, true);       // las canceladas tambien, tachadas
 
   var done=0, labs=0, labsPending=0, untested=0;
-  list.forEach(function(r){
+  var activas = list.filter(function(r){ return !r.cancelled; });
+  activas.forEach(function(r){
     if(runComplete(r)) done++;
     if(runSampleCount(r)>0){ labs++; if(!r.labSent) labsPending++; }
     if(!runTestCount(r).tested) untested++;
@@ -444,7 +478,7 @@ function renderProduction(){
   var sum = document.getElementById('pr-summary');
   if(sum){
     sum.innerHTML = list.length
-      ? kpiCard(list.length, 'runs scheduled', {icono:'calendar'}) +
+      ? kpiCard(activas.length, 'runs scheduled', {icono:'calendar'}) +
         kpiCard(done, 'complete', {tono:'ok', icono:'check'}) +
         kpiCard(untested, 'not tested', {tono:'bad', icono:'alert'}) +
         kpiCard(labsPending+'/'+labs, 'lab samples pending',
@@ -464,6 +498,25 @@ function renderProduction(){
 }
 
 function runRowHTML(r, i){
+  var ico0 = function(icon, title, onclick, cls){
+    return '<button class="ico-btn sm '+cls+'" title="'+title+'" aria-label="'+title+'" onclick="'+onclick+'"><span data-icon="'+icon+'"></span></button>';
+  };
+  // Cancelada: tachada, sin checklist, y con el boton para restaurarla
+  if(r.cancelled){
+    return '<tr class="pr-cancelled">'+
+      '<td class="rn">'+i+'</td>'+
+      '<td class="code pr-code">'+esc(r.product||'\u2014')+'</td>'+
+      '<td class="wide pr-name"><span class="pr-tachado">'+esc(r.productName||'\u2014')+'</span>'+
+        ' <span class="tag bad">Cancelled</span></td>'+
+      '<td class="mid pr-line">'+esc(String(r.line||'\u2014'))+'</td>'+
+      '<td colspan="5" class="soft pr-cx">Cancelled'+(r.cancelledBy ? ' by '+esc(r.cancelledBy) : '')+
+        (r.cancelledAt ? ' \u00b7 '+esc(fmtDate(r.cancelledAt))+' '+esc(String(r.cancelledAt).slice(11,16)) : '')+'</td>'+
+      '<td class="acts pr-acts">'+
+        ico0('back','Restore this run','toggleRunCancel('+r.id+')','pr-cancel')+
+        ico0('close','Remove from schedule','deleteRun('+r.id+')','pr-del')+
+      '</td>'+
+    '</tr>';
+  }
   var t = runTestCount(r);
   var n = runSampleCount(r);
   var complete = runComplete(r);
@@ -495,6 +548,7 @@ function runRowHTML(r, i){
                 : '<span class="soft">\u2014</span>')+'</td>'+
     '<td class="acts pr-acts">'+
       ico('scan','Scan the product to collect it','scanRunCollect('+r.id+')','pr-scan')+
+      ico('ban','Cancel this run (the order changed)','toggleRunCancel('+r.id+')','pr-cancel')+
       ico('close','Remove from schedule','deleteRun('+r.id+')','pr-del')+
     '</td>'+
   '</tr>';
@@ -503,15 +557,16 @@ function runRowHTML(r, i){
 // La hoja del dia, tal como se ve
 function exportScheduleCSV(){
   prodFilters();
-  var list = xlEntryOrder(runsFor(prodDate, prodShift));   // en el orden en que se capturo
+  var list = xlEntryOrder(runsFor(prodDate, prodShift, true));   // en el orden en que se capturo
   if(!list.length){ toast('Nothing scheduled for that day and shift'); return; }
-  var out = [['Product','Description','Line','LOT','Samples','Sample #s','Collected','Tested','Sent to lab']];
+  var out = [['Product','Description','Line','LOT','Samples','Sample #s','Collected','Tested','Sent to lab','Status']];
   list.forEach(function(r){
     var t = runTestCount(r), n = runSampleCount(r);
-    out.push([r.product||'', r.productName||'', r.line||'', r.lot||'', n,
+    out.push([r.product||'', r.productName||'', r.line||'', r.lot||'', r.cancelled ? '' : n,
       r.sampleFrom ? r.sampleFrom+'-'+r.sampleTo : '',
-      n>0 ? (r.collected?'Yes':'No') : '', t.tested?'Yes':'No',
-      n>0 ? (r.labSent?'Yes':'No') : '']);
+      n>0 ? (r.collected?'Yes':'No') : '', r.cancelled ? '' : (t.tested?'Yes':'No'),
+      n>0 ? (r.labSent?'Yes':'No') : '',
+      r.cancelled ? 'Cancelled' : (runComplete(r) ? 'Complete' : 'Pending')]);
   });
   downloadCSV('schedule-'+prodDate+'-shift'+prodShift+'.csv', out);
 }

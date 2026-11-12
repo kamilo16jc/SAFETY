@@ -89,7 +89,7 @@ function kpiSellos(v){
 }
 function kpiCorridas(v){
   return (getDB().runs||[]).filter(function(r){
-    return kpiEnVentana(r,v) && kpiPorLinea(r) && kpiPorTurno(r);
+    return !r.cancelled && kpiEnVentana(r,v) && kpiPorLinea(r) && kpiPorTurno(r);
   });
 }
 function kpiTemps(v){
