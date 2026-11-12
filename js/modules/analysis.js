@@ -26,14 +26,14 @@ function initAnalysis(){
   renderAnalysisRows();
 }
 
-// Número correlativo del año (como el ID de la hoja). Sigue al ULTIMO que se
-// guardo, no al mayor: si QA pone el 10 en la fila nueva, el siguiente es el
-// 11 aunque haya numeros mas altos de antes.
-function nextAnalysisSeq(year){
-  var y = String(year||new Date().getFullYear());
+// Número de la muestra: CADA DIA EMPIEZA EN 1 (pedido del usuario, 11 nov
+// 2026). Sigue al ULTIMO que se guardo ese dia, no al mayor: si QA pone el 10
+// en la fila nueva, el siguiente es el 11 aunque haya numeros mas altos.
+function nextAnalysisSeq(day){
+  var d = String(day||localDateStr()).slice(0,10);
   var ultimo = null;
   getAnalyses().forEach(function(a){
-    if(String(a.date||'').slice(0,4)!==y || !(+a.seq>0)) return;
+    if(String(a.date||'').slice(0,10)!==d || !(+a.seq>0)) return;
     if(!ultimo) { ultimo = a; return; }
     var ka = String(a.createdAt||''), ku = String(ultimo.createdAt||'');
     if(ka>ku || (ka===ku && (+a.id||0)>(+ultimo.id||0))) ultimo = a;
@@ -41,11 +41,11 @@ function nextAnalysisSeq(year){
   return ultimo ? (+ultimo.seq)+1 : 1;
 }
 
-// El numero que lleva la fila nueva: el que se escribio, o el que sigue
-function anSeqWanted(year){
+// El numero que lleva la fila nueva: el que se escribio, o el que sigue ese dia
+function anSeqWanted(day){
   var e = document.getElementById('an-seq');
   var n = e ? parseInt(String(e.value).trim(), 10) : NaN;
-  return (n > 0 && String(n) === String(e.value).trim()) ? n : nextAnalysisSeq(year);
+  return (n > 0 && String(n) === String(e.value).trim()) ? n : nextAnalysisSeq(day);
 }
 
 // Sugiere el siguiente numero, salvo que QA ya haya escrito uno
@@ -53,7 +53,7 @@ function anSuggestSeq(){
   var e = document.getElementById('an-seq');
   if(!e || e.dataset.manual) return;
   var d = (document.getElementById('an-date')||{}).value || localDateStr();
-  e.value = nextAnalysisSeq(String(d).slice(0,4));
+  e.value = nextAnalysisSeq(String(d).slice(0,10));
 }
 function anSeqTyped(e){ if(e.value.trim()) e.dataset.manual = '1'; else delete e.dataset.manual; }
 function anDateChanged(){ anSuggestSeq(); onAnalysisProduct(); }
@@ -163,7 +163,9 @@ function anFilters(){
 function analysisResults(){
   anFilters();
   return getAnalyses().filter(function(a){
-    if(!inScope(a.date, anFrom, anTo, !analysisDone(a))) return false;
+    // Sin fechas se ve SOLO el dia de hoy: una muestra de ayer sin resultados
+    // ya no se cuela (pedido del usuario, 11 nov 2026). Se busca con las fechas.
+    if(!inScope(a.date, anFrom, anTo, false)) return false;
     if(anQuery){
       var hay=(String(a.product||'')+' '+String(a.cheese||'')+' '+String(a.customer||'')+' '+
                String(a.order||'')+' '+String(a.po||'')+' #'+String(a.seq||'')).toLowerCase();
@@ -640,11 +642,11 @@ function saveAnalysis(){
   // productos y se testean despues, en la misma fila (pedido del usuario)
   var moisture=g('an-moisture'), fat=g('an-fat'), ph=g('an-ph');
 
-  var seq = anSeqWanted(date.slice(0,4));
+  var seq = anSeqWanted(date.slice(0,10));
   var repetido = getAnalyses().some(function(a){
-    return String(a.date||'').slice(0,4)===date.slice(0,4) && +a.seq===seq;
+    return String(a.date||'').slice(0,10)===date.slice(0,10) && +a.seq===seq;
   });
-  if(repetido && !confirm('Analysis #'+seq+' already exists in '+date.slice(0,4)+
+  if(repetido && !confirm('Analysis #'+seq+' already exists on '+fmtDate(date)+
                           '. Save another #'+seq+' anyway?')) return;
 
   var p = findProduct(product);

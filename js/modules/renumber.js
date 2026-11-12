@@ -7,7 +7,8 @@
 //
 // "Despues" es el orden de captura, el mismo con que se reparten los numeros
 // (nextAnalysisSeq / nextSampleLetter), no el orden de la tabla. En Sample
-// Analysis la cuenta es por año: solo se mueven las del mismo año.
+// Analysis cada dia empieza en 1: solo se mueven las del MISMO DIA (la v166
+// contaba por año y al corregir una de ayer movio las de hoy).
 //
 // Si el cambio mueve otras muestras (o repite un numero) se pregunta primero y
 // se muestra que va a cambiar; tambien se puede cambiar solo esa. Cada cambio
@@ -34,8 +35,8 @@ function anSeqEdit(id, el){
   if(!(n > 0) || String(n) !== txt){ toast('Write a whole number, like 12'); return; }
   if(n === antes) return;
 
-  var y = String(a.date||'').slice(0, 4);
-  var orden = anCapturaOrden(getAnalyses().filter(function(x){ return String(x.date||'').slice(0, 4) === y; }));
+  var dia = String(a.date||'').slice(0, 10);
+  var orden = anCapturaOrden(getAnalyses().filter(function(x){ return String(x.date||'').slice(0, 10) === dia; }));
   var pos = orden.indexOf(a);
   var previos = orden.slice(0, pos);
   var cambios = [], k = n;
@@ -201,9 +202,9 @@ function rnPreguntar(q){
   if(q.choques.length){
     var ej = q.choques.slice(0, 3).map(function(c){ return esc(q.et(c.v))+' ('+esc(fmtDate(c.rec.date))+')'; }).join(', ');
     body += '<p class="rn-nota warn">'+(q.choques.length === 1 ? ej+' is' : ej+(q.choques.length > 3 ? '…' : '')+' are')+
-      ' already used by a sample entered before. That one is not changed.</p>';
+      ' already used that day by a sample entered before. That one is not changed.</p>';
   } else if(!q.cambios.length && q.repiteSolo){
-    body += '<p class="rn-nota warn">'+esc(q.et(q.nuevo))+' is already used by another sample.</p>';
+    body += '<p class="rn-nota warn">'+esc(q.et(q.nuevo))+' is already used by another sample that day.</p>';
   }
   body += '</div>';
   var acts = q.cambios.length
