@@ -77,7 +77,9 @@ function stockSyncAll(){
 }
 
 // ===== LA PANTALLA (COA › Stock Customers) =====
-var skLot = '', skDia = '', skAbierta = null;
+// Se busca por LOT, numero de producto y fecha de produccion, cualquiera de
+// los tres o juntos (el numero de producto, pedido del usuario 12 nov 2026).
+var skLot = '', skDia = '', skProd = '', skAbierta = null;
 
 function initStock(){
   skAbierta = null;
@@ -87,7 +89,7 @@ function initStock(){
 }
 function skBuscar(){
   var g = function(id){ var e = document.getElementById(id); return e ? String(e.value).trim() : ''; };
-  skLot = g('sk-lot'); skDia = g('sk-date');
+  skLot = g('sk-lot'); skDia = g('sk-date'); skProd = g('sk-prod');
   skAbierta = null;
   // Lo de mas de 30 dias no esta en el equipo: se trae desde la fecha buscada
   // o, si solo hay LOT, desde el dia que dice el LOT (YYDDD o DDDYY)
@@ -119,9 +121,14 @@ function skLimpio(v){
 // ¿Esta muestra es la del LOT / fecha buscados? Sin LOT ni fecha, las de hoy
 function skCoincide(a){
   var lot = skLimpio(skLot), dia = skDia;
+  var prod = (typeof normNumber === 'function') ? normNumber(skProd) : String(skProd || '').trim().toUpperCase();
   var d = String(a.date || '').slice(0, 10);
-  if(!lot && !dia) return d === localDateStr();
+  if(!lot && !dia && !prod) return d === localDateStr();
   if(dia && d !== dia) return false;
+  if(prod){
+    var np = (typeof normNumber === 'function') ? normNumber(a.product) : String(a.product || '').toUpperCase();
+    if(np !== prod) return false;
+  }
   if(lot){
     var l = skLimpio((typeof analysisLot === 'function') ? analysisLot(a) : a.lot);
     if(!l || l.indexOf(lot) < 0) return false;
@@ -137,6 +144,7 @@ function skFilas(){
 }
 
 function skPintarListas(){
+  if(typeof renderProductOptions === 'function') renderProductOptions('sk-product-list');
   var dl = document.getElementById('sk-cust-list');
   if(dl) dl.innerHTML = ((typeof getCustomers === 'function') ? getCustomers() : []).map(function(c){
     return '<option value="'+esc(c.company)+'">'+esc(c.customerId || '')+'</option>';
@@ -151,7 +159,7 @@ function renderStock(){
   if(kp){
     var sinNadie = lista.filter(function(a){ return !stockHijos(a).length; }).length;
     var asignados = lista.reduce(function(n, a){ return n + stockHijos(a).length; }, 0);
-    kp.innerHTML = kpiCard(lista.length, (skLot || skDia) ? 'stock samples found' : 'stock samples today', {icono:'box'}) +
+    kp.innerHTML = kpiCard(lista.length, (skLot || skDia || skProd) ? 'stock samples found' : 'stock samples today', {icono:'box'}) +
       kpiCard(sinNadie, 'without a customer', {tono:sinNadie ? 'warn' : '', icono:'alert'}) +
       kpiCard(asignados, 'customers assigned', {tono:'ok', icono:'user'});
     renderIcons(kp);
@@ -159,19 +167,19 @@ function renderStock(){
   if(!lista.length){
     // Si el LOT existe pero sus muestras ya tienen cliente, se dice (no es
     // que no exista: el LOT 26289 del 16 oct salia "vacio", 11 nov 2026)
-    var conCliente = (skLot || skDia) ? getAnalyses().filter(function(a){
+    var conCliente = (skLot || skDia || skProd) ? getAnalyses().filter(function(a){
       return a.stockOf == null && !stockSinCliente(a) && skCoincide(a);
     }) : [];
     var cuenta = {};
     conCliente.forEach(function(a){ var c = a.customer || '—'; cuenta[c] = (cuenta[c] || 0) + 1; });
     var quienes = Object.keys(cuenta).map(function(c){ return esc(c)+(cuenta[c] > 1 ? ' ×'+cuenta[c] : ''); }).join(', ');
     host.innerHTML = '<div class="sheet-empty">'+(conCliente.length
-      ? 'That LOT / date has '+conCliente.length+' sample'+(conCliente.length === 1 ? '' : 's')+
+      ? 'That search has '+conCliente.length+' sample'+(conCliente.length === 1 ? '' : 's')+
         ', but '+(conCliente.length === 1 ? 'it already has its' : 'they already have their')+' customer: '+quienes+'. '+
         'This screen only lists products made for stock (no customer). Their COA is in COA Generator.'
-      : (skLot || skDia)
-        ? 'No sample with that LOT / date. Check the LOT and the production date.'
-        : 'Type the LOT and the production date of the stock product, and tap the magnifier.')+'</div>';
+      : (skLot || skDia || skProd)
+        ? 'No sample with that LOT / product / date. Check them and try again.'
+        : 'Type the LOT, the product # or the production date of the stock product, and tap the magnifier.')+'</div>';
     return;
   }
   host.innerHTML =

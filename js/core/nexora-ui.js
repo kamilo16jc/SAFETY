@@ -7,7 +7,7 @@ var NX_SCREEN_NOTES={
  'screen-coa':'Prepare certificates from completed laboratory results.',
  'screen-labresults':'Review external laboratory reports and final results.',
  'screen-coastatus':'Follow each sample from collection to certificate.',
- 'screen-coastock':'Give a customer to a product made for stock, by its LOT and date.',
+ 'screen-coastock':'Give a customer to a product made for stock, by its LOT, product # and date.',
  'screen-admin':'Manage people, roles and workspace permissions.',
  'screen-analysis':'Capture moisture, fat, pH and microbiological results.',
  'screen-yeast':'Track incubation dates, plate readings and pending samples.',
