@@ -491,6 +491,25 @@ body.nx-log-abierto{overflow:hidden}
 .nx-log-x{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);
   color:var(--muted);font-size:20px;line-height:1;cursor:pointer;flex-shrink:0}
 .nx-log-x:hover{color:var(--text);background:var(--surface2)}
+/* El "?" y su burbuja: la explicacion solo aparece si se pide */
+.nx-log-head{position:relative}
+.nx-log-tools{display:flex;gap:8px;flex-shrink:0}
+.nx-log-q{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);font:600 15px var(--font);cursor:pointer;flex-shrink:0}
+.nx-log-q:hover,.nx-log-q[aria-expanded="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-tint)}
+.nx-log-help{position:absolute;top:calc(100% - 12px);right:22px;z-index:5;width:min(320px,calc(100% - 44px));
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px 12px;
+  box-shadow:0 16px 40px #132b422e;animation:nxlog-pop .16s var(--nx-ease)}
+.nx-log-help[hidden]{display:none}
+.nx-log-help p{margin:0 0 11px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.nx-log-help p b{display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:2px}
+.nx-log-ley{display:flex;gap:14px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted)}
+.nx-log-ley span{display:inline-flex;align-items:center;gap:6px}
+.nx-log-ley span::before{content:'';width:10px;height:10px;border-radius:50%;box-sizing:border-box}
+.nx-log-ley .ok::before{background:var(--accent);box-shadow:0 0 6px color-mix(in srgb,var(--accent) 60%,transparent)}
+.nx-log-ley .pend::before{background:var(--warn-tint);border:1.5px dashed var(--warn)}
+.nx-log-ley .late::before{background:var(--fail-tint);border:1.5px dashed var(--fail)}
+@keyframes nxlog-pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .nx-log-body{flex:1;overflow-y:auto;padding:18px 24px 32px;scrollbar-width:thin}
 .nx-log-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
 .nx-log-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;min-width:0}
@@ -501,10 +520,7 @@ body.nx-log-abierto{overflow:hidden}
 .nx-log-card.ok b{color:var(--pass)}
 .nx-log-card.bad b{color:var(--fail)}
 .nx-log-card.warn b{color:var(--warn)}
-.nx-log-coa{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:12px 14px;margin-bottom:22px}
-.nx-log-coa .txt{flex:1;min-width:200px;font-size:12.5px;color:var(--muted);line-height:1.45}
-.nx-log-coa .txt b{color:var(--text)}
+.nx-log-coa{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 24px}
 .nx-log-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:9px;
   border:1px solid var(--border);background:var(--surface);color:var(--text);font:600 12px var(--font);cursor:pointer}
 .nx-log-btn:hover{background:var(--surface2)}
@@ -514,16 +530,27 @@ body.nx-log-abierto{overflow:hidden}
 .nx-log-h{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);font-weight:600;margin:4px 0 12px}
 .nx-tl{list-style:none;margin:0 0 20px;padding:0}
 .nx-tl li{position:relative;padding:0 0 18px 44px;min-height:34px}
-.nx-tl li::before{content:'';position:absolute;left:15px;top:34px;bottom:2px;width:2px;border-radius:2px;background:var(--border)}
+.nx-tl li::before{content:'';position:absolute;left:15px;top:38px;bottom:4px;width:2px;border-radius:2px;
+  background:color-mix(in srgb,var(--accent) 30%,var(--border))}
 .nx-tl li:last-child::before{display:none}
-.nx-tl-dot{position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
-  background:var(--accent-tint);color:var(--accent)}
-.nx-tl-dot svg{width:15px;height:15px}
-.nx-tl li.ok .nx-tl-dot{background:var(--accent);color:var(--accent-fg)}
-.nx-tl li.warn .nx-tl-dot{background:var(--warn-tint);color:var(--warn)}
-.nx-tl li.pend .nx-tl-dot{background:var(--surface);border:1.5px dashed var(--border);color:var(--dim)}
-.nx-tl li.late .nx-tl-dot{background:var(--fail-tint);border:0;color:var(--fail)}
-.nx-tl li.pend .nx-tl-t{color:var(--muted)}
+/* Lo HECHO: el icono con brillo y un destello de luz que lo cruza, en ola */
+.nx-tl-dot{position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;overflow:hidden;
+  color:#fff;background:radial-gradient(circle at 32% 26%,color-mix(in srgb,#fff 40%,var(--accent)) 0,var(--accent) 55%,var(--accent-deep) 100%);
+  box-shadow:0 0 0 3px var(--accent-tint),0 4px 12px color-mix(in srgb,var(--accent) 40%,transparent)}
+.nx-tl-dot svg{width:15px;height:15px;position:relative;z-index:1}
+.nx-tl li:not(.pend) .nx-tl-dot::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.9) 50%,transparent 68%);
+  transform:translateX(-130%);animation:nxtl-destello 5s ease-in-out infinite;animation-delay:calc(var(--i,0) * .18s)}
+@keyframes nxtl-destello{0%,56%{transform:translateX(-130%)}76%,100%{transform:translateX(130%)}}
+.nx-tl li.warn .nx-tl-dot{background:radial-gradient(circle at 32% 26%,color-mix(in srgb,#fff 40%,var(--warn)) 0,var(--warn) 55%,
+  color-mix(in srgb,var(--warn) 75%,#000) 100%);box-shadow:0 0 0 3px var(--warn-tint),0 4px 12px color-mix(in srgb,var(--warn) 40%,transparent)}
+/* Lo que FALTA: otro color (ambar), hueco y sin brillo; lo atrasado, en rojo */
+.nx-tl li.pend::before{width:0;border-radius:0;background:none;border-left:2px dashed color-mix(in srgb,var(--warn) 45%,transparent)}
+.nx-tl li.pend .nx-tl-dot{background:var(--warn-tint);box-shadow:none;border:1.5px dashed color-mix(in srgb,var(--warn) 65%,transparent);color:var(--warn)}
+.nx-tl li.late .nx-tl-dot{background:var(--fail-tint);border-color:color-mix(in srgb,var(--fail) 65%,transparent);color:var(--fail)}
+.nx-tl li.pend .nx-tl-t{color:color-mix(in srgb,var(--warn) 85%,var(--text))}
+.nx-tl li.late .nx-tl-t{color:var(--fail)}
+.nx-tl li.pend .nx-tl-d span{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 35%,var(--border))}
 .nx-tl li.late .nx-tl-d span:last-child{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 35%,var(--border))}
 .nx-tl-t{font-size:13.5px;font-weight:600;padding-top:6px;line-height:1.3}
 .nx-tl-m{font-size:11.5px;color:var(--dim);margin-top:2px}
@@ -532,7 +559,7 @@ body.nx-log-abierto{overflow:hidden}
 .nx-log-nota{font-size:11.5px;color:var(--dim);margin:0;line-height:1.5}
 @keyframes nxlog-slide{from{transform:translateX(36px);opacity:0}to{transform:none;opacity:1}}
 @keyframes nxlog-in{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.nx-log,.nx-log-scrim{animation:none}}
+@media (prefers-reduced-motion:reduce){.nx-log,.nx-log-scrim,.nx-log-help{animation:none}.nx-tl li .nx-tl-dot::after{display:none}}
 @media (max-width:700px){
   .nx-log-sum{grid-template-columns:1fr 1fr}
   .nx-log-head,.nx-log-body{padding-left:16px;padding-right:16px}
