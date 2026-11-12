@@ -115,8 +115,10 @@ function stEventos(a){
     } else {
       var due = (typeof ymDueDate === 'function') ? ymDueDate(a) : '';
       var left = due ? stDiasHasta(due) : 0;
+      // la placa se hace al testear Moisture / Fat / pH: antes no hay fecha
       falta.push({icon:'clock', t:'Yeast & mold plate', tarde:due && left < 0,
-        d:[due ? 'Due '+fmtDate(due) : '', due ? (left > 0 ? 'in '+left+' day'+(left === 1 ? '' : 's') : left === 0 ? 'today' : Math.abs(left)+' days late') : '']});
+        d:due ? ['Due '+fmtDate(due), left > 0 ? 'in '+left+' day'+(left === 1 ? '' : 's') : left === 0 ? 'today' : Math.abs(left)+' days late']
+              : ['Made when Moisture, Fat and pH are tested']});
     }
   }
 

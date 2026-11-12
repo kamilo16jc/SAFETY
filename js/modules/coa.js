@@ -764,7 +764,8 @@ function stRowHTML(a, i){
   } else {
     var due = (typeof ymDueDate==='function') ? ymDueDate(a) : '';
     var left = (typeof ymDaysLeft==='function') ? ymDaysLeft(a) : 0;
-    plate = '<span class="pill'+(left<=0?' bad':'')+'">'+
+    if(!due) plate = '<span class="pill">Not plated yet</span>';
+    else plate = '<span class="pill'+(left<=0?' bad':'')+'">'+
       (due ? esc(fmtDate(due)) : '\u2014')+
       (left>0 ? ' \u00b7 in '+left+'d' : (left<0 ? ' \u00b7 '+Math.abs(left)+'d late' : ' \u00b7 today'))+
       '</span>';

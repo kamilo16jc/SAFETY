@@ -390,6 +390,7 @@ function analysisPanel(list){
   var rows = list.slice(0, SEARCH_LIMIT).map(function(a){
     var plate = (typeof ymState==='function') ? ymState(a) : (a.yeast ? 'done' : 'waiting');
     var pill = plate==='done'  ? '<span class="pill ok">Read</span>'
+             : plate==='unplated' ? '<span class="pill">Not plated yet</span>'
              : plate==='ready' ? '<span class="pill bad">Pending · read now</span>'
              : '<span class="pill">Pending · incubating</span>';
     return '<tr class="view-row" onclick="viewAnalysisRecord('+a.id+')">'+
@@ -431,6 +432,7 @@ function viewAnalysisRecord(id){
       recRow('Fat', esc(a.fat||'\u2014'))+
       recRow('pH', esc(a.ph||'\u2014'))+
       recRow('Tested by', esc(a.testedBy||'\u2014'))+
+      recRow('Plate made', (typeof ymPlateDay==='function' && ymPlateDay(a)) ? fmtDate(ymPlateDay(a)) : 'Not yet (when Moisture, Fat and pH are tested)')+
       recRow('Plate reads on', due ? fmtDate(due) : '\u2014')+
       recRow('Yeast', esc(a.yeast||'\u2014'))+
       recRow('Mold', esc(a.mold||'\u2014'))+

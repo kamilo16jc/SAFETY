@@ -86,9 +86,24 @@ function getRawRecords(){ var d=getDB(); if(!d.raw) d.raw=[]; return d.raw; }
 function getSuppliers(){   var d=getDB(); if(!d.suppliers) d.suppliers=[]; return d.suppliers; }
 function getRawItems(){    var d=getDB(); if(!d.rawItems) d.rawItems=[]; return d.rawItems; }
 
-// ---- La placa: cinco dias, y el domingo no se lee ----
+// ---- La placa: cinco dias despues de HACERLA, y el domingo no se lee ----
+// La placa se hace cuando se testean Moisture / Fat / pH (pedido del usuario,
+// 11 nov 2026): una fila cargada sin resultados todavia no tiene placa. El dia
+// queda en platedAt al poner el primer resultado; lo de antes, el de la captura.
+function rawTieneMedidas(r){ return ['moisture','fat','ph'].some(function(f){ return rawHas(r && r[f]); }); }
+function rawStampPlated(r, tenia){
+  if(r && !tenia && !r.platedAt && rawTieneMedidas(r)) r.platedAt = localISOStr();
+}
+function rawPlateDay(r){
+  if(!r || !rawTieneMedidas(r)) return '';
+  var minimo = String(r.date||'').slice(0,10);
+  var d = String(r.platedAt || r.createdAt || r.date || '').slice(0,10);
+  return d < minimo ? minimo : d;
+}
 function rawPlateDue(r){
-  var d = new Date(String(r.date||'').slice(0,10)+'T12:00:00');
+  var dia = rawPlateDay(r);
+  if(!dia) return '';
+  var d = new Date(dia+'T12:00:00');
   if(isNaN(d)) return '';
   d.setDate(d.getDate() + (typeof YM_DAYS==='number' ? YM_DAYS : 5));
   if(d.getDay() === 0) d.setDate(d.getDate() + 1);
@@ -107,6 +122,7 @@ function rawPlateHTML(r){
   if(rawPlateRead(r)){
     return '<span class="pill ok">Completed'+(r.plateAt ? ' · '+esc(fmtDate(r.plateAt)) : '')+'</span>';
   }
+  if(!rawPlateDue(r)) return '<span class="pill">Not plated yet</span>';
   var left = rawDaysLeft(r);
   return '<span class="pill bad">Pending · '+
     (left>0 ? esc(fmtDate(rawPlateDue(r)))+' ('+left+'d)'
@@ -300,7 +316,7 @@ function buildRawSheet(forzar){
   c.medidas.forEach(function(x){
     nueva += '<td class="num"><input class="cell num" id="rw-n-'+x.f+'" inputmode="decimal" placeholder="'+esc(x.ph||'')+'"></td>';
   });
-  nueva += '<td class="soft mid" colspan="3">Read in 5 days</td>';
+  nueva += '<td class="soft mid" colspan="3">Read 5 days after testing</td>';
   if(rawExtra) c.extra.forEach(function(x){
     nueva += '<td class="num"><input class="cell num" id="rw-n-'+x.f+'" inputmode="decimal" placeholder="'+esc(x.t)+'"></td>';
   });
@@ -445,6 +461,7 @@ function saveRawRecord(){
   c.ident.forEach(function(x){ rec[x.f] = g(x.f); });
   if(rawSection==='raw' && /^[a-z]$/.test(rec.sample)) rec.sample = rec.sample.toUpperCase();
   c.medidas.forEach(function(x){ rec[x.f] = g(x.f); });
+  if(rawTieneMedidas(rec)) rec.platedAt = rec.createdAt;     // testeada al capturarla: la placa es de hoy
   if(rawExtra) c.extra.forEach(function(x){ var val = g(x.f); if(val) rec[x.f] = val; });
   if(c.cfg.notas) rec.notes = g('notes');
 
@@ -468,7 +485,9 @@ function setRawCell(id, field, value){
   var db = getDB();
   var r = (db.raw||[]).filter(function(x){ return x.id===id; })[0];
   if(!r) return null;
+  var tenia = rawTieneMedidas(r);
   r[field] = String(value==null?'':value).trim();
+  rawStampPlated(r, tenia);
   rawStampPlate(r);
   r.editedAt = localISOStr();
   saveDB(db, 'raw');
@@ -492,7 +511,9 @@ function saveRawRow(id, btn){
   var r = (db.raw||[]).filter(function(x){ return x.id===id; })[0];
   if(!r) return;
   var antes = rawPlateRead(r);
+  var tenia = rawTieneMedidas(r);
   Object.keys(vals).forEach(function(f){ r[f] = String(vals[f]==null?'':vals[f]).trim(); });
+  rawStampPlated(r, tenia);
   rawStampPlate(r);
   r.editedAt = localISOStr();
   saveDB(db, 'raw');

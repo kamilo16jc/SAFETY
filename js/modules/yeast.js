@@ -17,16 +17,35 @@ function initYeast(){
   renderYeast();
 }
 
-// ---- Fechas: la lectura cae a los 5 dias de tomada la muestra ----
-// La placa se lee a los 5 dias, pero el domingo no se lee: si cae domingo,
-// pasa al lunes.
-function ymDueDate(a){
-  var d = new Date(String(a.date||'').slice(0,10)+'T12:00:00');
+// ---- Fechas: la lectura cae a los 5 dias de HECHA la placa ----
+// La placa se hace cuando se testean Moisture / Fat / pH (pedido del usuario,
+// 11 nov 2026): muchas muestras se cargan primero y se testean despues, asi
+// que contar desde la fecha de la muestra adelantaba la lectura. Sin ningun
+// resultado todavia no hay placa, ni fecha de lectura.
+// El dia de la placa: el del primer resultado. Si vino al crear la fila, el de
+// la captura; si se puso despues, el del cambio que lo puso (a.changes). Nunca
+// antes que la fecha de la muestra.
+function ymPlateDay(a){
+  if(!a) return '';
+  var minimo = String(a.date||'').slice(0,10);
+  var dias = [];
+  ['moisture','fat','ph'].forEach(function(f){
+    if(!ymHas(a[f])) return;
+    var c = (a.changes || []).filter(function(x){ return x.field === f && !ymHas(x.from) && ymHas(x.to); })[0];
+    var d = String(c ? c.at : (a.createdAt || a.date) || '').slice(0, 10);
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) dias.push(d < minimo ? minimo : d);
+  });
+  return dias.sort()[0] || '';
+}
+// 5 dias despues; el domingo no se lee: si cae domingo, pasa al lunes
+function ymLectura(dia){
+  var d = new Date(String(dia||'').slice(0,10)+'T12:00:00');
   if(isNaN(d)) return '';
   d.setDate(d.getDate() + YM_DAYS);
   if(d.getDay() === 0) d.setDate(d.getDate() + 1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+function ymDueDate(a){ var d = ymPlateDay(a); return d ? ymLectura(d) : ''; }
 function ymDaysLeft(a){
   var due = ymDueDate(a);
   if(!due) return 0;
@@ -37,6 +56,7 @@ function ymHas(v){ return v!=null && String(v).trim()!==''; }
 function ymDone(a){ return ymHas(a.yeast) && ymHas(a.mold); }
 function ymState(a){
   if(ymDone(a)) return 'done';
+  if(!ymPlateDay(a)) return 'unplated';      // sin Moisture / Fat / pH no hay placa
   return ymDaysLeft(a) <= 0 ? 'ready' : 'waiting';
 }
 
@@ -80,6 +100,7 @@ function ymRows(){
 
   return (typeof getAnalyses==='function' ? getAnalyses() : []).filter(function(a){
     if(!ymPlate(a.product)) return false;
+    if(!ymDone(a) && !ymPlateDay(a)) return false;   // aun no se testea: no hay placa
     var abierta = !ymDone(a) || String(a.ymAt||'').slice(0,10) === localDateStr();
     if(!inScope(a.date, ymFrom, ymTo, abierta)) return false;
     if(ymQuery){
@@ -131,7 +152,7 @@ function renderYeast(){
 
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
-      '<th class="rn">#</th><th>ID</th><th>Sampled</th><th>Reads on</th><th>Status</th>'+
+      '<th class="rn">#</th><th>ID</th><th>Sampled</th><th>Plated</th><th>Reads on</th><th>Status</th>'+
       '<th>Product</th><th class="wide">Cheese</th><th>Customer</th><th>Prod. date</th><th>Order</th>'+
       '<th class="num">Yeast</th><th class="num">Mold</th><th>Read by</th><th>Save</th>'+
     '</tr></thead><tbody>'+
@@ -149,7 +170,8 @@ function ymRowHTML(a, i){
     '<td class="rn">'+i+'</td>'+
     '<td class="code">#'+esc(a.seq||'—')+'</td>'+
     '<td class="soft">'+esc(fmtDate(a.date))+'</td>'+
-    '<td class="soft">'+esc(fmtDate(ymDueDate(a)))+'</td>'+
+    '<td class="soft" title="The day Moisture, Fat and pH were tested">'+esc(ymPlateDay(a) ? fmtDate(ymPlateDay(a)) : '\u2014')+'</td>'+
+    '<td class="soft">'+esc(ymDueDate(a) ? fmtDate(ymDueDate(a)) : '\u2014')+'</td>'+
     '<td id="ym-st-'+a.id+'">'+ymStatusHTML(a)+'</td>'+
     '<td class="code">'+esc(a.product||'—')+'</td>'+
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+
@@ -265,11 +287,11 @@ function ymRefreshCounts(){
 function exportYeastCSV(){
   var list = xlEntryOrder(ymRows().filter(function(a){ return ymView==='all' || ymState(a)===ymView; }));
   if(!list.length){ toast('Nothing to export for this view'); return; }
-  var out = [['ID','Sampled','Reads on','Status','Product','Cheese','Customer',
+  var out = [['ID','Sampled','Plated','Reads on','Status','Product','Cheese','Customer',
               'Prod. date','Order','Yeast','Mold','Read by','Read on']];
   list.forEach(function(a){
-    out.push([a.seq||'', String(a.date||'').slice(0,10), ymDueDate(a),
-      {ready:'Ready to read', waiting:'Incubating', done:'Read'}[ymState(a)],
+    out.push([a.seq||'', String(a.date||'').slice(0,10), ymPlateDay(a), ymDueDate(a),
+      {ready:'Ready to read', waiting:'Incubating', done:'Read', unplated:'Not plated yet'}[ymState(a)],
       a.product||'', a.cheese||'', a.customer||'', a.prodDate||'', a.order||'',
       a.yeast||'', a.mold||'', a.ymBy||'', String(a.ymAt||'').slice(0,10)]);
   });
