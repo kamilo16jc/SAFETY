@@ -566,3 +566,6 @@ body.nx-log-abierto{overflow:hidden}
 }
 @media print{.nx-log-ov{display:none!important}}
 
+
+/* El "?" de las leyendas con la misma piel que el "..." */
+body.ui-fluent .nx-q-btn{border-radius:9px}

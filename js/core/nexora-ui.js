@@ -296,3 +296,53 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 })();
 
+
+// ===== LEYENDAS DETRAS DE UN "?" (pedido del usuario, 11 nov 2026) =====
+// Minimalismo: la leyenda de estados de una pantalla (.legend) ya no ocupa
+// sitio. Un "?" en la barra de filtros, junto al "...", la abre como burbuja;
+// se cierra con otro toque, tocando fuera o con Esc.
+(function(){
+  function cerrar(salvo){
+    document.querySelectorAll('.nx-q-box').forEach(function(bx){
+      if(bx === salvo) return;
+      var lg = bx.querySelector('.legend'), b = bx.querySelector('.nx-q-btn');
+      if(lg) lg.hidden = true;
+      if(b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+  function montar(){
+    document.querySelectorAll('.screen .legend').forEach(function(lg, i){
+      if(lg.closest('.nx-q-box')) return;
+      var scr = lg.closest('.screen'), bar = scr && scr.querySelector('.sheet-bar');
+      if(!bar) return;
+      if(!lg.id) lg.id = 'nx-legend-' + (scr.id || i);
+      lg.hidden = true;
+      lg.setAttribute('role', 'note');
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'nx-q-btn'; b.textContent = '?';
+      b.title = 'What do the statuses mean?';
+      b.setAttribute('aria-label', 'What do the statuses mean?');
+      b.setAttribute('aria-expanded', 'false');
+      b.setAttribute('aria-controls', lg.id);
+      var bx = document.createElement('div');
+      bx.className = 'nx-q-box';
+      bx.appendChild(b); bx.appendChild(lg);
+      // el "?" y el "..." van juntos al final de la barra
+      var more = bar.querySelector(':scope > .more-box');
+      var fin = document.createElement('div');
+      fin.className = 'nx-bar-end';
+      if(more){ bar.insertBefore(fin, more); fin.appendChild(bx); fin.appendChild(more); }
+      else { bar.appendChild(fin); fin.appendChild(bx); }
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        var abrir = lg.hidden;
+        cerrar(bx);
+        lg.hidden = !abrir;
+        b.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+      });
+    });
+  }
+  document.addEventListener('click', function(e){ if(!e.target.closest('.nx-q-box')) cerrar(null); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') cerrar(null); });
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar); else montar();
+})();
