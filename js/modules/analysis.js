@@ -328,8 +328,12 @@ function anRowHTML(a, i){
       'oninput="anMarkTarget(this,'+a.id+',\''+field+'\')" '+
       'onchange="setAnalysisCell('+a.id+',\''+field+'\',this.value)">';
   };
+  // El # se corrige aqui mismo; las que se capturaron despues siguen la cuenta
+  // (js/modules/renumber.js). Sin data-f: el boton Save de la fila no lo toca.
   return '<tr>'+
-    '<td class="rn">'+esc(a.seq||i)+'</td>'+
+    '<td class="rn"><input class="cell an-seq" inputmode="numeric" value="'+esc(a.seq||'')+'" '+
+      'aria-label="Analysis number" title="Change the number: the ones entered after it follow the count" '+
+      'onchange="anSeqEdit('+a.id+',this)"></td>'+
     '<td class="soft">'+esc(fmtDate(a.date))+'</td>'+
     '<td class="code">'+esc(a.product||'—')+'</td>'+
     '<td class="wide">'+esc(a.cheese||'—')+'</td>'+

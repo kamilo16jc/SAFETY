@@ -84,6 +84,10 @@ function stEventos(a){
     if(run.labSent) poner({at:run.labSentAt, icon:'factory', t:'Sent to the external lab'});
   }
   poner({at:a.createdAt, icon:'clipboard', t:'Registered in Sample Analysis'+(a.seq ? ' #'+a.seq : ''), by:a.createdBy});
+  // si se le cambio el numero (js/modules/renumber.js), tambien se ve
+  (a.changes || []).filter(function(c){ return c.field === 'seq'; }).forEach(function(c){
+    poner({at:c.at, icon:'history', t:'Analysis number changed', d:['#'+(c.from || '\u2014')+' \u2192 #'+c.to], by:c.by});
+  });
 
   // Moisture / Fat / pH: cuando se puso el primer resultado (pudo ser despues)
   var medidas = [a.moisture ? 'Moisture '+a.moisture+'%' : '', a.fat ? 'Fat '+a.fat+'%' : '', a.ph ? 'pH '+a.ph : ''];

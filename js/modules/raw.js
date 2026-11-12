@@ -394,6 +394,15 @@ function rawRowHTML(r, i, c){
     var val = r[x.f];
     if(x.tipo==='fecha') val = val ? fmtDate(val) : '';
     var clase = x.wide ? 'wide' : ((x.f==='code'||x.f==='batch'||x.f==='sample') ? 'code' : 'soft');
+    // En RAW la letra se corrige aqui mismo y las que siguen toman la cuenta
+    // (js/modules/renumber.js). Sin data-f: el boton Save de la fila no la toca.
+    if(x.f==='sample' && rawSection==='raw'){
+      html += '<td class="code"><input class="cell rw-letter" value="'+esc(val==null?'':val)+'" autocomplete="off" '+
+        'autocapitalize="characters" aria-label="Sample letter" '+
+        'title="Change the letter: the ones entered after it follow (K, L, M...)" '+
+        'onchange="rawLetterEdit('+r.id+',this)"></td>';
+      return;
+    }
     html += '<td class="'+clase+'">'+v(val)+'</td>';
   });
   c.medidas.forEach(function(x){ html += '<td class="num">'+cel(x.f, x.ph)+'</td>'; });
