@@ -250,7 +250,10 @@ function labFormDownload(blob, filename){
 function renderLabForms(){
   var el = document.getElementById('lab-forms');
   if(!el) return;
-  var groups = labFormGroups();
+  // Solo las formas del dia (o de las fechas buscadas): no todas las que se
+  // han generado (pedido del usuario, 11 nov 2026)
+  if(typeof labFilters === 'function') labFilters();
+  var groups = labFormGroups().filter(function(g){ return inScope(g.date, labFrom, labTo, false); });
   if(!groups.length){ el.innerHTML=''; return; }
   // Una fila por cliente y día, con el icono que genera su forma
   el.innerHTML =

@@ -344,7 +344,7 @@ function ribbonPendientes(){
     out.push({n:porRecoger, t:'Muestras por recoger', s:'screen-samplelist', m:'qa'});
   }
   if(typeof labFormGroups === 'function'){
-    var formas = labFormGroups().filter(function(g){ return g.sent < g.runs.length; }).length;
+    var formas = labFormGroups().filter(function(g){ return g.date === hoy && g.sent < g.runs.length; }).length;
     out.push({n:formas, t:'Formas del laboratorio por enviar', s:'screen-lab', m:'lab'});
   }
   if(typeof ymDone === 'function' && typeof ymDueDate === 'function'){

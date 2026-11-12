@@ -42,7 +42,9 @@ function labSamples(statusOverride){
   var status = statusOverride || labStatus;
   return getRuns().filter(function(r){
     if(runSampleCount(r)<=0) return false;
-    if(!inScope(r.date, labFrom, labTo, !r.labSent)) return false;
+    // Sin fechas, SOLO hoy: lo pendiente de otros dias ya no se cuela (pedido
+    // del usuario, 11 nov 2026). Para verlo se buscan sus fechas.
+    if(!inScope(r.date, labFrom, labTo, false)) return false;
     if(status==='pending' && r.labSent) return false;
     if(status==='sent'    && !r.labSent) return false;
     return true;
@@ -131,7 +133,7 @@ function renderLab(){
   if(!list.length){
     host.innerHTML = '<div class="sheet-empty">'+
       (labStatus==='pending'
-        ? 'No lab samples pending in this range. A product asks for a sample when its '+
+        ? 'No lab samples pending '+(labFrom || labTo ? 'in this range' : 'today')+'. A product asks for a sample when its '+
           '"Lab samples per run" is above zero in the catalog.'
         : 'No lab samples in this range.')+'</div>';
     return;
