@@ -9,7 +9,13 @@
 // debe tener cada producto (YYDDD Caputo / DDDYY del cliente que lo usa,
 // js/core/lot.js) y Sample Analysis avisa si el de la muestra no coincide.
 //
-// orders: {id, order, po, products:[numero], prodDate, notes, customer,
+// Rango de fabricacion (pedido del usuario, 11 nov 2026): las ordenes grandes
+// se hacen en toda la semana. Con From y To, CADA DIA del rango las muestras de
+// sus productos toman el Order y el PO (aunque el producto ya se haya testeado
+// otro dia) y el LOT esperado es el de ese dia. Fuera del rango no se propone.
+// Sin To es una orden de un dia, como antes.
+//
+// orders: {id, order, po, products:[numero], prodDate, prodTo, notes, customer,
 //          customerKey, closed, createdAt, createdBy, editedAt, editedBy}
 
 var orView = 'open', orEditId = null, orPicks = [];
@@ -37,12 +43,36 @@ function orClientes(nums){
   });
   return out;
 }
-// El LOT que debe llevar un producto de la orden (solo si tiene fecha)
-function orderExpectedLot(o, num){
+// ¿La orden se fabrica ese dia? (un dia, o del From al To)
+function orDesde(o){ return String((o && o.prodDate) || '').slice(0, 10); }
+function orHasta(o){ return String((o && o.prodTo) || '').slice(0, 10) || orDesde(o); }
+function orEsRango(o){ return !!(o && o.prodTo && orHasta(o) > orDesde(o)); }
+function orCubreDia(o, day){
+  var d = String(day || '').slice(0, 10);
+  return !!(d && orDesde(o) && d >= orDesde(o) && d <= orHasta(o));
+}
+// El LOT que debe llevar un producto de la orden (solo si tiene fecha). En una
+// orden de varios dias depende del dia: sin un dia del rango no hay uno solo.
+function orderExpectedLot(o, num, day){
   if(!o || !o.prodDate || typeof lotCodigo !== 'function') return '';
+  var fecha = orDesde(o);
+  if(orEsRango(o)){
+    if(!orCubreDia(o, day)) return '';
+    fecha = String(day).slice(0, 10);
+  }
   var p = (typeof findProduct === 'function') ? findProduct(num || (o.products || [])[0]) : null;
   var fmt = (typeof lotFormatoProducto === 'function') ? lotFormatoProducto(p) : 'yyddd';
-  return lotCodigo(String(o.prodDate).slice(0, 10), fmt);
+  return lotCodigo(fecha, fmt);
+}
+// Lo que se ensena: el LOT del dia, o el del primer y el ultimo dia del rango
+function orLotTexto(o, num){
+  if(!orEsRango(o)) return orderExpectedLot(o, num);
+  var a = orderExpectedLot(o, num, orDesde(o)), b = orderExpectedLot(o, num, orHasta(o));
+  return a && b ? a+' \u2013 '+b : '';
+}
+function orFechasTexto(o){
+  if(!orDesde(o)) return '';
+  return orEsRango(o) ? fmtDate(orDesde(o))+' \u2013 '+fmtDate(orHasta(o)) : fmtDate(orDesde(o));
 }
 
 // ---- Que muestras ya se testearon de cada orden ----
@@ -65,22 +95,26 @@ function orEstadoProducto(o, num){
 function orProgreso(o){
   var ps = o.products || [];
   var hechos = ps.filter(function(n){ return orEstadoProducto(o, n).estado === 'done'; }).length;
-  return {hechos:hechos, total:ps.length, completa: ps.length > 0 && hechos === ps.length};
+  // la de varios dias no se completa mientras se siga fabricando
+  var sigue = orEsRango(o) && localDateStr() <= orHasta(o);
+  return {hechos:hechos, total:ps.length, completa: ps.length > 0 && hechos === ps.length && !sigue};
 }
 
 // ---- Lo que usa Sample Analysis ----
 // Las ordenes abiertas que llevan este producto y aun no tienen su muestra; las
-// de esa fecha de produccion primero.
+// de esa fecha de produccion primero. La de varios dias: cada dia de su rango
+// (aunque el producto ya se haya testeado otro dia), y fuera de el, nunca.
 function ordersForProduct(num, day){
   num = normNumber(num);
   if(!num) return [];
   return getOrders().filter(function(o){
     if(o.closed) return false;
     if((o.products || []).map(normNumber).indexOf(num) < 0) return false;
+    if(orEsRango(o)) return orCubreDia(o, day);
     return orEstadoProducto(o, num).estado === 'pending';
   }).sort(function(a, b){
-    var da = String(a.prodDate || '').slice(0, 10) === day ? 0 : 1;
-    var dbb = String(b.prodDate || '').slice(0, 10) === day ? 0 : 1;
+    var da = orCubreDia(a, day) ? 0 : 1;
+    var dbb = orCubreDia(b, day) ? 0 : 1;
     return (da - dbb) || String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
   });
 }
@@ -104,7 +138,7 @@ function buildOrdersSheet(){
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Order</th><th>PO</th><th>Customer</th>'+
-      '<th class="wide">Products</th><th>Prod. date</th><th>LOT</th><th>Tested</th><th></th>'+
+      '<th class="wide">Products</th><th>Production</th><th>LOT</th><th>Tested</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="or-new"><tr class="newrow">'+
       '<td class="rn" id="or-n-rn">New</td>'+
@@ -115,7 +149,12 @@ function buildOrdersSheet(){
         '<input class="cell" id="or-product" list="or-product-list" placeholder="Add product #" autocomplete="off" '+
           'autocapitalize="characters" oninput="orProductoTecleado()" '+
           'onkeydown="if(event.key===\'Enter\'){event.preventDefault();orAddPick(true);}"></td>'+
-      '<td><input type="date" class="cell" id="or-date" onchange="orPintarNueva()"></td>'+
+      // un dia, o del From al To si la orden se fabrica en varios dias
+      '<td><div class="or-fechas">'+
+        '<input type="date" class="cell" id="or-date" aria-label="Production from" title="Production date (or the first day)" onchange="orPintarNueva()">'+
+        '<span class="or-a" aria-hidden="true">\u2192</span>'+
+        '<input type="date" class="cell" id="or-date-to" aria-label="Production to" title="Last day, when the order is made over several days" onchange="orPintarNueva()">'+
+      '</div></td>'+
       '<td class="code soft" id="or-n-lot">—</td>'+
       '<td class="soft">—</td>'+
       '<td class="or-acts"><button class="sheet-btn" id="or-save" onclick="orSave()">Add</button>'+
@@ -162,7 +201,9 @@ function orChipsHTML(nums, o){
         '<button type="button" onclick="orRemovePick(\''+esc(n)+'\')" aria-label="Remove '+esc(n)+'">×</button></span>';
     }
     var st = orEstadoProducto(o, n);
-    var marca = st.estado === 'done' ? '✓ #'+esc(st.a.seq || '') :
+    // la de varios dias junta muestras de varios dias: se dice cuantas
+    var cuantas = orEsRango(o) ? orAnalisisDe(o, n).length : 0;
+    var marca = st.estado === 'done' ? (cuantas > 1 ? '✓ '+cuantas+' samples' : '✓ #'+esc(st.a.seq || '')) :
                 st.estado === 'testing' ? 'in test #'+esc(st.a.seq || '') : 'pending';
     return '<span class="or-chip '+st.estado+'" title="'+esc(nombre)+'">'+esc(n)+
       ' <small>'+esc(nombre)+'</small><b>'+marca+'</b></span>';
@@ -180,11 +221,12 @@ function orPintarNueva(){
   }
   var lot = document.getElementById('or-n-lot');
   var d = (document.getElementById('or-date') || {}).value;
-  if(lot) lot.textContent = (d && orPicks.length) ? orderExpectedLot({prodDate:d, products:orPicks}, orPicks[0]) : '—';
+  var h = (document.getElementById('or-date-to') || {}).value;
+  if(lot) lot.textContent = (d && orPicks.length) ? (orLotTexto({prodDate:d, prodTo:h, products:orPicks}, orPicks[0]) || '—') : '—';
 }
 function orLimpiarFila(){
   orEditId = null; orPicks = [];
-  ['or-order', 'or-po', 'or-product', 'or-date'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
+  ['or-order', 'or-po', 'or-product', 'or-date', 'or-date-to'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
   var b = document.getElementById('or-save'); if(b) b.textContent = 'Add';
   var c = document.getElementById('or-cancel'); if(c) c.hidden = true;
   var rn = document.getElementById('or-n-rn'); if(rn) rn.textContent = 'New';
@@ -196,9 +238,12 @@ function orCancel(){ orLimpiarFila(); }
 function orSave(){
   var g = function(id){ var e = document.getElementById(id); return e ? String(e.value).trim() : ''; };
   if(g('or-product')) orAddPick(true);                  // lo que quedo escrito sin agregar
-  var order = g('or-order'), po = g('or-po'), date = g('or-date');
+  var order = g('or-order'), po = g('or-po'), date = g('or-date'), hasta = g('or-date-to');
   if(!order){ toast('Enter the order number'); return; }
   if(!orPicks.length){ toast('Add the products of this order'); return; }
+  if(hasta && !date){ toast('Enter the first production day too'); return; }
+  if(hasta && hasta < date){ toast('The last day is before the first one'); return; }
+  if(hasta === date) hasta = '';                        // un solo dia
   var otra = getOrders().filter(function(o){ return orNum(o.order) === orNum(order) && String(o.id) !== String(orEditId); })[0];
   if(otra && !confirm('Order '+order+' already exists. Save another one with the same number?')) return;
 
@@ -216,6 +261,7 @@ function orSave(){
     db.orders.push(rec);
   }
   rec.order = order; rec.po = po; rec.products = orPicks.slice(); rec.prodDate = date;
+  if(hasta) rec.prodTo = hasta; else delete rec.prodTo;
   rec.customer = c ? c.company : ''; rec.customerKey = (c && typeof custKey === 'function') ? custKey(c) : '';
   saveDB(db, 'orders');
   if(window.saveToFirebase) window.saveToFirebase('orders', rec);
@@ -234,6 +280,7 @@ function orEdit(id){
   orEditId = o.id; orPicks = (o.products || []).slice();
   var set = function(k, v){ var e = document.getElementById(k); if(e) e.value = v || ''; };
   set('or-order', o.order); set('or-po', o.po); set('or-date', String(o.prodDate || '').slice(0, 10));
+  set('or-date-to', orEsRango(o) ? orHasta(o) : '');
   var b = document.getElementById('or-save'); if(b) b.textContent = 'Save';
   var c = document.getElementById('or-cancel'); if(c) c.hidden = false;
   var rn = document.getElementById('or-n-rn'); if(rn) rn.textContent = 'Edit';
@@ -314,7 +361,7 @@ function renderOrders(){
 }
 
 function orRowHTML(o, pr, i){
-  var lot = o.prodDate ? orderExpectedLot(o) : '';
+  var lot = o.prodDate ? orLotTexto(o) : '';
   var estado = o.closed ? '<span class="pill">Closed</span>' :
                pr.completa ? '<span class="pill ok">'+pr.hechos+' / '+pr.total+'</span>' :
                '<span class="pill'+(pr.hechos ? ' warn' : ' bad')+'">'+pr.hechos+' / '+pr.total+'</span>';
@@ -324,7 +371,8 @@ function orRowHTML(o, pr, i){
     '<td class="code">'+esc(o.po || '—')+'</td>'+
     '<td class="soft">'+esc(o.customer || '—')+'</td>'+
     '<td class="wide"><div class="or-picks">'+orChipsHTML(o.products || [], o)+'</div></td>'+
-    '<td class="soft">'+(o.prodDate ? esc(fmtDate(String(o.prodDate).slice(0, 10))) : '—')+'</td>'+
+    '<td class="soft or-cuando">'+(!o.prodDate ? '—' : !orEsRango(o) ? esc(fmtDate(orDesde(o)))
+      : esc(fmtDate(orDesde(o)))+'<br><span class="or-hasta">to '+esc(fmtDate(orHasta(o)))+'</span>')+'</td>'+
     '<td class="code">'+esc(lot || '—')+'</td>'+
     '<td>'+estado+'</td>'+
     '<td class="or-acts"><div class="or-acts-in">'+
@@ -340,13 +388,13 @@ function orRowHTML(o, pr, i){
 function exportOrdersCSV(){
   var l = (typeof xlEntryOrder === 'function') ? xlEntryOrder(getOrders()) : getOrders();
   if(!l.length){ toast('No orders to export'); return; }
-  var out = [['Order', 'PO', 'Customer', 'Product', 'Description', 'Prod. date', 'Expected LOT', 'Status', 'Sample #']];
+  var out = [['Order', 'PO', 'Customer', 'Product', 'Description', 'Prod. from', 'Prod. to', 'Expected LOT', 'Status', 'Sample #']];
   l.forEach(function(o){
     (o.products || []).forEach(function(n){
       var p = (typeof findProduct === 'function') ? findProduct(n) : null;
       var st = orEstadoProducto(o, n);
       out.push([o.order || '', o.po || '', o.customer || '', n, p ? (p.name || '') : '',
-        String(o.prodDate || '').slice(0, 10), orderExpectedLot(o, n),
+        orDesde(o), orEsRango(o) ? orHasta(o) : '', orLotTexto(o, n),
         st.estado === 'done' ? 'Tested' : st.estado === 'testing' ? 'In test' : (o.closed ? 'Closed' : 'Pending'),
         st.a ? (st.a.seq || '') : '']);
     });

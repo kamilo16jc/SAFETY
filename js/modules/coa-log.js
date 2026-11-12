@@ -44,9 +44,14 @@ function stDiasHasta(iso){
 function stExpected(a){
   var o = stOrderOf(a);
   var base = (o && o.createdAt) ? String(o.createdAt).slice(0, 10) : String(a.date || '').slice(0, 10);
+  // Orden de varios dias: lo que se hizo despues de la orden cuenta desde su dia
+  var dm = String(a.date || '').slice(0, 10), porMuestra = false;
+  if(o && typeof orEsRango === 'function' && orEsRango(o) && /^\d{4}-\d{2}-\d{2}$/.test(dm) && dm > base){
+    base = dm; porMuestra = true;
+  }
   if(!/^\d{4}-\d{2}-\d{2}$/.test(base)) return null;
   var f = stIsoMas(base, ST_ESPERA_DIAS);
-  return {fecha:f, base:base, dias:stDiasHasta(f), deOrden:!!(o && o.createdAt)};
+  return {fecha:f, base:base, dias:stDiasHasta(f), deOrden:!!(o && o.createdAt) && !porMuestra, porMuestra:porMuestra};
 }
 // En que va el certificado
 function stCoaEstado(a){
@@ -74,7 +79,7 @@ function stEventos(a){
 
   if(o) poner({at:o.createdAt, icon:'doc', t:'Order '+o.order+' created',
     d:[o.po ? 'PO '+o.po : '', (o.products || []).length+' product'+((o.products || []).length === 1 ? '' : 's'),
-       o.prodDate ? 'Production '+fmtDate(o.prodDate) : ''], by:o.createdBy});
+       o.prodDate ? 'Production '+((typeof orFechasTexto === 'function') ? orFechasTexto(o) : fmtDate(o.prodDate)) : ''], by:o.createdBy});
   if(run){
     poner({at:run.createdAt, icon:'calendar', t:'Scheduled',
       d:['Line '+(run.line || '—'), (String(run.shift) === '1' ? '1st' : '2nd')+' shift', fmtDate(String(run.date).slice(0, 10))],
@@ -239,6 +244,7 @@ function stLogHTML(a){
   var ayuda = '<div class="nx-log-help" id="st-log-help" role="note" hidden>'+
       '<p><b>COA</b>'+esc(ayudaCoa)+'</p>'+
       (e ? '<p><b>Expected</b>5 days after the '+(e.deOrden ? 'order was created' : 'sample date')+'.'+
+        (e.porMuestra ? ' Order '+esc(o.order)+' is made over several days, so it counts from the day this sample was made.' : '')+
         (!o && a.order ? ' Order '+esc(a.order)+' is not in COA Orders, so its creation date is unknown.' : '')+'</p>' : '')+
       '<div class="nx-log-ley"><span class="ok">Done</span><span class="pend">Waiting</span><span class="late">Late</span></div>'+
     '</div>';

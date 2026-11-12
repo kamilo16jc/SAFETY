@@ -528,7 +528,7 @@ function anPonerOrdenCOA(num, day){
     return '<option value="'+esc(o.order)+'">'+esc((o.po ? 'PO '+o.po : '')+(o.customer ? ' · '+o.customer : ''))+'</option>';
   }).join('');
   if(!cands.length) return false;
-  var mismoDia = cands.filter(function(o){ return String(o.prodDate || '').slice(0,10) === day; });
+  var mismoDia = cands.filter(function(o){ return typeof orCubreDia === 'function' ? orCubreDia(o, day) : String(o.prodDate || '').slice(0,10) === day; });
   var o = cands.length === 1 ? cands[0] : (mismoDia.length === 1 ? mismoDia[0] : null);
   if(!o){
     // varias ordenes abiertas: que escoja QA (lo traido antes se quita)
@@ -572,12 +572,14 @@ function anCheckLotOrden(){
   if(!lot) return;
   var o = (window._anOrderId != null && typeof orderById === 'function') ? orderById(window._anOrderId) : null;
   var num = normNumber((document.getElementById('an-product')||{}).value || '');
-  var esp = (o && typeof orderExpectedLot === 'function') ? orderExpectedLot(o, num) : '';
+  var dia = (document.getElementById('an-date')||{}).value || localDateStr();
+  var esp = (o && typeof orderExpectedLot === 'function') ? orderExpectedLot(o, num, dia) : '';
   var v = lot.value.trim();
   var limpio = (typeof lotLimpio === 'function') ? lotLimpio(v) : v;
   var malo = !!(esp && v && limpio !== esp);
   lot.classList.toggle('or-check', malo);
-  if(malo) lot.title = 'COA order '+o.order+' expects LOT '+esp+' (production date '+fmtDate(String(o.prodDate).slice(0,10))+'). Check it.';
+  if(malo) lot.title = 'COA order '+o.order+' expects LOT '+esp+' (production date '+
+    fmtDate((typeof orEsRango === 'function' && orEsRango(o)) ? dia : String(o.prodDate).slice(0,10))+'). Check it.';
   else if(String(lot.title || '').indexOf('COA order') === 0) lot.title = '';
 }
 // Una muestra guardada con su Order: se liga a la orden y, si le falta, trae el PO
