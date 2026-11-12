@@ -223,7 +223,7 @@ function addRun(){
   numEl.value='';
   onScheduleProduct();
   numEl.focus();
-  renderProduction();
+  refreshRunViews();
 }
 
 function deleteRun(id){
@@ -233,7 +233,7 @@ function deleteRun(id){
   db.runs = (db.runs||[]).filter(function(r){ return r.id!==id; });
   saveDB(db,'runs');
   if(run._fbId && window.deleteFromFirebase) window.deleteFromFirebase('runs', run._fbId);
-  renderProduction();
+  refreshRunViews();
 }
 
 // Copia el schedule de otro día (el orden se repite mucho): trae las corridas
@@ -390,14 +390,17 @@ function sampleRangeLabel(run){
   return run.sampleFrom ? ' ('+run.sampleFrom+'-'+run.sampleTo+')' : '';
 }
 
-// Repinta la vista que esté abierta (Production o Lab Samples)
+// Repinta la vista que esté abierta (Production, Lab Samples o List Samples)
+// SIN moverla: la hoja se queda donde estaba (nxGuardarScroll, js/core/utils.js)
 function refreshRunViews(){
-  var pr = document.getElementById('screen-production');
-  if(pr && pr.classList.contains('active')) renderProduction();
-  var lb = document.getElementById('screen-lab');
-  if(lb && lb.classList.contains('active') && typeof renderLab==='function') renderLab();
-  var sl = document.getElementById('screen-samplelist');
-  if(sl && sl.classList.contains('active') && typeof renderSampleList==='function') renderSampleList();
+  [['screen-production', 'renderProduction'], ['screen-lab', 'renderLab'],
+   ['screen-samplelist', 'renderSampleList']].forEach(function(x){
+    var scr = document.getElementById(x[0]);
+    if(!scr || !scr.classList.contains('active') || typeof window[x[1]] !== 'function') return;
+    var vuelve = (typeof nxGuardarScroll === 'function') ? nxGuardarScroll(scr) : function(){};
+    window[x[1]]();
+    vuelve();
+  });
 }
 
 // Escanear el producto de una corrida es "ya me lo llevo": confirma que es ese

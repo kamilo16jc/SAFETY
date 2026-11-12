@@ -193,7 +193,7 @@ function labRowHTML(r, i){
     '<td class="code">'+esc(labFormCode(r,c)||'\u2014')+'</td>'+
     '<td class="wide">'+tests+'</td>'+
     '<td><input class="cell" placeholder="LOT" value="'+esc(r.lot||'')+'" '+
-      'onchange="setRunLot('+r.id+', this.value); renderLab()"></td>'+
+      'onchange="setRunLot('+r.id+', this.value)"></td>'+
     '<td class="num">'+labSampleCell(r)+'</td>'+
     '<td class="soft">'+(r.collected?esc(hhmm(r.collectedAt)):'\u2014')+'</td>'+
     '<td class="soft">'+(r.labSent?esc(hhmm(r.labSentAt)):'\u2014')+'</td>'+

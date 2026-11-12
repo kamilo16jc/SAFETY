@@ -82,6 +82,10 @@
     for(var j=0;j<bars.length;j++) stampBar(bars[j]);
   }
 
+  // Para quien repinta y necesita las tarjetas ya armadas en ese mismo momento
+  // (nxGuardarScroll: si no, la pagina se corria al llegar las etiquetas)
+  window.nxMarcarHojas = scan;
+
   function start(){
     scan(document.body);
     if(!window.MutationObserver) return;

@@ -255,6 +255,41 @@ function cbtnSaved(id, texto){
 }
 
 // Lee los campos marcados con data-f dentro de una fila
+// ===== QUE LA HOJA NO SE MUEVA AL REPINTARLA =====
+// Repintar una hoja (innerHTML) la deja arriba y a la izquierda: al dar Send en
+// Lab Samples la tabla volvia "a como se abre" (bug, 11 nov 2026). Antes de
+// repintar se guarda donde estaba cada hoja (.sheet-wrap, por el contenedor
+// con id que la tiene) y la pagina; despues se devuelve, y el foco del teclado
+// vuelve a la hoja para seguir con las flechas.
+function nxGuardarScroll(host){
+  if(!host) return function(){};
+  var SEL = '.sheet-wrap,.table-scroll';
+  var llave = function(w, i){ var c = w.parentElement && w.parentElement.closest('[id]'); return (c ? c.id : '') + '#' + i; };
+  var pos = {}, foco = null, ae = document.activeElement;
+  [].forEach.call(host.querySelectorAll(SEL), function(w, i){
+    var k = llave(w, i);
+    pos[k] = [w.scrollTop, w.scrollLeft];
+    if(ae && ae !== document.body && w.contains(ae)) foco = k;
+  });
+  var doc = document.scrollingElement || document.documentElement;
+  var y = doc.scrollTop, x = doc.scrollLeft;
+  return function(){
+    // en el telefono las tarjetas toman su forma final ANTES de devolver el
+    // lugar: si no, al llegar sus etiquetas la pagina se corria (js/core/mobile.js)
+    if(typeof window.nxMarcarHojas === 'function') window.nxMarcarHojas(host);
+    [].forEach.call(host.querySelectorAll(SEL), function(w, i){
+      var k = llave(w, i), p = pos[k];
+      if(p){ w.scrollTop = p[0]; w.scrollLeft = p[1]; }
+      if(foco === k && !w.contains(document.activeElement)){
+        if(!w.hasAttribute('tabindex')) w.setAttribute('tabindex', '-1');
+        w.focus({preventScroll:true});
+      }
+    });
+    // al instante: la pagina tiene scroll-behavior:smooth y se veria el viaje
+    if(doc.scrollTop !== y || doc.scrollLeft !== x) doc.scrollTo({top:y, left:x, behavior:'instant'});
+  };
+}
+
 function readRowFields(btn){
   var tr = btn && btn.closest ? btn.closest('tr') : null;
   if(!tr) return null;
