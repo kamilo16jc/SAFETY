@@ -344,7 +344,7 @@ function anRowHTML(a, i){
       : (typeof stockHijos === 'function' && stockHijos(a).length)
         ? '<span class="tag">Stock</span> '+esc(stockHijos(a).map(function(k){ return k.customer; }).join(', '))
         : '—')+'</td>'+
-    '<td class="code">'+esc(analysisLot(a)||'—')+'</td>'+
+    '<td class="code">'+anLotInputHTML(a)+'</td>'+
     '<td>'+txt('order', a.order, 'Order')+'</td>'+
     '<td>'+txt('po', a.po, 'PO')+'</td>'+
     '<td class="num">'+cell('moisture', a.moisture, '%')+'</td>'+
@@ -397,6 +397,49 @@ function setAnalysisCell(id, field, value){
   if(field === 'order' || field === 'po') anShareOrder(a);
   anRefreshCounts();
   if(typeof refreshRunViews==='function') refreshRunViews();
+}
+
+// ===== EL LOT DE UNA MUESTRA GUARDADA =====
+// Se corrige en la misma fila (pedido del usuario, 12 nov 2026). Sin data-f:
+// el boton Save de la fila no lo toca, asi el LOT que sale de la corrida no se
+// copia a la muestra sin que nadie lo cambie. Borrarlo = vuelve al de la corrida.
+function anLotInfo(a){
+  var v = analysisLot(a) || '';
+  var propio = !!String(a.lot || '').trim();
+  var o = (a.orderId != null && a.orderId !== '' && typeof orderById === 'function') ? orderById(a.orderId) : null;
+  var esp = (o && typeof orderExpectedLot === 'function')
+    ? orderExpectedLot(o, a.product, String(a.prodDate || a.date || '').slice(0, 10)) : '';
+  var limpio = (typeof lotLimpio === 'function') ? lotLimpio(v) : v;
+  var malo = !!(esp && v && limpio !== esp);
+  var title = malo ? 'COA order '+o.order+' expects LOT '+esp+'. Check it.'
+    : (v && !propio) ? 'LOT of the collected sample. You can change it.'
+    : 'Change the LOT of this sample';
+  return {v:v, malo:malo, title:title};
+}
+function anLotInputHTML(a){
+  var k = anLotInfo(a);
+  return '<input class="cell an-lot'+(k.malo ? ' or-check' : '')+'" placeholder="LOT" '+
+    'aria-label="LOT" title="'+esc(k.title)+'" value="'+esc(k.v)+'" '+
+    'onchange="anLotEdit('+a.id+',this)">';
+}
+function anLotEdit(id, el){
+  var a = getAnalyses().filter(function(x){ return x.id === id; })[0];
+  if(!a) return;
+  var v = String(el.value || '').trim().toUpperCase();
+  var antes = String(a.lot || '').trim();
+  // igual al que tenia, o al de la corrida que ya se veia: nada que guardar
+  if(v === antes || (!antes && v && v === analysisLot(a))){ el.value = analysisLot(a) || ''; return; }
+  setAnalysisCell(id, 'lot', v);
+  var b = getAnalyses().filter(function(x){ return x.id === id; })[0] || a;
+  var k = anLotInfo(b);
+  el.value = k.v;
+  el.title = k.title;
+  el.classList.toggle('or-check', k.malo);
+  if(typeof logActivity === 'function')
+    logActivity('analysis', 'LOT changed', '#'+(b.seq || '')+' '+(b.product || '')+': '+(antes || '—')+' → '+(v || '—'),
+      currentUser ? currentUser.name : '—');
+  toast(v ? 'LOT '+v+' saved'+(k.malo ? ' · check it against the COA order' : '')
+          : (k.v ? 'LOT cleared · it uses the collected sample\'s LOT '+k.v : 'LOT cleared'));
 }
 
 // La fila se puede cargar sin resultados y testearse despues: quien testea es

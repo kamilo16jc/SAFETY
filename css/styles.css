@@ -1371,6 +1371,8 @@ html::-webkit-scrollbar-thumb:hover{background-color:rgba(80,92,87,.65)}
 #an-body tr.done td.rn .an-seq{color:var(--pass)}
 #an-body td.rn .an-seq:focus{color:var(--text)}
 .sheet input.cell.rw-letter{width:52px;min-width:44px;text-align:center;font-weight:700;text-transform:uppercase}
+/* El LOT de una muestra guardada se corrige en la misma celda */
+#an-body input.cell.an-lot{min-width:72px;font-variant-numeric:tabular-nums;text-transform:uppercase}
 
 /* List Samples: el LOT se escribe o se escanea en la misma celda */
 .sl-lotbox{display:flex;align-items:center;gap:6px;min-width:150px}
