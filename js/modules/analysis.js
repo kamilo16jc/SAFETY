@@ -407,11 +407,8 @@ function anLotInfo(a){
   var v = analysisLot(a) || '';
   var propio = !!String(a.lot || '').trim();
   var o = (a.orderId != null && a.orderId !== '' && typeof orderById === 'function') ? orderById(a.orderId) : null;
-  var esp = (o && typeof orderExpectedLot === 'function')
-    ? orderExpectedLot(o, a.product, String(a.prodDate || a.date || '').slice(0, 10)) : '';
-  var limpio = (typeof lotLimpio === 'function') ? lotLimpio(v) : v;
-  var malo = !!(esp && v && limpio !== esp);
-  var title = malo ? 'COA order '+o.order+' expects LOT '+esp+'. Check it.'
+  var malo = !!(o && typeof orLotCoincide === 'function' && !orLotCoincide(o, v));
+  var title = malo ? 'COA order '+o.order+' has LOT '+orderExpectedLot(o)+'. Check it.'
     : (v && !propio) ? 'LOT of the collected sample. You can change it.'
     : 'Change the LOT of this sample';
   return {v:v, malo:malo, title:title};
@@ -615,20 +612,15 @@ function anOrdenTecleada(){
   }
   anCheckLotOrden();
 }
-// La orden con fecha de produccion dice que LOT debe tener: si no es ese, ambar
+// La orden de COA Orders con el LOT que QA le escribio: si la muestra trae
+// otro, ambar (sin LOT en la orden no se juzga)
 function anCheckLotOrden(){
   var lot = document.getElementById('an-lot');
   if(!lot) return;
   var o = (window._anOrderId != null && typeof orderById === 'function') ? orderById(window._anOrderId) : null;
-  var num = normNumber((document.getElementById('an-product')||{}).value || '');
-  var dia = (document.getElementById('an-date')||{}).value || localDateStr();
-  var esp = (o && typeof orderExpectedLot === 'function') ? orderExpectedLot(o, num, dia) : '';
-  var v = lot.value.trim();
-  var limpio = (typeof lotLimpio === 'function') ? lotLimpio(v) : v;
-  var malo = !!(esp && v && limpio !== esp);
+  var malo = !!(o && typeof orLotCoincide === 'function' && !orLotCoincide(o, lot.value));
   lot.classList.toggle('or-check', malo);
-  if(malo) lot.title = 'COA order '+o.order+' expects LOT '+esp+' (production date '+
-    fmtDate((typeof orEsRango === 'function' && orEsRango(o)) ? dia : String(o.prodDate).slice(0,10))+'). Check it.';
+  if(malo) lot.title = 'COA order '+o.order+' has LOT '+orderExpectedLot(o)+'. Check it.';
   else if(String(lot.title || '').indexOf('COA order') === 0) lot.title = '';
 }
 // Una muestra guardada con su Order: se liga a la orden y, si le falta, trae el PO
