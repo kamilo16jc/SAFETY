@@ -488,7 +488,11 @@ function shiftPanel(list){
       '<td>'+(s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+'</td>'+
       '<td>'+(s.status?'<span class="pill '+(stt[s.status]||'')+'">'+(window.shiftStatusLabel?shiftStatusLabel(s.status):cap1(s.status))+'</span>':'—')+'</td>'+
       '<td class="soft">'+esc(s.reportedBy||'—')+'</td>'+
-      '<td class="view-cell"><span class="view-btn" title="View report" data-icon="search"></span></td>'+
+      '<td class="view-cell"><span class="row-icos">'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();viewShiftReport('+s.id+')" '+
+          'data-tip="View report" aria-label="View this report"><span data-icon="search"></span></button>'+
+        formBtn('exportShiftPDF('+s.id+')', 'shift report')+
+      '</span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Shift reports', list.length, [
@@ -521,7 +525,8 @@ function viewShiftReport(id){
     '</div>';
   var canEdit = (typeof canEditReports==='function') && canEditReports();
   var actions =
-    '<button class="btn-solid" onclick="exportShiftPDF('+s.id+')"><span data-icon="doc"></span>Export PDF</button>'+
+    '<button class="btn-solid" onclick="exportShiftPDF('+s.id+')"><span data-icon="pdf"></span>Export PDF</button>'+
+    '<button class="btn-ghost" onclick="nxImprimir(function(){ return exportShiftPDF('+s.id+'); })"><span data-icon="print"></span>Print</button>'+
     (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-shift\');editShift('+s.id+')">Open to edit</button>':'')+
     '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
   openRecordModal('Shift report · <span class="mono">'+esc(s.reportNumber||'')+'</span>', body, actions);
@@ -545,7 +550,7 @@ function capaPanel(list){
       '<td class="view-cell"><span class="row-icos">'+
         '<button class="form-ico" type="button" onclick="event.stopPropagation();viewCapaReport('+c.id+')" '+
           'data-tip="View report" aria-label="View this report"><span data-icon="search"></span></button>'+
-        formBtn('exportCapaPDF('+c.id+')', 'Official form · Incident &amp; CAPA (PDF)')+
+        formBtn('exportCapaPDF('+c.id+')', 'Incident &amp; CAPA form')+
       '</span></td>'+
     '</tr>';
   }).join('');
@@ -611,6 +616,7 @@ function viewCapaReport(id){
   var canEdit = currentUser;
   var actions =
     '<button class="btn-solid" onclick="exportCapaPDF('+c.id+')"><span data-icon="pdf"></span>Official form</button>'+
+    '<button class="btn-ghost" onclick="nxImprimir(function(){ return exportCapaPDF('+c.id+'); })"><span data-icon="print"></span>Print</button>'+
     (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-capa\');editCapa('+c.id+')">Open to edit</button>':'')+
     '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
 
@@ -725,7 +731,7 @@ function weightPanel(list){
   return tablePanel('Weight history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},{t:'Size'},
     {t:'Samples'},{t:'Avg',num:true},{t:'Compliance',num:true},{t:'By'},{t:''}
-  ], rows, page.length, formBtn('searchWeightForm()', 'Official form · weight & bag seal (PDF)'));
+  ], rows, page.length, formBtn('searchWeightForm()', 'weight &amp; bag seal form'));
 }
 
 function sealPanel(list){
@@ -754,21 +760,46 @@ function sealPanel(list){
   return tablePanel('Bag seal history', list.length, [
     {t:'Date'},{t:'Time'},{t:'Line'},{t:'Shift'},{t:'LOT'},{t:'Product'},
     {t:'Visual'},{t:'Dunk Tank'},{t:'Printing'},{t:'By'},{t:''}
-  ], rows, page.length, formBtn('searchWeightForm()', 'Official form · weight & bag seal (PDF)'));
+  ], rows, page.length, formBtn('searchWeightForm()', 'weight &amp; bag seal form'));
 }
 
 // ===== FORMAS OFICIALES DESDE SEARCH (antes en Reports) =====
 // Pesos y bag seal: una sola forma con lo que muestra la busqueda (una hoja
 // por fecha + turno + linea + LOT). GMP y metal detector: cada registro su
 // forma, con el boton de su fila.
-// Solo el icono; lo que hace se lee al pasar el raton (data-tip, nexora-ui.js)
-function formBtn(onclick, title){
+// Solo el icono; lo que hace se lee al pasar el raton (data-tip, nexora-ui.js).
+// Cada forma lleva dos: bajar el PDF y mandarla a la impresora (pedido del
+// usuario, 13 nov 2026). La impresora llama a la MISMA funcion con
+// nxImprimir (word-fill.js): sale la misma forma, al dialogo de imprimir.
+// nombre va dentro de un atributo: & como &amp;
+function pdfBtn(onclick, nombre){
   return '<button class="form-ico" type="button" onclick="event.stopPropagation();'+onclick+'" '+
-    'data-tip="'+title+'" aria-label="'+title+'"><span data-icon="pdf"></span></button>';
+    'data-tip="Download PDF · '+nombre+'" aria-label="Download PDF, '+nombre+'"><span data-icon="pdf"></span></button>';
+}
+function printBtn(onclick, nombre){
+  return '<button class="form-ico" type="button" onclick="event.stopPropagation();nxImprimir(function(){ return '+onclick+'; })" '+
+    'data-tip="Print · '+nombre+'" aria-label="Print, '+nombre+'"><span data-icon="print"></span></button>';
+}
+function formBtn(onclick, nombre){ return pdfBtn(onclick, nombre) + printBtn(onclick, nombre); }
+// Lo mismo en la ventana del registro, con texto
+function formBtnsModal(onclick, texto){
+  return '<button class="btn-ghost" onclick="'+onclick+'"><span data-icon="pdf"></span>'+texto+'</button>'+
+    '<button class="btn-ghost" onclick="nxImprimir(function(){ return '+onclick+'; })"><span data-icon="print"></span>Print</button>';
 }
 function searchWeightForm(){
   var r = window._srch || {};
-  sendWeightSealForm(r.weights || [], r.seals || []);
+  return sendWeightSealForm(r.weights || [], r.seals || []);
+}
+// La hoja de un registro de peso o de bag seal: todo lo de su dia de
+// produccion, turno y linea (lo mismo que agrupa la forma, wsHojas)
+function weightSheetFor(col, id){
+  var db = getDB();
+  var r = (db[col] || []).filter(function(x){ return String(x.id) === String(id); })[0];
+  if(!r || typeof wsDiaProduccion !== 'function') return;
+  var k = function(x){ return [wsDiaProduccion(x), String(x.shift || ''), String(x.line || '')].join('|'); };
+  var mia = k(r);
+  var mismo = function(x){ return k(x) === mia; };
+  return sendWeightSealForm((db.weights || []).filter(mismo), (db.seals || []).filter(mismo));
 }
 function yesNoCount(ans){
   var a = ans || {}, n = 0, no = 0;
@@ -789,8 +820,7 @@ function gmpPanel(list){
       '<td class="num">'+(c.no ? '<span class="pill bad">'+c.no+' NO</span>' : '<span class="pill ok">All yes</span>')+'</td>'+
       '<td class="soft">'+esc(g.completedBy||'—')+'</td>'+
       '<td class="soft">'+esc(g.verifiedBy||'—')+'</td>'+
-      '<td class="view-cell"><button class="form-ico" type="button" onclick="sendGmpForm(\''+String(g.id)+'\')" '+
-        'data-tip="Official form · GMP audit (PDF)" aria-label="Official form, GMP audit (PDF)"><span data-icon="pdf"></span></button></td>'+
+      '<td class="view-cell"><span class="row-icos">'+formBtn("sendGmpForm('"+String(g.id)+"')", 'GMP audit form')+'</span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('GMP audits', list.length, [
@@ -815,8 +845,7 @@ function metalPanel(list){
       '<td class="view-cell"><span class="row-icos">'+
         '<button class="form-ico" type="button" onclick="event.stopPropagation();viewMetalRecord(\''+String(m.id)+'\')" '+
           'data-tip="View / edit" aria-label="View or edit this check"><span data-icon="search"></span></button>'+
-        '<button class="form-ico" type="button" onclick="event.stopPropagation();sendMetalForm(\''+String(m.id)+'\')" '+
-          'data-tip="Official form · metal detector (PDF)" aria-label="Official form, metal detector (PDF)"><span data-icon="pdf"></span></button>'+
+        formBtn("sendMetalForm('"+String(m.id)+"')", 'metal detector form')+
       '</span></td>'+
     '</tr>';
   }).join('');
@@ -873,7 +902,7 @@ function viewMetalRecord(id){
       }).join('')+'</div>'+
       recBlock('Corrective actions', m.corrective);
   }
-  var pdf = '<button class="btn-ghost" onclick="sendMetalForm(\''+String(m.id)+'\')"><span data-icon="pdf"></span>Official form</button>';
+  var pdf = formBtnsModal("sendMetalForm('"+String(m.id)+"')", 'Official form');
   var actions = edit
     ? saveBtn("saveMetalEdit('"+String(m.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
       '<button class="btn-danger" onclick="deleteMetalRecord(\''+String(m.id)+'\')">Delete</button>'+
@@ -1084,14 +1113,14 @@ function preopPanel(list){
       '<td class="view-cell"><span class="row-icos">'+
         '<button class="form-ico" type="button" onclick="event.stopPropagation();viewPreopRecord(\''+String(p.id)+'\')" '+
           'data-tip="'+tip+'" aria-label="'+tip+' this inspection"><span data-icon="search"></span></button>'+
-        formBtn("preopFormFor('"+String(p.id)+"')", 'Official form · that week (PDF)')+
+        formBtn("preopFormFor('"+String(p.id)+"')", 'Pre-Op form of that week')+
       '</span></td>'+
     '</tr>';
   }).join('');
   return tablePanel('Pre-Op inspections · 2nd shift', list.length, [
     {t:'Date'},{t:'Day'},{t:'Answered',num:true},{t:'Findings',num:true},
     {t:'Waste (1-10)',num:true},{t:'Completed by'},{t:'QA'},{t:'Form'}
-  ], rows, page.length, formBtn('searchPreopForm()', 'Official form · every week shown (PDF)'));
+  ], rows, page.length, formBtn('searchPreopForm()', 'Pre-Op form, every week shown'));
 }
 
 // ===== VISOR/EDITOR DEL PRE-OP (admin/supervisor editan; el resto ve) =====
@@ -1149,7 +1178,7 @@ function viewPreopRecord(id){
       }).join('')+'</div>'+
       recBlock('Comments', p.comments);
   }
-  var pdf = '<button class="btn-ghost" onclick="preopFormFor(\''+String(p.id)+'\')"><span data-icon="pdf"></span>Official form (week)</button>';
+  var pdf = formBtnsModal("preopFormFor('"+String(p.id)+"')", 'Official form (week)');
   var borrar = (typeof canDeleteRecords==='function') ? canDeleteRecords() : edit;
   var actions = edit
     ? saveBtn("savePreopEdit('"+String(p.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
@@ -1316,9 +1345,11 @@ function viewWeightRecord(id){
 
   var actions = edit
     ? saveBtn("saveWeightEdit("+w.id+",this)", {texto:'Save changes', grande:true})+
+      formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form')+
       '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    : formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form')+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
   // La foto, si la tiene: se pide al abrir (ver js/modules/weight-photo.js)
   if(typeof wpBloqueHTML==='function') body += wpBloqueHTML(w);
   openRecordModal((issue ? 'Line status record' : 'Weight record')+
@@ -1451,9 +1482,11 @@ function viewSealRecord(id){
   }
   var actions = edit
     ? saveBtn("saveSealEdit("+s.id+",this)", {texto:'Save changes', grande:true})+
+      formBtnsModal("weightSheetFor('seals',"+s.id+")", 'Official form')+
       '<button class="btn-danger" onclick="deleteSealRecord('+s.id+')">Delete</button>'+
       '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    : formBtnsModal("weightSheetFor('seals',"+s.id+")", 'Official form')+
+      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
   openRecordModal('Bag seal record'+(s.lot?' · LOT '+esc(s.lot):''), body, actions);
 }
 

@@ -57,7 +57,7 @@ function exportCapaPDF(id){
   var rec = getCapa().filter(function(c){ return String(c.id) === String(id); })[0];
   if(!rec){ toast('Report not found'); return; }
   toast('Building form…');
-  downloadCapaPdf(rec).then(function(nombre){
+  return downloadCapaPdf(rec).then(function(nombre){
     toast('Form ready ✓');
     logActivity('form', 'CAPA form generated', nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){

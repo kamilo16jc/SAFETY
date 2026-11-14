@@ -96,37 +96,9 @@ function downloadGrillingPdf(rawId){
 //
 // Al cerrar el dialogo se pregunta si la hoja salio bien: el navegador no lo
 // sabe. El "si" deja el lote marcado (ver gcPrintedHTML en grilling.js).
-var _gcMarco = null;
-
-function _gcImprimeEnPagina(){
-  return !(typeof _esIOS === 'function' && _esIOS()) && !/Android/i.test(navigator.userAgent || '');
-}
-
-function _gcImprimirBlob(blob){
-  return new Promise(function(ok, falla){
-    if(_gcMarco){ URL.revokeObjectURL(_gcMarco.src); _gcMarco.remove(); _gcMarco = null; }
-    var f = document.createElement('iframe');
-    f.setAttribute('aria-hidden', 'true');
-    f.tabIndex = -1;
-    // con tamaño (aunque minimo): escondido con display:none el visor no carga
-    f.style.cssText = 'position:fixed;right:0;bottom:0;width:2px;height:2px;border:0;opacity:0;pointer-events:none';
-    var listo = false;
-    f.onload = function(){
-      setTimeout(function(){
-        if(listo) return;
-        listo = true;
-        try { f.contentWindow.focus(); f.contentWindow.print(); ok(); }
-        catch(e){ falla(e); }
-      }, 150);
-    };
-    // Si el navegador esta puesto para bajar los PDF en vez de abrirlos, el
-    // marco nunca carga: el archivo ya se bajo y de todos modos se pregunta
-    setTimeout(function(){ if(!listo){ listo = true; ok(); } }, 8000);
-    f.src = URL.createObjectURL(blob);
-    document.body.appendChild(f);
-    _gcMarco = f;
-  });
-}
+// El marco escondido es el de todas las formas (nxImprimirBlob, word-fill.js)
+function _gcImprimeEnPagina(){ return nxImprimeEnPagina(); }
+function _gcImprimirBlob(blob){ return nxImprimirBlob(blob); }
 
 function printGrillingPdf(rawId){
   var L = _gcLote(rawId);

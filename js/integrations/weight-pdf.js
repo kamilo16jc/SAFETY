@@ -154,7 +154,7 @@ function sendWeightSealForm(weights, seals){
   var n = wsHojas(weights, seals).length;
   if(n > 30 && !confirm('This makes '+n+' sheets (one per date, shift, line and LOT). Generate anyway?')) return;
   toast('Building form…');
-  downloadWeightSealPdf(weights, seals).then(function(r){
+  return downloadWeightSealPdf(weights, seals).then(function(r){
     toast('Form ready ✓' + (r.hojas > 1 ? ' · '+r.hojas+' sheets' : ''));
     logActivity('form', 'Official form generated', r.nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){

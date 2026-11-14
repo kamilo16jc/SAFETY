@@ -57,7 +57,7 @@ function sendMetalForm(id){
   if(!lista.length){ toast('No metal detector checks for the selected date'); return; }
   var m = lista[lista.length - 1];
   toast('Building form…');
-  downloadMetalPdf(m).then(function(nombre){
+  return downloadMetalPdf(m).then(function(nombre){
     toast('Form ready ✓');
     logActivity('form', 'Metal detector form generated', nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){

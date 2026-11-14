@@ -196,6 +196,15 @@ function exportShiftPDF(id){
   '</body></html>';
 
   var blob = new Blob([doc], {type:'text/html'});
+  // la impresora de Search: el reporte va directo al dialogo de imprimir
+  if(typeof nxTomarImpresion === 'function' && nxTomarImpresion()){
+    if(typeof logActivity === 'function')
+      logActivity('form', 'Shift report sent to print', rec.reportNumber || '', (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : '');
+    return nxImprimirBlob(blob).catch(function(err){
+      console.warn('exportShiftPDF, marco de impresion:', err);
+      window.open(URL.createObjectURL(blob), '_blank');
+    });
+  }
   var url  = URL.createObjectURL(blob);
   var a    = document.createElement('a');
   a.href = url; a.target = '_blank'; a.click();

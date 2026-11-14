@@ -111,7 +111,7 @@ function sendPreopForm(lista){
   var n = preopHojas(lista).hojas.length;
   if(n > 30 && !confirm('This makes ' + n + ' sheets (one per week). Generate anyway?')) return;
   toast('Building form…');
-  downloadPreopPdf(lista).then(function(r){
+  return downloadPreopPdf(lista).then(function(r){
     toast('Form ready ✓' + (r.hojas > 1 ? ' · ' + r.hojas + ' sheets' : '') +
           (r.domingos ? ' · ' + r.domingos + ' Sunday inspection(s) left out' : ''));
     logActivity('form', 'Pre-Op form generated', r.nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
@@ -132,9 +132,9 @@ function preopFormFromScreen(){
 // Search: la semana de esa fila
 function preopFormFor(id){
   var r = (getDB().preop || []).filter(function(x){ return String(x.id) === String(id); })[0];
-  if(r) sendPreopForm(_preopSemana(r.date));
+  if(r) return sendPreopForm(_preopSemana(r.date));
 }
 // Search: todo lo que muestra la busqueda
 function searchPreopForm(){
-  sendPreopForm((window._srch || {}).preop || []);
+  return sendPreopForm((window._srch || {}).preop || []);
 }

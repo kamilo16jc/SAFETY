@@ -74,7 +74,7 @@ function sendGmpForm(id){
     return (!dia || String(t.date || '').slice(0,10) === dia) && (g.shift == null || t.shift === g.shift);
   });
   toast('Building form…');
-  downloadGmpPdf(g, temps).then(function(nombre){
+  return downloadGmpPdf(g, temps).then(function(nombre){
     toast('Form ready ✓');
     logActivity('form', 'GMP form generated', nombre, (typeof currentUser!=='undefined' && currentUser) ? currentUser.name : '');
   }).catch(function(e){
