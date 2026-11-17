@@ -38,7 +38,7 @@ function dtConstruir(){
     '</tr></thead>'+
     '<tbody id="dt-new"><tr class="newrow">'+
       '<td class="rn">New</td>'+
-      '<td><select class="cell" id="dt-line">'+opsLineOptions('', 'Line')+'</select></td>'+
+      '<td><select class="cell" id="dt-line">'+opsLineOptions('', 'Line', true)+'</select></td>'+
       '<td><input type="time" class="cell ops-time" id="dt-start" aria-label="Stopped at" oninput="dtMinNueva()"></td>'+
       '<td><input type="time" class="cell ops-time" id="dt-end" aria-label="Running again at" oninput="dtMinNueva()"></td>'+
       '<td class="num soft" id="dt-min">—</td>'+
@@ -72,17 +72,17 @@ function dtAgregar(){
     product: p ? normNumber(p.number) : num, productName: p ? (p.name || '') : '',
     what:g('dt-what'), action:g('dt-action'), fixedBy:g('dt-fixed'), createdAt:localISOStr(), createdBy:opsQuien()};
   opsGuardar('downtime', r, true);
-  opsLog('Line stop', 'Line '+line+' · '+cause+' · '+opsHora12(start)+(r.end ? ' to '+opsHora12(r.end) : ' (still down)'));
+  opsLog('Line stop', opsLineaTxt(line)+' · '+cause+' · '+opsHora12(start)+(r.end ? ' to '+opsHora12(r.end) : ' (still down)'));
   ['dt-start', 'dt-end', 'dt-product', 'dt-what', 'dt-action', 'dt-fixed'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
   ['dt-line', 'dt-cause'].forEach(function(id){ var e = document.getElementById(id); if(e) e.value = ''; });
   dtMinNueva();
   opsRepintar('screen-downtime', renderDowntime);
-  toast('Line '+line+' stop added'+(r.end ? '' : ': still down'));
+  toast(opsLineaTxt(line)+' stop added'+(r.end ? '' : ': still down'));
 }
 
 function dtDelDia(f){
   return opsDelDia('downtime', f).sort(function(a, b){
-    return String(a.start || '').localeCompare(String(b.start || '')) || (parseInt(a.line, 10) || 0) - (parseInt(b.line, 10) || 0);
+    return String(a.start || '').localeCompare(String(b.start || '')) || (parseInt(a.line, 10) || 99) - (parseInt(b.line, 10) || 99);
   });
 }
 // La causa que mas minutos se llevo
@@ -127,10 +127,10 @@ function dtFilaHTML(r, i){
     : '<span class="pill bad">Down'+(min == null ? '' : ' '+min+' min')+'</span>';
   return '<tr'+(r.end ? '' : ' class="dt-open"')+'>'+
     '<td class="rn">'+i+'</td>'+
-    '<td><select class="cell" aria-label="Line" onchange="dtCampo('+id+',\'line\',this)">'+opsLineOptions(r.line, '—')+'</select></td>'+
+    '<td><select class="cell" aria-label="Line" onchange="dtCampo('+id+',\'line\',this)">'+opsLineOptions(r.line, '—', true)+'</select></td>'+
     '<td>'+inp('start', 'ops-time', 'type="time"')+'</td>'+
     '<td><div class="dt-fin">'+inp('end', 'ops-time', 'type="time"')+
-      (r.end ? '' : '<button class="ico-btn sm" type="button" data-tip="Running again now" aria-label="Line '+esc(r.line)+' running again now" onclick="dtArriba('+id+')"><span data-icon="check"></span></button>')+
+      (r.end ? '' : '<button class="ico-btn sm" type="button" data-tip="Running again now" aria-label="'+esc(opsLineaTxt(r.line))+' running again now" onclick="dtArriba('+id+')"><span data-icon="check"></span></button>')+
     '</div></td>'+
     '<td class="num">'+minutos+'</td>'+
     '<td><select class="cell" aria-label="Cause" onchange="dtCampo('+id+',\'cause\',this)">'+dtCauseOptions(r.cause)+'</select></td>'+
@@ -154,7 +154,7 @@ function dtCampo(id, campo, el){
   if(String(r[campo] || '') === v) return;
   r[campo] = v;
   opsGuardar('downtime', r, false);
-  if(campo === 'end' && v) opsLog('Line running again', 'Line '+r.line+' · '+r.cause+' · '+dtMinutos(r)+' min');
+  if(campo === 'end' && v) opsLog('Line running again', opsLineaTxt(r.line)+' · '+r.cause+' · '+dtMinutos(r)+' min');
   opsRepintar('screen-downtime', renderDowntime);
 }
 function dtArriba(id){
@@ -162,16 +162,16 @@ function dtArriba(id){
   if(!r) return;
   r.end = opsAhora();
   opsGuardar('downtime', r, false);
-  opsLog('Line running again', 'Line '+r.line+' · '+r.cause+' · '+dtMinutos(r)+' min');
+  opsLog('Line running again', opsLineaTxt(r.line)+' · '+r.cause+' · '+dtMinutos(r)+' min');
   opsRepintar('screen-downtime', renderDowntime);
-  toast('Line '+r.line+' running again · '+dtMinutos(r)+' min down');
+  toast(opsLineaTxt(r.line)+' running again · '+dtMinutos(r)+' min down');
 }
 function dtBorrar(id){
   var r = opsBuscar('downtime', id);
   if(!r || !opsPuedeBorrar()) return;
-  if(!confirm('Delete this stop of line '+r.line+'?')) return;
+  if(!confirm('Delete this stop of '+opsLineaTxt(r.line)+'?')) return;
   opsBorrar('downtime', id);
-  opsLog('Line stop deleted', 'Line '+r.line+' · '+r.cause+' · '+opsFechaTxt(r.date));
+  opsLog('Line stop deleted', opsLineaTxt(r.line)+' · '+r.cause+' · '+opsFechaTxt(r.date));
   opsRepintar('screen-downtime', renderDowntime);
 }
 
@@ -180,7 +180,7 @@ var DT_COLS = [{h:'Line', w:11}, {h:'Start', w:15}, {h:'End', w:15}, {h:'Minutes
   {h:'Product #', w:18}, {h:'What happened', w:52}, {h:'Action taken', w:52}, {h:'Fixed by', w:22}];
 function dtFilaReporte(r){
   var m = dtMinutos(r);
-  return ['Line '+(r.line || ''), opsHora12(r.start), r.end ? opsHora12(r.end) : 'still down', m == null ? '' : m,
+  return [opsLineaTxt(r.line), opsHora12(r.start), r.end ? opsHora12(r.end) : 'still down', m == null ? '' : m,
           r.cause || '', r.product || '', r.what || '', r.action || '', r.fixedBy || ''];
 }
 function dtResumenLinea(lista){
@@ -190,8 +190,8 @@ function dtResumenLinea(lista){
     if(!m[k]) m[k] = {stops:0, min:0};
     m[k].stops++; m[k].min += dtMinutos(r) || 0;
   });
-  return Object.keys(m).sort(function(a, b){ return (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0); })
-    .map(function(k){ return ['Line '+k, m[k].stops, m[k].min, opsHoras(m[k].min)]; });
+  return Object.keys(m).sort(function(a, b){ return (parseInt(a, 10) || 99) - (parseInt(b, 10) || 99); })
+    .map(function(k){ return [opsLineaTxt(k), m[k].stops, m[k].min, opsHoras(m[k].min)]; });
 }
 function dtResumenCausa(lista){
   var m = {}, total = 0;
