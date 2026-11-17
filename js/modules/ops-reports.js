@@ -44,7 +44,7 @@ function repTexto(f){
   var from = f.from || f.to, to = f.to || f.from;
   var fechas = !from ? opsFechaTxt(localDateStr()) : from === to ? opsFechaTxt(from) : opsFechaTxt(from)+' – '+opsFechaTxt(to);
   // la asistencia no va por linea
-  var linea = f.what === 'attendance' ? '' : (f.line ? ' · Line '+f.line : ' · All lines');
+  var linea = f.what === 'attendance' ? '' : (f.line ? ' · '+opsLineaTxt(f.line) : ' · All lines');
   return fechas+' · '+opsTurno(f.shift)+linea;
 }
 function repIncluye(f, k){ return (f.what || 'attendance') === k; }

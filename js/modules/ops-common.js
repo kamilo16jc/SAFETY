@@ -126,10 +126,17 @@ function opsTurno(s){
   return s === '1' ? '1st shift' : s === '2' ? '2nd shift' : 'All shifts';
 }
 function opsFechaTxt(iso){ return (typeof fmtDate === 'function') ? fmtDate(iso) : String(iso || ''); }
-function opsLineOptions(sel, vacio){
+// Output tambien se fabrica en el Chopped area, que no es una linea numerada
+// (pedido del usuario, 17 nov 2026): se guarda como line:'chopped'
+var OPS_CHOPPED = 'chopped';
+function opsLineaTxt(v){
+  v = String(v == null ? '' : v);
+  return !v ? '' : v === OPS_CHOPPED ? 'Chopped area' : 'Line '+v;
+}
+function opsLineOptions(sel, vacio, conChopped){
   return (vacio ? '<option value="">'+vacio+'</option>' : '') + OPS_LINES.map(function(n){
     return '<option value="'+n+'"'+(String(sel) === String(n) ? ' selected' : '')+'>Line '+n+'</option>';
-  }).join('');
+  }).join('') + (conChopped ? '<option value="'+OPS_CHOPPED+'"'+(String(sel) === OPS_CHOPPED ? ' selected' : '')+'>Chopped area</option>' : '');
 }
 
 // ===== REPORTES EN PDF =====

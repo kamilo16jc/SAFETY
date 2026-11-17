@@ -86,7 +86,7 @@ function outConstruir(){
       '<td><input class="cell" id="out-product" list="out-product-list" placeholder="Product #" autocomplete="off" '+
         'autocapitalize="characters" oninput="outProducto()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();outAgregar();}"></td>'+
       '<td class="wide soft" id="out-desc">—</td>'+
-      '<td><select class="cell" id="out-line">'+opsLineOptions('', 'Line')+'</select></td>'+
+      '<td><select class="cell" id="out-line">'+opsLineOptions('', 'Line', true)+'</select></td>'+
       '<td><input class="cell ops-short" id="out-order" list="out-order-list" placeholder="Order #" autocomplete="off"></td>'+
       '<td><input class="cell ops-qty" id="out-ordered" inputmode="decimal" placeholder="Qty" autocomplete="off" oninput="outBalNueva()"></td>'+
       '<td><input class="cell ops-qty" id="out-produced" inputmode="decimal" placeholder="Qty" autocomplete="off" oninput="outBalNueva()" '+
@@ -168,7 +168,7 @@ function outAgregar(){
   var b = outBalance(r);
   if(b != null && opsNum(r.ordered) > 0 && b <= 0) r.completed = true;
   opsGuardar('output', r, true);
-  opsLog('Output added', 'Product '+r.product+' · '+(r.produced || 0)+' '+outUnitTxt(r.unit)+(r.line ? ' · Line '+r.line : ''));
+  opsLog('Output added', 'Product '+r.product+' · '+(r.produced || 0)+' '+outUnitTxt(r.unit)+(r.line ? ' · '+opsLineaTxt(r.line) : ''));
   outLimpiar();
   opsRepintar('screen-output', renderOutput);
   var e = document.getElementById('out-product'); if(e) e.focus();
@@ -277,7 +277,7 @@ function outFilaHTML(r, i){
     '<td class="rn">'+i+'</td>'+
     '<td class="code">'+esc(r.product || '—')+'</td>'+
     '<td class="wide">'+esc(r.productName || '—')+'</td>'+
-    '<td><select class="cell" aria-label="Line" onchange="outCampo('+id+',\'line\',this)">'+opsLineOptions(r.line, '—')+'</select></td>'+
+    '<td><select class="cell" aria-label="Line" onchange="outCampo('+id+',\'line\',this)">'+opsLineOptions(r.line, '—', true)+'</select></td>'+
     '<td>'+inp('order', 'ops-short', 'placeholder="Order #"')+'</td>'+
     '<td>'+inp('ordered', 'ops-qty', 'inputmode="decimal"')+'</td>'+
     '<td>'+inp('produced', 'ops-qty', 'inputmode="decimal"')+'</td>'+
@@ -334,7 +334,7 @@ function outFilaReporte(r, xl){
   var n = xl ? function(v){ var x = opsNum(v); return x == null ? '' : x; } : opsFmt;
   var lb = outLbs(r);
   var lbsTxt = lb == null ? '' : xl ? Math.round(lb * 100) / 100 : opsFmt(lb);
-  return [r.line ? 'Line '+r.line : '', r.product || '', r.productName || '', r.order || '', n(r.ordered), n(r.produced),
+  return [opsLineaTxt(r.line), r.product || '', r.productName || '', r.order || '', n(r.ordered), n(r.produced),
           outUnitTxt(r.unit), lbsTxt, b == null ? '' : n(b), r.lot || '', r.completed ? 'Yes' : 'No', r.notes || ''];
 }
 function outDayPdf(){
