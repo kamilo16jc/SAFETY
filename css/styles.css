@@ -3267,6 +3267,11 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 /* sin marca: lo pendiente en ambar */
 .ops-sheet tr.att-pend td.rn{box-shadow:inset 3px 0 0 var(--warn)}
 .ops-sheet tr.att-off td{opacity:.55}
+/* Output: libras sacadas del catalogo (subrayado punteado = pasa el raton para ver como) */
+.ops-conv{border-bottom:1px dotted var(--muted);cursor:help}
+.ops-nolb{cursor:help}
+#out-sheet .ops-sheet .wide{min-width:150px}
+#out-sheet .ops-sheet td.ops-note,#out-sheet .ops-sheet th.ops-note{min-width:130px}
 /* linea todavia parada */
 .ops-sheet tr.dt-open td.rn{box-shadow:inset 3px 0 0 var(--fail)}
 .dt-fin{display:flex;align-items:center;gap:4px}

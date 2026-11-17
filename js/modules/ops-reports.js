@@ -75,14 +75,16 @@ function repDatos(f){
   });
   var porProd = {};
   out.forEach(function(r){
-    var k = normNumber(r.product)+'|'+(r.unit || 'cases');
-    if(!porProd[k]) porProd[k] = {product:r.product, name:r.productName || '', unit:r.unit || 'cases', runs:0, ordered:0, conOrden:false,
-                                  produced:0, balance:0, done:0, lots:{}};
+    var k = normNumber(r.product)+'|'+(r.unit || OUT_UNIT_DEF);
+    if(!porProd[k]) porProd[k] = {product:r.product, name:r.productName || '', unit:r.unit || OUT_UNIT_DEF, runs:0, ordered:0, conOrden:false,
+                                  produced:0, balance:0, done:0, lots:{}, lbs:0, conLbs:false};
     var x = porProd[k];
     x.runs++;
     var o = opsNum(r.ordered), p = opsNum(r.produced), b = outBalance(r);
     if(o != null){ x.ordered += o; x.conOrden = true; }
     if(p != null) x.produced += p;
+    var lb = outLbs(r);
+    if(lb != null){ x.lbs += lb; x.conLbs = true; }
     if(b != null && b > 0 && !r.completed) x.balance += b;
     if(r.completed) x.done++;
     if(r.lot) x.lots[r.lot] = 1;
@@ -137,7 +139,7 @@ function renderOpsReports(){
       kpiCard(d.out.length, 'products run', {icono:'box'}) +
       kpiCard(d.out.filter(function(r){ return r.completed; }).length, 'orders completed', {tono:'ok', icono:'check'}) +
       kpiCard(d.out.filter(function(r){ var b = outBalance(r); return !r.completed && b != null && b > 0; }).length, 'with balance left', {tono:'bad', icono:'alert'}) +
-      kpiCard(outTotales(d.out) || '0', 'produced', {icono:'chart'}) +
+      outKpiProducido(d.out) +
       '</div>'+tabla(REP_PROD_COLS, repFilasProd(d.productos), 'Nothing produced in this range')+
       '<h3 class="ops-h3">Each entry</h3>'+tabla(REP_OUT_COLS, d.out.map(function(r){ return repFilaOut(r); }), 'Nothing produced in this range')+'</section>';
   }
@@ -174,12 +176,14 @@ function repTotAtt(emps){
   return ['Total', '', emps.length+' people', t.dias, t.present, t.late, t.left, t.absent, t.excused, t.min ? opsHoras(t.min) : ''];
 }
 var REP_PROD_COLS = [{h:'Product #', w:20}, {h:'Description', w:50}, {h:'Runs', w:12, al:'right'}, {h:'Ordered', w:18, al:'right'},
-  {h:'Produced', w:18, al:'right'}, {h:'Balance left', w:18, al:'right'}, {h:'Unit', w:13}, {h:'Completed', w:16, al:'right'}, {h:'LOTs', w:45}];
+  {h:'Produced', w:18, al:'right'}, {h:'Balance left', w:18, al:'right'}, {h:'Unit', w:13}, {h:'Lbs produced', w:20, al:'right'},
+  {h:'Completed', w:16, al:'right'}, {h:'LOTs', w:42}];
 function repFilasProd(ps, xl){
   var n = xl ? function(v){ return v; } : opsFmt;
   return ps.map(function(x){
     return [x.product, x.name, x.runs, x.conOrden ? n(x.ordered) : '', n(x.produced), x.balance ? n(x.balance) : '',
-            outUnitTxt(x.unit), x.done+' of '+x.runs, Object.keys(x.lots).join(', ')];
+            outUnitTxt(x.unit), x.conLbs ? (xl ? Math.round(x.lbs * 100) / 100 : opsFmt(x.lbs)) : '',
+            x.done+' of '+x.runs, Object.keys(x.lots).join(', ')];
   });
 }
 var REP_OUT_COLS = [{h:'Date', w:18}, {h:'Shift', w:12}].concat(OUT_COLS);

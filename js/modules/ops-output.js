@@ -4,10 +4,58 @@
 // hoja; "Completed" se marca solo cuando lo hecho alcanza lo pedido y se puede
 // cambiar a mano. El LOT con que salio la orden se escribe aqui (si el
 // Schedule o la orden de COA ya lo tienen, se propone).
+//
+// Se cuenta en LIBRAS (el usuario, 16 nov 2026). Si se cuenta en cajas o en
+// bolsas, la columna Lbs lo pasa a libras con el catalogo: el tamano de la
+// bolsa (5 lbs, 8 oz...) y las bolsas por caja. Se calcula al mostrar, asi
+// que si el catalogo se corrige, las libras se corrigen solas.
 
-var OUT_UNITS = [['cases', 'Cases'], ['lbs', 'Lbs'], ['units', 'Units'], ['pallets', 'Pallets']];
+var OUT_UNITS = [['lbs', 'Lbs'], ['cases', 'Cases'], ['bags', 'Bags'], ['pallets', 'Pallets']];
+var OUT_UNIT_DEF = 'lbs';
 
-function outUnitTxt(u){ var x = OUT_UNITS.filter(function(p){ return p[0] === u; })[0]; return x ? x[1].toLowerCase() : (u || ''); }
+function outUnitTxt(u){
+  if(u === 'units') return 'units';
+  var x = OUT_UNITS.filter(function(p){ return p[0] === u; })[0];
+  return x ? x[1].toLowerCase() : (u || '');
+}
+// Libras de UNA bolsa del producto, leidas de su tamano ("5 lbs", "25LB", "12 OZ", "12 ONZ")
+function outBolsaLb(p){
+  if(!p) return null;
+  var lbl = (p.pkg != null && typeof PKGS !== 'undefined' && PKGS[p.pkg]) ? PKGS[p.pkg].label : p.pkgLabel;
+  var m = /([\d.]+)\s*(lbs?|pounds?|oz|onz|ounces?|kg|g)\b/i.exec(String(lbl || ''));
+  if(!m) return null;
+  var n = parseFloat(m[1]), u = m[2].toLowerCase();
+  if(!(n > 0)) return null;
+  if(/^(oz|onz|ounce)/.test(u)) return n / 16;
+  if(u === 'kg') return n * 2.20462;
+  if(u === 'g') return n / 453.592;
+  return n;
+}
+// Cuantas libras es 1 de esa unidad para ese producto, y como se saco
+function outFactorLb(producto, unidad){
+  unidad = unidad || OUT_UNIT_DEF;
+  if(unidad === 'lbs') return {f:1, txt:''};
+  var p = producto ? findProduct(producto) : null;
+  var bolsa = outBolsaLb(p);
+  var bl = bolsa == null ? '' : opsFmt(bolsa)+' lb';
+  if(unidad === 'bags' || unidad === 'units'){
+    return bolsa == null ? {f:null, txt:'The catalog has no bag size for this product'}
+                         : {f:bolsa, txt:'1 bag = '+bl};
+  }
+  if(unidad === 'cases'){
+    if(bolsa == null) return {f:null, txt:'The catalog has no bag size for this product'};
+    if(!(p.bagsPerCase > 0)) return {f:null, txt:'The catalog has no bags per case for this product'};
+    return {f:bolsa * p.bagsPerCase, txt:'1 case = '+p.bagsPerCase+' bags × '+bl+' = '+opsFmt(bolsa * p.bagsPerCase)+' lb'};
+  }
+  return {f:null, txt:'Pallets cannot be turned into pounds'};
+}
+// Lo producido (o pedido) en libras; null si no se puede convertir
+function outLbs(r, campo){
+  var q = opsNum(r[campo || 'produced']);
+  if(q == null) return null;
+  var k = outFactorLb(r.product, r.unit);
+  return k.f == null ? null : q * k.f;
+}
 function outBalance(r){
   var o = opsNum(r.ordered), p = opsNum(r.produced);
   return o == null ? null : o - (p || 0);
@@ -30,7 +78,7 @@ function outConstruir(){
   host.innerHTML =
     '<div class="sheet-wrap"><table class="sheet ops-sheet"><thead><tr>'+
       '<th class="rn">#</th><th>Product #</th><th class="wide">Description</th><th>Line</th><th>Order #</th>'+
-      '<th class="num">Ordered</th><th class="num">Produced</th><th>Unit</th><th class="num">Balance</th>'+
+      '<th class="num">Ordered</th><th class="num">Produced</th><th>Unit</th><th class="num">Lbs</th><th class="num">Balance</th>'+
       '<th>LOT</th><th>Completed</th><th class="ops-note">Notes</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="out-new"><tr class="newrow">'+
@@ -43,7 +91,8 @@ function outConstruir(){
       '<td><input class="cell ops-qty" id="out-ordered" inputmode="decimal" placeholder="Qty" autocomplete="off" oninput="outBalNueva()"></td>'+
       '<td><input class="cell ops-qty" id="out-produced" inputmode="decimal" placeholder="Qty" autocomplete="off" oninput="outBalNueva()" '+
         'onkeydown="if(event.key===\'Enter\'){event.preventDefault();outAgregar();}"></td>'+
-      '<td><select class="cell" id="out-unit">'+outUnitOptions('cases')+'</select></td>'+
+      '<td><select class="cell" id="out-unit" onchange="outBalNueva()">'+outUnitOptions(OUT_UNIT_DEF)+'</select></td>'+
+      '<td class="num soft" id="out-lbs">—</td>'+
       '<td class="num soft" id="out-bal">—</td>'+
       '<td><input class="cell ops-lot" id="out-lot" placeholder="LOT" autocomplete="off" autocapitalize="characters"></td>'+
       '<td class="soft">auto</td>'+
@@ -61,6 +110,7 @@ function outProducto(){
   var p = num ? findProduct(num) : null;
   var d = document.getElementById('out-desc');
   if(d) d.textContent = p ? (p.name || '—') : '—';
+  outBalNueva();
   var f = opsFiltro('out');
   var set = function(id, v){ var e = document.getElementById(id); if(e && !e.value && v) e.value = v; };
   if(p && typeof runsFor === 'function'){
@@ -76,10 +126,19 @@ function outProducto(){
   }
 }
 function outBalNueva(){
+  var g = function(id){ return (document.getElementById(id) || {}).value || ''; };
   var e = document.getElementById('out-bal');
-  if(!e) return;
-  var b = outBalance({ordered:(document.getElementById('out-ordered') || {}).value, produced:(document.getElementById('out-produced') || {}).value});
-  e.textContent = b == null ? '—' : opsFmt(b);
+  if(e){
+    var b = outBalance({ordered:g('out-ordered'), produced:g('out-produced')});
+    e.textContent = b == null ? '—' : opsFmt(b);
+  }
+  var l = document.getElementById('out-lbs');
+  if(l){
+    var r = {product:normNumber(g('out-product')), unit:g('out-unit'), produced:g('out-produced')};
+    var lb = outLbs(r), k = outFactorLb(r.product, r.unit);
+    l.textContent = lb == null ? '—' : opsFmt(lb);
+    if(k.txt && r.product) l.setAttribute('data-tip', k.txt); else l.removeAttribute('data-tip');
+  }
 }
 function outLimpiar(){
   ['out-product', 'out-order', 'out-ordered', 'out-produced', 'out-lot', 'out-notes'].forEach(function(id){
@@ -88,6 +147,7 @@ function outLimpiar(){
   var l = document.getElementById('out-line'); if(l) l.value = '';
   var d = document.getElementById('out-desc'); if(d) d.textContent = '—';
   var b = document.getElementById('out-bal'); if(b) b.textContent = '—';
+  var lb = document.getElementById('out-lbs'); if(lb){ lb.textContent = '—'; lb.removeAttribute('data-tip'); }
 }
 
 function outAgregar(){
@@ -103,7 +163,7 @@ function outAgregar(){
   var r = {id:newRecordId(), date:f.date, shift:String(f.shift), line:g('out-line'),
     product: p ? normNumber(p.number) : num, productName: p ? (p.name || '') : '',
     order:g('out-order'), ordered:ordered === '' ? '' : String(opsNum(ordered)), produced:produced === '' ? '' : String(opsNum(produced)),
-    unit:g('out-unit') || 'cases', lot:g('out-lot').toUpperCase(), notes:g('out-notes'), completed:false,
+    unit:g('out-unit') || OUT_UNIT_DEF, lot:g('out-lot').toUpperCase(), notes:g('out-notes'), completed:false,
     createdAt:localISOStr(), createdBy:opsQuien()};
   var b = outBalance(r);
   if(b != null && opsNum(r.ordered) > 0 && b <= 0) r.completed = true;
@@ -128,7 +188,7 @@ function outDesdeSchedule(){
     });
   });
   if(!nuevas.length){ toast('The scheduled products are already on this sheet'); return; }
-  var unidad = (document.getElementById('out-unit') || {}).value || 'cases';
+  var unidad = (document.getElementById('out-unit') || {}).value || OUT_UNIT_DEF;
   nuevas.forEach(function(run){
     opsGuardar('output', {id:newRecordId(), date:f.date, shift:String(f.shift), line:String(run.line || ''),
       product:run.product || '', productName:run.productName || '', order:'', ordered:'', produced:'',
@@ -146,14 +206,34 @@ function outDelDia(f){
     return (parseInt(a.line, 10) || 99) - (parseInt(b.line, 10) || 99) || String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
   });
 }
+// Lo producido en LIBRAS (lo que se pudo convertir) + lo que no se pudo, en su unidad
 function outTotales(lista){
-  var t = {};
+  var lb = 0, hayLb = false, otros = {};
   lista.forEach(function(r){
-    var p = opsNum(r.produced);
-    if(p == null) return;
-    t[r.unit || 'cases'] = (t[r.unit || 'cases'] || 0) + p;
+    var q = opsNum(r.produced);
+    if(q == null) return;
+    var x = outLbs(r);
+    if(x != null){ lb += x; hayLb = true; return; }
+    var u = r.unit || OUT_UNIT_DEF;
+    otros[u] = (otros[u] || 0) + q;
   });
-  return Object.keys(t).map(function(u){ return opsFmt(t[u])+' '+outUnitTxt(u); }).join(' · ');
+  var partes = hayLb ? [opsFmt(lb)+' lbs'] : [];
+  Object.keys(otros).forEach(function(u){ partes.push(opsFmt(otros[u])+' '+outUnitTxt(u)+' (no lbs)'); });
+  return partes.join(' · ');
+}
+// La tarjeta: las libras en grande; lo que no se pudo pasar a libras, abajo
+function outKpiProducido(lista){
+  var t = outTotales(lista).split(' · ');
+  var lb = /lbs$/.test(t[0]) ? t.shift() : '0 lbs';
+  var otros = t.filter(Boolean).map(function(x){ return x.replace(' (no lbs)', ''); }).join(', ');
+  return kpiCard(lb, 'produced', {icono:'chart', note: otros ? 'Not in lbs: '+otros : ''});
+}
+// La celda Lbs: al pasar el raton dice como se saco (o por que no se pudo)
+function outLbsHTML(r){
+  if(opsNum(r.produced) == null) return '<span class="soft">—</span>';
+  var k = outFactorLb(r.product, r.unit), lb = outLbs(r);
+  if(lb == null) return '<span class="soft ops-nolb" data-tip="'+esc(k.txt)+'">—</span>';
+  return '<span'+(k.txt ? ' class="ops-conv" data-tip="'+esc(k.txt)+'"' : '')+'>'+opsFmt(lb)+'</span>';
 }
 function renderOutput(){
   outConstruir();
@@ -167,13 +247,13 @@ function renderOutput(){
       kpiCard(lista.length, 'products run', {icono:'box'}) +
       kpiCard(hechas, 'orders completed', {tono:'ok', icono:'check'}) +
       kpiCard(conBal, 'with balance left', {tono:'bad', icono:'alert'}) +
-      kpiCard(outTotales(lista) || '0', 'produced', {icono:'chart'});
+      outKpiProducido(lista);
     renderIcons(kp);
   }
   var body = document.getElementById('out-body');
   if(!body) return;
   if(!lista.length){
-    body.innerHTML = '<tr><td colspan="13" class="sheet-empty" style="border:0">Nothing entered for this day and shift. '+
+    body.innerHTML = '<tr><td colspan="14" class="sheet-empty" style="border:0">Nothing entered for this day and shift. '+
       'Add each product in the top row, or bring the scheduled products from the ⋯ menu.</td></tr>';
     return;
   }
@@ -201,7 +281,8 @@ function outFilaHTML(r, i){
     '<td>'+inp('order', 'ops-short', 'placeholder="Order #"')+'</td>'+
     '<td>'+inp('ordered', 'ops-qty', 'inputmode="decimal"')+'</td>'+
     '<td>'+inp('produced', 'ops-qty', 'inputmode="decimal"')+'</td>'+
-    '<td><select class="cell" aria-label="Unit" onchange="outCampo('+id+',\'unit\',this)">'+outUnitOptions(r.unit || 'cases')+'</select></td>'+
+    '<td><select class="cell" aria-label="Unit" onchange="outCampo('+id+',\'unit\',this)">'+outUnitOptions(r.unit || OUT_UNIT_DEF)+'</select></td>'+
+    '<td class="num">'+outLbsHTML(r)+'</td>'+
     '<td class="num">'+outBalHTML(r)+'</td>'+
     '<td>'+inp('lot', 'ops-lot', 'placeholder="LOT" autocapitalize="characters"')+'</td>'+
     '<td><button class="cell-tog'+(r.completed ? ' on' : '')+'" onclick="outCompletar('+id+')">'+(r.completed ? '✓ Yes' : 'No')+'</button></td>'+
@@ -246,13 +327,15 @@ function outBorrar(id){
 
 // ===== REPORTE DEL DIA =====
 var OUT_COLS = [{h:'Line', w:11}, {h:'Product #', w:20}, {h:'Description', w:44}, {h:'Order #', w:20}, {h:'Ordered', w:17, al:'right'},
-  {h:'Produced', w:17, al:'right'}, {h:'Unit', w:13}, {h:'Balance', w:17, al:'right'}, {h:'LOT', w:22}, {h:'Completed', w:15}, {h:'Notes', w:40}];
+  {h:'Produced', w:17, al:'right'}, {h:'Unit', w:13}, {h:'Lbs', w:17, al:'right'}, {h:'Balance', w:17, al:'right'}, {h:'LOT', w:22}, {h:'Completed', w:15}, {h:'Notes', w:40}];
 // xl: numeros sin comas, para que Excel los sume
 function outFilaReporte(r, xl){
   var b = outBalance(r);
   var n = xl ? function(v){ var x = opsNum(v); return x == null ? '' : x; } : opsFmt;
+  var lb = outLbs(r);
+  var lbsTxt = lb == null ? '' : xl ? Math.round(lb * 100) / 100 : opsFmt(lb);
   return [r.line ? 'Line '+r.line : '', r.product || '', r.productName || '', r.order || '', n(r.ordered), n(r.produced),
-          outUnitTxt(r.unit), b == null ? '' : n(b), r.lot || '', r.completed ? 'Yes' : 'No', r.notes || ''];
+          outUnitTxt(r.unit), lbsTxt, b == null ? '' : n(b), r.lot || '', r.completed ? 'Yes' : 'No', r.notes || ''];
 }
 function outDayPdf(){
   var f = opsFiltro('out');
