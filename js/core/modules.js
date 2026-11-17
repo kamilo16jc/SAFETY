@@ -37,6 +37,13 @@ var MODULES = [
       {screen:'screen-orders',    name:'COA Orders',       icon:'doc', color:'#a21caf'},
       {screen:'screen-lotsearch', name:'Search',           icon:'search', color:'#b45309'}
   ]},
+  // El piso de produccion: la gente, lo que se fabrico y los paros de linea
+  { id:'operations', color:'#818cf8', ink:'#4338ca', name:'Operations', icon:'factory', items:[
+      {screen:'screen-attendance',name:'Attendance',       icon:'user', color:'#4338ca'},
+      {screen:'screen-output',    name:'Output',           icon:'box', color:'#047857'},
+      {screen:'screen-downtime',  name:'Downtime',         icon:'clock', color:'#be123c'},
+      {screen:'screen-opsreports',name:'Reports',          icon:'chart', color:'#0369a1'}
+  ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
       {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'},
       {screen:'screen-addproduct',name:'Create Product',   icon:'plus', color:'#0369a1'},
@@ -255,6 +262,7 @@ var MODULE_SCOPE = {
   lab:        ['analysis','runs','raw','grilling'],
   coa:        ['analysis','runs'],
   production: ['runs','shifts'],
+  operations: [],
   admin:      null                       // el administrador ve todo
 };
 function scopeKinds(){

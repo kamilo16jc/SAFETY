@@ -81,6 +81,10 @@ function goTo(id){
   if(id==='screen-shift') initShift();
   if(id==='screen-production') initProduction();
   if(id==='screen-orders') initOrders();
+  if(id==='screen-attendance') initAttendance();
+  if(id==='screen-output') initOutput();
+  if(id==='screen-downtime') initDowntime();
+  if(id==='screen-opsreports') initOpsReports();
   if(id==='screen-samplelist') initSampleList();
   if(id==='screen-lab') initLab();
   if(id==='screen-analysis') initAnalysis();
@@ -171,6 +175,10 @@ var CRUMBS = {
   'screen-module':   ['', 'Modules'],
   'screen-production':['Capture', 'Production Schedule'],
   'screen-orders':['Production', 'COA Orders'],
+  'screen-attendance':['Operations', 'Attendance'],
+  'screen-output':['Operations', 'Output'],
+  'screen-downtime':['Operations', 'Downtime'],
+  'screen-opsreports':['Operations', 'Reports'],
   'screen-samplelist':['Capture', 'List Samples'],
   'screen-lab':      ['Capture', 'Lab Samples'],
   'screen-analysis': ['Capture', 'Sample Analysis'],

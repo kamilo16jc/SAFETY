@@ -3243,3 +3243,43 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
   .sk-chip{white-space:normal;flex-wrap:wrap;border-radius:12px;max-width:100%}
 }
 
+
+/* ============================================================
+   OPERATIONS: Attendance, Output, Downtime y Reports
+   ============================================================ */
+.sheet-bar .sb-icos{display:flex;align-items:center;gap:2px;align-self:flex-end;min-height:38px}
+.ops-sheet input.cell.ops-time{min-width:96px}
+.ops-sheet input.cell.ops-short{min-width:84px;max-width:130px}
+.ops-sheet input.cell.ops-qty{min-width:62px;max-width:86px;text-align:right;font-variant-numeric:tabular-nums}
+.ops-sheet select.cell{min-width:74px}
+.ops-sheet .wide{min-width:170px}
+.ops-sheet td.ops-note{min-width:150px}
+.ops-sheet input.cell.ops-lot{min-width:92px;text-transform:uppercase;font-variant-numeric:tabular-nums}
+/* asistencia: cinco letras; la marcada toma su color */
+.att-st{display:inline-flex;gap:3px}
+.att-b{width:28px;height:26px;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface);
+  font-family:inherit;font-size:12px;font-weight:700;line-height:1;color:var(--muted);cursor:pointer}
+.att-b:hover{border-color:var(--accent);color:var(--accent)}
+.att-b.on.ok{background:var(--pass-tint);border-color:var(--pass);color:var(--pass)}
+.att-b.on.warn{background:var(--warn-tint);border-color:var(--warn);color:var(--warn)}
+.att-b.on.bad{background:var(--fail-tint);border-color:var(--fail);color:var(--fail)}
+.att-b.on.soft{background:var(--surface2);border-color:var(--text);color:var(--text)}
+/* sin marca: lo pendiente en ambar */
+.ops-sheet tr.att-pend td.rn{box-shadow:inset 3px 0 0 var(--warn)}
+.ops-sheet tr.att-off td{opacity:.55}
+/* linea todavia parada */
+.ops-sheet tr.dt-open td.rn{box-shadow:inset 3px 0 0 var(--fail)}
+.dt-fin{display:flex;align-items:center;gap:4px}
+.dt-fin .ico-btn.sm{width:26px;height:26px}
+.dt-fin .ico-btn.sm svg{width:14px;height:14px}
+/* Reports */
+.ops-rep-sub{font-size:13px;font-weight:600;color:var(--text);margin:-4px 0 14px}
+.ops-sec{margin-bottom:28px}
+.ops-h{font-size:16px;font-weight:700;margin:0 0 10px;color:var(--text)}
+.ops-h3{font-size:13px;font-weight:700;margin:14px 0 8px;color:var(--text)}
+.ops-dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.ops-rep tr.ops-tot td{background:var(--surface2)}
+@media (max-width:760px){
+  .ops-dos{grid-template-columns:1fr}
+  .sheet-bar .sb-icos{min-height:0}
+}

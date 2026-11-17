@@ -4,6 +4,10 @@ var nxCommandTrigger=null;
 var NX_SCREEN_NOTES={
  'screen-production':'Plan the shift. Keep every line and sample connected.',
  'screen-orders':'Enter each order once: its PO and its products. Sample Analysis fills them in by itself.',
+ 'screen-attendance':'Mark who came to work in each shift.',
+ 'screen-output':'What was produced of each product, its balance and its LOT.',
+ 'screen-downtime':'Every line stop: how long, why and what was done.',
+ 'screen-opsreports':'Attendance, output and downtime, each report on its own, for any range of dates.',
  'screen-coa':'Prepare certificates from completed laboratory results.',
  'screen-labresults':'Review external laboratory reports and final results.',
  'screen-coastatus':'Follow each sample from collection to certificate.',
@@ -48,7 +52,8 @@ var NX_SHEET_SCREENS={
  'screen-analysis':1,'screen-yeast':1,'screen-lab':1,'screen-raw':1,'screen-dry':1,
  'screen-formag':1,'screen-rd':1,'screen-grilling':1,'screen-production':1,'screen-orders':1,
  'screen-samplelist':1,'screen-coa':1,'screen-labresults':1,'screen-coastatus':1,'screen-coastock':1,
- 'screen-customers':1,'screen-products':1,'screen-hold':1,'screen-admin':1,'screen-lotsearch':1
+ 'screen-customers':1,'screen-products':1,'screen-hold':1,'screen-admin':1,'screen-lotsearch':1,
+ 'screen-attendance':1,'screen-output':1,'screen-downtime':1,'screen-opsreports':1
 };
 function nxNavAuto(){return document.body.classList.contains('nx-nav-auto');}
 function nxNavDrawer(){return window.innerWidth<1024||nxNavAuto();}

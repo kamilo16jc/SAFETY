@@ -122,6 +122,152 @@
   <datalist id="or-product-list"></datalist>
 </div>
 
+<!-- ===== OPERATIONS (piso de produccion): asistencia, produccion, paros y reportes ===== -->
+<div class="screen" id="screen-attendance">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">Attendance</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="att-date">Date</label>
+      <input type="date" class="field" id="att-date" oninput="opsSucio('att')" onkeydown="if(event.key==='Enter')attAplicar()"></div>
+    <div class="sb-field"><label for="att-shift">Shift</label>
+      <div class="select-wrap"><select class="field" id="att-shift" onchange="opsSucio('att')">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="att-go" aria-label="Apply filters" title="Apply filters" onclick="attAplicar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-icos">
+      <button class="form-ico" type="button" onclick="attDayPdf()" data-tip="Download PDF · report of this day and shift" aria-label="Download PDF report"><span data-icon="pdf"></span></button>
+      <button class="form-ico" type="button" onclick="nxImprimir(function(){ return attDayPdf(); })" data-tip="Print · report of this day and shift" aria-label="Print report"><span data-icon="print"></span></button>
+    </div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,attTodosPresentes)"><span data-icon="check"></span>Mark everyone without a mark as Present</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,function(){setAttView('roster')})"><span data-icon="user"></span>Employees</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,attDayExcel)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div><span class="pill ok">P</span> Present &nbsp; <span class="pill warn">L</span> Late &nbsp; <span class="pill warn">E</span> Left early &nbsp;
+      <span class="pill bad">A</span> Absent &nbsp; <span class="pill">X</span> Excused (vacation, sick with notice). Tap the letter; the &times; clears the mark.</div>
+    <div>In and Out are optional; with both, the sheet counts the hours. The Employees card keeps the list of people, with their shift and area.</div>
+  </div>
+  <div class="kpi-row" id="att-kpis"></div>
+  <div id="att-sheet"></div>
+  <datalist id="att-emp-list"></datalist>
+  <datalist id="att-area-list"></datalist>
+</div>
+
+<div class="screen" id="screen-output">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">Output</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="out-date">Date</label>
+      <input type="date" class="field" id="out-date" oninput="opsSucio('out')" onkeydown="if(event.key==='Enter')outAplicar()"></div>
+    <div class="sb-field"><label for="out-shift">Shift</label>
+      <div class="select-wrap"><select class="field" id="out-shift" onchange="opsSucio('out')">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="out-go" aria-label="Apply filters" title="Apply filters" onclick="outAplicar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-icos">
+      <button class="form-ico" type="button" onclick="outDayPdf()" data-tip="Download PDF · report of this day and shift" aria-label="Download PDF report"><span data-icon="pdf"></span></button>
+      <button class="form-ico" type="button" onclick="nxImprimir(function(){ return outDayPdf(); })" data-tip="Print · report of this day and shift" aria-label="Print report"><span data-icon="print"></span></button>
+    </div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,outDesdeSchedule)"><span data-icon="calendar"></span>Bring the scheduled products</button>
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,outDayExcel)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div>Balance = Ordered &minus; Produced. When the produced quantity reaches the order, Completed turns on by itself; tap it to change it.</div>
+    <div>When you write the product #, the line, the order and the LOT come from the Production Schedule or the COA order if they have them.</div>
+  </div>
+  <div class="kpi-row" id="out-kpis"></div>
+  <div id="out-sheet"></div>
+  <datalist id="out-product-list"></datalist>
+</div>
+
+<div class="screen" id="screen-downtime">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">Downtime</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="dt-date">Date</label>
+      <input type="date" class="field" id="dt-date" oninput="opsSucio('dt')" onkeydown="if(event.key==='Enter')dtAplicar()"></div>
+    <div class="sb-field"><label for="dt-shift">Shift</label>
+      <div class="select-wrap"><select class="field" id="dt-shift" onchange="opsSucio('dt')">
+        <option value="1">1st Shift</option>
+        <option value="2">2nd Shift</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="dt-go" aria-label="Apply filters" title="Apply filters" onclick="dtAplicar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-icos">
+      <button class="form-ico" type="button" onclick="dtDayPdf()" data-tip="Download PDF · report of this day and shift" aria-label="Download PDF report"><span data-icon="pdf"></span></button>
+      <button class="form-ico" type="button" onclick="nxImprimir(function(){ return dtDayPdf(); })" data-tip="Print · report of this day and shift" aria-label="Print report"><span data-icon="print"></span></button>
+    </div>
+    <div class="more-box" data-open="false">
+      <button class="more-btn" type="button" aria-haspopup="true" aria-expanded="false"
+              title="More options" aria-label="More options" onclick="moreToggle(this)"><span data-icon="more"></span></button>
+      <div class="more-menu" role="menu">
+        <button class="more-item" type="button" role="menuitem" onclick="moreRun(this,dtDayExcel)"><span data-icon="grid"></span>Export to Excel</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div>Start is when the line stopped; End, when it ran again. Without End the line is still down: it shows in red, and the check button closes it with the current time.</div>
+    <div>Start empty = now. The sheet counts the minutes (past midnight too).</div>
+  </div>
+  <div class="kpi-row" id="dt-kpis"></div>
+  <div id="dt-sheet"></div>
+  <datalist id="dt-product-list"></datalist>
+</div>
+
+<div class="screen" id="screen-opsreports">
+  <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
+  <div class="form-title">Operations Reports</div>
+  <div class="sheet-bar">
+    <div class="sb-field"><label for="rep-from">From</label>
+      <input type="date" class="field" id="rep-from" oninput="opsSucio('rep')" onkeydown="repTecla(event)"></div>
+    <div class="sb-field"><label for="rep-to">To</label>
+      <input type="date" class="field" id="rep-to" oninput="opsSucio('rep')" onkeydown="repTecla(event)"></div>
+    <div class="sb-field"><label for="rep-shift">Shift</label>
+      <div class="select-wrap"><select class="field" id="rep-shift" onchange="opsSucio('rep')">
+        <option value="">All shifts</option><option value="1">1st Shift</option><option value="2">2nd Shift</option>
+      </select></div></div>
+    <div class="sb-field"><label for="rep-line">Line</label>
+      <div class="select-wrap"><select class="field" id="rep-line" onchange="opsSucio('rep')">
+        <option value="">All lines</option><option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
+        <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+      </select></div></div>
+    <div class="sb-field"><label>&nbsp;</label>
+      <button class="btn-solid" id="rep-go" aria-label="Apply filters" title="Apply filters" onclick="repAplicar()"><span data-icon="search"></span></button></div>
+    <span class="sb-gap"></span>
+    <div class="sb-icos">
+      <button class="form-ico" type="button" onclick="opsReportPdf()" data-tip="Download PDF · this report" aria-label="Download PDF report"><span data-icon="pdf"></span></button>
+      <button class="form-ico" type="button" onclick="nxImprimir(function(){ return opsReportPdf(); })" data-tip="Print · this report" aria-label="Print report"><span data-icon="print"></span></button>
+      <button class="form-ico" type="button" onclick="opsReportExcel()" data-tip="Excel · this report" aria-label="Export report to Excel"><span data-icon="grid"></span></button>
+    </div>
+  </div>
+  <div class="legend">
+    <div>Three separate reports: tap Attendance, Output or Downtime. The PDF, the printer and Excel give the one on screen.</div>
+    <div>Without dates the report is today. Line filters Output and Downtime; Attendance goes by shift. Nothing changes until you tap the magnifier.</div>
+  </div>
+  <div class="kpi-row" id="rep-tabs"></div>
+  <div class="ops-rep-sub" id="rep-sub"></div>
+  <div id="rep-body"></div>
+</div>
+
 <!-- LIST SAMPLES -->
 <div class="screen" id="screen-samplelist">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
@@ -2171,6 +2317,11 @@
 <script src="js/modules/scanner.js"></script>
 <script src="js/modules/production.js"></script>
 <script src="js/modules/orders.js"></script>
+<script src="js/modules/ops-common.js"></script>
+<script src="js/modules/ops-attendance.js"></script>
+<script src="js/modules/ops-output.js"></script>
+<script src="js/modules/ops-downtime.js"></script>
+<script src="js/modules/ops-reports.js"></script>
 <script src="js/modules/samplelist.js"></script>
 <script src="js/modules/lab.js"></script>
 <script src="js/modules/analysis.js"></script>

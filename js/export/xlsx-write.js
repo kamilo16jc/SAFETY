@@ -48,7 +48,7 @@ function xlIsNumber(v){
 // numero de orden, un PO o un lote son identificadores: si Excel los toma como
 // numero los alinea a la derecha, se come los ceros de adelante y a los largos
 // les pone notacion cientifica. Esos van como texto.
-var XL_NUMERIC = /^(moisture|fat|ph|aw|salt|yeast|mold|coliform|e\.? ?coli|pseudomonas|matrix .+|temp|temperature|humidity|weight|avg|average|total|count|compliance|pass|in target|out of target|.+ failed|failures|samples?|sample \d+|products?|people|qty|quantity|%.*|.*\s%|.*\(%\))$/i;
+var XL_NUMERIC = /^(moisture|fat|ph|aw|salt|yeast|mold|coliform|e\.? ?coli|pseudomonas|matrix .+|temp|temperature|humidity|weight|avg|average|total|count|compliance|pass|in target|out of target|.+ failed|failures|samples?|sample \d+|products?|people|qty|quantity|ordered|produced|balance|balance left|runs|stops|minutes|hours|days|present|late|left early|absent|excused|%.*|.*\s%|.*\(%\))$/i;
 
 function xlNumericHeader(h){
   return XL_NUMERIC.test(String(h==null?'':h).trim());
