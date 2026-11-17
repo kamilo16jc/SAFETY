@@ -3,6 +3,11 @@
 // (P L E A X), la hora de entrada y salida y una nota. Se marca con un clic;
 // el registro se crea al marcar. La lista de empleados se arma aqui mismo
 // (tarjeta "Employees") y vive solo en Firestore.
+//
+// Linea (pedido del usuario, 17 nov 2026: "agrega las lines para identificar
+// donde trabaja ese operador"): cada empleado tiene su linea fija (Line 1-6 o
+// Chopped area) y la hoja del dia la propone; si ese dia lo mueven, se cambia
+// en su fila y queda en el registro del dia (attendance.line).
 
 var ATT_STATUS = [
   {k:'present', label:'Present',    short:'P', tono:'ok'},
@@ -11,7 +16,7 @@ var ATT_STATUS = [
   {k:'absent',  label:'Absent',     short:'A', tono:'bad'},
   {k:'excused', label:'Excused',    short:'X', tono:'soft'}
 ];
-var ATT_AREAS = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5', 'Line 6', 'Packaging', 'Sanitation', 'Warehouse', 'Maintenance', 'Shipping'];
+var ATT_AREAS = ['Production', 'Packaging', 'Sanitation', 'Warehouse', 'Maintenance', 'Shipping'];
 var attView = 'day';
 
 function attStatus(k){ return ATT_STATUS.filter(function(s){ return s.k === k; })[0] || null; }
@@ -24,6 +29,19 @@ function attCmpArea(a, b){
   var x = String(a || '').trim(), y = String(b || '').trim();
   if(!x !== !y) return x ? -1 : 1;
   return x.localeCompare(y, undefined, {numeric:true});
+}
+// Orden de las lineas: 1..6, Chopped area y al final los que no tienen
+function attLineaOrden(v){
+  v = String(v || '');
+  if(!v) return 999;
+  if(v === OPS_CHOPPED) return 500;
+  return parseInt(v, 10) || 600;
+}
+// La linea de un registro del dia: la que se le puso ese dia, o la fija del empleado
+function attLineaDe(r, e){
+  if(r && r.line != null) return String(r.line);
+  e = e || (r ? attEmp(r.employeeId) : null);
+  return String((e && e.line) || '');
 }
 function attHorasMin(r){ return r ? opsMinutos(r.timeIn, r.timeOut) : null; }
 // Llego a trabajar (aunque tarde o se fuera antes)
@@ -41,7 +59,7 @@ function setAttView(v){ attView = v; renderAttendance(); }
 function attListas(){
   var l = document.getElementById('att-emp-list');
   if(l) l.innerHTML = getEmployees().filter(function(e){ return e.active !== false; })
-    .map(function(e){ return '<option value="'+esc(e.name)+'">'+esc((e.empNo ? '#'+e.empNo+' · ' : '')+(e.area || ''))+'</option>'; }).join('');
+    .map(function(e){ return '<option value="'+esc(e.name)+'">'+esc((e.line ? opsLineaTxt(e.line)+' · ' : '')+(e.empNo ? '#'+e.empNo+' · ' : '')+(e.area || ''))+'</option>'; }).join('');
   var a = document.getElementById('att-area-list');
   if(a){
     var vistas = {}, out = [];
@@ -60,20 +78,22 @@ function attConstruir(){
   var turnos = '<option value="1">1st</option><option value="2">2nd</option><option value="any">Both</option>';
   host.innerHTML =
     '<div id="att-day"><div class="sheet-wrap"><table class="sheet ops-sheet"><thead><tr>'+
-      '<th class="rn">#</th><th>Employee</th><th>Emp #</th><th>Area</th><th>Status</th>'+
+      '<th class="rn">#</th><th>Employee</th><th>Emp #</th><th>Line</th><th>Area</th><th>Status</th>'+
       '<th>In</th><th>Out</th><th class="num">Hours</th><th class="wide">Notes</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="att-new"><tr class="newrow">'+
       '<td class="rn">New</td>'+
-      '<td colspan="3"><input class="cell" id="att-n-name" list="att-emp-list" placeholder="Someone not on this list (another shift, new)" '+
+      '<td colspan="2"><input class="cell" id="att-n-name" list="att-emp-list" placeholder="Someone not on this list (another shift, new)" '+
         'autocomplete="off" onkeydown="if(event.key===\'Enter\'){event.preventDefault();attAgregar();}"></td>'+
+      '<td><select class="cell" id="att-n-line" aria-label="Line">'+opsLineOptions('', 'Line', true)+'</select></td>'+
+      '<td class="soft"></td>'+
       '<td><select class="cell" id="att-n-status">'+ATT_STATUS.map(function(s){ return '<option value="'+s.k+'">'+s.label+'</option>'; }).join('')+'</select></td>'+
       '<td colspan="4" class="soft">Each employee of the shift is listed below: tap a letter to mark them</td>'+
       '<td><button class="sheet-btn" onclick="attAgregar()">Add</button></td>'+
     '</tr></tbody>'+
     '<tbody id="att-body"></tbody></table></div></div>'+
     '<div id="att-roster" hidden><div class="sheet-wrap"><table class="sheet ops-sheet"><thead><tr>'+
-      '<th class="rn">#</th><th>Name</th><th>Emp #</th><th>Shift</th><th>Area</th><th>Active</th><th></th>'+
+      '<th class="rn">#</th><th>Name</th><th>Emp #</th><th>Shift</th><th>Line</th><th>Area</th><th>Active</th><th></th>'+
     '</tr></thead>'+
     '<tbody id="att-rnew"><tr class="newrow">'+
       '<td class="rn">New</td>'+
@@ -81,7 +101,8 @@ function attConstruir(){
         'onkeydown="if(event.key===\'Enter\'){event.preventDefault();attEmpAgregar();}"></td>'+
       '<td><input class="cell ops-short" id="att-r-no" placeholder="Emp #" autocomplete="off"></td>'+
       '<td><select class="cell" id="att-r-shift">'+turnos+'</select></td>'+
-      '<td><input class="cell" id="att-r-area" list="att-area-list" placeholder="Line / area" autocomplete="off" '+
+      '<td><select class="cell" id="att-r-line" aria-label="Line">'+opsLineOptions('', '—', true)+'</select></td>'+
+      '<td><input class="cell" id="att-r-area" list="att-area-list" placeholder="Area" autocomplete="off" '+
         'onkeydown="if(event.key===\'Enter\'){event.preventDefault();attEmpAgregar();}"></td>'+
       '<td class="soft">—</td>'+
       '<td><button class="sheet-btn" onclick="attEmpAgregar()">Add</button></td>'+
@@ -107,10 +128,11 @@ function attFilas(f){
     var k = String(r.employeeId);
     if(vistos[k]) return;
     vistos[k] = 1;
-    filas.push({e: attEmp(r.employeeId) || {id:r.employeeId, name:r.name, empNo:r.empNo, area:r.area}, r:r, fuera:true});
+    filas.push({e: attEmp(r.employeeId) || {id:r.employeeId, name:r.name, empNo:r.empNo, area:r.area, line:r.line}, r:r, fuera:true});
   });
   return filas.sort(function(a, b){
-    return attCmpArea(a.e.area, b.e.area) || String(a.e.name || '').localeCompare(String(b.e.name || ''), undefined, {numeric:true});
+    return (attLineaOrden(attLineaDe(a.r, a.e)) - attLineaOrden(attLineaDe(b.r, b.e))) ||
+      attCmpArea(a.e.area, b.e.area) || String(a.e.name || '').localeCompare(String(b.e.name || ''), undefined, {numeric:true});
   });
 }
 function attConteo(filas){
@@ -147,7 +169,7 @@ function renderAttendance(){
   var body = document.getElementById('att-body');
   if(!body) return;
   if(!filas.length){
-    body.innerHTML = '<tr><td colspan="10" class="sheet-empty" style="border:0">'+
+    body.innerHTML = '<tr><td colspan="11" class="sheet-empty" style="border:0">'+
       (getEmployees().length ? 'Nobody is on the '+opsTurno(f.shift)+' list. Open Employees to set each person’s shift.'
                              : 'No employees yet. Open the Employees card and add the people of each shift.')+'</td></tr>';
     return;
@@ -168,6 +190,8 @@ function attFilaHTML(x, i){
     '<td class="rn">'+i+'</td>'+
     '<td class="code">'+esc(e.name || '—')+(x.fuera ? ' <span class="tag">'+(e.active === false ? 'inactive' : 'other shift')+'</span>' : '')+'</td>'+
     '<td class="soft">'+esc(e.empNo || '—')+'</td>'+
+    '<td><select class="cell'+(r && r.line != null && String(r.line) !== String(e.line || '') ? ' att-moved' : '')+'" aria-label="Line of '+esc(e.name)+' this day" '+
+      'onchange="attCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(attLineaDe(r, e), '—', true)+'</select></td>'+
     '<td class="soft">'+esc(e.area || '—')+'</td>'+
     '<td><div class="att-st">'+botones+'</div></td>'+
     '<td><input type="time" class="cell ops-time" value="'+esc(r && r.timeIn || '')+'" aria-label="Time in" onchange="attCampo(\''+id+'\',\'timeIn\',this)"></td>'+
@@ -184,7 +208,7 @@ function attRegistro(empId, f, crear){
   if(r || !crear) return {r:r, nuevo:false};
   var e = attEmp(empId) || {};
   r = {id:newRecordId(), date:f.date, shift:String(f.shift), employeeId:e.id != null ? e.id : empId,
-       name:e.name || '', empNo:e.empNo || '', area:e.area || '', status:'', timeIn:'', timeOut:'', notes:'',
+       name:e.name || '', empNo:e.empNo || '', area:e.area || '', line:String(e.line || ''), status:'', timeIn:'', timeOut:'', notes:'',
        createdAt:localISOStr(), createdBy:opsQuien()};
   return {r:r, nuevo:true};
 }
@@ -199,10 +223,10 @@ function attMarcar(empId, k){
 function attCampo(empId, campo, el){
   var f = opsFiltro('att');
   var v = String(el.value || '').trim();
-  var x = attRegistro(empId, f, v !== '');
+  var x = attRegistro(empId, f, v !== '' || campo === 'line');
   if(!x.r) return;
   if(x.nuevo && (campo === 'timeIn' || campo === 'timeOut')) x.r.status = 'present';
-  if(x.r[campo] === v) return;
+  if(!x.nuevo && x.r[campo] === v) return;
   x.r[campo] = v;
   opsGuardar('attendance', x.r, x.nuevo);
   opsRepintar('screen-attendance', renderAttendance);
@@ -240,7 +264,8 @@ function attAgregar(){
   })[0];
   if(!e){
     if(!confirm(nombre+' is not on the employee list. Add them to the list ('+opsTurno(f.shift)+')?')) return;
-    e = {id:newRecordId(), name:nombre, empNo:'', shift:String(f.shift), area:'', active:true, createdAt:localISOStr(), createdBy:opsQuien()};
+    e = {id:newRecordId(), name:nombre, empNo:'', shift:String(f.shift), line:(document.getElementById('att-n-line') || {}).value || '',
+         area:'', active:true, createdAt:localISOStr(), createdBy:opsQuien()};
     opsGuardar('employees', e, true);
     opsLog('Employee added', nombre);
     attListas();
@@ -248,8 +273,11 @@ function attAgregar(){
   var x = attRegistro(e.id, f, true);
   if(!x.nuevo && x.r.status){ toast(e.name+' is already on this sheet'); return; }
   x.r.status = (document.getElementById('att-n-status') || {}).value || 'present';
+  var lnN = (document.getElementById('att-n-line') || {}).value || '';
+  if(lnN) x.r.line = lnN;
   opsGuardar('attendance', x.r, x.nuevo);
   inp.value = '';
+  var selN = document.getElementById('att-n-line'); if(selN) selN.value = '';
   opsRepintar('screen-attendance', renderAttendance);
   toast(e.name+' · '+attStatus(x.r.status).label);
 }
@@ -261,11 +289,12 @@ function renderAttRoster(){
   var l = getEmployees().slice().sort(function(a, b){
     return ((a.active === false) - (b.active === false)) ||
       String(a.shift).localeCompare(String(b.shift)) ||
+      (attLineaOrden(a.line) - attLineaOrden(b.line)) ||
       attCmpArea(a.area, b.area) ||
       String(a.name || '').localeCompare(String(b.name || ''), undefined, {numeric:true});
   });
   if(!l.length){
-    body.innerHTML = '<tr><td colspan="7" class="sheet-empty" style="border:0">No employees yet. Add each person in the top row with their shift and area.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" class="sheet-empty" style="border:0">No employees yet. Add each person in the top row with their shift, line and area.</td></tr>';
     return;
   }
   body.innerHTML = l.map(function(e, i){
@@ -276,6 +305,7 @@ function renderAttRoster(){
       '<td><input class="cell" value="'+esc(e.name || '')+'" aria-label="Name" onchange="attEmpCampo(\''+id+'\',\'name\',this)"></td>'+
       '<td><input class="cell ops-short" value="'+esc(e.empNo || '')+'" aria-label="Employee number" onchange="attEmpCampo(\''+id+'\',\'empNo\',this)"></td>'+
       '<td><select class="cell" aria-label="Shift" onchange="attEmpCampo(\''+id+'\',\'shift\',this)">'+sel('1', '1st')+sel('2', '2nd')+sel('any', 'Both')+'</select></td>'+
+      '<td><select class="cell" aria-label="Line" onchange="attEmpCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(e.line || '', '—', true)+'</select></td>'+
       '<td><input class="cell" list="att-area-list" value="'+esc(e.area || '')+'" aria-label="Area" onchange="attEmpCampo(\''+id+'\',\'area\',this)"></td>'+
       '<td><button class="cell-tog'+(e.active === false ? '' : ' on')+'" onclick="attEmpActivo(\''+id+'\')">'+(e.active === false ? 'Inactive' : '✓ Active')+'</button></td>'+
       '<td class="acts"><button class="run-del" type="button" title="Delete" aria-label="Delete '+esc(e.name)+'" onclick="attEmpBorrar(\''+id+'\')"><span data-icon="close"></span></button></td>'+
@@ -289,10 +319,10 @@ function attEmpAgregar(){
   if(!nombre){ toast('Write the employee name'); return; }
   var repetido = getEmployees().filter(function(x){ return attNombreKey(x.name) === attNombreKey(nombre); })[0];
   if(repetido && !confirm(nombre+' is already on the list. Add another person with the same name?')) return;
-  var e = {id:newRecordId(), name:nombre, empNo:g('att-r-no'), shift:g('att-r-shift') || '1', area:g('att-r-area'),
+  var e = {id:newRecordId(), name:nombre, empNo:g('att-r-no'), shift:g('att-r-shift') || '1', line:g('att-r-line'), area:g('att-r-area'),
            active:true, createdAt:localISOStr(), createdBy:opsQuien()};
   opsGuardar('employees', e, true);
-  opsLog('Employee added', nombre+' · '+attTurnoTxt(e.shift)+' shift');
+  opsLog('Employee added', nombre+' · '+attTurnoTxt(e.shift)+' shift'+(e.line ? ' · '+opsLineaTxt(e.line) : ''));
   ['att-r-name', 'att-r-no'].forEach(function(id){ var x = document.getElementById(id); if(x) x.value = ''; });
   attListas();
   opsRepintar('screen-attendance', renderAttendance);
@@ -332,7 +362,7 @@ function attEmpBorrar(id){
 function attFilasReporte(f){
   return attFilas(f).map(function(x){
     var r = x.r, s = r && attStatus(r.status), min = attHorasMin(r);
-    return [x.e.name || '', x.e.empNo || '', x.e.area || '', s ? s.label : 'Not marked',
+    return [x.e.name || '', x.e.empNo || '', opsLineaTxt(attLineaDe(r, x.e)), x.e.area || '', s ? s.label : 'Not marked',
             opsHora12(r && r.timeIn), opsHora12(r && r.timeOut), min == null ? '' : opsHoras(min), r && r.notes || ''];
   });
 }
@@ -345,7 +375,7 @@ function attDayPdf(){
     sections: [{
       title: 'Employees',
       kpis: [['At work', c.vino+' of '+c.total], ['Late', c.late], ['Left early', c.left], ['Absent', c.absent], ['Excused', c.excused], ['Not marked', c.sin]],
-      cols: [{h:'Employee', w:46}, {h:'Emp #', w:16}, {h:'Area', w:24}, {h:'Status', w:20}, {h:'In', w:15}, {h:'Out', w:15}, {h:'Hours', w:13, al:'right'}, {h:'Notes', w:60}],
+      cols: [{h:'Employee', w:44}, {h:'Emp #', w:15}, {h:'Line', w:20}, {h:'Area', w:22}, {h:'Status', w:20}, {h:'In', w:15}, {h:'Out', w:15}, {h:'Hours', w:13, al:'right'}, {h:'Notes', w:60}],
       rows: attFilasReporte(f), empty: 'No employees on this shift'
     }]
   });
@@ -355,7 +385,7 @@ function attDayExcel(){
   var filas = attFilasReporte(f);
   if(!filas.length){ toast('Nothing to export'); return; }
   downloadSheet('attendance-'+f.date+'-shift'+f.shift+'.xlsx',
-    [['Date', 'Shift', 'Employee', 'Emp #', 'Area', 'Status', 'In', 'Out', 'Hours', 'Notes']].concat(filas.map(function(r){
+    [['Date', 'Shift', 'Employee', 'Emp #', 'Line', 'Area', 'Status', 'In', 'Out', 'Hours', 'Notes']].concat(filas.map(function(r){
       return [f.date, opsTurno(f.shift)].concat(r);
     })), 'Attendance');
 }

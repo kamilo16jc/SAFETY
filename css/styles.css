@@ -3267,6 +3267,8 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 /* sin marca: lo pendiente en ambar */
 .ops-sheet tr.att-pend td.rn{box-shadow:inset 3px 0 0 var(--warn)}
 .ops-sheet tr.att-off td{opacity:.55}
+/* Attendance: ese dia trabajo en otra linea que la suya */
+.ops-sheet select.cell.att-moved{color:var(--warn);font-weight:700}
 /* Output: libras sacadas del catalogo (subrayado punteado = pasa el raton para ver como) */
 .ops-conv{border-bottom:1px dotted var(--muted);cursor:help}
 .ops-nolb{cursor:help}

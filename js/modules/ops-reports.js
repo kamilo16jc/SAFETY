@@ -44,7 +44,7 @@ function repTexto(f){
   var from = f.from || f.to, to = f.to || f.from;
   var fechas = !from ? opsFechaTxt(localDateStr()) : from === to ? opsFechaTxt(from) : opsFechaTxt(from)+' – '+opsFechaTxt(to);
   // la asistencia no va por linea
-  var linea = f.what === 'attendance' ? '' : (f.line ? ' · '+opsLineaTxt(f.line) : ' · All lines');
+  var linea = (f.line ? ' · '+opsLineaTxt(f.line) : ' · All lines');
   return fechas+' · '+opsTurno(f.shift)+linea;
 }
 function repIncluye(f, k){ return (f.what || 'attendance') === k; }
@@ -55,15 +55,19 @@ function repDatos(f){
     return String(a.date || '').localeCompare(String(b.date || '')) || String(a.shift).localeCompare(String(b.shift));
   };
   // Asistencia: no tiene linea; se filtra por fecha y turno
-  var att = opsLista('attendance').filter(function(r){ return repEnRango(r, f) && r.status; }).sort(ordenar);
+  var att = opsLista('attendance').filter(function(r){
+    return repEnRango(r, f) && r.status && (!f.line || attLineaDe(r) === String(f.line));
+  }).sort(ordenar);
   var porEmp = {};
   att.forEach(function(r){
     var k = String(r.employeeId);
     var e = attEmp(r.employeeId);
     if(!porEmp[k]) porEmp[k] = {name:(e && e.name) || r.name || '', empNo:(e && e.empNo) || r.empNo || '', area:(e && e.area) || r.area || '',
-                                dias:0, present:0, late:0, left:0, absent:0, excused:0, min:0};
+                                dias:0, present:0, late:0, left:0, absent:0, excused:0, min:0, lineas:{}};
     var x = porEmp[k];
     x.dias++; x[r.status] = (x[r.status] || 0) + 1;
+    var ln = attLineaDe(r, e);
+    if(ln) x.lineas[ln] = 1;
     x.min += attHorasMin(r) || 0;
   });
   var empleados = Object.keys(porEmp).map(function(k){ return porEmp[k]; })
@@ -165,15 +169,17 @@ function repConteoAtt(att){
 }
 
 // ===== COLUMNAS Y FILAS (las mismas en pantalla, PDF y Excel) =====
-var REP_ATT_COLS = [{h:'Employee', w:46}, {h:'Emp #', w:16}, {h:'Area', w:24}, {h:'Days', w:13, al:'right'}, {h:'Present', w:15, al:'right'},
+var REP_ATT_COLS = [{h:'Employee', w:44}, {h:'Emp #', w:15}, {h:'Line', w:22}, {h:'Area', w:22}, {h:'Days', w:13, al:'right'}, {h:'Present', w:15, al:'right'},
   {h:'Late', w:13, al:'right'}, {h:'Left early', w:16, al:'right'}, {h:'Absent', w:15, al:'right'}, {h:'Excused', w:15, al:'right'}, {h:'Hours', w:15, al:'right'}];
 function repFilasAtt(emps){
-  return emps.map(function(x){ return [x.name, x.empNo, x.area, x.dias, x.present, x.late, x.left, x.absent, x.excused, x.min ? opsHoras(x.min) : '']; });
+  return emps.map(function(x){
+    var ls = Object.keys(x.lineas).sort(function(a, b){ return attLineaOrden(a) - attLineaOrden(b); }).map(opsLineaTxt).join(', ');
+    return [x.name, x.empNo, ls, x.area, x.dias, x.present, x.late, x.left, x.absent, x.excused, x.min ? opsHoras(x.min) : '']; });
 }
 function repTotAtt(emps){
   var t = {dias:0, present:0, late:0, left:0, absent:0, excused:0, min:0};
   emps.forEach(function(x){ Object.keys(t).forEach(function(k){ t[k] += x[k] || 0; }); });
-  return ['Total', '', emps.length+' people', t.dias, t.present, t.late, t.left, t.absent, t.excused, t.min ? opsHoras(t.min) : ''];
+  return ['Total', '', '', emps.length+' people', t.dias, t.present, t.late, t.left, t.absent, t.excused, t.min ? opsHoras(t.min) : ''];
 }
 var REP_PROD_COLS = [{h:'Product #', w:20}, {h:'Description', w:50}, {h:'Runs', w:12, al:'right'}, {h:'Ordered', w:18, al:'right'},
   {h:'Produced', w:18, al:'right'}, {h:'Balance left', w:18, al:'right'}, {h:'Unit', w:13}, {h:'Lbs produced', w:20, al:'right'},
