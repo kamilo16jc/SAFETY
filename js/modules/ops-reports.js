@@ -217,6 +217,7 @@ function opsReportPdf(){
     secs.push({title:'Output by product', kpis:[['Products run', d.out.length], ['Completed', d.out.filter(function(r){ return r.completed; }).length], ['Produced', outTotales(d.out) || '0']],
       cols:REP_PROD_COLS, rows:repFilasProd(d.productos), empty:'Nothing produced in this range'});
     secs.push({title:'Output — each entry', cols:REP_OUT_COLS, rows:d.out.map(function(r){ return repFilaOut(r); }), empty:'Nothing produced in this range'});
+    secs.push(outSeccionLinea(d.out));
   }
   if(repIncluye(f, 'downtime')){
     var total = d.dt.reduce(function(a, r){ return a + (dtMinutos(r) || 0); }, 0);
@@ -248,6 +249,8 @@ function opsReportExcel(){
   if(repIncluye(f, 'output')){
     hojas.push({nombre:'Output by product', filas:[cab(REP_PROD_COLS)].concat(repFilasProd(d.productos, true))});
     hojas.push({nombre:'Output', filas:[cab(REP_OUT_COLS)].concat(d.out.map(function(r){ return repFilaOut(r, true); }))});
+    var pl = outFilasLinea(d.out, true);
+    hojas.push({nombre:'Output by line', filas:[cab(OUT_LINEA_COLS)].concat(pl.filas, pl.filas.length ? [pl.total] : [])});
   }
   if(repIncluye(f, 'downtime')){
     hojas.push({nombre:'Downtime by line', filas:[cab(REP_DTL_COLS)].concat(dtResumenLinea(d.dt))});

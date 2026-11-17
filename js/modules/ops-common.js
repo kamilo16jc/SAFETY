@@ -133,6 +133,13 @@ function opsLineaTxt(v){
   v = String(v == null ? '' : v);
   return !v ? '' : v === OPS_CHOPPED ? 'Chopped area' : 'Line '+v;
 }
+// Orden de las lineas en totales y listas: 1..6, Chopped area y al final las sin linea
+function opsLineaOrden(v){
+  v = String(v == null ? '' : v);
+  if(!v) return 999;
+  if(v === OPS_CHOPPED) return 500;
+  return parseInt(v, 10) || 600;
+}
 function opsLineOptions(sel, vacio, conChopped){
   return (vacio ? '<option value="">'+vacio+'</option>' : '') + OPS_LINES.map(function(n){
     return '<option value="'+n+'"'+(String(sel) === String(n) ? ' selected' : '')+'>Line '+n+'</option>';
@@ -233,7 +240,9 @@ function opsPdf(spec){
       }
       var cols = sec.cols || [];
       var suma = cols.reduce(function(a, c){ return a + (c.w || 20); }, 0) || 1;
-      var base = cols.map(function(c){ return (c.w || 20) * UTIL / suma; });
+      // una tabla corta (pocos datos) puede ir mas angosta: sec.width en mm
+      var ANCHO = sec.width ? Math.min(sec.width, UTIL) : UTIL;
+      var base = cols.map(function(c){ return (c.w || 20) * ANCHO / suma; });
 
       // 1) Los titulos en una linea: la letra mas grande con la que caben todos
       var suma1 = function(l){ return l.reduce(function(a, b){ return a + b; }, 0); };
@@ -242,7 +251,7 @@ function opsPdf(spec){
         HFS = t;
         doc.setFont('helvetica', 'bold'); doc.setFontSize(t);
         minCab = cols.map(function(c){ return doc.getTextWidth(String(c.h)) + 2 * PAD + 0.4; });
-        if(suma1(minCab) <= UTIL) break;
+        if(suma1(minCab) <= ANCHO) break;
       }
       // 2) Los datos cortos (Line 1, un LOT, una hora) tampoco se parten; los
       //    textos largos (descripcion, notas) si, y le prestan el ancho a los cortos
@@ -260,7 +269,7 @@ function opsPdf(spec){
         var m = largo[i] + 2 * PAD + 0.4;
         return m <= 42 ? Math.max(m, minCab[i]) : minCab[i];
       });
-      if(suma1(minimo) > UTIL) minimo = minCab;
+      if(suma1(minimo) > ANCHO) minimo = minCab;
       var falta = 0, holgura = 0;
       base.forEach(function(w, i){ if(w < minimo[i]) falta += minimo[i] - w; else holgura += w - minimo[i]; });
       var anchos = (!falta || !holgura) ? base : base.map(function(w, i){
@@ -319,7 +328,7 @@ function opsPdf(spec){
         if(r.length === 1 && cols.length > 1){
           var a1 = LH + 2 * PAD;
           if(y + a1 > H - 14){ pagina(); dibujarCab(); }
-          doc.setDrawColor(150); doc.setLineWidth(0.2); doc.rect(M, y, UTIL, a1);
+          doc.setDrawColor(150); doc.setLineWidth(0.2); doc.rect(M, y, ANCHO, a1);
           doc.setFont('helvetica', 'normal'); doc.setFontSize(FS); doc.setTextColor(90);
           doc.text(String(r[0]), M + PAD, y + PAD, {baseline: 'top'});
           doc.setTextColor(0);

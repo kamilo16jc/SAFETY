@@ -347,15 +347,63 @@ function outDayPdf(){
       title: 'Products',
       kpis: [['Products run', l.length], ['Completed', l.filter(function(r){ return r.completed; }).length], ['Produced', outTotales(l) || '0']],
       cols: OUT_COLS, rows: l.map(function(r){ return outFilaReporte(r); }), empty: 'Nothing entered for this day and shift'
-    }]
+    }, outSeccionLinea(l)]
   });
 }
 function outDayExcel(){
   var f = opsFiltro('out');
   var l = outDelDia(f);
   if(!l.length){ toast('Nothing to export'); return; }
-  downloadSheet('output-'+f.date+'-shift'+f.shift+'.xlsx',
-    [['Date', 'Shift'].concat(OUT_COLS.map(function(c){ return c.h; }))].concat(l.map(function(r){
+  var pl = outFilasLinea(l, true);
+  downloadBook('output-'+f.date+'-shift'+f.shift+'.xlsx', [
+    {nombre:'Output', filas:[['Date', 'Shift'].concat(OUT_COLS.map(function(c){ return c.h; }))].concat(l.map(function(r){
       return [f.date, opsTurno(f.shift)].concat(outFilaReporte(r, true));
-    })), 'Output');
+    }))},
+    {nombre:'Total by line', filas:[OUT_LINEA_COLS.map(function(c){ return c.h; })].concat(pl.filas, [pl.total])}
+  ]);
+}
+
+// ===== TOTAL POR LINEA =====
+// Al final de los PDF de Output (pedido del usuario, 17 nov 2026: "abajo de
+// los pdf totalices lo producido por linea"): por cada linea, cuantos
+// productos, cuantos completos y las libras; lo que no se pudo pasar a libras
+// (tarimas, producto sin datos) va aparte en su unidad.
+var OUT_LINEA_COLS = [{h:'Line', w:34}, {h:'Products run', w:24, al:'right'}, {h:'Completed', w:22, al:'right'},
+  {h:'Lbs produced', w:30, al:'right'}, {h:'Not in lbs', w:44}];
+function outPorLinea(lista){
+  var m = {};
+  lista.forEach(function(r){
+    var k = String(r.line || '');
+    if(!m[k]) m[k] = {line:k, runs:0, done:0, lbs:0, conLbs:false, otros:{}};
+    var x = m[k];
+    x.runs++;
+    if(r.completed) x.done++;
+    var q = opsNum(r.produced);
+    if(q == null) return;
+    var lb = outLbs(r);
+    if(lb != null){ x.lbs += lb; x.conLbs = true; }
+    else { var u = r.unit || OUT_UNIT_DEF; x.otros[u] = (x.otros[u] || 0) + q; }
+  });
+  return Object.keys(m).sort(function(a, b){ return opsLineaOrden(a) - opsLineaOrden(b); })
+    .map(function(k){ return m[k]; });
+}
+function outOtrosTxt(o){
+  return Object.keys(o).map(function(u){ return opsFmt(o[u])+' '+outUnitTxt(u); }).join(', ');
+}
+// Las filas por linea y la del total (xl: numeros sin comas, para Excel)
+function outFilasLinea(lista, xl){
+  var n = xl ? function(v){ return Math.round(v * 100) / 100; } : opsFmt;
+  var t = {runs:0, done:0, lbs:0, conLbs:false, otros:{}};
+  var filas = outPorLinea(lista).map(function(x){
+    t.runs += x.runs; t.done += x.done; t.lbs += x.lbs;
+    if(x.conLbs) t.conLbs = true;
+    Object.keys(x.otros).forEach(function(u){ t.otros[u] = (t.otros[u] || 0) + x.otros[u]; });
+    return [opsLineaTxt(x.line) || 'No line', x.runs, x.done+' of '+x.runs, x.conLbs ? n(x.lbs) : '', outOtrosTxt(x.otros)];
+  });
+  return {filas:filas, total:['Total', t.runs, t.done+' of '+t.runs, t.conLbs ? n(t.lbs) : '', outOtrosTxt(t.otros)]};
+}
+function outSeccionLinea(lista){
+  var x = outFilasLinea(lista);
+  return {title:'Total by line', width:175, cols:OUT_LINEA_COLS, rows:x.filas,
+          foot: x.filas.length ? x.total : null, empty:'Nothing produced'};
 }
