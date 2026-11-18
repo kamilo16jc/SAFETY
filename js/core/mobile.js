@@ -86,14 +86,37 @@
   // (nxGuardarScroll: si no, la pagina se corria al llegar las etiquetas)
   window.nxMarcarHojas = scan;
 
+  // Lo que llega de una vez se junta y cada tabla se marca UNA vez (prueba de
+  // estres, 17 nov 2026): antes cada icono que renderIcons dibuja en una fila
+  // volvia a marcar la tabla ENTERA, y con 720 filas eran 720 tablas: COA
+  // Status tardaba 13 s en la PC y casi 2 minutos en un telefono. Un icono
+  // (svg) dentro de una celda no cambia la tarjeta, asi que ni se mira.
+  var SVG_NS = 'http://www.w3.org/2000/svg';
   function start(){
     scan(document.body);
     if(!window.MutationObserver) return;
     new MutationObserver(function(muts){
+      var tablas = [], barras = [];
+      var poner = function(lista, el){ if(el && lista.indexOf(el) < 0) lista.push(el); };
       for(var i=0;i<muts.length;i++){
         var added = muts[i].addedNodes;
-        for(var j=0;j<added.length;j++) scan(added[j]);
+        for(var j=0;j<added.length;j++){
+          var n = added[j];
+          if(!n || n.nodeType!==1 || n.namespaceURI===SVG_NS) continue;
+          if(n.matches){
+            if(n.matches(SHEETS)) poner(tablas, n);
+            if(n.matches('.sheet-bar')) poner(barras, n);
+          }
+          if(n.closest) poner(tablas, n.closest(SHEETS));
+          if(n.querySelectorAll){
+            var ts = n.querySelectorAll(SHEETS), bs = n.querySelectorAll('.sheet-bar');
+            for(var a=0;a<ts.length;a++) poner(tablas, ts[a]);
+            for(var b=0;b<bs.length;b++) poner(barras, bs[b]);
+          }
+        }
       }
+      for(var t=0;t<tablas.length;t++) stampSheet(tablas[t]);
+      for(var k=0;k<barras.length;k++) stampBar(barras[k]);
     }).observe(document.body, {childList:true, subtree:true});
   }
 
