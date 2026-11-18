@@ -192,3 +192,12 @@
 [data-theme=dark] .nxc #nxc-tab-quality{--c:#86d3a8}
 [data-theme=dark] .nxc #nxc-tab-laboratory{--c:#7dc4ec}
 .nxc .nxc-step.nxc-completed .nxc-step-icon{background:var(--t);color:var(--c);border-color:color-mix(in srgb,var(--c) 22%,transparent)}
+/* Chrome pinta de azul lo que autocompleta (usuario y contraseña guardados):
+   dentro del recuadro se veia como una caja dentro de otra. El campo
+   autocompletado se ve igual que uno escrito, en claro y en oscuro. */
+.nxc .nxc-input-wrap input:-webkit-autofill,
+.nxc .nxc-input-wrap input:-webkit-autofill:hover,
+.nxc .nxc-input-wrap input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--surface) inset;box-shadow:0 0 0 1000px var(--surface) inset;
+  -webkit-text-fill-color:var(--ink);caret-color:var(--ink);transition:background-color 99999s ease-out 0s}
+.nxc .nxc-input-wrap input:autofill{box-shadow:0 0 0 1000px var(--surface) inset;-webkit-text-fill-color:var(--ink)}
