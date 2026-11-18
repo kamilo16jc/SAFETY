@@ -6,7 +6,7 @@
 // LA VERSION es la fecha de la publicacion: año.mes.dia (26.11.17), y si hay
 // otra el mismo dia 26.11.17.1, 26.11.17.2... (pedido del usuario, 17 nov
 // 2026). Al publicar se cambia SOLO esta linea. Las de antes eran vN.
-const VERSION = '26.11.17.5';
+const VERSION = '26.11.17.6';
 const CACHE = 'nexora-qc-' + VERSION;
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
@@ -17,7 +17,7 @@ function inmutable(url){ return url.hostname === 'cdn.jsdelivr.net' && /@\d/.tes
 const SHELL = [
   './',
   './index.html',
-  './css/styles.css','./css/nexora-ui.css',
+  './css/styles.css','./css/nexora-ui.css','./css/login-corp.css',
   './js/core/nexora-ui.js','./js/modules/nexora-insights.js',
   './apple-touch-icon.png','./manifest.webmanifest',
   './assets/nexora-icon-192.png','./assets/nexora-icon-512.png',
@@ -25,7 +25,7 @@ const SHELL = [
   './assets/caputo-dark.svg',
   './js/main.js',
   './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/sidenav.js','./js/core/utils.js',
-  './js/core/auth.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
+  './js/core/auth.js','./js/core/login-ui.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
   './js/modules/weight.js','./js/modules/lot-ocr.js','./js/modules/label-read.js','./js/modules/phone-reader.js','./js/core/lot.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js',
   './js/modules/admin.js','./js/modules/holds.js',

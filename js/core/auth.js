@@ -115,7 +115,9 @@ function initLogin() {
   var u = document.getElementById('login-user');
   var p = document.getElementById('login-pass');
   var err = document.getElementById('login-error');
-  if(u) { u.value=''; u.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();p.focus();} }; }
+  // "Remember my username" (js/core/login-ui.js): el usuario ya escrito
+  var rec = (typeof nxcUsuarioRecordado === 'function') ? nxcUsuarioRecordado() : '';
+  if(u) { u.value=rec; u.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();p.focus();} }; }
   if(p) { p.value=''; p.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();doLogin();} }; }
   if(err) err.style.display = 'none';
 }
@@ -200,6 +202,7 @@ function doLogin() {
   var entrar = function(op){
     listo();
     document.getElementById('login-pass').value = '';
+    if(typeof nxcRecordar === 'function') nxcRecordar(id);
     currentUser = op;
     loginSuccess();
   };

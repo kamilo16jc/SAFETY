@@ -14,6 +14,7 @@
 <!-- Tipografía nativa: SF Pro en Apple; fuente del sistema en Windows. -->
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/nexora-ui.css">
+<link rel="stylesheet" href="css/login-corp.css">
 <!-- Recien actualizada (js/core/pwa.js nxUpAplicar): la pantalla entra suave -->
 <script>try{if(sessionStorage.getItem('nx-up-fade')){sessionStorage.removeItem('nx-up-fade');document.documentElement.classList.add('nx-fadein');}}catch(e){}</script>
 <meta name="description" content="NEXORA — Food manufacturing quality workspace.">
@@ -450,35 +451,89 @@
 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
-  <div class="nx-login">
-    <aside class="nx-login-art" aria-hidden="true">
-      <div class="nx-login-brand"><span class="nx-brand-tag">Quality control</span></div>
-      <div class="nx-orbit">
-        <div class="nx-orbit-core"><span data-icon="seal"></span></div>
-        <div class="nx-orbit-chip"><span data-icon="clipboard"></span>Quality inspections</div>
-        <div class="nx-orbit-chip"><span data-icon="droplet"></span>Laboratory</div>
-        <div class="nx-orbit-chip"><span data-icon="chart"></span>Production insights</div>
-      </div>
-      <div class="nx-art-foot"><p>A clear view of quality.<br>From the line to the laboratory.</p><span>CAPUTO / QC</span></div>
-    </aside>
-    <main class="nx-login-main">
-      <button class="nx-login-theme" type="button" onclick="toggleDarkMode()" aria-label="Switch color theme"><span data-icon="moon"></span></button>
-      <form class="login-form" onsubmit="event.preventDefault();doLogin()">
-        <div class="nx-login-client"><img id="login-logo" data-brand="static" src="assets/caputo.svg" alt="Caputo"></div>
-        <h1 class="nx-login-heading">Welcome back.</h1>
-        <p class="nx-login-sub">Sign in to your quality workspace.</p>
-        <label class="sec-label" for="login-user">Username or email</label>
-        <input type="text" class="field" id="login-user" placeholder="Enter your username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-        <label class="sec-label" for="login-pass">Password</label>
-        <div class="nx-password">
-          <input type="password" class="field" id="login-pass" placeholder="Enter your password" autocomplete="current-password" required>
-          <button type="button" id="nx-pass-toggle" aria-label="Show password" aria-pressed="false" onclick="nxTogglePassword()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <!-- LA ENTRADA (diseño "corporate", pedido del usuario 17 nov 2026): estilos en
+       css/login-corp.css (todo dentro de .nxc) y lo que hace en js/core/login-ui.js.
+       Entrar es lo de siempre: doLogin() con #login-user y #login-pass. -->
+  <div class="nxc" id="nxc-login">
+  <svg class="nxc-icons" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="nxc-i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="nxc-i-moon" viewBox="0 0 24 24"><path d="M20.5 13A8.8 8.8 0 0 1 11 3.5 8.8 8.8 0 1 0 20.5 13Z"/></symbol>
+    <symbol id="nxc-i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    <symbol id="nxc-i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></symbol>
+    <symbol id="nxc-i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="nxc-i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-2a6.5 6.5 0 0 1 13 0v2"/></symbol>
+    <symbol id="nxc-i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
+    <symbol id="nxc-i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="nxc-i-eye-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.5 5.1 12 5c6.5 0 10 7 10 7a20 20 0 0 1-3.2 3.8M6.2 6.2A20 20 0 0 0 2 12s3.5 7 10 7a11 11 0 0 0 5.1-1.3M10 10a3 3 0 0 0 4 4"/></symbol>
+    <symbol id="nxc-i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8.5 11.5 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="nxc-i-production" viewBox="0 0 24 24"><path d="M4 20V9l5 3V7l6 4V4h4l1 16H4Z"/><path d="M8 16h1m4 0h1m3 0h1"/></symbol>
+    <symbol id="nxc-i-clipboard" viewBox="0 0 24 24"><path d="M9 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8 13 2.5 2.5L16 10"/></symbol>
+    <symbol id="nxc-i-flask" viewBox="0 0 24 24"><path d="M9 3h6m-5 0v7L4.6 19a1.3 1.3 0 0 0 1.1 2h12.6a1.3 1.3 0 0 0 1.1-2L14 10V3M7.8 14h8.4"/><path d="M10 17h.01M14 18h.01"/></symbol>
+    <symbol id="nxc-i-box" viewBox="0 0 24 24"><path d="m12 3 9 5v9l-9 5-9-5V8l9-5Zm0 10v9M3 8l9 5 9-5M7.5 5.5l9 5"/></symbol>
+    <symbol id="nxc-i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+    <symbol id="nxc-i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="nxc-i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  </defs></svg>
+  <div class="nxc-shell">
+  <header class="nxc-masthead">
+    <div class="nxc-brand" aria-label="NEXORA">
+      <svg class="nxc-brand-symbol" viewBox="0 0 34 36" aria-hidden="true" style="stroke:none;fill:currentColor"><path d="M3 32V4h6.6l15.8 20.4V4H31v28h-6.4L8.7 11.5V32Z"/><path d="M25.4 4H31v8l-5.6-7Z" fill="#7b9c87"/></svg>
+      <div><div class="nxc-brand-word">NEXORA</div><p class="nxc-brand-sub" data-i18n="brandSub">Production &amp; Quality</p></div>
+    </div>
+    <div class="nxc-header-right">
+      <span class="nxc-header-caption" data-i18n="headerCaption">A connected operation. A higher standard.</span><span class="nxc-header-divider"></span>
+      <button type="button" class="nxc-language" id="nxc-lang" aria-label="Cambiar a español"><svg><use href="#nxc-i-globe"/></svg><span id="nxc-lang-label">EN</span><svg class="nxc-chev"><use href="#nxc-i-chevron"/></svg></button>
+      <button type="button" class="nxc-icon-button" id="nxc-theme" aria-label="Switch to dark theme"><svg class="nxc-theme-moon"><use href="#nxc-i-moon"/></svg><svg class="nxc-theme-sun"><use href="#nxc-i-sun"/></svg></button>
+    </div>
+  </header>
+  <main>
+  <div class="nxc-login-layout">
+    <section class="nxc-story nxc-enter" aria-labelledby="nxc-story-title">
+      <div class="nxc-eyebrow"><span class="nxc-dash"></span><span data-i18n="storyEyebrow">THE CAPUTO WORKSPACE</span></div>
+      <h1 id="nxc-story-title"><span data-i18n="headline1" style="color:inherit">One operation.</span><br><span data-i18n="headline2">Every detail.</span></h1>
+      <p class="nxc-story-intro" data-i18n="storyIntro">Bring your production, quality and people together. From the first check to the final release.</p>
+      <div class="nxc-flow-window" role="tabpanel" id="nxc-module-panel" aria-labelledby="nxc-tab-quality" tabindex="0">
+        <div class="nxc-window-top"><div class="nxc-window-caption"><svg><use href="#nxc-i-grid"/></svg><span data-i18n="workflowPreview">WORKFLOW PREVIEW</span></div><span class="nxc-window-counter" id="nxc-counter">02 / 03</span></div>
+        <h2 id="nxc-flow-title">Confidence at every checkpoint.</h2>
+        <div class="nxc-flow-steps">
+          <div class="nxc-step nxc-completed" data-step="0"><span class="nxc-step-icon"><svg><use href="#nxc-i-production"/></svg></span><span class="nxc-step-label" data-i18n="production">Production</span></div>
+          <div class="nxc-step nxc-active" data-step="1"><span class="nxc-step-icon"><svg><use href="#nxc-i-shield"/></svg></span><span class="nxc-step-label" data-i18n="qualityCheck">Quality check</span></div>
+          <div class="nxc-step" data-step="2"><span class="nxc-step-icon"><svg><use href="#nxc-i-box"/></svg></span><span class="nxc-step-label" data-i18n="release">Release</span></div>
         </div>
-        <div id="login-error" role="alert" style="display:none"></div>
-        <button class="main-btn login-btn" id="nx-sign-in" type="submit"><span>Enter workspace</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12h15m-5-5 5 5-5 5"/></svg></button>
-        <p class="nx-login-note">Your assigned role defines your workspace access.</p>
-      </form>
-    </main>
+        <div class="nxc-batch-card" id="nxc-batch"><div class="nxc-batch-icon"><svg><use id="nxc-batch-icon" href="#nxc-i-clipboard"/></svg></div><div class="nxc-batch-copy"><strong class="nxc-batch-name" id="nxc-batch-name">Every batch, verified.</strong><span class="nxc-batch-sub" id="nxc-batch-sub">Inspections · Traceability · Approvals</span></div><span class="nxc-status-pill"><svg><use href="#nxc-i-check"/></svg><span id="nxc-batch-pill">Quality first</span></span></div>
+        <div class="nxc-window-bottom"><span><i class="nxc-status-dot"></i><span data-i18n="connectedProcess">One connected process</span></span><span class="nxc-progress-ticks" aria-hidden="true"><i class="nxc-on"></i><i class="nxc-on"></i><i class="nxc-on"></i><i class="nxc-on"></i><i></i><i></i></span></div>
+      </div>
+      <div class="nxc-module-tabs" role="tablist" aria-label="Explore workspace modules" id="nxc-tabs">
+        <button type="button" class="nxc-module-tab" id="nxc-tab-production" data-module="0" role="tab" aria-controls="nxc-module-panel" aria-selected="false" tabindex="-1"><svg><use href="#nxc-i-production"/></svg><span data-i18n="production">Production</span></button>
+        <button type="button" class="nxc-module-tab" id="nxc-tab-quality" data-module="1" role="tab" aria-controls="nxc-module-panel" aria-selected="true"><svg><use href="#nxc-i-shield"/></svg><span data-i18n="quality">Quality</span></button>
+        <button type="button" class="nxc-module-tab" id="nxc-tab-laboratory" data-module="2" role="tab" aria-controls="nxc-module-panel" aria-selected="false" tabindex="-1"><svg><use href="#nxc-i-flask"/></svg><span data-i18n="laboratory">Laboratory</span></button>
+      </div>
+      <div class="nxc-story-footer"><p data-i18n="storyFoot">Built around your team.<br>Designed for a higher standard.</p><span class="nxc-story-stamp">CAPUTO / NEXORA</span></div>
+    </section>
+    <section class="nxc-login-side nxc-enter" aria-labelledby="nxc-login-title">
+      <div class="nxc-login-inner">
+        <div class="nxc-company">
+          <img class="nxc-caputo-logo" id="nxc-logo" data-brand="static" src="assets/caputo.svg" alt="Caputo Cheese">
+          <span class="nxc-company-divider"></span><span class="nxc-company-type" data-i18n="companyType">Production<br>&amp; Quality Control</span>
+        </div>
+        <div class="nxc-form-eyebrow" data-i18n="accessEyebrow">YOUR WORKSPACE, CONNECTED</div>
+        <h2 id="nxc-login-title" data-i18n="welcome">Welcome back.</h2>
+        <p class="nxc-form-intro" data-i18n="formIntro">Sign in to keep your operation moving.<br>Every team. Every shift. In sync.</p>
+        <form id="nxc-form" onsubmit="event.preventDefault();doLogin()">
+          <div class="nxc-field"><label for="login-user" data-i18n="username">Username or email</label><div class="nxc-input-wrap"><svg class="nxc-field-icon"><use href="#nxc-i-user"/></svg><input id="login-user" name="username" type="text" autocomplete="username" autocapitalize="none" placeholder="Enter your username" data-placeholder="usernamePlaceholder" required spellcheck="false"></div></div>
+          <div class="nxc-field"><label for="login-pass" data-i18n="password">Password</label><div class="nxc-input-wrap"><svg class="nxc-field-icon"><use href="#nxc-i-lock"/></svg><input id="login-pass" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" data-placeholder="passwordPlaceholder" required><button class="nxc-reveal" type="button" id="nx-pass-toggle" aria-label="Show password" aria-pressed="false"><svg><use id="nxc-eye" href="#nxc-i-eye"/></svg></button></div></div>
+          <div class="nxc-form-options"><label class="nxc-remember"><input type="checkbox" id="nxc-remember"><span data-i18n="remember">Remember my username</span></label><button type="button" class="nxc-text-button" id="nxc-forgot" data-i18n="forgot">Forgot password?</button></div>
+          <p class="nxc-form-message" id="login-error" role="alert" style="display:none"></p>
+          <button type="submit" class="nxc-primary-button" id="nx-sign-in"><span data-i18n="enter">Enter workspace</span><svg><use href="#nxc-i-arrow"/></svg></button>
+        </form>
+        <p class="nxc-access-note"><svg><use href="#nxc-i-shield"/></svg><span data-i18n="accessNote">Your role. Your tools. One shared standard.</span></p>
+      </div>
+    </section>
+  </div>
+  </main>
+  <footer class="nxc-page-footer"><div class="nxc-copyright"><span>© <span id="nxc-year">2026</span> NEXORA</span><span class="nxc-footer-split"></span><span data-i18n="footerCaption">Made for the way you operate.</span></div><div class="nxc-footer-links"><button type="button" id="nxc-privacy" data-i18n="privacy">Privacy &amp; access</button><button type="button" id="nxc-support" data-i18n="support">Need help?</button></div></footer>
+  </div>
+  <dialog id="nxc-dialog" aria-labelledby="nxc-dialog-title"><div class="nxc-dialog-icon"><svg id="nxc-dialog-svg"><use href="#nxc-i-shield"/></svg></div><div class="nxc-dialog-head"><h2 id="nxc-dialog-title"></h2><button type="button" class="nxc-icon-button" id="nxc-dialog-x" aria-label="Close dialog"><svg><use href="#nxc-i-close"/></svg></button></div><div class="nxc-dialog-body" id="nxc-dialog-body"></div><button type="button" class="nxc-primary-button nxc-dialog-button" id="nxc-dialog-ok" data-i18n="understood">Got it</button></dialog>
   </div>
 </div>
 
@@ -2356,6 +2411,7 @@
 <script src="js/export/capa-pdf.js"></script>
 <script src="js/export/shift-pdf.js"></script>
 <script src="js/core/auth.js"></script>
+<script src="js/core/login-ui.js"></script>
 <script src="js/modules/admin.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/modules/holds.js"></script>

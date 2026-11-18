@@ -35,7 +35,7 @@ var NX_SCREEN_NOTES={
 function nxSetLoginBusy(v){
   nxLoginBusy=!!v;
   var b=document.getElementById('nx-sign-in');
-  if(b){b.disabled=v;b.classList.toggle('nx-login-busy',v);b.setAttribute('aria-busy',String(v));b.querySelector('span').textContent=v?'Signing in…':'Enter workspace';}
+  if(b){b.disabled=v;b.classList.toggle('nx-login-busy',v);b.setAttribute('aria-busy',String(v));var tx=window.nxcTexto||function(k){return k==='signingIn'?'Signing in…':'Enter workspace';};b.querySelector('span').textContent=tx(v?'signingIn':'enter');}
   if(v){var e=document.getElementById('login-error');if(e)e.style.display='none';}
 }
 function nxTogglePassword(){

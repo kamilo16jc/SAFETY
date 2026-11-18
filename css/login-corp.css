@@ -1,0 +1,162 @@
+/* ===== LA ENTRADA "corporate" (17 nov 2026) =====
+   Sale de nexora-corporate-ui.html (el diseño del usuario), encerrada en .nxc
+   para no tocar el resto de la app: sus clases llevan nxc-. Lo que hace esta
+   en js/core/login-ui.js; el HTML, en index.html (#screen-login). */
+.nxc{--bg:#fafbf9;--surface:#fff;--ink:#1d2c30;--muted:#73817e;--line:#e1e7e2;--green:#356459;--mint:#e6efe9;--soft:#f2f5f1;--hero:#e4eee7;--hero-ink:#23463d;--shadow:0 24px 70px -28px #24483a26;--red:#a62b3c;--focus:#4a7968}
+.nxc *{box-sizing:border-box}
+.nxc{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px}
+.nxc button,.nxc input,.nxc select{font:inherit}
+.nxc button,.nxc a,.nxc input{-webkit-tap-highlight-color:transparent}
+.nxc button{cursor:pointer}
+.nxc button,.nxc a{touch-action:manipulation}
+.nxc button{color:inherit}
+.nxc button:disabled{cursor:wait}
+.nxc a{color:inherit;text-decoration:none}
+.nxc svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.nxc button:focus-visible,.nxc a:focus-visible,.nxc input:focus-visible,.nxc select:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.nxc button{border:0}
+.nxc button svg{flex:none}
+.nxc [hidden]{display:none!important}
+.nxc ::selection{background:#bad8c8;color:#16372d}
+.nxc .nxc-icons{position:absolute;width:0;height:0;overflow:hidden}
+.nxc .nxc-shell{max-width:1680px;margin:auto;padding:0 4.4%}
+.nxc .nxc-masthead{height:100px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.nxc .nxc-brand{display:flex;gap:12px;align-items:center}
+.nxc .nxc-brand-symbol{width:34px;height:36px;color:var(--ink)}
+.nxc .nxc-brand-word{font-size:21px;letter-spacing:3.8px;font-weight:650}
+.nxc .nxc-brand-sub{margin:5px 0 0;color:var(--muted);font-size:9px;letter-spacing:1.8px;text-transform:uppercase}
+.nxc .nxc-header-right{display:flex;align-items:center;gap:23px}
+.nxc .nxc-header-caption{font-size:11px;color:var(--muted);letter-spacing:.15px}
+.nxc .nxc-header-divider{height:19px;width:1px;background:var(--line)}
+.nxc .nxc-icon-button{border:1px solid var(--line);background:var(--surface);border-radius:50%;height:36px;width:36px;display:grid;place-items:center;transition:background .2s,transform .2s}
+.nxc .nxc-icon-button:hover{background:var(--soft);transform:translateY(-1px)}
+.nxc .nxc-icon-button svg{width:16px;height:16px}
+.nxc .nxc-language{display:flex;align-items:center;gap:7px;background:transparent;font-size:11px;color:var(--muted);padding:8px 0}
+.nxc .nxc-language svg{width:14px;height:14px}
+.nxc .nxc-language .nxc-chev{width:10px;height:10px}
+.nxc .nxc-login-layout{display:grid;grid-template-columns:1.12fr 1fr;min-height:min(755px,calc(100svh - 162px));gap:60px}
+.nxc .nxc-story{background:var(--hero);border:1px solid #dce7df;border-radius:20px;overflow:hidden;position:relative;padding:46px 48px 28px;display:flex;flex-direction:column;isolation:isolate}
+.nxc .nxc-story:after{content:"";position:absolute;z-index:-1;bottom:80px;right:-20px;width:350px;height:310px;background-image:radial-gradient(#648b7540 .75px,transparent .75px);background-size:15px 15px;mask-image:linear-gradient(120deg,transparent,#000)}
+.nxc .nxc-eyebrow{font-size:10px;font-weight:650;letter-spacing:2.2px;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.nxc .nxc-eyebrow .nxc-dash{height:1px;width:21px;background:currentColor}
+.nxc .nxc-story>.nxc-eyebrow{color:#547467}
+.nxc .nxc-story h1{font-size:clamp(40px,4.1vw,62px);letter-spacing:-2.8px;line-height:1.1;font-weight:520;margin:26px 0 16px;color:var(--hero-ink)}
+.nxc .nxc-story h1 span{color:#6c8979}
+.nxc .nxc-story-intro{font-size:13px;line-height:1.85;color:#61766b;max-width:330px;margin:0}
+.nxc .nxc-flow-window{margin-top:36px;border:1px solid #ffffffc0;background:#fcfefaed;border-radius:13px;box-shadow:var(--shadow);padding:22px 22px 0;position:relative;transition:transform .3s;backdrop-filter:blur(6px)}
+.nxc .nxc-window-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nxc .nxc-window-caption{display:flex;align-items:center;gap:8px;color:#6a7d72;font-size:9px;letter-spacing:1.2px;font-weight:600}
+.nxc .nxc-window-caption svg{width:14px;height:14px}
+.nxc .nxc-window-counter{font-size:9px;color:#8b9991;font-variant-numeric:tabular-nums}
+.nxc .nxc-flow-window h2{font-size:18px;font-weight:550;letter-spacing:-.55px;margin:16px 0 24px;color:#2e463a}
+.nxc .nxc-flow-steps{display:grid;grid-template-columns:repeat(3,1fr);position:relative;margin-bottom:22px}
+.nxc .nxc-flow-steps:before{content:"";position:absolute;left:17%;right:17%;height:1px;top:21px;background:#dbe6dd}
+.nxc .nxc-step{display:flex;align-items:center;flex-direction:column;gap:10px;position:relative}
+.nxc .nxc-step-icon{width:43px;height:43px;border-radius:12px;display:grid;place-items:center;background:#f4f7f1;border:1px solid #e3e9df;color:#96a296;transition:background .25s,box-shadow .25s,color .25s}
+.nxc .nxc-step.nxc-active .nxc-step-icon{background:#416d59;border-color:#416d59;color:#fff;box-shadow:0 4px 14px #3a674a25}
+.nxc .nxc-step.nxc-completed .nxc-step-icon{background:#e9f0e5;color:#527956}
+.nxc .nxc-step-label{font-size:9px;font-weight:550;color:#8a978c;letter-spacing:.1px}
+.nxc .nxc-step.nxc-active .nxc-step-label{color:#3d6049}
+.nxc .nxc-batch-card{background:#f0f4ec;border:1px solid #e6ece1;border-radius:9px;padding:14px;display:flex;gap:14px;align-items:center;min-height:74px}
+.nxc .nxc-batch-icon{width:36px;height:36px;border:1px solid #dae4d3;border-radius:9px;background:#fbfdf8;display:grid;place-items:center;color:#55744c;flex:none}
+.nxc .nxc-batch-icon svg{width:17px;height:17px}
+.nxc .nxc-batch-copy{flex:1;min-width:0}
+.nxc .nxc-batch-name{font-size:11px;color:#314830;font-weight:600;display:block;margin:0 0 6px}
+.nxc .nxc-batch-sub{font-size:9px;color:#7c8974;display:block}
+.nxc .nxc-status-pill{font-size:8px;display:flex;align-items:center;gap:5px;color:#567044;border:1px solid #d4dfca;padding:5px 7px;border-radius:5px;white-space:nowrap;background:#f9fcf5}
+.nxc .nxc-status-pill svg{width:10px;height:10px}
+.nxc .nxc-window-bottom{display:flex;align-items:center;justify-content:space-between;padding:14px 0;color:#8c998b;font-size:8px}
+.nxc .nxc-window-bottom span:first-child{display:flex;align-items:center;gap:5px}
+.nxc .nxc-status-dot{width:5px;height:5px;background:#739465;border-radius:50%;display:inline-block;box-shadow:0 0 0 3px #7e9d6710}
+.nxc .nxc-window-bottom .nxc-progress-ticks{display:flex;gap:3px}
+.nxc .nxc-progress-ticks i{display:block;width:16px;height:3px;border-radius:3px;background:#dce5d5}
+.nxc .nxc-progress-ticks i.nxc-on{background:#6e9259}
+.nxc .nxc-module-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:24px}
+.nxc .nxc-module-tab{padding:10px 6px 11px;background:transparent;color:#6f8676;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:10px;transition:background .2s,color .2s;white-space:nowrap;border:1px solid transparent}
+.nxc .nxc-module-tab svg{width:14px;height:14px}
+.nxc .nxc-module-tab:hover{background:#ffffff60}
+.nxc .nxc-module-tab[aria-selected=true]{background:#ffffff9c;color:#315940;border-color:#ffffffb0;box-shadow:0 2px 5px #28563c04}
+.nxc .nxc-story-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:auto;padding-top:32px}
+.nxc .nxc-story-footer p{font-size:10px;line-height:1.7;color:#738779;margin:0;max-width:220px}
+.nxc .nxc-story-stamp{font-size:8px;color:#859789;letter-spacing:1.4px;white-space:nowrap}
+.nxc .nxc-login-side{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px 18px 40px}
+.nxc .nxc-login-inner{width:100%;max-width:350px}
+.nxc .nxc-company{display:flex;align-items:center;gap:15px;margin-bottom:37px}
+.nxc .nxc-caputo-logo{width:102px;height:50px;object-fit:contain;object-position:left center}
+.nxc .nxc-company-divider{width:1px;height:30px;background:var(--line)}
+.nxc .nxc-company-type{color:var(--muted);font-size:9px;letter-spacing:1.3px;line-height:1.8;text-transform:uppercase}
+.nxc .nxc-form-eyebrow{font-size:9px;letter-spacing:1.8px;color:var(--green);font-weight:600;margin-bottom:11px}
+.nxc .nxc-login-inner h2{font-size:34px;line-height:1.2;letter-spacing:-1.35px;font-weight:560;margin:0 0 12px}
+.nxc .nxc-form-intro{font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 31px;max-width:300px}
+.nxc .nxc-field{margin-bottom:19px}
+.nxc .nxc-field label{display:block;font-size:12px;font-weight:550;margin-bottom:9px}
+.nxc .nxc-input-wrap{display:flex;align-items:center;border:1px solid #dce3dd;border-radius:8px;background:var(--surface);height:49px;padding-left:15px;transition:border-color .2s,box-shadow .2s}
+.nxc .nxc-input-wrap:focus-within{border-color:#5f8270;box-shadow:0 0 0 3px #6b977412}
+.nxc .nxc-input-wrap>.nxc-field-icon{width:16px;height:16px;color:#9aa79e;flex-shrink:0}
+.nxc .nxc-input-wrap input{width:100%;min-width:0;outline:0!important;box-shadow:none;border:0;height:100%;background:transparent;padding:0 12px;font-size:13px;color:var(--ink);border-radius:8px}
+.nxc .nxc-input-wrap input::placeholder{color:#8b998e}
+.nxc .nxc-reveal{display:grid;place-items:center;background:transparent;width:44px;height:44px;color:#7c8980;flex-shrink:0}
+.nxc .nxc-reveal svg{width:16px;height:16px}
+.nxc .nxc-form-options{display:flex;align-items:center;justify-content:space-between;margin:2px 0 24px;gap:10px;font-size:10px}
+.nxc .nxc-remember{display:flex;align-items:center;gap:7px;color:#718075;cursor:pointer}
+.nxc .nxc-remember input{accent-color:var(--green);height:13px;width:13px;margin:0;cursor:pointer}
+.nxc .nxc-text-button{background:transparent;padding:4px 0;font-size:10px;color:var(--green);font-weight:550}
+.nxc .nxc-text-button:hover{text-decoration:underline;text-underline-offset:3px}
+.nxc .nxc-primary-button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:14px;background:#21332e;color:#fff;border-radius:8px;font-size:12px;font-weight:550;letter-spacing:.1px;box-shadow:0 3px 5px #263c2d0a;transition:background .2s,transform .2s,box-shadow .2s}
+.nxc .nxc-primary-button:hover{background:#345549;box-shadow:0 6px 16px #263c2d15;transform:translateY(-1px)}
+.nxc .nxc-primary-button:active{transform:translateY(0)}
+.nxc .nxc-primary-button svg{width:16px;height:16px;transition:transform .2s}
+.nxc .nxc-primary-button:hover svg{transform:translateX(3px)}
+.nxc .nxc-access-note{display:flex;align-items:center;justify-content:center;gap:6px;color:#9aa69d;font-size:9px;line-height:1.6;margin:32px 0 0}
+.nxc .nxc-access-note svg{width:12px;height:12px}
+.nxc .nxc-page-footer{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:15px;color:#9aa69d;font-size:9px;letter-spacing:.1px}
+.nxc .nxc-footer-links{display:flex;gap:23px}
+.nxc .nxc-footer-links button{color:#88998d;background:transparent;padding:8px 0;font-size:9px}
+.nxc .nxc-footer-links button:hover{color:var(--green)}
+.nxc .nxc-copyright{display:flex;align-items:center;gap:9px}
+.nxc .nxc-footer-split{height:9px;width:1px;background:var(--line)}
+.nxc .nxc-form-message{margin:0 0 14px;font-size:11px;line-height:1.6;background:#f6eee0;border:1px solid #ebdfc8;color:#79633d;padding:10px 12px;border-radius:7px}
+.nxc dialog{max-width:440px;width:calc(100% - 40px);padding:32px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:0 30px 90px #18362530}
+.nxc dialog::backdrop{background:#172d245c;backdrop-filter:blur(5px)}
+.nxc .nxc-dialog-icon{height:42px;width:42px;background:var(--mint);color:var(--green);display:grid;place-items:center;border-radius:12px;margin-bottom:22px}
+.nxc .nxc-dialog-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.nxc .nxc-dialog-head h2{font-size:22px;letter-spacing:-.6px;margin:0;font-weight:550}
+.nxc .nxc-dialog-head .nxc-icon-button{width:28px;height:28px;flex:none}
+.nxc .nxc-dialog-head svg{width:14px;height:14px}
+.nxc .nxc-dialog-body{font-size:12px;line-height:1.9;color:var(--muted);margin:16px 0 24px}
+.nxc .nxc-dialog-body p{margin:0 0 12px}
+.nxc .nxc-dialog-button{min-height:42px}
+.nxc .nxc-panel{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:21px;min-width:0}
+[data-theme=dark] .nxc{--bg:#151e1a;--surface:#202c25;--ink:#e3eae3;--muted:#94a69a;--line:#34443a;--soft:#1c2821;--mint:#2b4234;--green:#a3c3ae;--hero:#263c2e;--hero-ink:#dae7d6;--focus:#8ebda0}
+.nxc .nxc-theme-sun{display:none}
+[data-theme=dark] .nxc .nxc-theme-sun{display:block}
+[data-theme=dark] .nxc .nxc-theme-moon{display:none}
+[data-theme=dark] .nxc .nxc-story{border-color:#344d3b}
+[data-theme=dark] .nxc .nxc-story h1 span{color:#93ad96}
+[data-theme=dark] .nxc .nxc-story-intro,[data-theme=dark] .nxc .nxc-story>.nxc-eyebrow{color:#a4baa5}
+[data-theme=dark] .nxc .nxc-story-footer p,[data-theme=dark] .nxc .nxc-story-stamp{color:#92ab96}
+[data-theme=dark] .nxc .nxc-module-tab{color:#a6bca8}
+[data-theme=dark] .nxc .nxc-module-tab[aria-selected=true]{color:#e0ebdf;background:#3f5843;border-color:#4d6851}
+[data-theme=dark] .nxc .nxc-module-tab:hover{background:#3b5140}
+[data-theme=dark] .nxc .nxc-input-wrap{border-color:var(--line)}
+[data-theme=dark] .nxc .nxc-primary-button{background:#a7c3aa;color:#192d20}
+[data-theme=dark] .nxc .nxc-primary-button:hover{background:#bdd4bd}
+
+.nxc .nxc-enter{animation:nxc-rise .7s both}
+.nxc .nxc-story.nxc-enter{animation-delay:.04s}
+.nxc .nxc-login-side.nxc-enter{animation-delay:.16s}
+.nxc .nxc-flow-window{animation:nxc-rise .85s .25s both}
+.nxc .nxc-content-pulse{animation:nxc-content-in .25s both}
+@keyframes nxc-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes nxc-content-in{from{opacity:.3;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:1500px){.nxc .nxc-login-layout{gap:100px;min-height:calc(100svh - 180px);max-height:950px}.nxc .nxc-story{padding:55px 60px 36px}.nxc .nxc-story h1{font-size:68px;margin-top:34px}.nxc .nxc-story-intro{font-size:14px}.nxc .nxc-flow-window{margin-top:45px;padding:26px 28px 0}.nxc .nxc-flow-window h2{margin-bottom:30px;font-size:20px}.nxc .nxc-flow-steps{margin-bottom:27px}.nxc .nxc-step-label{font-size:10px}.nxc .nxc-batch-card{padding:17px}.nxc .nxc-module-tabs{margin-top:25px}.nxc .nxc-module-tab{font-size:11px}.nxc .nxc-story-footer{padding-top:35px}.nxc .nxc-login-inner{max-width:380px}.nxc .nxc-input-wrap{height:52px}.nxc .nxc-primary-button{min-height:51px}.nxc .nxc-login-inner h2{font-size:38px}.nxc .nxc-form-intro{font-size:13px}.nxc .nxc-company{margin-bottom:43px}.nxc .nxc-caputo-logo{width:110px;height:54px}.nxc .nxc-page-footer{min-height:80px}.nxc .nxc-story-intro{max-width:360px}.nxc .nxc-story-footer p{font-size:11px}}
+@media(max-width:1100px){.nxc .nxc-shell{padding:0 3%}.nxc .nxc-login-layout{gap:26px;grid-template-columns:1.05fr 1fr}.nxc .nxc-story{padding:34px 30px 26px}.nxc .nxc-story h1{font-size:46px}.nxc .nxc-flow-window{padding:18px 16px 0}.nxc .nxc-batch-card{padding:12px 10px;gap:9px}.nxc .nxc-status-pill{font-size:7px;padding:4px}.nxc .nxc-module-tab{font-size:9px;gap:5px}.nxc .nxc-login-side{padding:24px 15px 35px}.nxc .nxc-login-inner{max-width:325px}}
+@media(max-width:800px){.nxc .nxc-masthead{height:83px}.nxc .nxc-header-caption,.nxc .nxc-header-divider{display:none}.nxc .nxc-header-right{gap:17px}.nxc .nxc-shell{padding:0 24px}.nxc .nxc-login-layout{gap:24px;min-height:0;grid-template-columns:1fr 1fr}.nxc .nxc-story{padding:30px 22px}.nxc .nxc-story h1{font-size:38px;letter-spacing:-1.8px}.nxc .nxc-story-intro{font-size:11px}.nxc .nxc-flow-window{margin-top:29px;padding:16px 12px 0}.nxc .nxc-window-caption{font-size:7px;letter-spacing:.6px}.nxc .nxc-window-caption svg{width:11px}.nxc .nxc-flow-window h2{font-size:14px;margin:17px 0 20px}.nxc .nxc-step-icon{width:34px;height:34px;border-radius:9px}.nxc .nxc-step-icon svg{width:17px;height:17px}.nxc .nxc-flow-steps:before{top:17px}.nxc .nxc-step-label{font-size:8px}.nxc .nxc-batch-icon{display:none}.nxc .nxc-batch-name{font-size:9px}.nxc .nxc-batch-sub{font-size:8px}.nxc .nxc-status-pill{font-size:7px}.nxc .nxc-window-bottom{font-size:7px}.nxc .nxc-progress-ticks i{width:10px}.nxc .nxc-module-tabs{gap:0}.nxc .nxc-module-tab{flex-direction:column;font-size:8px;gap:7px}.nxc .nxc-story-footer{padding-top:40px}.nxc .nxc-story-footer p{font-size:9px}.nxc .nxc-story-stamp{display:none}.nxc .nxc-login-side{padding:25px 0 30px}.nxc .nxc-login-inner h2{font-size:29px}.nxc .nxc-form-intro{font-size:11px}.nxc .nxc-company-type{font-size:8px}.nxc .nxc-caputo-logo{width:90px;height:45px}.nxc .nxc-company{gap:10px;margin-bottom:28px}.nxc .nxc-company-divider{height:24px}.nxc .nxc-form-options{font-size:9px}.nxc .nxc-text-button{font-size:9px}.nxc .nxc-field label{font-size:10px}.nxc .nxc-input-wrap input{font-size:10px}.nxc .nxc-input-wrap{padding-left:12px}.nxc .nxc-input-wrap>.nxc-field-icon{width:14px}.nxc .nxc-access-note{font-size:8px}.nxc .nxc-page-footer{font-size:8px}.nxc .nxc-footer-links button{font-size:8px}.nxc .nxc-footer-links{gap:14px}}
+@media(max-width:620px){.nxc .nxc-shell{padding:0 22px}.nxc .nxc-masthead{height:83px}.nxc .nxc-brand-symbol{width:29px;height:31px}.nxc .nxc-brand-word{font-size:18px;letter-spacing:3px}.nxc .nxc-brand-sub{font-size:7px;letter-spacing:1.4px;margin-top:4px}.nxc .nxc-header-right{gap:14px}.nxc .nxc-icon-button{width:33px;height:33px}.nxc .nxc-language{font-size:10px}.nxc .nxc-login-layout{display:flex;flex-direction:column;gap:0}.nxc .nxc-story{order:2;margin:36px 0 0;padding:25px;min-height:0;border-radius:14px}.nxc .nxc-story>.nxc-eyebrow{font-size:8px}.nxc .nxc-story h1{font-size:36px;margin:20px 0 12px;line-height:1.13}.nxc .nxc-story-intro{font-size:11px;max-width:260px}.nxc .nxc-flow-window{margin-top:25px;padding:19px 17px 0}.nxc .nxc-window-caption{font-size:8px}.nxc .nxc-flow-window h2{font-size:16px}.nxc .nxc-step-icon{width:38px;height:38px}.nxc .nxc-flow-steps:before{top:19px}.nxc .nxc-step-label{font-size:9px}.nxc .nxc-batch-icon{display:grid;width:30px;height:30px}.nxc .nxc-batch-card{padding:13px}.nxc .nxc-batch-name{font-size:10px}.nxc .nxc-batch-sub{font-size:8px}.nxc .nxc-status-pill{font-size:8px}.nxc .nxc-window-bottom{font-size:8px}.nxc .nxc-module-tabs{margin-top:15px;gap:4px}.nxc .nxc-module-tab{font-size:9px;flex-direction:row;gap:6px}.nxc .nxc-story-footer{padding-top:22px}.nxc .nxc-story-footer p{font-size:9px;max-width:none}.nxc .nxc-story-stamp{display:block;font-size:7px}.nxc .nxc-login-side{order:1;align-items:center;padding:27px 4px 0}.nxc .nxc-login-inner{max-width:400px}.nxc .nxc-company{margin-bottom:26px}.nxc .nxc-caputo-logo{width:92px;height:45px}.nxc .nxc-company-type{font-size:8px}.nxc .nxc-company-divider{height:25px}.nxc .nxc-form-eyebrow{font-size:8px;margin-bottom:10px}.nxc .nxc-login-inner h2{font-size:33px;letter-spacing:-1.3px}.nxc .nxc-form-intro{font-size:13px;margin-bottom:26px;max-width:290px}.nxc .nxc-field{margin-bottom:18px}.nxc .nxc-field label{font-size:11px}.nxc .nxc-input-wrap{height:50px}.nxc .nxc-input-wrap input{font-size:12px}.nxc .nxc-input-wrap>.nxc-field-icon{width:16px}.nxc .nxc-reveal{width:44px}.nxc .nxc-form-options{font-size:10px;margin-bottom:22px}.nxc .nxc-text-button{font-size:10px}.nxc .nxc-primary-button{height:49px;font-size:12px}.nxc .nxc-access-note{margin-top:24px;font-size:9px}.nxc .nxc-page-footer{min-height:85px;padding:20px 0;align-items:flex-start;flex-direction:column;justify-content:center;gap:5px;font-size:8px}.nxc .nxc-footer-links{gap:19px}.nxc .nxc-footer-links button{font-size:9px}.nxc .nxc-panel{padding:17px 13px}}
+@media(prefers-reduced-motion:reduce){.nxc *,.nxc *:before,.nxc *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* ---- en la app ---- */
+/* la entrada ocupa toda la ventana (la app ya la deja sin relleno) */
+#screen-login .nxc{min-height:100dvh}
+/* el error de entrar: el aviso del diseño, en rojo */
+.nxc #login-error{margin:0 0 14px;border-color:color-mix(in srgb,var(--fail) 28%,transparent)}
+.nxc .nxc-primary-button.nx-login-busy{opacity:.65;pointer-events:none}
