@@ -160,3 +160,35 @@
 /* el error de entrar: el aviso del diseño, en rojo */
 .nxc #login-error{margin:0 0 14px;border-color:color-mix(in srgb,var(--fail) 28%,transparent)}
 .nxc .nxc-primary-button.nx-login-busy{opacity:.65;pointer-events:none}
+/* ---- Iconos con color (pedido del usuario, 17 nov 2026: "que no se vea tan
+   plano"): cada paso y cada modulo con el suyo. Production naranja, Quality
+   verde, Release indigo, Laboratory azul. El paso activo va en su color
+   lleno; los demas, con su fondo suave. ---- */
+.nxc{--c-prod:#c2410c;--t-prod:#fdeee3;--c-qa:#2f7a55;--t-qa:#e2f1e8;--c-rel:#4f46e5;--t-rel:#ecebfd;--c-lab:#0369a1;--t-lab:#e1f0fa}
+.nxc [data-step="0"]{--c:var(--c-prod);--t:var(--t-prod)}
+.nxc [data-step="1"]{--c:var(--c-qa);--t:var(--t-qa)}
+.nxc [data-step="2"]{--c:var(--c-rel);--t:var(--t-rel)}
+.nxc .nxc-step .nxc-step-icon{background:var(--t);border-color:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c)}
+.nxc .nxc-step:not(.nxc-active):not(.nxc-completed) .nxc-step-icon{opacity:.8}
+.nxc .nxc-step.nxc-active .nxc-step-icon{background:var(--c);border-color:var(--c);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--c) 32%,transparent)}
+.nxc .nxc-step .nxc-step-label{color:color-mix(in srgb,var(--c) 70%,#8a978c)}
+.nxc .nxc-step.nxc-active .nxc-step-label{color:var(--c);font-weight:650}
+/* el modulo escogido pinta la tarjeta de abajo */
+.nxc .nxc-flow-window[data-mod="0"]{--c:var(--c-prod);--t:var(--t-prod)}
+.nxc .nxc-flow-window[data-mod="1"]{--c:var(--c-qa);--t:var(--t-qa)}
+.nxc .nxc-flow-window[data-mod="2"]{--c:var(--c-lab);--t:var(--t-lab)}
+.nxc .nxc-flow-window[data-mod] .nxc-batch-icon{background:var(--t);border-color:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c)}
+.nxc .nxc-flow-window[data-mod] .nxc-status-pill{color:var(--c);border-color:color-mix(in srgb,var(--c) 28%,transparent);background:var(--t)}
+.nxc .nxc-flow-window[data-mod] .nxc-progress-ticks i.nxc-on{background:var(--c)}
+/* las pestanas de abajo: cada icono con su color; la escogida, tambien el texto */
+.nxc #nxc-tab-production{--c:var(--c-prod)}
+.nxc #nxc-tab-quality{--c:var(--c-qa)}
+.nxc #nxc-tab-laboratory{--c:var(--c-lab)}
+.nxc .nxc-module-tab svg{color:var(--c)}
+.nxc .nxc-module-tab[aria-selected=true]{color:var(--c)}
+.nxc .nxc-module-tab[aria-selected=true] svg{transform:scale(1.12)}
+/* en oscuro las pestanas van sobre verde oscuro: los mismos colores, mas claros */
+[data-theme=dark] .nxc #nxc-tab-production{--c:#fdba74}
+[data-theme=dark] .nxc #nxc-tab-quality{--c:#86d3a8}
+[data-theme=dark] .nxc #nxc-tab-laboratory{--c:#7dc4ec}
+.nxc .nxc-step.nxc-completed .nxc-step-icon{background:var(--t);color:var(--c);border-color:color-mix(in srgb,var(--c) 22%,transparent)}

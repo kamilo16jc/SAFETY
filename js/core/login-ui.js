@@ -76,6 +76,7 @@
     $('nxc-batch-pill').textContent = m.pill;
     $('nxc-batch-icon').setAttribute('href', '#nxc-i-'+m.icon);
     $('nxc-counter').textContent = '0'+(i + 1)+' / 03';
+    $('nxc-module-panel').setAttribute('data-mod', String(i));   // el color del modulo (login-corp.css)
     document.querySelectorAll('#nxc-login [data-module]').forEach(function(b){
       var sel = Number(b.getAttribute('data-module')) === i;
       b.setAttribute('aria-selected', String(sel));
