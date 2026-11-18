@@ -42,6 +42,7 @@ var MODULES = [
       {screen:'screen-attendance',name:'Attendance',       icon:'user', color:'#4338ca'},
       {screen:'screen-output',    name:'Output',           icon:'box', color:'#047857'},
       {screen:'screen-downtime',  name:'Downtime',         icon:'clock', color:'#be123c'},
+      {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#c2410c'},
       {screen:'screen-opsreports',name:'Reports',          icon:'chart', color:'#0369a1'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
@@ -262,7 +263,7 @@ var MODULE_SCOPE = {
   lab:        ['analysis','runs','raw','grilling'],
   coa:        ['analysis','runs'],
   production: ['runs','shifts'],
-  operations: [],
+  operations: ['shifts'],
   admin:      null                       // el administrador ve todo
 };
 function scopeKinds(){
