@@ -482,7 +482,7 @@ canvas{width:100%!important}
 .form-ico:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .nx-tip{position:fixed;z-index:10070;pointer-events:none;max-width:260px;padding:6px 10px;border-radius:7px;
   background:var(--text);color:var(--surface);font-size:12px;font-weight:500;line-height:1.3;
-  box-shadow:0 6px 18px #0b182433;white-space:nowrap}
+  box-shadow:0 6px 18px #0b182433;white-space:pre-line}
 .res-ico{width:18px;height:18px;color:var(--accent);flex-shrink:0}
 .res-ico svg{width:18px;height:18px;display:block}
 .res-title{font-size:14px;font-weight:700;letter-spacing:-0.01em}
@@ -2742,6 +2742,25 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 .wp-check.bad{background:var(--fail-tint);border-color:var(--fail)}
 .wp-check.bad b{color:var(--fail)}
 .wp-aviso{color:var(--warn);font-weight:600}
+/* el control del LOT en el registro: iconos con color, el detalle en el tooltip */
+.lc-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.lc-est{display:inline-flex;width:24px;height:24px;color:var(--dim)}
+.lc-est svg{width:24px;height:24px;stroke-width:2}
+.lc-est.ok{color:var(--pass)}
+.lc-est.bad{color:var(--fail)}
+.lc-est.warn{color:var(--warn)}
+.lc-lot{font-size:17px;font-weight:800;letter-spacing:.03em;color:var(--text)}
+.lc-chips{display:inline-flex;gap:6px;flex-wrap:wrap}
+.lc-chip{display:inline-flex;align-items:center;gap:5px;height:30px;min-width:30px;padding:0 7px;justify-content:center;
+  border-radius:15px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:default;outline:none}
+.lc-chip:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.lc-ico{display:inline-flex}
+.lc-ico svg{width:17px;height:17px}
+.lc-chip b{font-size:12.5px;font-weight:700}
+.lc-chip.ok{color:var(--pass);background:var(--pass-tint);border-color:transparent}
+.lc-chip.bad{color:var(--fail);background:var(--fail-tint);border-color:var(--fail)}
+.lc-chip.warn{color:var(--warn);background:var(--warn-tint);border-color:var(--warn)}
+.lc-chip.off{color:var(--dim);background:none;border-style:dashed;opacity:.7}
 .wp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .wp-fig{margin:0;display:flex;flex-direction:column;gap:4px}
 .wp-fig figcaption{font-size:11.5px;font-weight:600;color:var(--muted)}

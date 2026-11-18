@@ -360,27 +360,57 @@ setTimeout(function(){ wpSubir(); }, 4000);
 setInterval(function(){ wpColaAll().then(function(x){ if(x.length) wpSubir(); }).catch(function(){}); }, 120000);
 
 // ---- Ver las fotos y el control de un registro ----
+// El control del LOT con iconos (pedido del usuario, 17 nov 2026): bolsa,
+// etiqueta y dia, en verde si estan bien y en rojo si no. El detalle sale al
+// pasar el raton o al tocar el icono. Si todo coincide el LOT se ve una vez;
+// si la bolsa y la etiqueta no coinciden, cada icono lleva su LOT y se ve
+// cual es el distinto (el que no es el LOT del dia).
+function wpLotIconos(c){
+  var como = function(h){ return h === 'read' ? 'Read from the photo' : 'Typed'; };
+  var otro = function(n){ return n === 'Bag' ? 'label' : 'bag'; };
+  var ref = c.expected || null;
+  var leidos = [c.bag, c.label].filter(Boolean);
+  var igual = !(c.bag && c.label && c.bag !== c.label);   // bolsa y etiqueta dicen lo mismo
+  var conDia = !!ref && leidos.indexOf(ref) >= 0;          // alguna de las dos es el LOT del dia
+  var fechaMala = !!c.lotDate && (c.days > 1 || c.days < 0);
+  var fecha = c.lotDate
+    ? 'LOT date '+wpFechaCorta(c.lotDate)+(c.days === 0 ? ', same day' : c.days === 1 ? ', the day before'
+       : c.days < 0 ? ', after the record' : ', '+c.days+' days before')
+    : '';
+  var chip = function(icono, est, tip, txt){
+    return '<span class="lc-chip '+est+'" tabindex="0" role="img" data-tip="'+esc(tip)+'" data-tip-tap aria-label="'+esc(tip.replace(/\n/g, '. '))+'">'+
+      '<span class="lc-ico">'+(ICONS[icono] || '')+'</span>'+(txt ? '<b class="mono">'+esc(txt)+'</b>' : '')+'</span>';
+  };
+  var par = function(nom, v, how){
+    if(!v) return chip(nom === 'Bag' ? 'bag' : 'tag', 'off', 'No '+nom.toLowerCase()+' LOT');
+    var est = !igual ? (v === ref ? 'ok' : 'bad')
+            : (c.match === true || c.dayMatch === true) ? 'ok' : 'on';
+    var tip = nom+' '+v+'\n'+como(how)+
+      (c.match === true ? ' · matches the '+otro(nom) : c.match === false ? ' · does not match the '+otro(nom) : '');
+    return chip(nom === 'Bag' ? 'bag' : 'tag', est, tip, igual ? '' : v);
+  };
+  // El dia: el LOT del dia y la fecha que trae el LOT
+  var dEst, dTxt = '';
+  if(ref && leidos.length && !conDia){ dEst = 'bad'; dTxt = ref; }
+  else if(fechaMala){ dEst = 'warn'; dTxt = wpFechaCorta(c.lotDate); }
+  else if(conDia || c.lotDate){ dEst = 'ok'; dTxt = igual ? '' : ref; }
+  else dEst = 'off';
+  var dTip = (c.expected ? 'LOT of the day '+c.expected+(c.dayMatch === true ? ' · match' : c.dayMatch === false ? ' · does not match' : '') : 'No LOT of the day')+
+             (fecha ? '\n'+fecha : '');
+  var est = (c.match === false || c.dayMatch === false) ? 'bad' : fechaMala ? 'warn'
+          : (c.match === true || c.dayMatch === true) ? 'ok' : 'on';
+  var estTip = {ok:'All match', bad:'Does not match', warn:'Check the LOT date', on:'Only one LOT, nothing to compare'}[est];
+  return '<div class="lc-row">'+
+    '<span class="lc-est '+est+'" role="img" data-tip="'+estTip+'" data-tip-tap aria-label="'+estTip+'">'+
+      ICONS[est === 'bad' || est === 'warn' ? 'alert' : 'check']+'</span>'+
+    (igual ? '<b class="mono lc-lot">'+esc(leidos[0])+'</b>' : '')+
+    '<span class="lc-chips">'+par('Bag', c.bag, c.bagHow)+par('Label', c.label, c.labelHow)+chip('calendar', dEst, dTip, dTxt)+'</span>'+
+  '</div>';
+}
 function wpBloqueHTML(w){
   if(!w) return '';
   var html = '';
-  var c = w.lotCheck;
-  if(c){
-    var como = function(h){ return h === 'read' ? 'read' : 'typed'; };
-    var est = c.match === true ? '<span class="numstate ok">Match</span>'
-            : c.match === false ? '<span class="numstate bad">Do not match</span>'
-            : '<span class="soft">Only one LOT</span>';
-    html += '<div class="rec-block"><div class="rec-lbl">LOT check</div><div class="rec-text">'+
-      'Bag <b class="mono">'+esc(c.bag||'—')+'</b>'+(c.bag?' <span class="soft">('+como(c.bagHow)+')</span>':'')+
-      ' · Label <b class="mono">'+esc(c.label||'—')+'</b>'+(c.label?' <span class="soft">('+como(c.labelHow)+')</span>':'')+
-      ' · '+est+
-      (c.expected ? '<br>LOT of the day <b class="mono">'+esc(c.expected)+'</b> · '+
-        (c.dayMatch === true ? '<span class="numstate ok">Match</span>'
-         : c.dayMatch === false ? '<span class="numstate bad">Does not match</span>' : '')
-        : '')+
-      (c.lotDate ? '<br><span class="soft">LOT date '+wpFechaCorta(c.lotDate)+
-        (c.days === 0 ? ', same day as the record' : c.days === 1 ? ', the day before the record' : ', '+c.days+' days from the record')+'</span>' : '')+
-      '</div></div>';
-  }
+  if(w.lotCheck) html += '<div class="rec-block"><div class="rec-lbl">LOT check</div>'+wpLotIconos(w.lotCheck)+'</div>';
   var fotos = w.photos || (w.photo ? [{kind:'', fileName:w.photo.fileName}] : []);
   if(fotos.length){
     html += '<div class="rec-block"><div class="rec-lbl">Photos</div><div class="wp-grid">'+

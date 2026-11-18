@@ -198,6 +198,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(el && el.matches(':focus-visible')) poner(el);
   });
   ['focusout', 'scroll', 'click'].forEach(function(ev){ document.addEventListener(ev, quitar, true); });
+  // [data-tip-tap]: iconos que solo informan; en el telefono no hay raton,
+  // asi que el toque tambien muestra la etiqueta (el siguiente toque la quita)
+  document.addEventListener('click', function(e){
+    var el = e.target.closest && e.target.closest('[data-tip-tap]');
+    if(el) poner(el);
+  });
 })();
 
 // ===== HOJAS COMO EXCEL (pedido del usuario, 10 nov 2026) =====
