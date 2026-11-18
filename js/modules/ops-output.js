@@ -195,6 +195,11 @@ function outAgregar(){
   var p = findProduct(num);
   if(!p && !confirm('Product '+num+' is not in the catalog. Add it anyway?')) return;
   var ordered = g('out-ordered'), produced = g('out-produced');
+  // un LOT de Caputo en un producto "day first" no se guarda (js/core/lot.js)
+  var f0 = opsFiltro('out');
+  if(typeof lotRevisar === 'function' && lotFrenar(lotRevisar(p || num, g('out-lot'), f0.date), function(bueno){
+    var e = document.getElementById('out-lot'); if(e) e.value = bueno; outAgregar();
+  })) return;
   if(ordered && opsNum(ordered) == null){ toast('Ordered must be a number'); return; }
   if(produced && opsNum(produced) == null){ toast('Produced must be a number'); return; }
   var f = opsFiltro('out');
@@ -277,6 +282,12 @@ function outLbsHTML(r){
   if(lb == null) return '<span class="soft ops-nolb" data-tip="'+esc(k.txt)+'">—</span>';
   return '<span'+(k.txt ? ' class="ops-conv" data-tip="'+esc(k.txt)+'"' : '')+'>'+opsFmt(lb)+'</span>';
 }
+// El LOT de la fila: en rojo si es de Caputo y el producto es "day first"
+function outLotHTML(r, inp){
+  var rv = (typeof lotRevisar === 'function') ? lotRevisar(r.product, r.lot, r.date) : null;
+  return inp('lot', 'ops-lot'+(rv ? ' lot-mal' : ''), 'placeholder="LOT" autocapitalize="characters"'+
+    (rv ? ' data-tip="'+esc(rv.lot+' is a Caputo LOT · use '+rv.bueno)+'"' : ''));
+}
 // La celda Cases, igual: al pasar el raton dice como se saco
 function outCasesHTML(r){
   if(opsNum(r.produced) == null) return '<span class="soft">—</span>';
@@ -334,7 +345,7 @@ function outFilaHTML(r, i){
     '<td class="num">'+outLbsHTML(r)+'</td>'+
     '<td class="num">'+outCasesHTML(r)+'</td>'+
     '<td class="num">'+outBalHTML(r)+'</td>'+
-    '<td>'+inp('lot', 'ops-lot', 'placeholder="LOT" autocapitalize="characters"')+'</td>'+
+    '<td>'+outLotHTML(r, inp)+'</td>'+
     '<td><button class="cell-tog'+(r.completed ? ' on' : '')+'" onclick="outCompletar('+id+')">'+(r.completed ? '✓ Yes' : 'No')+'</button></td>'+
     '<td class="ops-note">'+inp('notes', '', 'placeholder="Note"')+'</td>'+
     '<td class="acts"><button class="run-del" type="button" title="Delete" aria-label="Delete product '+esc(r.product)+'" onclick="outBorrar('+id+')"><span data-icon="close"></span></button></td>'+
@@ -350,6 +361,14 @@ function outCampo(id, campo, el){
   }
   if(campo === 'lot') v = v.toUpperCase();
   if(String(r[campo] == null ? '' : r[campo]) === v){ el.value = v; return; }
+  if(campo === 'lot' && typeof lotRevisar === 'function'){
+    var rv = lotRevisar(r.product, v, r.date);
+    if(rv){
+      el.value = r.lot || '';
+      lotFrenar(rv, function(bueno){ outCampo(id, 'lot', {value: bueno}); });
+      return;
+    }
+  }
   var antes = outBalance(r);
   r[campo] = v;
   // Llego a lo pedido: queda completa (se puede quitar a mano)

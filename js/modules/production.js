@@ -275,6 +275,13 @@ function setRunLot(id, val){
   var db = getDB();
   var run = (db.runs||[]).filter(function(r){ return r.id===id; })[0];
   if(!run) return;
+  // un LOT de Caputo en un producto "day first" no se guarda (js/core/lot.js)
+  var rv = (typeof lotRevisar === 'function') ? lotRevisar(run.product, val, run.date) : null;
+  if(rv){
+    refreshRunViews();
+    lotFrenar(rv, function(bueno){ setRunLot(id, bueno); });
+    return;
+  }
   run.lot = String(val||'').trim();
   persistRunEdit(run, db);
   refreshRunViews();

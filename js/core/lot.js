@@ -246,6 +246,54 @@ function lotCalPintar(){
     '</div>';
 }
 
+// ---- Un LOT de Caputo en un producto "day first" (pedido del usuario, 18 nov 2026) ----
+// Un producto de un cliente que usa el LOT DDDYY no puede llevar un LOT de
+// Caputo (YYDDD): sale el aviso, no se guarda, y se ofrece el LOT bueno del
+// mismo dia. Solo se juzgan LOT de 5 numeros; cual formato es se decide por la
+// fecha: el que cae cerca del dia del registro (los dos pueden ser validos,
+// p. ej. 26326, y gana el mas cercano).
+function lotComoFecha(l, fmt){
+  var yy = fmt === 'dddyy' ? +l.slice(3) : +l.slice(0, 2);
+  var ddd = fmt === 'dddyy' ? +l.slice(0, 3) : +l.slice(2);
+  if(!(ddd >= 1 && ddd <= 366)) return null;
+  var y = 2000 + yy, d = new Date(y, 0, 1, 12);
+  d.setDate(ddd);
+  return d.getFullYear() === y ? lotIso(d) : null;
+}
+function lotEsCaputo(l, dia){
+  var ref = lotFecha(dia);
+  var dist = function(iso){ return iso ? Math.abs((lotFecha(iso) - ref) / 864e5) : Infinity; };
+  var a = dist(lotComoFecha(l, 'yyddd')), b = dist(lotComoFecha(l, 'dddyy'));
+  return a <= 60 && a < b;
+}
+// null si esta bien; si no {lot, bueno, dia, producto, cliente}
+function lotRevisar(producto, lot, fecha){
+  var p = (producto && typeof producto === 'object') ? producto
+        : (producto && typeof findProduct === 'function') ? findProduct(producto) : null;
+  if(!p || lotFormatoProducto(p) !== 'dddyy') return null;
+  var l = String(lot || '').trim();
+  if(!/^\d{5}$/.test(l)) return null;
+  var dia = String(fecha || '').slice(0, 10) || localDateStr();
+  if(!lotEsCaputo(l, dia)) return null;
+  var del = lotComoFecha(l, 'yyddd');          // el dia que dice ese LOT de Caputo
+  var c = (typeof productCustomer === 'function') ? productCustomer(p) : null;
+  return {lot:l, bueno:lotCodigo(del, 'dddyy'), dia:del, producto:p.number,
+          cliente:(c && c.company) || lotNombreDddyy()};
+}
+// El aviso: "Use X" pone el LOT bueno (poner) y sigue; "Change it" no guarda
+function lotFrenar(r, poner){
+  if(!r) return false;
+  var cerrar = function(){ if(typeof closeDupModal === 'function') closeDupModal(); };
+  var txt = function(iso){ return typeof fmtDate === 'function' ? fmtDate(iso) : iso; };
+  showGuardModal({icon:'alert',
+    title: r.lot+' is a Caputo LOT',
+    detail: r.producto+' is a '+r.cliente+' product: it uses the day-first LOT (DDDYY).',
+    ask: txt(r.dia)+': the right LOT is '+r.bueno+'.',
+    primaryLabel:'Use '+r.bueno, onPrimary:function(){ cerrar(); if(poner) poner(r.bueno); },
+    secondaryLabel:'Change it', onSecondary:cerrar});
+  return true;
+}
+
 // ---- El calendario de LOT de la fecha de arriba (pedido del usuario, 17 nov 2026) ----
 // Tocar la fecha de la barra de arriba abre un mes con el LOT de cada dia, en
 // UN formato a la vez: 1 = Caputo (YYDDD), 2 = el "day first" (DDDYY) del

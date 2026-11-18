@@ -426,6 +426,12 @@ function anLotEdit(id, el){
   var antes = String(a.lot || '').trim();
   // igual al que tenia, o al de la corrida que ya se veia: nada que guardar
   if(v === antes || (!antes && v && v === analysisLot(a))){ el.value = analysisLot(a) || ''; return; }
+  var rv = (typeof lotRevisar === 'function') ? lotRevisar(a.product, v, a.date) : null;
+  if(rv){
+    el.value = antes || analysisLot(a) || '';
+    lotFrenar(rv, function(bueno){ el.value = bueno; anLotEdit(id, el); });
+    return;
+  }
   setAnalysisCell(id, 'lot', v);
   var b = getAnalyses().filter(function(x){ return x.id === id; })[0] || a;
   var k = anLotInfo(b);
@@ -681,6 +687,11 @@ function saveAnalysis(){
   var date = g('an-date') || localDateStr();
   var product = normNumber(g('an-product'));
   if(!product){ toast('Enter the product number'); return; }
+  // un LOT de Caputo en un producto "day first" no se guarda (js/core/lot.js)
+  if(typeof lotRevisar==='function' && lotFrenar(lotRevisar(product, g('an-lot'), date), function(bueno){
+    var e=document.getElementById('an-lot'); if(e){ e.value=bueno; delete e.dataset.auto; }
+    saveAnalysis();
+  })) return;
   // Los resultados NO son obligatorios: muchas veces se cargan primero los
   // productos y se testean despues, en la misma fila (pedido del usuario)
   var moisture=g('an-moisture'), fat=g('an-fat'), ph=g('an-ph');

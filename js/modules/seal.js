@@ -160,6 +160,12 @@ function setSeal(btn){
 }
 function saveSeal(){
   if(!st.line||!st.shift){toast('Select line & shift first');return}
+  // un LOT de Caputo en un producto "day first" no se guarda (js/core/lot.js)
+  if(typeof lotRevisar==='function' && lotFrenar(lotRevisar((document.getElementById('s-product')||{}).value,
+      (document.getElementById('s-lot')||{}).value, (document.getElementById('s-date')||{}).value), function(bueno){
+    var e=document.getElementById('s-lot'); if(e){ e.value=bueno; if(typeof lotPropio==='function') lotPropio(e); }
+    saveSeal();
+  })) return;
   var d=findRecentSeal();
   if(d){
     showDupModal({title:dupSealTitle(d), detail:dupSealDetail(d),

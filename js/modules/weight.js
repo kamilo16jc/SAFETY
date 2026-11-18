@@ -281,6 +281,12 @@ function saveWeight(cual){
   if(!vals.length){toast('Enter at least one sample');return}
   // Lot de la bolsa distinto al de la etiqueta: se guarda, pero con comentario
   if(typeof wpLotBloquea==='function' && wpLotBloquea()) return;
+  // un LOT de Caputo en un producto "day first" no se guarda (js/core/lot.js)
+  if(typeof lotRevisar==='function' && lotFrenar(lotRevisar((document.getElementById('w-product')||{}).value,
+      (document.getElementById('w-lot')||{}).value, (document.getElementById('w-date')||{}).value), function(bueno){
+    var e=document.getElementById('w-lot'); if(e){ e.value=bueno; if(typeof lotPropio==='function') lotPropio(e); }
+    saveWeight(cual);
+  })) return;
   var d=findRecentWeight();
   if(d){
     showDupModal({title:dupWeightTitle(d), detail:dupWeightDetail(d),

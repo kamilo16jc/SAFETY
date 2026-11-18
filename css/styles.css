@@ -3380,6 +3380,8 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 /* Operations › Search: el texto del shift report en una linea (completo al pasar el raton) */
 .ops-rep td.ops-sr-txt{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ops-nolb{cursor:help}
+/* un LOT de Caputo en un producto "day first" (js/core/lot.js lotRevisar) */
+.sheet input.cell.lot-mal{color:var(--fail)!important;font-weight:700;background:var(--fail-tint)!important;border-color:color-mix(in srgb,var(--fail) 45%,transparent)!important}
 #out-sheet .ops-sheet .wide{min-width:120px}
 #out-sheet .ops-sheet td.ops-note,#out-sheet .ops-sheet th.ops-note{min-width:0}
 #out-sheet .ops-sheet input.cell.ops-short{max-width:104px}
