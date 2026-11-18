@@ -938,6 +938,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
   border-radius:var(--radius);padding:9px 11px;background:var(--surface2)}
 .rec-hist{border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-top:8px}
 .rec-hist-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+/* Ventana horizontal (registro de pesos): datos a la izquierda en 4 columnas,
+   LOT check y fotos a la derecha; todo a la vista sin bajar */
+.rec-box.rec-wide{max-width:1180px}
+.rec-box.rec-mid{max-width:900px}
+.rec-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+.rec-main,.rec-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (min-width:1000px){
+  .rec-wide .rec-cols{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+  .rec-wide .rec-grid,.rec-mid .rec-grid{display:flex;flex-wrap:wrap}
+  .rec-wide .rec-grid > .rec-field,.rec-mid .rec-grid > .rec-field{flex:1 1 calc(25% - 1px);min-width:0}
+  .rec-wide .rec-edit .field,.rec-mid .rec-edit .field{min-height:36px;padding:6px 10px}
+  .rec-wide .samp-edit .field,.rec-mid .samp-edit .field{min-height:36px;padding:6px 8px}
+  .rec-wide .rec-field,.rec-mid .rec-field{padding:7px 10px}
+  .rec-side .wp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rec-side .wp-img{max-height:300px}
+}
 .rec-modal-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:0 18px 16px}
 .rec-modal-actions:empty{display:none}
 .rec-modal-actions .btn-solid,.rec-modal-actions .btn-ghost{padding:6px 12px;font-size:12.5px}

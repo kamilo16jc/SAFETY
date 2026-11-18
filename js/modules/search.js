@@ -564,9 +564,13 @@ function closeRecordModal(){
   document.body.style.overflow = '';
 }
 
-function openRecordModal(title, body, actions){
+// o.ancho: 'wide' (datos + columna de fotos) o 'mid' (solo datos, en 4
+// columnas). Sin o, la ventana angosta de siempre.
+function openRecordModal(title, body, actions, o){
   var m = document.getElementById('record-modal');
   if(!m) return;
+  var box = m.querySelector('.rec-box');
+  if(box) box.className = 'rec-box' + (o && o.ancho ? ' rec-'+o.ancho : '');
   document.getElementById('rec-modal-title').innerHTML = title;
   document.getElementById('rec-modal-body').innerHTML = body;
   document.getElementById('rec-modal-actions').innerHTML = actions || '';
@@ -1349,10 +1353,14 @@ function viewWeightRecord(id){
       formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form')+
       recDelBtn('deleteWeightRecord('+w.id+')')
     : formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form');
-  // La foto, si la tiene: se pide al abrir (ver js/modules/weight-photo.js)
-  if(typeof wpBloqueHTML==='function') body += wpBloqueHTML(w);
+  // La foto, si la tiene: se pide al abrir (ver js/modules/weight-photo.js).
+  // Ventana horizontal (pedido del usuario, 17 nov 2026: que se vea todo sin
+  // bajar): los datos a la izquierda y el LOT check con las fotos a la derecha.
+  var lado = typeof wpBloqueHTML==='function' ? wpBloqueHTML(w) : '';
+  body = '<div class="rec-cols"><div class="rec-main">'+body+'</div>'+
+    (lado ? '<div class="rec-side">'+lado+'</div>' : '')+'</div>';
   openRecordModal((issue ? 'Line status record' : 'Weight record')+
-    (w.lot?' · LOT '+esc(w.lot):''), body, actions);
+    (w.lot?' · LOT '+esc(w.lot):''), body, actions, {ancho: lado ? 'wide' : 'mid'});
   if(typeof wpCargarEn==='function') wpCargarEn(document.getElementById('rec-modal-body'));
 }
 
