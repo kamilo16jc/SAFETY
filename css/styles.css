@@ -938,8 +938,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
   border-radius:var(--radius);padding:9px 11px;background:var(--surface2)}
 .rec-hist{border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-top:8px}
 .rec-hist-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
-.rec-modal-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 18px}
-.rec-modal-actions .btn-solid,.rec-modal-actions .btn-ghost{padding:9px 14px}
+.rec-modal-actions{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:0 18px 16px}
+.rec-modal-actions:empty{display:none}
+.rec-modal-actions .btn-solid,.rec-modal-actions .btn-ghost{padding:6px 12px;font-size:12.5px}
+/* botones de solo icono (search.js recIco): PDF, imprimir, editar, borrar */
+.rec-ico{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;
+  border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.rec-ico svg{width:18px;height:18px;display:block}
+.rec-ico:hover{background:var(--surface2);color:var(--text)}
+.rec-ico:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rec-ico.del{color:var(--fail);margin-left:6px}
+.rec-ico.del:hover{background:var(--fail-tint);color:var(--fail)}
+/* Save pequeno, a la derecha */
+.rec-modal-actions .btn-save{order:9;margin-left:auto;max-width:96px}
 
 /* --- SHIFT REPORTS: fila de area con boton de agregar --- */
 .area-row{display:flex;gap:8px;align-items:stretch}
@@ -2434,6 +2445,7 @@ input.field.tgt{margin-bottom:0;text-align:right;font-variant-numeric:tabular-nu
 @media (max-width:1023px){
   .btn-save{--h:36px;max-width:none}
   .btn-save.lg{--h:46px;max-width:none}
+  .rec-modal-actions .btn-save{--h:34px;max-width:96px}
 }
 
 /* ============================================================

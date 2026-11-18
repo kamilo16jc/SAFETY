@@ -439,7 +439,7 @@ function viewAnalysisRecord(id){
       recRow('Plate read by', esc(a.ymBy||'\u2014')+(a.ymAt ? ' \u00b7 '+fmtDate(a.ymAt) : ''))+
     '</div>';
   openRecordModal('Sample analysis \u00b7 <span class="mono">#'+esc(a.seq||'')+'</span>', body,
-    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>');
+    '');
 }
 
 function runPanel(list){
@@ -525,10 +525,8 @@ function viewShiftReport(id){
     '</div>';
   var canEdit = (typeof canEditReports==='function') && canEditReports();
   var actions =
-    '<button class="btn-solid" onclick="exportShiftPDF('+s.id+')"><span data-icon="pdf"></span>Export PDF</button>'+
-    '<button class="btn-ghost" onclick="nxImprimir(function(){ return exportShiftPDF('+s.id+'); })"><span data-icon="print"></span>Print</button>'+
-    (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-shift\');editShift('+s.id+')">Open to edit</button>':'')+
-    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    formBtnsModal('exportShiftPDF('+s.id+')', 'Shift report')+
+    (canEdit ? recIco('closeRecordModal();goTo(\'screen-shift\');editShift('+s.id+')', 'note', 'Open to edit') : '');
   openRecordModal('Shift report · <span class="mono">'+esc(s.reportNumber||'')+'</span>', body, actions);
 }
 
@@ -615,10 +613,8 @@ function viewCapaReport(id){
 
   var canEdit = currentUser;
   var actions =
-    '<button class="btn-solid" onclick="exportCapaPDF('+c.id+')"><span data-icon="pdf"></span>Official form</button>'+
-    '<button class="btn-ghost" onclick="nxImprimir(function(){ return exportCapaPDF('+c.id+'); })"><span data-icon="print"></span>Print</button>'+
-    (canEdit?'<button class="btn-ghost" onclick="closeRecordModal();goTo(\'screen-capa\');editCapa('+c.id+')">Open to edit</button>':'')+
-    '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    formBtnsModal('exportCapaPDF('+c.id+')', 'Official form')+
+    (canEdit ? recIco('closeRecordModal();goTo(\'screen-capa\');editCapa('+c.id+')', 'note', 'Open to edit') : '');
 
   openRecordModal('Incident &amp; CAPA · <span class="mono">'+esc(c.reportNumber||'')+'</span>', body, actions);
 }
@@ -781,10 +777,18 @@ function printBtn(onclick, nombre){
     'data-tip="Print · '+nombre+'" aria-label="Print, '+nombre+'"><span data-icon="print"></span></button>';
 }
 function formBtn(onclick, nombre){ return pdfBtn(onclick, nombre) + printBtn(onclick, nombre); }
-// Lo mismo en la ventana del registro, con texto
+// Botones de la ventana del registro: chicos y de solo icono (pedido del
+// usuario, 17 nov 2026: "botones mas pequenos, mas minimalistas"). Lo que hace
+// cada uno sale al pasar el raton (data-tip). Cerrar es la X de arriba: ya no
+// hay boton "Close" abajo. Save queda a la derecha, pequeno.
+function recIco(onclick, icono, tip, cls){
+  return '<button type="button" class="rec-ico'+(cls ? ' '+cls : '')+'" onclick="'+onclick+'" '+
+    'data-tip="'+tip+'" aria-label="'+tip+'"><span data-icon="'+icono+'"></span></button>';
+}
+function recDelBtn(onclick){ return recIco(onclick, 'trash', 'Delete', 'del'); }
 function formBtnsModal(onclick, texto){
-  return '<button class="btn-ghost" onclick="'+onclick+'"><span data-icon="pdf"></span>'+texto+'</button>'+
-    '<button class="btn-ghost" onclick="nxImprimir(function(){ return '+onclick+'; })"><span data-icon="print"></span>Print</button>';
+  return recIco(onclick, 'pdf', texto+' · PDF') +
+    recIco('nxImprimir(function(){ return '+onclick+'; })', 'print', 'Print · '+texto);
 }
 function searchWeightForm(){
   var r = window._srch || {};
@@ -904,10 +908,9 @@ function viewMetalRecord(id){
   }
   var pdf = formBtnsModal("sendMetalForm('"+String(m.id)+"')", 'Official form');
   var actions = edit
-    ? saveBtn("saveMetalEdit('"+String(m.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
-      '<button class="btn-danger" onclick="deleteMetalRecord(\''+String(m.id)+'\')">Delete</button>'+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : pdf + '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    ? saveBtn("saveMetalEdit('"+String(m.id)+"',this)", {texto:'Save'})+ pdf +
+      recDelBtn('deleteMetalRecord(\''+String(m.id)+'\')')
+    : pdf;
   openRecordModal('Metal detector check · '+esc(m.line||'—'), body, actions);
 }
 
@@ -1026,10 +1029,9 @@ function viewTempRecord(id){
   }
   var borrar = (typeof canDeleteRecords==='function') ? canDeleteRecords() : edit;
   var actions = edit
-    ? saveBtn("saveTempEdit('"+String(t.id)+"',this)", {texto:'Save changes', grande:true})+
-      (borrar ? '<button class="btn-danger" onclick="deleteTempRecord(\''+String(t.id)+'\')">Delete</button>' : '')+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    ? saveBtn("saveTempEdit('"+String(t.id)+"',this)", {texto:'Save'})+
+      (borrar ? recDelBtn('deleteTempRecord(\''+String(t.id)+'\')') : '')
+    : '';
   openRecordModal('Temperature &amp; humidity · '+esc(TEMP_CP[t.checkpoint]||t.checkpoint||'—')+' · '+turno+' shift', body, actions);
 }
 
@@ -1181,10 +1183,9 @@ function viewPreopRecord(id){
   var pdf = formBtnsModal("preopFormFor('"+String(p.id)+"')", 'Official form (week)');
   var borrar = (typeof canDeleteRecords==='function') ? canDeleteRecords() : edit;
   var actions = edit
-    ? saveBtn("savePreopEdit('"+String(p.id)+"',this)", {texto:'Save changes', grande:true})+ pdf +
-      (borrar ? '<button class="btn-danger" onclick="deletePreopRecord(\''+String(p.id)+'\')">Delete</button>' : '')+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : pdf + '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+    ? saveBtn("savePreopEdit('"+String(p.id)+"',this)", {texto:'Save'})+ pdf +
+      (borrar ? recDelBtn('deletePreopRecord(\''+String(p.id)+'\')') : '')
+    : pdf;
   openRecordModal('Pre-Op inspection · '+fmtDate(p.date), body, actions);
 }
 
@@ -1344,12 +1345,10 @@ function viewWeightRecord(id){
   }
 
   var actions = edit
-    ? saveBtn("saveWeightEdit("+w.id+",this)", {texto:'Save changes', grande:true})+
+    ? saveBtn("saveWeightEdit("+w.id+",this)", {texto:'Save'})+
       formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form')+
-      '<button class="btn-danger" onclick="deleteWeightRecord('+w.id+')">Delete</button>'+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form')+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+      recDelBtn('deleteWeightRecord('+w.id+')')
+    : formBtnsModal("weightSheetFor('weights',"+w.id+")", 'Official form');
   // La foto, si la tiene: se pide al abrir (ver js/modules/weight-photo.js)
   if(typeof wpBloqueHTML==='function') body += wpBloqueHTML(w);
   openRecordModal((issue ? 'Line status record' : 'Weight record')+
@@ -1481,12 +1480,10 @@ function viewSealRecord(id){
       recBlock('Comments', s.comments);
   }
   var actions = edit
-    ? saveBtn("saveSealEdit("+s.id+",this)", {texto:'Save changes', grande:true})+
+    ? saveBtn("saveSealEdit("+s.id+",this)", {texto:'Save'})+
       formBtnsModal("weightSheetFor('seals',"+s.id+")", 'Official form')+
-      '<button class="btn-danger" onclick="deleteSealRecord('+s.id+')">Delete</button>'+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>'
-    : formBtnsModal("weightSheetFor('seals',"+s.id+")", 'Official form')+
-      '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+      recDelBtn('deleteSealRecord('+s.id+')')
+    : formBtnsModal("weightSheetFor('seals',"+s.id+")", 'Official form');
   openRecordModal('Bag seal record'+(s.lot?' · LOT '+esc(s.lot):''), body, actions);
 }
 
@@ -1585,6 +1582,6 @@ function viewHoldCase(id){
               '<div class="rec-text">'+esc(e.comment||'')+'</div></div>';
           }).join('')+'</div>'
       : '');
-  var actions = '<button class="btn-ghost" onclick="closeRecordModal()">Close</button>';
+  var actions = '';
   openRecordModal('Hold case · <span class="mono">'+esc(h.caseNumber||'')+'</span>', body, actions);
 }
