@@ -105,7 +105,8 @@ function rawLetterEdit(id, el){
   var L = String(el.value).trim().toUpperCase();
   el.value = r.sample || '';
   if(!L) return;
-  if(!/^[A-Z]$/.test(L)){ toast('Write one letter, A to Z'); return; }
+  // una letra (A-Z) o dos despues de la Z (AA, BA ... ZA, AB ...): raw.js rawLetterAfter
+  if(!/^[A-Z]{1,2}$/.test(L)){ toast('Write a letter: A to Z, or AA, BA, CA...'); return; }
   if(L === antes) return;
 
   var orden = xlEntryOrder(getRawRecords().filter(function(x){ return x && x.section === 'raw'; }));

@@ -246,11 +246,19 @@ function toggleRawExtra(){
 // La letra que sigue para la muestra RAW: la siguiente a la ULTIMA que se
 // capturo (orden de captura, no alfabetico). La letra de arranque la elige el
 // operador: si empieza en la M, la que sigue es la N, luego la O... y si
-// escribe otra a mano, la cuenta sigue desde esa. Despues de la Z, la A.
+// escribe otra a mano, la cuenta sigue desde esa.
+// Despues de la Z siguen dos letras (pedido del usuario, 18 nov 2026): AA, BA,
+// CA ... ZA, luego AB, BB ... ZB, y asi hasta ZZ; despues de ZZ, la A.
 function rawLetterAfter(s){
   var t = String(s==null?'':s).trim().toUpperCase();
-  if(!/^[A-Z]$/.test(t)) return '';
-  return t==='Z' ? 'A' : String.fromCharCode(t.charCodeAt(0)+1);
+  if(/^[A-Z]$/.test(t)) return t==='Z' ? 'AA' : String.fromCharCode(t.charCodeAt(0)+1);
+  if(/^[A-Z]{2}$/.test(t)){
+    var a = t.charCodeAt(0), b = t.charCodeAt(1);
+    if(a < 90) return String.fromCharCode(a+1) + t.charAt(1);   // BA, CA ... ZA
+    if(b < 90) return 'A' + String.fromCharCode(b+1);            // ZA -> AB
+    return 'A';                                                  // ZZ -> A
+  }
+  return '';
 }
 function nextSampleLetter(){
   var ultimo = null, tUlt = -Infinity;
@@ -459,7 +467,7 @@ function saveRawRecord(){
     createdAt: localISOStr()
   };
   c.ident.forEach(function(x){ rec[x.f] = g(x.f); });
-  if(rawSection==='raw' && /^[a-z]$/.test(rec.sample)) rec.sample = rec.sample.toUpperCase();
+  if(rawSection==='raw' && /^[a-z]{1,2}$/i.test(rec.sample)) rec.sample = rec.sample.toUpperCase();
   c.medidas.forEach(function(x){ rec[x.f] = g(x.f); });
   if(rawTieneMedidas(rec)) rec.platedAt = rec.createdAt;     // testeada al capturarla: la placa es de hoy
   if(rawExtra) c.extra.forEach(function(x){ var val = g(x.f); if(val) rec[x.f] = val; });
