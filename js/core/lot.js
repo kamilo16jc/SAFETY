@@ -246,6 +246,102 @@ function lotCalPintar(){
     '</div>';
 }
 
+// ---- El calendario de LOT de la fecha de arriba (pedido del usuario, 17 nov 2026) ----
+// Tocar la fecha de la barra de arriba abre un mes con el LOT de cada dia, en
+// UN formato a la vez: 1 = Caputo (YYDDD), 2 = el "day first" (DDDYY) del
+// cliente que lo usa (el nombre sale de los datos, no del codigo). Puro
+// minimalismo: sin leyendas; lo que es cada uno sale al pasar el raton. Tocar
+// un LOT lo copia.
+var lotTb = {y:0, m:0, fmt:'yyddd'};
+try { if(localStorage.getItem('nexora-lot-fmt') === 'dddyy') lotTb.fmt = 'dddyy'; } catch(e){}
+function lotTbAbrir(){
+  var ov = document.getElementById('lot-tb');
+  if(ov && !ov.hidden){ lotTbCerrar(); return; }
+  var f = lotFecha(lotDiaProduccion(localDateStr()));
+  lotTb.y = f.getFullYear(); lotTb.m = f.getMonth();
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'lot-tb'; ov.className = 'ltb'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'LOT calendar');
+    ov.addEventListener('click', function(e){
+      var b = e.target.closest('button');
+      if(!b) return;
+      if(b.hasAttribute('data-fmt')){
+        lotTb.fmt = b.getAttribute('data-fmt');
+        try { localStorage.setItem('nexora-lot-fmt', lotTb.fmt); } catch(err){}
+        lotTbPintar(); return;
+      }
+      if(b.hasAttribute('data-mes')){ lotTbMover(+b.getAttribute('data-mes')); return; }
+      if(b.hasAttribute('data-hoy')){ var h = lotFecha(lotDiaProduccion(localDateStr())); lotTb.y = h.getFullYear(); lotTb.m = h.getMonth(); lotTbPintar(); return; }
+      if(b.hasAttribute('data-lot')) lotTbCopiar(b.getAttribute('data-lot'));
+    });
+    document.addEventListener('mousedown', function(e){
+      var o = document.getElementById('lot-tb');
+      if(o && !o.hidden && !o.contains(e.target) && !e.target.closest('#tb-stamp')) lotTbCerrar();
+    }, true);
+    document.addEventListener('keydown', function(e){
+      var o = document.getElementById('lot-tb');
+      if(e.key === 'Escape' && o && !o.hidden) lotTbCerrar();
+    });
+    window.addEventListener('resize', function(){ var o = document.getElementById('lot-tb'); if(o && !o.hidden) lotTbLugar(); });
+    document.body.appendChild(ov);
+  }
+  ov.hidden = false;
+  lotTbPintar();
+  lotTbLugar();
+  var st = document.getElementById('tb-stamp'); if(st) st.setAttribute('aria-expanded', 'true');
+}
+// Debajo de la fecha, alineado a su orilla derecha
+function lotTbLugar(){
+  var ov = document.getElementById('lot-tb'), st = document.getElementById('tb-stamp');
+  if(!ov || !st) return;
+  var r = st.getBoundingClientRect();
+  ov.style.top = Math.round(r.bottom + 10)+'px';
+  ov.style.right = Math.max(8, Math.round(window.innerWidth - r.right))+'px';
+}
+function lotTbCerrar(){
+  var ov = document.getElementById('lot-tb'); if(ov) ov.hidden = true;
+  var st = document.getElementById('tb-stamp'); if(st) st.setAttribute('aria-expanded', 'false');
+}
+function lotTbMover(n){
+  var d = new Date(lotTb.y, lotTb.m + n, 1);
+  lotTb.y = d.getFullYear(); lotTb.m = d.getMonth();
+  lotTbPintar();
+}
+function lotTbCopiar(lot){
+  var ok = function(){ toast('LOT '+lot+' copied'); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(lot).then(ok, function(){ toast('LOT '+lot); });
+  else toast('LOT '+lot);
+}
+function lotTbPintar(){
+  var ov = document.getElementById('lot-tb');
+  if(!ov) return;
+  var MES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var hoy = lotDiaProduccion(localDateStr());
+  var primero = new Date(lotTb.y, lotTb.m, 1, 12).getDay();
+  var dias = new Date(lotTb.y, lotTb.m + 1, 0).getDate();
+  var celdas = '';
+  for(var i = 0; i < primero; i++) celdas += '<span></span>';
+  for(var d = 1; d <= dias; d++){
+    var iso = lotIso(new Date(lotTb.y, lotTb.m, d, 12)), lot = lotCodigo(iso, lotTb.fmt);
+    celdas += '<button type="button" class="ltb-d'+(iso === hoy ? ' hoy' : '')+'" data-lot="'+lot+'" aria-label="'+d+' '+MES[lotTb.m]+': LOT '+lot+'">'+
+      '<i>'+d+'</i><b>'+lot+'</b></button>';
+  }
+  var t1 = 'Caputo · YYDDD', t2 = lotNombreDddyy()+' · DDDYY';
+  ov.innerHTML =
+    '<div class="ltb-top">'+
+      '<div class="ltb-seg">'+
+        '<button type="button" data-fmt="yyddd" class="'+(lotTb.fmt === 'yyddd' ? 'on' : '')+'" data-tip="'+esc(t1)+'" aria-label="'+esc(t1)+'" aria-pressed="'+(lotTb.fmt === 'yyddd')+'">1</button>'+
+        '<button type="button" data-fmt="dddyy" class="'+(lotTb.fmt === 'dddyy' ? 'on' : '')+'" data-tip="'+esc(t2)+'" aria-label="'+esc(t2)+'" aria-pressed="'+(lotTb.fmt === 'dddyy')+'">2</button>'+
+      '</div>'+
+      '<div class="ltb-mes">'+
+        '<button type="button" data-mes="-1" aria-label="Previous month">‹</button>'+
+        '<button type="button" class="ltb-t" data-hoy="1" data-tip="Today">'+MES[lotTb.m]+' '+lotTb.y+'</button>'+
+        '<button type="button" data-mes="1" aria-label="Next month">›</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ltb-grid">'+['S','M','T','W','T','F','S'].map(function(w){ return '<em>'+w+'</em>'; }).join('')+celdas+'</div>';
+}
+
 // ---- Arranque ----
 (function(){
   lotMontar('weight');
