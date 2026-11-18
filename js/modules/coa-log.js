@@ -225,23 +225,38 @@ function stLogHTML(a){
   var lot = (typeof analysisLot === 'function') ? analysisLot(a) : (a.lot || '');
   var chip = function(r, v){ return v ? '<span>'+r+' <b>'+esc(v)+'</b></span>' : ''; };
   var stTxt = {qa:['Pending QA lab', 'warn'], lab:['Pending lab', 'bad'], done:['Complete', 'ok']}[st] || ['—', ''];
-  var expCard = !e ? '<b>—</b>'
-    : '<b>'+esc(fmtDate(e.fecha))+'</b>'+(coa !== 'waiting' ? '' : '<em>'+
-        (e.dias > 0 ? 'in '+e.dias+' day'+(e.dias === 1 ? '' : 's') : e.dias === 0 ? 'today' : Math.abs(e.dias)+' days late')+'</em>');
-  var expTono = !e ? '' : coa !== 'waiting' ? 'ok' : e.dias < 0 ? 'bad' : e.dias === 0 ? 'warn' : '';
-  var coaCard = coa === 'issued' ? ['<b>'+esc(a.coaNo)+(a.coaRev ? ' R'+esc(a.coaRev) : '')+'</b><em>'+esc(stCuando(a.coaAt))+'</em>', 'ok']
-              : coa === 'ready'  ? ['<b>Ready to issue</b>', 'ok']
-              : ['<b>Not ready</b><em>'+esc((typeof coaMissing === 'function') ? coaMissing(a) : '')+'</em>', ''];
+  // KPIs (pedido del usuario, 17 nov 2026: mas modernos y minimalistas): una
+  // sola franja con tres datos; el avance va en un anillo (pasos hechos de
+  // todos los pasos), el Expected dice cuanto falta o cuanto va de atraso
+  var pasos = ev.hechos.length + ev.falta.length;
+  var pct = pasos ? Math.round(ev.hechos.length / pasos * 100) : 0;
+  var anillo = '<svg class="nx-kpi-ring '+stTxt[1]+'" viewBox="0 0 40 40" aria-hidden="true">'+
+    '<circle cx="20" cy="20" r="16" class="bg"/>'+
+    '<circle cx="20" cy="20" r="16" class="fg" stroke-dasharray="100.5" stroke-dashoffset="'+(100.5 - 100.5 * pct / 100).toFixed(1)+'"/></svg>';
+  var expVal, expSub, expTono;
+  if(!e){ expVal = '—'; expSub = ''; expTono = ''; }
+  else if(coa !== 'waiting'){ expVal = fmtDate(e.fecha); expSub = coa === 'issued' ? 'COA issued' : 'COA ready'; expTono = 'ok'; }
+  else {
+    expVal = e.dias > 0 ? 'in '+e.dias+' day'+(e.dias === 1 ? '' : 's') : e.dias === 0 ? 'Today' : Math.abs(e.dias)+' day'+(e.dias === -1 ? '' : 's')+' late';
+    expSub = fmtDate(e.fecha);
+    expTono = e.dias < 0 ? 'bad' : e.dias === 0 ? 'warn' : '';
+  }
+  var coaVal = coa === 'issued' ? a.coaNo+(a.coaRev ? ' R'+a.coaRev : '') : coa === 'ready' ? 'Ready to issue' : 'Not ready';
+  var coaSub = coa === 'issued' ? stCuando(a.coaAt) : coa === 'ready' ? '' : ((typeof coaMissing === 'function') ? 'Missing: '+coaMissing(a) : '');
 
-  // Lo que se puede hacer con el certificado: solo los botones. Lo que lo
-  // explica va detras del "?" (pedido del usuario, 11 nov 2026: minimalismo)
+  // Lo que se puede hacer con el certificado: botones de solo icono dentro
+  // del dato del COA (lo que hacen sale al pasar el raton). Lo que lo explica
+  // va detras del "?" (pedido del usuario, 11 nov 2026: minimalismo)
+  var ico = function(fn, icono, tip, cls){
+    return '<button type="button" class="rec-ico'+(cls ? ' '+cls : '')+'" onclick="'+fn+'" data-tip="'+tip+'" aria-label="'+tip+'"><span data-icon="'+icono+'"></span></button>';
+  };
   var acciones = '', ayudaCoa;
   if(coa === 'issued'){
-    acciones = '<button class="nx-log-btn pri" type="button" onclick="stLogDescargar('+a.id+')"><span data-icon="download"></span>Download COA</button>'+
-      '<button class="nx-log-btn" type="button" onclick="reprintCoa('+a.id+')"><span data-icon="pdf"></span>PDF</button>';
+    acciones = ico('stLogDescargar('+a.id+')', 'download', 'Download COA · customer form', 'pri')+
+      ico('reprintCoa('+a.id+')', 'pdf', 'COA · PDF');
     ayudaCoa = 'The COA is ready. Download the customer’s form or the PDF.';
   } else if(coa === 'ready'){
-    acciones = '<button class="nx-log-btn pri" type="button" onclick="stLogEmitir('+a.id+')"><span data-icon="pdf"></span>Issue COA</button>';
+    acciones = ico('stLogEmitir('+a.id+')', 'seal', 'Issue COA', 'pri');
     ayudaCoa = 'Everything is in. Issue the certificate and it downloads right away.';
   } else {
     ayudaCoa = 'The COA is not ready yet. '+((typeof coaMissing === 'function') ? 'Missing: '+coaMissing(a)+'. ' : '')+
@@ -255,12 +270,15 @@ function stLogHTML(a){
       '<div class="nx-log-ley"><span class="ok">Done</span><span class="pend">Waiting</span><span class="late">Late</span></div>'+
     '</div>';
 
+  // Cada paso: solo el icono, de un color por tipo (data-k), sin circulo
+  // (pedido del usuario, 17 nov 2026). Lo que falta va al final, en ambar
+  // punteado, y en rojo si ya se paso.
   var item = function(x, pend, n){
     var cls = pend ? (x.tarde ? 'pend late' : 'pend') : (x.warn ? 'warn' : (x.ok ? 'ok' : ''));
     var det = (x.d || []).filter(Boolean).map(function(s){ return '<span>'+esc(s)+'</span>'; }).join('');
     var meta = pend ? '' : [stCuando(x.at), x.by ? 'by '+x.by : ''].filter(Boolean).join(' · ');
-    // --i: el destello baja en ola, un icono tras otro
-    return '<li class="'+cls+'" style="--i:'+(n || 0)+'"><span class="nx-tl-dot"><span data-icon="'+x.icon+'"></span></span>'+
+    // --i: los pasos entran en ola, uno tras otro
+    return '<li class="'+cls+'" data-k="'+x.icon+'" style="--i:'+(n || 0)+'"><span class="nx-tl-dot"><span data-icon="'+x.icon+'"></span></span>'+
       '<div class="nx-tl-t">'+esc(x.t)+'</div>'+
       (meta ? '<div class="nx-tl-m">'+esc(meta)+'</div>' : '')+
       (det ? '<div class="nx-tl-d">'+det+'</div>' : '')+'</li>';
@@ -280,17 +298,20 @@ function stLogHTML(a){
       ayuda+
     '</header>'+
     '<div class="nx-log-body">'+
-      '<div class="nx-log-sum">'+
-        '<div class="nx-log-card '+stTxt[1]+'"><small>Status</small><b>'+stTxt[0]+'</b></div>'+
-        '<div class="nx-log-card '+expTono+'"><small>Expected</small>'+expCard+'</div>'+
-        '<div class="nx-log-card '+coaCard[1]+'"><small>COA</small>'+coaCard[0]+'</div>'+
+      '<div class="nx-kpis">'+
+        '<div class="nx-kpi '+stTxt[1]+'">'+anillo+'<div><small>Status</small><b>'+stTxt[0]+'</b>'+
+          '<em>'+ev.hechos.length+' of '+pasos+' steps</em></div></div>'+
+        '<div class="nx-kpi '+expTono+'"><div><small>Expected</small><b>'+esc(expVal)+'</b>'+(expSub ? '<em>'+esc(expSub)+'</em>' : '')+'</div></div>'+
+        '<div class="nx-kpi '+(coa !== 'waiting' ? 'ok' : '')+'"><div><small>COA</small><b>'+esc(coaVal)+'</b>'+(coaSub ? '<em>'+esc(coaSub)+'</em>' : '')+'</div>'+
+          (acciones ? '<span class="nx-kpi-acts">'+acciones+'</span>' : '')+'</div>'+
       '</div>'+
-      (acciones ? '<div class="nx-log-coa">'+acciones+'</div>' : '')+
       '<div class="nx-log-h">Timeline</div>'+
-      '<ol class="nx-tl">'+(ev.hechos.length ? ev.hechos.map(function(x, n){ return item(x, false, n); }).join('')
-                                             : '<li class="pend"><div class="nx-tl-t">No events yet</div></li>')+'</ol>'+
-      (ev.falta.length ? '<div class="nx-log-h">Still to come</div><ol class="nx-tl">'+
-        ev.falta.map(function(x, n){ return item(x, true, n); }).join('')+'</ol>' : '')+
+      // una sola linea: lo hecho y despues lo que falta
+      '<ol class="nx-tl">'+
+        (ev.hechos.length ? ev.hechos.map(function(x, n){ return item(x, false, n); }).join('')
+                          : '<li class="pend"><div class="nx-tl-t">No events yet</div></li>')+
+        ev.falta.map(function(x, n){ return item(x, true, ev.hechos.length + n); }).join('')+
+      '</ol>'+
     '</div>';
 }
 
