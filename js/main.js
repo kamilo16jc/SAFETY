@@ -18,18 +18,31 @@ if('serviceWorker' in navigator){
   // le avisa con una barra y el decide cuando actualizar.
   var swLastTyped = 0;
   document.addEventListener('input', function(){ swLastTyped = Date.now(); }, true);
+  // La actualizacion se ve (js/core/pwa.js, nxUp*): barra mientras baja,
+  // ✓ y la pantalla se desvanece y vuelve con la version nueva.
+  var swNueva = '';
   var swApply = function(){
     if(swReloading) return;
     swReloading = true;
-    window.location.reload();
+    nxUpAplicar(swNueva);
   };
+  navigator.serviceWorker.addEventListener('message', function(e){
+    var d = e.data || {};
+    if(d.type !== 'nx-sw-progress') return;
+    if(d.version) swNueva = d.version;
+    // la primera instalacion no es una actualizacion: no se anuncia
+    if(hadController && !swReloading) nxUpProgreso(d.version, d.done, d.total);
+  });
   navigator.serviceWorker.addEventListener('controllerchange', function(){
     if(swReloading) return;
     // La primera instalacion toma el control sin que haya nada viejo que
     // cambiar: esa no recarga, pero las siguientes en esta misma sesion si.
     if(!hadController){ hadController = true; return; }
-    if(Date.now() - swLastTyped > 90000) swApply();
-    else swUpdateBar(swApply);
+    nxVersiones().then(function(vs){
+      if(vs.length) swNueva = vs[vs.length - 1];
+      if(document.hidden || Date.now() - swLastTyped > 90000) swApply();
+      else nxUpListo(swNueva, swApply);
+    });
   });
   // El navegador solo busca una version nueva al ABRIR la app. En el telefono
   // la PWA se queda abierta en segundo plano dias enteros y nunca se enteraba

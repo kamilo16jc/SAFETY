@@ -39,7 +39,13 @@
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var ver = function(txt){ var m = /nexora-qc-v(\d+)/.exec(txt||''); return m ? 'v'+m[1] : '—'; };
+  // La version: la fecha de la publicacion (VERSION = '26.11.17' en sw.js);
+  // las de antes eran nexora-qc-vN
+  var ver = function(txt){
+    txt = txt || '';
+    var m = /VERSION\s*=\s*'([\d.]+)'/.exec(txt) || /nexora-qc-(v\d+|\d+(?:\.\d+){2,3})/.exec(txt);
+    return m ? m[1] : '—';
+  };
 
   // La version publicada: el sw.js del servidor, sin cache
   var srv = fetch('sw.js?ts='+Date.now(), {cache:'no-store'})
@@ -49,7 +55,7 @@
 
   // La que tenia el telefono: el nombre de su cache
   var old = (window.caches && caches.keys) ? caches.keys().then(function(ks){
-    var v = ks.filter(function(k){ return /^nexora-qc-v\d+$/.test(k); }).join(' ');
+    var v = ks.filter(function(k){ return /^nexora-qc-(v\d+|\d+(\.\d+){2,3})$/.test(k); }).join(' ');
     $('old').textContent = v ? ver(v) : 'none';
     return ks;
   }) : Promise.resolve([]);

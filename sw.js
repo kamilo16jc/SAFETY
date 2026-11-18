@@ -3,7 +3,11 @@
 // de CDN y las fuentes se cachean en tiempo de ejecución. Las llamadas a
 // Firestore/Auth NUNCA se cachean: siempre van a la red y fallan solas
 // cuando no hay conexión (la app trabaja sobre localStorage).
-const CACHE = 'nexora-qc-v192';
+// LA VERSION es la fecha de la publicacion: año.mes.dia (26.11.17), y si hay
+// otra el mismo dia 26.11.17.1, 26.11.17.2... (pedido del usuario, 17 nov
+// 2026). Al publicar se cambia SOLO esta linea. Las de antes eran vN.
+const VERSION = '26.11.17';
+const CACHE = 'nexora-qc-' + VERSION;
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
 // no, cada telefono los volveria a bajar despues de cada actualizacion.
@@ -47,8 +51,16 @@ const NEVER_CACHE = [
 ];
 
 self.addEventListener('install', function(e){
+  // Cada archivo que baja se le avisa a la app abierta: es la barra de
+  // "Updating to …" (js/core/pwa.js, nxUpProgreso). Progreso de verdad.
+  var hechos = 0, total = SHELL.length;
+  var avisar = function(){
+    return self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(cs){
+      cs.forEach(function(c){ c.postMessage({type:'nx-sw-progress', version:VERSION, done:hechos, total:total}); });
+    }).catch(function(){});
+  };
   e.waitUntil(
-    caches.open(CACHE).then(function(c){
+    avisar().then(function(){ return caches.open(CACHE); }).then(function(c){
       // addAll falla si un archivo falta; se cachea uno por uno para no romper
       // la instalación. Y cada uno se pide con cache:'reload': sin eso el
       // navegador entrega su propia copia HTTP —que en GitHub Pages dura diez
@@ -56,7 +68,8 @@ self.addEventListener('install', function(e){
       // viejos. Esa era la razón de que una publicación no se viera.
       return Promise.all(SHELL.map(function(url){
         return c.add(new Request(url, {cache:'reload'}))
-                .catch(function(){ return c.add(url).catch(function(){}); });
+                .catch(function(){ return c.add(url).catch(function(){}); })
+                .then(function(){ hechos++; return avisar(); });
       }));
     }).then(function(){ return self.skipWaiting(); })
   );

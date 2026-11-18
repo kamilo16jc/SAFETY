@@ -43,6 +43,9 @@ var ICONS = {
   back:      _IC('<path d="M19 12H5.5"/><path d="m11 5.5-5.5 6.5 5.5 6.5"/>'),
   chevron:   _IC('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
   phone:     _IC('<rect x="6.8" y="2.8" width="10.4" height="18.4" rx="2.4"/><path d="M10.6 18h2.8"/>'),
+  // La actualizacion: girando mientras baja, chispa cuando esta lista
+  refresh:   _IC('<path d="M19.6 12a7.6 7.6 0 1 1-2.25-5.4"/><path d="M19.8 4.2v4h-4"/>'),
+  spark:     _IC('<path d="M11 3.5c.7 4.6 2.4 6.3 7 7-4.6.7-6.3 2.4-7 7-.7-4.6-2.4-6.3-7-7 4.6-.7 6.3-2.4 7-7Z"/><path d="M18.5 15c.3 1.7.9 2.3 2.5 2.5-1.6.3-2.2.9-2.5 2.5-.3-1.6-.9-2.2-2.5-2.5 1.6-.2 2.2-.8 2.5-2.5Z"/>'),
   // Control del LOT: la bolsa (con su sello arriba) y la etiqueta de la caja
   bag:       _IC('<path d="M6 3.5h12v3.2H6Z"/><path d="M7 6.7c-1.3 3-1.9 6.6-1.6 12a1.6 1.6 0 0 0 1.6 1.5h10a1.6 1.6 0 0 0 1.6-1.5c.3-5.4-.3-9-1.6-12"/><path d="M9.5 12.5h5"/>'),
   tag:       _IC('<path d="M3.8 12V5.2a1.4 1.4 0 0 1 1.4-1.4H12l8.2 8.2a1.4 1.4 0 0 1 0 2l-6.2 6.2a1.4 1.4 0 0 1-2 0Z"/><circle cx="8.2" cy="8.2" r="1.4"/>'),
