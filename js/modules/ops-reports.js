@@ -77,24 +77,25 @@ function repDatos(f){
   var out = opsLista('output').filter(function(r){ return repEnRango(r, f) && enLinea(r); }).sort(function(a, b){
     return ordenar(a, b) || (parseInt(a.line, 10) || 99) - (parseInt(b.line, 10) || 99);
   });
+  // Por LINEA y producto (pedido del usuario, 17 nov 2026), con libras y cajas
   var porProd = {};
   out.forEach(function(r){
-    var k = normNumber(r.product)+'|'+(r.unit || OUT_UNIT_DEF);
-    if(!porProd[k]) porProd[k] = {product:r.product, name:r.productName || '', unit:r.unit || OUT_UNIT_DEF, runs:0, ordered:0, conOrden:false,
-                                  produced:0, balance:0, done:0, lots:{}, lbs:0, conLbs:false};
+    var k = String(r.line || '')+'|'+normNumber(r.product)+'|'+(r.unit || OUT_UNIT_DEF);
+    if(!porProd[k]) porProd[k] = {line:String(r.line || ''), product:r.product, name:r.productName || '', unit:r.unit || OUT_UNIT_DEF, runs:0, ordered:0, conOrden:false,
+                                  produced:0, balance:0, done:0, lots:{}, lbs:0, conLbs:false, cases:0, conCases:false};
     var x = porProd[k];
     x.runs++;
     var o = opsNum(r.ordered), p = opsNum(r.produced), b = outBalance(r);
     if(o != null){ x.ordered += o; x.conOrden = true; }
     if(p != null) x.produced += p;
-    var lb = outLbs(r);
+    var lb = outLbs(r), cs = outCases(r);
     if(lb != null){ x.lbs += lb; x.conLbs = true; }
+    if(cs != null){ x.cases += cs; x.conCases = true; }
     if(b != null && b > 0 && !r.completed) x.balance += b;
     if(r.completed) x.done++;
     if(r.lot) x.lots[r.lot] = 1;
   });
-  var productos = Object.keys(porProd).map(function(k){ return porProd[k]; })
-    .sort(function(a, b){ return String(a.product).localeCompare(String(b.product), undefined, {numeric:true}); });
+  var productos = Object.keys(porProd).map(function(k){ return porProd[k]; }).sort(outOrden);
 
   var dt = opsLista('downtime').filter(function(r){ return repEnRango(r, f) && enLinea(r); }).sort(function(a, b){
     return ordenar(a, b) || String(a.start || '').localeCompare(String(b.start || ''));
@@ -145,7 +146,8 @@ function renderOpsReports(){
       kpiCard(d.out.filter(function(r){ var b = outBalance(r); return !r.completed && b != null && b > 0; }).length, 'with balance left', {tono:'bad', icono:'alert'}) +
       outKpiProducido(d.out) +
       '</div>'+tabla(REP_PROD_COLS, repFilasProd(d.productos), 'Nothing produced in this range')+
-      '<h3 class="ops-h3">Each entry</h3>'+tabla(REP_OUT_COLS, d.out.map(function(r){ return repFilaOut(r); }), 'Nothing produced in this range')+'</section>';
+      '<h3 class="ops-h3">Each entry</h3>'+tabla(REP_OUT_COLS, d.out.map(function(r){ return repFilaOut(r); }), 'Nothing produced in this range')+
+      (outComentarios(d.out, true).length ? '<h3 class="ops-h3">Comments</h3>'+tabla(OUT_COM_COLS_F, outComentarios(d.out, true), '') : '')+'</section>';
   }
   if(repIncluye(f, 'downtime')){
     var total = d.dt.reduce(function(a, r){ return a + (dtMinutos(r) || 0); }, 0);
@@ -181,14 +183,14 @@ function repTotAtt(emps){
   emps.forEach(function(x){ Object.keys(t).forEach(function(k){ t[k] += x[k] || 0; }); });
   return ['Total', '', '', emps.length+' people', t.dias, t.present, t.late, t.left, t.absent, t.excused, t.min ? opsHoras(t.min) : ''];
 }
-var REP_PROD_COLS = [{h:'Product #', w:20}, {h:'Description', w:50}, {h:'Runs', w:12, al:'right'}, {h:'Ordered', w:18, al:'right'},
+var REP_PROD_COLS = [{h:'Line', w:16}, {h:'Product #', w:20}, {h:'Description', w:46}, {h:'Runs', w:12, al:'right'}, {h:'Ordered', w:18, al:'right'},
   {h:'Produced', w:18, al:'right'}, {h:'Balance left', w:18, al:'right'}, {h:'Unit', w:13}, {h:'Lbs produced', w:20, al:'right'},
-  {h:'Completed', w:16, al:'right'}, {h:'LOTs', w:42}];
+  {h:'Cases produced', w:20, al:'right'}, {h:'Completed', w:16, al:'right'}, {h:'LOTs', w:36}];
 function repFilasProd(ps, xl){
   var n = xl ? function(v){ return v; } : opsFmt;
   return ps.map(function(x){
-    return [x.product, x.name, x.runs, x.conOrden ? n(x.ordered) : '', n(x.produced), x.balance ? n(x.balance) : '',
-            outUnitTxt(x.unit), x.conLbs ? (xl ? Math.round(x.lbs * 100) / 100 : opsFmt(x.lbs)) : '',
+    return [opsLineaTxt(x.line) || 'No line', x.product, x.name, x.runs, x.conOrden ? n(x.ordered) : '', n(x.produced), x.balance ? n(x.balance) : '',
+            outUnitTxt(x.unit), x.conLbs ? outNumRep(x.lbs, xl) : '', x.conCases ? outNumRep(x.cases, xl) : '',
             x.done+' of '+x.runs, Object.keys(x.lots).join(', ')];
   });
 }
@@ -214,10 +216,12 @@ function opsReportPdf(){
       cols:REP_ATT_COLS, rows:repFilasAtt(d.empleados), foot: d.empleados.length ? repTotAtt(d.empleados) : null, empty:'No attendance marked in this range'});
   }
   if(repIncluye(f, 'output')){
-    secs.push({title:'Output by product', kpis:[['Products run', d.out.length], ['Completed', d.out.filter(function(r){ return r.completed; }).length], ['Produced', outTotales(d.out) || '0']],
+    secs.push({title:'Output by line and product', kpis:[['Products run', d.out.length], ['Completed', d.out.filter(function(r){ return r.completed; }).length], ['Produced', outTotales(d.out) || '0']],
       cols:REP_PROD_COLS, rows:repFilasProd(d.productos), empty:'Nothing produced in this range'});
     secs.push({title:'Output — each entry', cols:REP_OUT_COLS, rows:d.out.map(function(r){ return repFilaOut(r); }), empty:'Nothing produced in this range'});
     secs.push(outSeccionLinea(d.out));
+    var com = outSeccionComentarios(d.out, true);
+    if(com) secs.push(com);
   }
   if(repIncluye(f, 'downtime')){
     var total = d.dt.reduce(function(a, r){ return a + (dtMinutos(r) || 0); }, 0);
@@ -247,10 +251,12 @@ function opsReportExcel(){
     }))});
   }
   if(repIncluye(f, 'output')){
-    hojas.push({nombre:'Output by product', filas:[cab(REP_PROD_COLS)].concat(repFilasProd(d.productos, true))});
+    hojas.push({nombre:'Output by line and product', filas:[cab(REP_PROD_COLS)].concat(repFilasProd(d.productos, true))});
     hojas.push({nombre:'Output', filas:[cab(REP_OUT_COLS)].concat(d.out.map(function(r){ return repFilaOut(r, true); }))});
-    var pl = outFilasLinea(d.out, true);
-    hojas.push({nombre:'Output by line', filas:[cab(OUT_LINEA_COLS)].concat(pl.filas, pl.filas.length ? [pl.total] : [])});
+    var pl = outTablaLinea(d.out, true);
+    hojas.push({nombre:'Output by line', filas:[cab(pl.cols)].concat(pl.filas, pl.filas.length ? [pl.total] : [])});
+    var cm = outComentarios(d.out, true, true);
+    if(cm.length) hojas.push({nombre:'Output comments', filas:[cab(OUT_COM_COLS_F)].concat(cm)});
   }
   if(repIncluye(f, 'downtime')){
     hojas.push({nombre:'Downtime by line', filas:[cab(REP_DTL_COLS)].concat(dtResumenLinea(d.dt))});

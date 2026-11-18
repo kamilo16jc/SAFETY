@@ -3352,9 +3352,13 @@ body.ui-fluent .nfield input.ninput[readonly]:focus{border-color:var(--border);b
 /* Output: libras sacadas del catalogo (subrayado punteado = pasa el raton para ver como) */
 .ops-conv{border-bottom:1px dotted var(--muted);cursor:help}
 .ops-nolb{cursor:help}
-#out-sheet .ops-sheet .wide{min-width:128px}
-#out-sheet .ops-sheet td.ops-note,#out-sheet .ops-sheet th.ops-note{min-width:110px}
+#out-sheet .ops-sheet .wide{min-width:120px}
+#out-sheet .ops-sheet td.ops-note,#out-sheet .ops-sheet th.ops-note{min-width:0}
 #out-sheet .ops-sheet input.cell.ops-short{max-width:104px}
+/* con la columna Cases: la unidad (Lbs/Cases/Bags), el LOT y la nota mas angostos */
+#out-sheet .ops-sheet select.cell[aria-label="Unit"],#out-sheet .ops-sheet #out-unit{min-width:62px;padding-right:18px}
+#out-sheet .ops-sheet input.cell.ops-lot{min-width:78px}
+#out-sheet .ops-sheet td.ops-note input.cell{min-width:64px}
 /* linea todavia parada */
 .ops-sheet tr.dt-open td.rn{box-shadow:inset 3px 0 0 var(--fail)}
 .dt-fin{display:flex;align-items:center;gap:4px}
