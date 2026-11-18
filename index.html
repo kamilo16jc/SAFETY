@@ -239,7 +239,7 @@
 
 <div class="screen" id="screen-opsreports">
   <button class="back-btn" onclick="goBack()"><span class="btn-ico" data-icon="back"></span>Back</button>
-  <div class="form-title">Operations Reports</div>
+  <div class="form-title">Operations Search</div>
   <div class="sheet-bar">
     <div class="sb-field"><label for="rep-from">From</label>
       <input type="date" class="field" id="rep-from" oninput="opsSucio('rep')" onkeydown="repTecla(event)"></div>
@@ -265,8 +265,8 @@
     </div>
   </div>
   <div class="legend">
-    <div>Three separate reports: tap Attendance, Output or Downtime. The PDF, the printer and Excel give the one on screen.</div>
-    <div>Without dates the report is today. Line filters all three; in Attendance it is the line each person worked that day. Nothing changes until you tap the magnifier.</div>
+    <div>Everything done in Operations, each on its own: tap Attendance, Output, Downtime or Shift reports. The PDF, the printer and Excel give the one on screen. Each shift report has its own PDF and printer in its row.</div>
+    <div>Without dates it is today. Line filters all four; in Attendance it is the line each person worked that day. Nothing changes until you tap the magnifier.</div>
   </div>
   <div class="kpi-row" id="rep-tabs"></div>
   <div class="ops-rep-sub" id="rep-sub"></div>
@@ -1953,6 +1953,7 @@
             <option value="">—</option>
             <option value="1">Line 1</option><option value="2">Line 2</option><option value="3">Line 3</option>
             <option value="4">Line 4</option><option value="5">Line 5</option><option value="6">Line 6</option>
+            <option value="chopped">Chopped area</option>
           </select></div></div>
         <div class="field-group"><div class="sec-label">Lot <span class="opt">· optional</span></div>
           <input type="text" class="field" id="sr-lot" placeholder="Lot"></div>

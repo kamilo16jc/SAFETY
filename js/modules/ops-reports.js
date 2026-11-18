@@ -1,4 +1,8 @@
-// ===== OPERATIONS › REPORTS =====
+// ===== OPERATIONS › SEARCH (antes Reports) =====
+// 17 nov 2026: se llama Search y trae TODO lo de Operations, cada cosa por
+// separado: Attendance, Output, Downtime y los Shift reports (cada reporte
+// con su PDF y su impresora en la fila, y la lista entera en PDF y Excel).
+//
 // Tres reportes SEPARADOS (pedido del usuario, 16 nov 2026: "los reportes los
 // quiero separados, no unidos como solo uno"): Attendance, Output y Downtime,
 // cada uno con su PDF, su impresora y su Excel. Las tarjetas de arriba escogen
@@ -30,7 +34,7 @@ function setRepView(k){
   opsRep.what = k;
   opsRepintar('screen-opsreports', renderOpsReports);
 }
-var REP_NOMBRES = {attendance:'Attendance report', output:'Output report', downtime:'Downtime report'};
+var REP_NOMBRES = {attendance:'Attendance report', output:'Output report', downtime:'Downtime report', shifts:'Shift reports'};
 
 function repEnRango(r, f){
   var d = String(r.date || '').slice(0, 10);
@@ -100,7 +104,21 @@ function repDatos(f){
   var dt = opsLista('downtime').filter(function(r){ return repEnRango(r, f) && enLinea(r); }).sort(function(a, b){
     return ordenar(a, b) || String(a.start || '').localeCompare(String(b.start || ''));
   });
-  return {att:att, empleados:empleados, out:out, productos:productos, dt:dt};
+  return {att:att, empleados:empleados, out:out, productos:productos, dt:dt, sr:repShifts(f)};
+}
+// Los Shift reports del rango (los mismos de QA: es una sola lista)
+function repShifts(f){
+  return (typeof getShifts === 'function' ? getShifts() : []).filter(function(s){
+    return repEnRango(s, f) && (!f.line || String(s.line || '') === String(f.line));
+  }).sort(function(a, b){
+    return String(a.date || '').localeCompare(String(b.date || '')) || String(a.shift).localeCompare(String(b.shift)) ||
+      String(a.reportNumber || '').localeCompare(String(b.reportNumber || ''), undefined, {numeric:true});
+  });
+}
+function repSrConteo(l){
+  return {open:l.filter(function(s){ return s.status === 'open'; }).length,
+          seguir:l.filter(function(s){ return s.status === 'followup' || s.status === 'monitoring' || (s.followUp && s.status !== 'resolved'); }).length,
+          resueltos:l.filter(function(s){ return s.status === 'resolved'; }).length};
 }
 
 // ===== EN PANTALLA =====
@@ -118,7 +136,8 @@ function renderOpsReports(){
     tabs.innerHTML =
       kpiCard(d.att.length, 'attendance', {icono:'user', on:w === 'attendance', click:"setRepView('attendance')", note:'marks'}) +
       kpiCard(d.out.length, 'output', {icono:'box', on:w === 'output', click:"setRepView('output')", note:'products run'}) +
-      kpiCard(d.dt.length, 'downtime', {icono:'clock', on:w === 'downtime', click:"setRepView('downtime')", note:'line stops'});
+      kpiCard(d.dt.length, 'downtime', {icono:'clock', on:w === 'downtime', click:"setRepView('downtime')", note:'line stops'}) +
+      kpiCard(d.sr.length, 'shift reports', {icono:'history', on:w === 'shifts', click:"setRepView('shifts')", note:'reports'});
     renderIcons(tabs);
   }
   var html = '';
@@ -159,6 +178,15 @@ function renderOpsReports(){
         '<div>'+tabla(REP_DTL_COLS, dtResumenLinea(d.dt), 'No line stops')+'</div>'+
         '<div>'+tabla(REP_DTC_COLS, dtResumenCausa(d.dt).map(function(x){ return [x[0], x[1], x[2], x[3]+'%']; }), 'No line stops')+'</div>'+
       '</div><h3 class="ops-h3">Each stop</h3>'+tabla(REP_DT_COLS, d.dt.map(repFilaDt), 'No line stops in this range')+'</section>';
+  }
+  if(repIncluye(f, 'shifts')){
+    var cs = repSrConteo(d.sr);
+    html += '<section class="ops-sec"><div class="kpi-row ops-sum">'+
+      kpiCard(d.sr.length, 'shift reports', {icono:'history'}) +
+      kpiCard(cs.open, 'open', {tono:'bad', icono:'alert'}) +
+      kpiCard(cs.seguir, 'to follow up', {tono:'warn', icono:'clock'}) +
+      kpiCard(cs.resueltos, 'resolved', {tono:'ok', icono:'check'}) +
+      '</div>'+repTablaShifts(d.sr)+'</section>';
   }
   host.innerHTML = html;
   renderIcons(host);
@@ -205,6 +233,44 @@ function repFilaDt(r, xl){
   return [xl ? String(r.date).slice(0, 10) : opsFechaTxt(r.date), String(r.shift) === '2' ? '2nd' : '1st'].concat(dtFilaReporte(r));
 }
 
+// La lista de Shift reports en pantalla: la fila abre el reporte; al final,
+// el PDF y la impresora de ESE reporte (los mismos de Search de QA)
+function repTablaShifts(l){
+  var stt = (typeof SHIFT_STATUS !== 'undefined') ? SHIFT_STATUS : {};
+  var filas = l.map(function(s){
+    var st = stt[s.status] || {};
+    return '<tr class="view-row" onclick="viewShiftReport('+s.id+')">'+
+      '<td class="code">'+esc(s.reportNumber || '—')+'</td>'+
+      '<td>'+esc(opsFechaTxt(s.date))+'</td>'+
+      '<td>'+(String(s.shift) === '2' ? '2nd' : '1st')+'</td>'+
+      '<td>'+esc(s.area || '—')+'</td>'+
+      '<td>'+esc(opsLineaTxt(s.line) || '—')+'</td>'+
+      '<td>'+(s.category ? '<span class="pill">'+esc(s.category)+'</span>' : '—')+'</td>'+
+      '<td>'+(s.status ? '<span class="pill '+(st.cls || '')+'">'+esc(st.label || s.status)+'</span>' : '—')+'</td>'+
+      '<td class="ops-sr-txt" title="'+esc(s.notes || '')+'">'+esc(s.notes || '—')+'</td>'+
+      '<td class="soft">'+esc(s.reportedBy || s.createdBy || '—')+'</td>'+
+      '<td class="view-cell"><span class="row-icos">'+
+        '<button class="form-ico" type="button" onclick="event.stopPropagation();viewShiftReport('+s.id+')" '+
+          'data-tip="View report" aria-label="View report '+esc(s.reportNumber || '')+'"><span data-icon="search"></span></button>'+
+        formBtn('exportShiftPDF('+s.id+')', 'shift report')+
+      '</span></td></tr>';
+  }).join('');
+  return '<div class="sheet-wrap"><table class="sheet ops-sheet ops-rep"><thead><tr>'+
+      '<th>Report #</th><th>Date</th><th>Shift</th><th>Area</th><th>Line</th><th>Category</th><th>Status</th>'+
+      '<th>What happened</th><th>By</th><th></th></tr></thead><tbody>'+
+    (filas || '<tr><td colspan="10" class="soft">No shift reports in this range</td></tr>')+'</tbody></table></div>';
+}
+var REP_SR_COLS = [{h:'Report #', w:24}, {h:'Date', w:20}, {h:'Shift', w:11}, {h:'Area', w:24}, {h:'Line', w:18}, {h:'Category', w:20},
+  {h:'Status', w:18}, {h:'What happened', w:62}, {h:'Action taken', w:42}, {h:'By', w:22}];
+function repFilasShifts(l, xl){
+  var stt = (typeof SHIFT_STATUS !== 'undefined') ? SHIFT_STATUS : {};
+  return l.map(function(s){
+    return [s.reportNumber || '', xl ? String(s.date || '').slice(0, 10) : opsFechaTxt(s.date), String(s.shift) === '2' ? '2nd' : '1st',
+            s.area || '', opsLineaTxt(s.line), s.category || '', (stt[s.status] || {}).label || s.status || '',
+            s.notes || '', s.action || '', s.reportedBy || s.createdBy || ''];
+  });
+}
+
 // ===== PDF =====
 function opsReportPdf(){
   var f = opsRep || {what:'attendance'};
@@ -229,6 +295,11 @@ function opsReportPdf(){
       cols:REP_DTL_COLS, rows:dtResumenLinea(d.dt), empty:'No line stops'});
     secs.push({title:'Downtime by cause', cols:REP_DTC_COLS, rows:dtResumenCausa(d.dt).map(function(x){ return [x[0], x[1], x[2], x[3]+'%']; }), empty:'No line stops'});
     secs.push({title:'Downtime — each stop', cols:REP_DT_COLS, rows:d.dt.map(function(r){ return repFilaDt(r); }), empty:'No line stops in this range'});
+  }
+  if(repIncluye(f, 'shifts')){
+    var cs = repSrConteo(d.sr);
+    secs.push({title:'Shift reports', kpis:[['Reports', d.sr.length], ['Open', cs.open], ['To follow up', cs.seguir], ['Resolved', cs.resueltos]],
+      cols:REP_SR_COLS, rows:repFilasShifts(d.sr), empty:'No shift reports in this range'});
   }
   var from = f.from || f.to || localDateStr(), to = f.to || f.from || localDateStr();
   var w = f.what || 'attendance';
@@ -262,6 +333,13 @@ function opsReportExcel(){
     hojas.push({nombre:'Downtime by line', filas:[cab(REP_DTL_COLS)].concat(dtResumenLinea(d.dt))});
     hojas.push({nombre:'Downtime by cause', filas:[cab(REP_DTC_COLS)].concat(dtResumenCausa(d.dt))});
     hojas.push({nombre:'Downtime', filas:[cab(REP_DT_COLS)].concat(d.dt.map(function(r){ return repFilaDt(r, true); }))});
+  }
+  if(repIncluye(f, 'shifts')){
+    hojas.push({nombre:'Shift reports', filas:[cab(REP_SR_COLS).concat(['Follow-up', 'Product', 'LOT', 'Supervisor'])].concat(
+      repFilasShifts(d.sr, true).map(function(fila, i){
+        var s = d.sr[i];
+        return fila.concat([s.followUp ? 'Yes' : 'No', s.product || '', s.lot || '', s.supervisor || '']);
+      }))});
   }
   var hay = hojas.some(function(h){ return h.filas.length > 1; });
   if(!hay){ toast('Nothing to export for these filters'); return; }

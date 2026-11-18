@@ -6,7 +6,7 @@
 // LA VERSION es la fecha de la publicacion: año.mes.dia (26.11.17), y si hay
 // otra el mismo dia 26.11.17.1, 26.11.17.2... (pedido del usuario, 17 nov
 // 2026). Al publicar se cambia SOLO esta linea. Las de antes eran vN.
-const VERSION = '26.11.17.4';
+const VERSION = '26.11.17.5';
 const CACHE = 'nexora-qc-' + VERSION;
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si

@@ -7,7 +7,7 @@ var NX_SCREEN_NOTES={
  'screen-attendance':'Mark who came to work in each shift.',
  'screen-output':'What was produced of each product, its balance and its LOT.',
  'screen-downtime':'Every line stop: how long, why and what was done.',
- 'screen-opsreports':'Attendance, output and downtime, each report on its own, for any range of dates.',
+ 'screen-opsreports':'Everything done in Operations: attendance, output, downtime and shift reports, for any range of dates.',
  'screen-coa':'Prepare certificates from completed laboratory results.',
  'screen-labresults':'Review external laboratory reports and final results.',
  'screen-coastatus':'Follow each sample from collection to certificate.',

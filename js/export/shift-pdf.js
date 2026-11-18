@@ -64,7 +64,7 @@ function exportDailyShiftPDF(){
 
   var eventCard = function(s, i){
     var meta = [];
-    if(s.line)    meta.push('Line '+esc(s.line));
+    if(s.line)    meta.push(esc(typeof opsLineaTxt === 'function' ? opsLineaTxt(s.line) : 'Line '+s.line));
     if(s.product) meta.push('Product '+esc(s.product)+(s.productName?' — '+esc(s.productName):''));
     if(s.lot)     meta.push('LOT '+esc(s.lot));
     return '<div style="border:1px solid '+line+';border-radius:5px;padding:11px 13px;margin-bottom:9px;page-break-inside:avoid">'+
@@ -174,7 +174,7 @@ function exportShiftPDF(id){
     field('Shift:', rec.shift?(rec.shift===1?'1st':'2nd')+' shift':'')+
     field('Area:', rec.area)+
     field('Category:', rec.category)+
-    field('Line:', rec.line)+
+    field('Line:', rec.line === 'chopped' ? 'Chopped area' : rec.line)+
     field('Product / Item #:', rec.product + (rec.productName?' — '+rec.productName:''))+
     field('Lot Number:', rec.lot)+
     field('Status:', window.shiftStatusLabel?shiftStatusLabel(rec.status):cap1(rec.status))+

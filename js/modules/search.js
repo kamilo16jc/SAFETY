@@ -512,7 +512,7 @@ function viewShiftReport(id){
       recRow('Area', esc(s.area||'—'))+
       recRow('Category', s.category?'<span class="pill">'+esc(s.category)+'</span>':'—')+
       recRow('Status', s.status?'<span class="pill '+(stt[s.status]||'')+'">'+(window.shiftStatusLabel?shiftStatusLabel(s.status):cap1(s.status))+'</span>':'—')+
-      recRow('Line', s.line?('Line '+esc(s.line)):'—')+
+      recRow('Line', s.line ? esc(typeof opsLineaTxt === 'function' ? opsLineaTxt(s.line) : 'Line '+s.line) : '—')+
       recRow('Product', esc(s.product||'—')+(s.productName?' · '+esc(s.productName):''))+
       recRow('Lot', '<span class="mono">'+esc(s.lot||'—')+'</span>')+
       recRow('Follow-up', s.followUp?'<span class="pill warn">Required</span>':'No')+

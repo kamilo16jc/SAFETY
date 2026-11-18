@@ -178,7 +178,7 @@ var CRUMBS = {
   'screen-attendance':['Operations', 'Attendance'],
   'screen-output':['Operations', 'Output'],
   'screen-downtime':['Operations', 'Downtime'],
-  'screen-opsreports':['Operations', 'Reports'],
+  'screen-opsreports':['Operations', 'Search'],
   'screen-samplelist':['Capture', 'List Samples'],
   'screen-lab':      ['Capture', 'Lab Samples'],
   'screen-analysis': ['Capture', 'Sample Analysis'],

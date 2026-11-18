@@ -43,7 +43,7 @@ var MODULES = [
       {screen:'screen-output',    name:'Output',           icon:'box', color:'#047857'},
       {screen:'screen-downtime',  name:'Downtime',         icon:'clock', color:'#be123c'},
       {screen:'screen-shift',     name:'Shift Report',     icon:'history', color:'#c2410c'},
-      {screen:'screen-opsreports',name:'Reports',          icon:'chart', color:'#0369a1'}
+      {screen:'screen-opsreports',name:'Search',           icon:'search', color:'#0369a1'}
   ]},
   { id:'products', color:'#c084fc', ink:'#7c3aed', name:'Products', icon:'box', items:[
       {screen:'screen-products',  name:'Product Catalog',  icon:'box', color:'#047857'},
