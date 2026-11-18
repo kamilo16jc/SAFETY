@@ -129,21 +129,28 @@ function opsFechaTxt(iso){ return (typeof fmtDate === 'function') ? fmtDate(iso)
 // Output tambien se fabrica en el Chopped area, que no es una linea numerada
 // (pedido del usuario, 17 nov 2026): se guarda como line:'chopped'
 var OPS_CHOPPED = 'chopped';
+// Forklift (pedido del usuario, 17 nov 2026): solo en Attendance, para los
+// operadores de montacargas; no es una linea de produccion
+var OPS_FORKLIFT = 'forklift';
 function opsLineaTxt(v){
   v = String(v == null ? '' : v);
-  return !v ? '' : v === OPS_CHOPPED ? 'Chopped area' : 'Line '+v;
+  return !v ? '' : v === OPS_CHOPPED ? 'Chopped area' : v === OPS_FORKLIFT ? 'Forklift' : 'Line '+v;
 }
 // Orden de las lineas en totales y listas: 1..6, Chopped area y al final las sin linea
 function opsLineaOrden(v){
   v = String(v == null ? '' : v);
   if(!v) return 999;
   if(v === OPS_CHOPPED) return 500;
+  if(v === OPS_FORKLIFT) return 510;
   return parseInt(v, 10) || 600;
 }
-function opsLineOptions(sel, vacio, conChopped){
+function opsLineOptions(sel, vacio, conChopped, conForklift){
+  // un registro que ya dice Forklift lo sigue diciendo aunque la lista no lo ofrezca
+  var fk = conForklift || String(sel) === OPS_FORKLIFT;
   return (vacio ? '<option value="">'+vacio+'</option>' : '') + OPS_LINES.map(function(n){
     return '<option value="'+n+'"'+(String(sel) === String(n) ? ' selected' : '')+'>Line '+n+'</option>';
-  }).join('') + (conChopped ? '<option value="'+OPS_CHOPPED+'"'+(String(sel) === OPS_CHOPPED ? ' selected' : '')+'>Chopped area</option>' : '');
+  }).join('') + (conChopped ? '<option value="'+OPS_CHOPPED+'"'+(String(sel) === OPS_CHOPPED ? ' selected' : '')+'>Chopped area</option>' : '') +
+    (fk ? '<option value="'+OPS_FORKLIFT+'"'+(String(sel) === OPS_FORKLIFT ? ' selected' : '')+'>Forklift</option>' : '');
 }
 
 // ===== REPORTES EN PDF =====

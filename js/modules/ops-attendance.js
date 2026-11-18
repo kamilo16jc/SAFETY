@@ -16,7 +16,7 @@ var ATT_STATUS = [
   {k:'absent',  label:'Absent',     short:'A', tono:'bad'},
   {k:'excused', label:'Excused',    short:'X', tono:'soft'}
 ];
-var ATT_AREAS = ['Production', 'Packaging', 'Sanitation', 'Warehouse', 'Maintenance', 'Shipping'];
+var ATT_AREAS = ['Production', 'Packaging', 'Sanitation', 'Warehouse', 'Maintenance', 'Shipping', 'Driver'];
 var attView = 'day';
 
 function attStatus(k){ return ATT_STATUS.filter(function(s){ return s.k === k; })[0] || null; }
@@ -35,6 +35,7 @@ function attLineaOrden(v){
   v = String(v || '');
   if(!v) return 999;
   if(v === OPS_CHOPPED) return 500;
+  if(v === OPS_FORKLIFT) return 510;
   return parseInt(v, 10) || 600;
 }
 // La linea de un registro del dia: la que se le puso ese dia, o la fija del empleado
@@ -85,7 +86,7 @@ function attConstruir(){
       '<td class="rn">New</td>'+
       '<td colspan="2"><input class="cell" id="att-n-name" list="att-emp-list" placeholder="Someone not on this list (another shift, new)" '+
         'autocomplete="off" onkeydown="if(event.key===\'Enter\'){event.preventDefault();attAgregar();}"></td>'+
-      '<td><select class="cell" id="att-n-line" aria-label="Line">'+opsLineOptions('', 'Line', true)+'</select></td>'+
+      '<td><select class="cell" id="att-n-line" aria-label="Line">'+opsLineOptions('', 'Line', true, true)+'</select></td>'+
       '<td class="soft"></td>'+
       '<td><select class="cell" id="att-n-status">'+ATT_STATUS.map(function(s){ return '<option value="'+s.k+'">'+s.label+'</option>'; }).join('')+'</select></td>'+
       '<td colspan="4" class="soft">Each employee of the shift is listed below: tap a letter to mark them</td>'+
@@ -101,7 +102,7 @@ function attConstruir(){
         'onkeydown="if(event.key===\'Enter\'){event.preventDefault();attEmpAgregar();}"></td>'+
       '<td><input class="cell ops-short" id="att-r-no" placeholder="Emp #" autocomplete="off"></td>'+
       '<td><select class="cell" id="att-r-shift">'+turnos+'</select></td>'+
-      '<td><select class="cell" id="att-r-line" aria-label="Line">'+opsLineOptions('', '—', true)+'</select></td>'+
+      '<td><select class="cell" id="att-r-line" aria-label="Line">'+opsLineOptions('', '—', true, true)+'</select></td>'+
       '<td><input class="cell" id="att-r-area" list="att-area-list" placeholder="Area" autocomplete="off" '+
         'onkeydown="if(event.key===\'Enter\'){event.preventDefault();attEmpAgregar();}"></td>'+
       '<td class="soft">—</td>'+
@@ -191,7 +192,7 @@ function attFilaHTML(x, i){
     '<td class="code">'+esc(e.name || '—')+(x.fuera ? ' <span class="tag">'+(e.active === false ? 'inactive' : 'other shift')+'</span>' : '')+'</td>'+
     '<td class="soft">'+esc(e.empNo || '—')+'</td>'+
     '<td><select class="cell'+(r && r.line != null && String(r.line) !== String(e.line || '') ? ' att-moved' : '')+'" aria-label="Line of '+esc(e.name)+' this day" '+
-      'onchange="attCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(attLineaDe(r, e), '—', true)+'</select></td>'+
+      'onchange="attCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(attLineaDe(r, e), '—', true, true)+'</select></td>'+
     '<td class="soft">'+esc(e.area || '—')+'</td>'+
     '<td><div class="att-st">'+botones+'</div></td>'+
     '<td><input type="time" class="cell ops-time" value="'+esc(r && r.timeIn || '')+'" aria-label="Time in" onchange="attCampo(\''+id+'\',\'timeIn\',this)"></td>'+
@@ -305,7 +306,7 @@ function renderAttRoster(){
       '<td><input class="cell" value="'+esc(e.name || '')+'" aria-label="Name" onchange="attEmpCampo(\''+id+'\',\'name\',this)"></td>'+
       '<td><input class="cell ops-short" value="'+esc(e.empNo || '')+'" aria-label="Employee number" onchange="attEmpCampo(\''+id+'\',\'empNo\',this)"></td>'+
       '<td><select class="cell" aria-label="Shift" onchange="attEmpCampo(\''+id+'\',\'shift\',this)">'+sel('1', '1st')+sel('2', '2nd')+sel('any', 'Both')+'</select></td>'+
-      '<td><select class="cell" aria-label="Line" onchange="attEmpCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(e.line || '', '—', true)+'</select></td>'+
+      '<td><select class="cell" aria-label="Line" onchange="attEmpCampo(\''+id+'\',\'line\',this)">'+opsLineOptions(e.line || '', '—', true, true)+'</select></td>'+
       '<td><input class="cell" list="att-area-list" value="'+esc(e.area || '')+'" aria-label="Area" onchange="attEmpCampo(\''+id+'\',\'area\',this)"></td>'+
       '<td><button class="cell-tog'+(e.active === false ? '' : ' on')+'" onclick="attEmpActivo(\''+id+'\')">'+(e.active === false ? 'Inactive' : '✓ Active')+'</button></td>'+
       '<td class="acts"><button class="run-del" type="button" title="Delete" aria-label="Delete '+esc(e.name)+'" onclick="attEmpBorrar(\''+id+'\')"><span data-icon="close"></span></button></td>'+
