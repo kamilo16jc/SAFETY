@@ -177,36 +177,49 @@ function renderCatalogDetail(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'+
       '</button>'+
     '</div>'+
-    '<div class="cd-body">'+
-      '<div class="field-group"><div class="sec-label">Description</div>'+
-        '<input type="text" class="field" id="cd-name" value="'+esc(p.name||'')+'"></div>'+
-      '<div class="field-group"><div class="sec-label">Package Size</div>'+
-        '<div class="select-wrap"><select class="field" id="cd-size">'+sizeOpts+'</select></div></div>'+
-      '<div class="field-group"><div class="sec-label">Target Range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· in the unit of the package (lb or oz)</span></div>'+
+    // Ventana horizontal (pedido del usuario, 17 nov 2026: como el registro de
+    // pesos, todo a la vista): el producto a la izquierda, el laboratorio a la
+    // derecha. Bajo 1000 px vuelve a una sola columna.
+    '<div class="cd-body cd-cols">'+
+      '<div class="cd-col">'+
+        '<div class="field-group"><div class="sec-label">Description</div>'+
+          '<input type="text" class="field" id="cd-name" value="'+esc(p.name||'')+'"></div>'+
         '<div class="pair">'+
-          '<input type="text" class="field" id="cd-min" inputmode="decimal" placeholder="Min" value="'+(p.target&&p.target.min!=null?p.target.min:'')+'">'+
-          '<input type="text" class="field" id="cd-max" inputmode="decimal" placeholder="Max" value="'+(p.target&&p.target.max!=null?p.target.max:'')+'">'+
+          '<div class="field-group"><div class="sec-label">Package Size</div>'+
+            '<div class="select-wrap"><select class="field" id="cd-size">'+sizeOpts+'</select></div></div>'+
+          '<div class="field-group"><div class="sec-label">Bags per case</div>'+
+            '<input type="text" class="field" id="cd-bags" inputmode="numeric" value="'+(p.bagsPerCase||'')+'"></div>'+
         '</div>'+
-        '<div class="hint">Leave empty to log weights without scoring them.</div></div>'+
-      '<div class="pair">'+
-        '<div class="field-group"><div class="sec-label">Bags per case</div>'+
-          '<input type="text" class="field" id="cd-bags" inputmode="numeric" value="'+(p.bagsPerCase||'')+'"></div>'+
+        '<div class="field-group"><div class="sec-label">Target Range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· in the unit of the package (lb or oz)</span></div>'+
+          '<div class="pair">'+
+            '<input type="text" class="field" id="cd-min" inputmode="decimal" placeholder="Min" value="'+(p.target&&p.target.min!=null?p.target.min:'')+'">'+
+            '<input type="text" class="field" id="cd-max" inputmode="decimal" placeholder="Max" value="'+(p.target&&p.target.max!=null?p.target.max:'')+'">'+
+          '</div>'+
+          '<div class="hint">Leave empty to log weights without scoring them.</div></div>'+
         '<div class="field-group"><div class="sec-label">Barcode</div>'+
           '<button class="btn-ghost" style="width:100%;justify-content:center" onclick="catalogRescan()">'+
             ((p.barcodes||[]).length ? 'Linked · rescan' : 'Scan to link')+'</button></div>'+
+        '<div class="cd-meta">'+
+          '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
+          '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
+          '<div>Used in <span>'+countProductUse(p.number)+' records</span></div>'+
+        '</div>'+
       '</div>'+
-      (typeof labTargetsHTML==='function' ? labTargetsHTML('cd', p) : '')+
-      labBlockHTML('cd', p)+
-      '<div class="cd-meta">'+
-        '<div>Created by <span>'+esc(p.createdBy||'—')+'</span></div>'+
-        '<div>Added <span>'+((p.createdAt||'').slice(0,10)||'—')+'</span></div>'+
-        '<div>Used in <span>'+countProductUse(p.number)+' records</span></div>'+
+      '<div class="cd-col">'+
+        (typeof labTargetsHTML==='function' ? labTargetsHTML('cd', p) : '')+
+        labBlockHTML('cd', p)+
       '</div>'+
     '</div>'+
+    // Botones chicos: la papelera es solo el icono; Save es el de Weights (la
+    // franja verde cruza el boton y dice "Saved", cbtnSaved en utils.js)
     '<div class="cd-actions">'+
-      saveBtn('saveCatalogEdits(this)', {texto:'Save changes', grande:true})+
-      (canDelete ? '<button class="btn-danger" onclick="deleteCatalogProduct()">Delete</button>' : '')+
+      (canDelete ? recIco('deleteCatalogProduct()', 'trash', 'Delete product', 'del') : '')+
+      '<button type="button" class="cbtn cbtn-primary cd-save" id="cd-save-btn" onclick="saveCatalogEdits(this)">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3"/><path d="M8 21v-7h8v7"/></svg>'+
+        '<span class="cb-lbl">Save</span>'+
+      '</button>'+
     '</div>';
+  if(typeof renderIcons === 'function') renderIcons(el);
   // El bloque de laboratorio se rellena una vez esta en el DOM
   fillLabBlock('cd', p);
 }
@@ -274,6 +287,8 @@ function saveCatalogEdits(btn){
   renderProductOptions('s-product-list');
   renderCatalog();
   renderCatalogDetail();
+  // la ficha se repinta: el boton se busca por id y confirma que guardo
+  cbtnSaved('cd-save-btn');
   toast('Product updated');
 }
 

@@ -442,9 +442,20 @@ canvas{width:100%!important}
 .cat-detail .cd-meta div span{color:var(--text);text-align:right}
 .cat-detail .cd-actions{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);
   background:var(--surface2);flex-shrink:0}
-.cat-detail .cd-actions button{flex:1;justify-content:center}
-/* el de guardar tiene dos caras apiladas: centrado enseña media de cada una */
-.cat-detail .cd-actions .btn-save{justify-content:flex-start;max-width:none}
+/* los botones de adentro (cliente nuevo) siguen llenando su fila */
+.cat-detail .cd-col .cd-actions button{flex:1;justify-content:center}
+.cat-detail .cd-col .cd-actions .btn-save{justify-content:flex-start;max-width:none}
+/* los de la ficha: papelera de icono a la izquierda, Save a la derecha */
+.cat-detail > .cd-actions{align-items:center;padding:10px 16px}
+.cat-detail > .cd-actions .cd-save{margin-left:auto;height:34px;min-width:96px}
+.cat-detail > .cd-actions .rec-ico.del{margin-left:0}
+/* ventana horizontal: producto a la izquierda, laboratorio a la derecha */
+.cat-detail .cd-col{display:flex;flex-direction:column;gap:13px;min-width:0}
+@media (min-width:1000px){
+  .cat-modal .cat-detail{width:min(1080px,100%)}
+  .cat-detail .cd-body.cd-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+    gap:22px;align-items:start}
+}
 .cat-detail .cd-empty{padding:36px 20px;text-align:center;color:var(--dim);font-size:12.5px}
 .btn-danger{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--fail);font-size:13px;font-weight:600;cursor:pointer}
 .btn-danger:active{transform:scale(0.97)}
