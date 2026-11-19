@@ -159,13 +159,14 @@ function renderCatalogDetail(){
   }
   if(modal) modal.hidden = false;
   var canDelete = currentUser && (currentUser.role==='admin' || currentUser.role==='supervisor');
+  // El tamano: los de la lista o uno propio escrito a mano ("Other size…"),
+  // igual que en Create Product. Antes un producto de 20 lb o 50 lb solo
+  // ofrecia su propio tamano y no se podia cambiar a otro que no estuviera en
+  // la lista (pedido del usuario, 18 nov 2026).
+  var propio = p.pkg==null || !PKGS[p.pkg];
   var sizeOpts = PKGS.map(function(k,i){
-    return '<option value="'+i+'"'+(p.pkg===i?' selected':'')+'>'+k.label+'</option>';
-  }).join('');
-  // Un peso que no está en la lista se conserva como opción propia
-  if(p.pkg==null && p.pkgLabel){
-    sizeOpts += '<option value="custom" selected>'+esc(p.pkgLabel)+'</option>';
-  }
+    return '<option value="'+i+'"'+(!propio && p.pkg===i?' selected':'')+'>'+k.label+'</option>';
+  }).join('') + '<option value="other"'+(propio?' selected':'')+'>Other size…</option>';
 
   el.innerHTML =
     '<div class="cd-head">'+
@@ -186,10 +187,15 @@ function renderCatalogDetail(){
           '<input type="text" class="field" id="cd-name" value="'+esc(p.name||'')+'"></div>'+
         '<div class="pair">'+
           '<div class="field-group"><div class="sec-label">Package Size</div>'+
-            '<div class="select-wrap"><select class="field" id="cd-size">'+sizeOpts+'</select></div></div>'+
+            '<div class="select-wrap"><select class="field" id="cd-size" data-prev="'+(propio?'other':p.pkg)+'" '+
+              'onchange="cdSizeChanged()">'+sizeOpts+'</select></div></div>'+
           '<div class="field-group"><div class="sec-label">Bags per case</div>'+
             '<input type="text" class="field" id="cd-bags" inputmode="numeric" value="'+(p.bagsPerCase||'')+'"></div>'+
         '</div>'+
+        '<div class="field-group" id="cd-custom-wrap"'+(propio?'':' style="display:none"')+'>'+
+          '<div class="sec-label">Size label</div>'+
+          '<input type="text" class="field" id="cd-custom-label" placeholder="e.g. 20 lb or 15 oz" '+
+            'value="'+esc(propio ? (p.pkgLabel||'') : '')+'"></div>'+
         '<div class="field-group"><div class="sec-label">Target Range <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">· in the unit of the package (lb or oz)</span></div>'+
           '<div class="pair">'+
             '<input type="text" class="field" id="cd-min" inputmode="decimal" placeholder="Min" value="'+(p.target&&p.target.min!=null?p.target.min:'')+'">'+
@@ -225,6 +231,30 @@ function renderCatalogDetail(){
 }
 
 
+// Al cambiar el tamano: "Other size…" pide escribirlo; uno de la lista pone su
+// rango de peso, pero solo si el que habia era el de fabrica del tamano
+// anterior (o estaba vacio): un rango escrito a mano no se pisa.
+function cdSizeChanged(){
+  var sel = document.getElementById('cd-size');
+  if(!sel) return;
+  var v = sel.value, antes = sel.getAttribute('data-prev');
+  var wrap = document.getElementById('cd-custom-wrap');
+  var mn = document.getElementById('cd-min'), mx = document.getElementById('cd-max');
+  if(wrap) wrap.style.display = v==='other' ? '' : 'none';
+  var k0 = (antes!=null && antes!=='other') ? PKGS[parseInt(antes)] : null;
+  var deFabrica = (!mn.value.trim() && !mx.value.trim()) ||
+    (k0 && parseFloat(mn.value)===k0.min && parseFloat(mx.value)===k0.max);
+  if(v==='other'){
+    if(deFabrica && k0){ mn.value = ''; mx.value = ''; }
+    var l = document.getElementById('cd-custom-label');
+    if(l) l.focus();
+  } else if(deFabrica){
+    var k = PKGS[parseInt(v)];
+    mn.value = k.min; mx.value = k.max;
+  }
+  sel.setAttribute('data-prev', v);
+}
+
 // Cliente del producto + los tests que exige. El número suele bastar, pero los
 // clientes marcados "all items" (no listan números) hay que asignarlos a mano.
 
@@ -247,12 +277,17 @@ function saveCatalogEdits(btn){
   var mn = parseFloat(document.getElementById('cd-min').value);
   var mx = parseFloat(document.getElementById('cd-max').value);
   var bags = parseInt(document.getElementById('cd-bags').value);
+  var propio = String((document.getElementById('cd-custom-label')||{}).value||'').trim();
 
+  if(sizeVal==='other' && !propio){ toast('Enter the package size (e.g. 20 lb)'); return; }
   if(!isNaN(mn) !== !isNaN(mx)){ toast('Enter both min and max, or leave both empty'); return; }
   if(!isNaN(mn) && !isNaN(mx) && mn>=mx){ toast('Min must be lower than max'); return; }
 
   p.name = document.getElementById('cd-name').value.trim();
-  if(sizeVal!=='custom'){
+  if(sizeVal==='other'){
+    p.pkg = null;
+    p.pkgLabel = propio;
+  } else {
     p.pkg = parseInt(sizeVal);
     p.pkgLabel = PKGS[p.pkg].label;
     // Si no se escribió un target propio, se toma el del tamaño elegido
