@@ -165,7 +165,8 @@ function renderRoles(){
         '<td class="rn">'+(i+1)+'</td>'+
         '<td><b>'+esc(r.name)+'</b>'+(r.protected?' <span class="soft">(built in)</span>':'')+'</td>'+
         '<td class="num">'+gente+'</td>'+
-        '<td class="wide soft">'+esc(roleModulesText(r))+'</td>'+
+        '<td class="wide soft">'+esc(roleModulesText(r))+
+          (r.home ? ' · home: '+(r.home === 'ops' ? 'Operations' : 'Quality') : '')+'</td>'+
         '<td class="soft">'+esc(rolePermsText(r) || '—')+'</td>'+
         '<td><button class="sheet-btn" onclick="editRole(\''+esc(r.key)+'\')">Edit</button></td>'+
         '<td>'+(r.protected ? '' :
@@ -207,7 +208,7 @@ function roleSummary(key){
 
 // ---- El editor ----
 function newRole(){
-  rolEditor = {key:'', name:'', screens:[], perms:{edit:false, remove:false, approve:false}, nuevo:true};
+  rolEditor = {key:'', name:'', screens:[], perms:{edit:false, remove:false, approve:false}, home:'', nuevo:true};
   renderRoles(); renderRoleEditor();
   var n = document.getElementById('role-name'); if(n) n.focus();
 }
@@ -216,7 +217,7 @@ function editRole(key){
   if(!r) return;
   rolEditor = {key:r.key, name:r.name, screens:(r.screens||[]).slice(),
                perms:Object.assign({edit:false,remove:false,approve:false}, r.perms||{}),
-               protected:!!r.protected};
+               home:r.home||'', protected:!!r.protected};
   renderRoles(); renderRoleEditor();
   var p = document.getElementById('role-editor'); if(p) p.scrollIntoView({block:'nearest'});
 }
@@ -291,6 +292,15 @@ function renderRoleEditor(){
         permiso('approve','Approve and sign','signs the grilling cheese form') +
       '</div>'+
 
+      // Que tablero ve al entrar. En Auto lo dice lo que ve: Operations o
+      // Production sin calidad -> el de operaciones; con los dos, los dos.
+      '<div class="sec-label">Home dashboard</div>'+
+      '<select class="field" id="role-home" style="max-width:320px">'+
+        [['', 'Auto · from what it sees'], ['quality', 'Quality'], ['ops', 'Operations']].map(function(o){
+          return '<option value="'+o[0]+'"'+((e.home||'')===o[0]?' selected':'')+'>'+o[1]+'</option>';
+        }).join('')+
+      '</select>'+
+
       '<div class="cd-actions">'+
         '<button class="main-btn" onclick="saveRoleEdit()">'+(e.nuevo?'Create role':'Save role')+'</button>'+
         '<button class="btn-ghost" onclick="closeRoleEditor()">Cancel</button>'+
@@ -332,13 +342,18 @@ function saveRoleEdit(){
     perms[c.getAttribute('data-perm')] = c.checked;
   });
 
+  var homeSel = document.getElementById('role-home');
+  var home = homeSel ? homeSel.value : '';
+
   var lista = getRoles();
   var repetido = lista.filter(function(r){
     return r.key!==rolEditor.key && r.name.toLowerCase()===nombre.toLowerCase(); }).length;
   if(repetido){ toast('There is already a role with that name'); return; }
 
   if(rolEditor.nuevo){
-    lista.push({key:roleKeyFrom(nombre), name:nombre, screens:screens, perms:perms});
+    var nuevo = {key:roleKeyFrom(nombre), name:nombre, screens:screens, perms:perms};
+    if(home) nuevo.home = home;
+    lista.push(nuevo);
     logActivity('admin','Role created', nombre, currentUser?currentUser.name:'—');
   } else {
     var r = lista.filter(function(x){ return x.key===rolEditor.key; })[0];
@@ -352,6 +367,7 @@ function saveRoleEdit(){
     if(!r.protected) r.name = nombre;
     r.screens = screens;
     r.perms = perms;
+    if(home) r.home = home; else delete r.home;
     logActivity('admin','Role updated', r.name+' · '+screens.length+' functions',
       currentUser?currentUser.name:'—');
   }

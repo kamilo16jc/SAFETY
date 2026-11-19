@@ -302,7 +302,8 @@ function initHome(){
     var hm0 = document.getElementById('home-modules');
     if(hs) hs.innerHTML = '';
     if(hm0) hm0.innerHTML = '';
-    renderHomeKPI();
+    // calidad u operaciones, segun el rol (js/modules/ops-dash.js)
+    if(typeof homeTableros === 'function') homeTableros(); else renderHomeKPI();
     return;
   }
 

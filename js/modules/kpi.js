@@ -285,7 +285,7 @@ function kpiCasilla(o){
       (o.unit ? '<small>'+o.unit+'</small>' : '')+'</div>'+(o.spark||'')+'</div>'+
     '<div class="kd-kpi-row kd-kpi-foot"><div class="kd-kpi-meta">'+
       '<span class="kd-cap">'+esc(o.target)+'</span>'+(o.foot||'')+'</div>'+
-      kpiInsignia(o.estado)+'</div>'+
+      (o.badge != null ? o.badge : kpiInsignia(o.estado))+'</div>'+
   '</div>';
 }
 
@@ -660,5 +660,7 @@ window.addEventListener('resize', function(){
   var home = document.getElementById('screen-home');
   if(!home || !home.classList.contains('active')) return;
   clearTimeout(kpiResizeT);
-  kpiResizeT = setTimeout(renderHomeKPI, 150);
+  kpiResizeT = setTimeout(function(){
+    if(typeof homeRepintar === 'function') homeRepintar(); else renderHomeKPI();
+  }, 150);
 });

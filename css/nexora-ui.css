@@ -436,7 +436,15 @@ body.ui-fluent .toast {border-radius:12px;background:var(--text);color:var(--sur
 .nx-data-caption {text-align:left;color:var(--dim);padding:12px}
 .nx-kpi-action {cursor:pointer;transition:transform .2s var(--nx-ease),box-shadow .2s}
 body.ui-fluent .nx-kpi-action:hover {transform:translateY(-3px);box-shadow:0 7px 16px #233b4a09}
-#nx-kpi-apply.pending {box-shadow:0 0 0 3px var(--warn-tint);outline:1px solid var(--warn)}
+#nx-kpi-apply.pending,#kdo-apply.pending {box-shadow:0 0 0 3px var(--warn-tint);outline:1px solid var(--warn)}
+/* Tablero de Operaciones (js/modules/ops-dash.js): el que no toca no se ve,
+   y con los dos el selector Quality · Operations va arriba a la derecha */
+.kd[hidden] {display:none!important}
+.kd-dsw {flex-shrink:0;padding-top:2px}
+.kd-dsw[hidden] {display:none}
+#kdo-kpis .kd-kpi-val small {margin-left:5px}
+.nx-chart-caption i.kdo-ghost {height:8px;background:var(--mint);outline:1px dashed color-mix(in srgb,var(--accent) 60%,transparent)}
+.kd-val.kdo-cero {fill:var(--dim);font-weight:400}
 .nx-nav-close {display:none}
 body.ui-fluent .splash {background:var(--surface);transition:opacity .25s}
 body.ui-fluent .sp-mark {width:150px}
