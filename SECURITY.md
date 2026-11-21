@@ -51,6 +51,13 @@ antes. Así, si algo falla el primer día, nadie se queda afuera.
 
 **Pruebas** (emuladores de Firebase, datos sintéticos): `firestore-safety/tests/`.
 
+**Avisos en el teléfono (20 nov 2026).** La llave privada VAPID con la que el
+servidor firma las notificaciones vive en Secret Manager (`SAFETY_VAPID_PRIVATE`,
+envirotrack-5173f), nunca en git; la crea y la guarda `node functions/tools/avisos-setup.js`
+sin mostrarla. Cada teléfono anotado queda en `pushSubs/{id}` (su suscripción,
+turno y avisos); las reglas dejan a cada quien solo el suyo, y `pushState`
+(lo ya mandado) solo lo toca el servidor.
+
 ---
 
 ## Resumen

@@ -289,6 +289,8 @@ function loginSuccess() {
 
   goTo('screen-home');
   if(typeof playSplash==='function') playSplash();
+  // avisos en el telefono (js/core/avisos.js)
+  if(typeof nxaDespuesDeEntrar==='function') nxaDespuesDeEntrar();
 }
 
 function logoutUser() {

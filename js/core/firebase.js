@@ -233,6 +233,10 @@
     onSnapshot(doc(db,'config','labCounters'), function(d){
       if(d.exists()){ var ldb=getDB(); ldb.labCounters=d.data().counters||{}; saveDB(ldb); }
     }, function(){});
+    // Horas de los turnos para los avisos (las pone el administrador)
+    onSnapshot(doc(db,'config','reminders'), function(d){
+      if(d.exists()){ var ldb=getDB(); ldb.reminders=d.data(); saveDB(ldb); }
+    }, function(){});
     onSnapshot(doc(db,'config','roles'), function(d){
       if(d.exists()){ var l=d.data().list||[]; if(l.length){ var rdb=getDB(); rdb.roles=l; saveDB(rdb,'roles'); } }
     }, function(){});
@@ -528,6 +532,21 @@
     } catch(e) {
       console.error('Save roles error:', e);
     }
+  };
+
+  // ---- AVISOS EN EL TELEFONO (js/core/avisos.js) ----
+  // Las horas de los turnos (de todos) y cada telefono anotado: su suscripcion
+  // push, de que turno es y que avisos quiere. Lo lee la funcion safetyReminders.
+  window.nxGuardarAvisosCfg = async function(cfg) {
+    try { await setDoc(doc(db,'config','reminders'), Object.assign({}, cfg, {updatedAt: new Date().toISOString()})); }
+    catch(e) { console.error('Save reminders error:', e); }
+  };
+  window.nxGuardarPushSub = async function(id, data) {
+    try { await setDoc(doc(db,'pushSubs',id), data); }
+    catch(e) { console.error('Save push sub error:', e); }
+  };
+  window.nxBorrarPushSub = async function(id) {
+    try { await deleteDoc(doc(db,'pushSubs',id)); } catch(e) {}
   };
 
   // ---- SAVE OPERATORS to Firestore ----

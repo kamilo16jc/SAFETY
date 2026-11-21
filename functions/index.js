@@ -334,3 +334,90 @@ exports.safetyLogin = onRequest(Object.assign({}, OPTS_SEG, { memory: "512MiB" }
     res.status(503).json({ ok: false, error: "login unavailable" });
   }
 });
+
+// ===== AVISOS EN EL TELEFONO (notificaciones) =====
+// Pedido del usuario (20 nov 2026): que el telefono avise solo, aunque la app
+// este cerrada, cuando falta el GMP, una temperatura, los pesos de una linea,
+// el metal detector de una linea que corrio o el Pre-Op. QUE avisar lo decide
+// functions/avisos-reglas.js (el mismo archivo que usa la app abierta).
+//
+//   safetyReminders  cada 15 minutos (hora de la planta): revisa el turno y
+//                    manda lo nuevo a los telefonos que lo pidieron
+//   safetyPushKey    GET -> {publicKey}: la llave publica con la que la app
+//                    se suscribe
+//
+// Los telefonos se anotan en caputo-cheese pushSubs/{id} (lo escribe la app:
+// su suscripcion, turno(s) y que avisos quiere). Lo ya mandado se apunta en
+// pushState/{dia}-{turno} para no repetirlo.
+//
+// La llave privada (VAPID) va en Secret Manager, nunca en git:
+//   node functions/tools/avisos-setup.js   (la crea, la guarda y despliega)
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const AVISOS = require("./avisos-reglas");
+const VAPID_PRIVATE = defineSecret("SAFETY_VAPID_PRIVATE");
+const PLANTA_TZ = "America/Chicago";   // tambien en avisos-revisar.js
+const VAPID_CONTACTO = "https://kamilo16jc.github.io/SAFETY/";
+
+const { revisarAvisos, horaPlanta, vapidPublica } = require("./avisos-revisar");
+
+// Lo de Firestore (caputo-cheese): solo lo del turno, no colecciones enteras
+function ioFirestore() {
+  const db = fsCaputo();
+  const docs = (q) => q.get().then((s) => s.docs.map((d) => Object.assign({ id: d.id }, d.data())));
+  const entre = (col, a, b) => docs(db.collection(col).where("date", ">=", a).where("date", "<", b));
+  return {
+    config: () => db.doc("config/reminders").get().then((d) => (d.exists ? d.data() : {})),
+    subs: () => docs(db.collection("pushSubs").where("active", "==", true)),
+    datos: async (ctx) => {
+      const d = ctx.day, man = AVISOS.diaMas(d, 1);
+      const [weights, temps, gmps, preop, metal, runs] = await Promise.all([
+        entre("weights", d, AVISOS.diaMas(d, 2)),
+        entre("temps", d, man), entre("gmps", d, man), entre("preop", d, man),
+        entre("metal", AVISOS.lunes(d), AVISOS.diaMas(d, 2)),
+        entre("runs", d, man),
+      ]);
+      return { weights, temps, gmps, preop, metal, runs };
+    },
+    estado: (ctx) => db.doc("pushState/" + ctx.day + "-" + ctx.shift).get().then((x) => (x.exists ? (x.get("sent") || {}) : {})),
+    apuntar: (ctx, llaves) => {
+      const sent = {};
+      llaves.forEach((k) => { sent[k] = new Date().toISOString(); });
+      return db.doc("pushState/" + ctx.day + "-" + ctx.shift).set({ sent, updatedAt: new Date().toISOString() }, { merge: true });
+    },
+    olvidar: (s) => db.doc("pushSubs/" + s.id).delete().catch(() => {}),
+  };
+}
+
+exports.safetyReminders = onSchedule({
+  schedule: "*/15 * * * *", timeZone: PLANTA_TZ, region: REGION,
+  secrets: [CAPUTO_SA, VAPID_PRIVATE], memory: "256MiB", timeoutSeconds: 120, maxInstances: 1,
+}, async () => {
+  const webpush = require("web-push");
+  const priv = String(VAPID_PRIVATE.value() || "").trim();
+  webpush.setVapidDetails(VAPID_CONTACTO, vapidPublica(priv), priv);
+  const io = ioFirestore();
+  io.enviar = async (s, aviso) => {
+    try {
+      await webpush.sendNotification(s.sub, JSON.stringify(aviso),
+        { TTL: 1800, urgency: "high", topic: String(aviso.tag || "nx").replace(/[^A-Za-z0-9]/g, "").slice(0, 32) || "nx" });
+      return "ok";
+    } catch (e) {
+      if (e && (e.statusCode === 404 || e.statusCode === 410)) return "gone";
+      console.error("safetyReminders send", e && e.statusCode, e && e.body);
+      return "error";
+    }
+  };
+  const r = await revisarAvisos(io, horaPlanta(new Date()));
+  if (r.ctx) console.log("safetyReminders", r.ctx.day, "shift " + r.ctx.shift, "t=" + r.ctx.t, "new " + r.nuevos.length, "sent " + r.enviados);
+});
+
+exports.safetyPushKey = onRequest(Object.assign({}, OPTS, { secrets: [VAPID_PRIVATE] }), async (req, res) => {
+  if (!origenValido(req)) { res.status(403).json({ ok: false }); return; }
+  try {
+    res.set("Cache-Control", "public, max-age=3600");
+    res.status(200).json({ ok: true, publicKey: vapidPublica(VAPID_PRIVATE.value()) });
+  } catch (e) {
+    res.status(503).json({ ok: false });
+  }
+});
+

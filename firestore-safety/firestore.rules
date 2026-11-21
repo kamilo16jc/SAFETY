@@ -20,7 +20,14 @@ service cloud.firestore {
 
     // Los datos de la planta: cualquier usuario activo
     match /{col}/{id} {
-      allow read, write: if activo() && !(col in ['config', 'access', 'reader']);
+      allow read, write: if activo() && !(col in ['config', 'access', 'reader', 'pushSubs', 'pushState']);
+    }
+
+    // Los telefonos anotados para los avisos: cada quien solo el suyo.
+    // pushState lo escribe solo el servidor (safetyReminders), que no pasa por aqui.
+    match /pushSubs/{id} {
+      allow read, delete: if activo() && resource.data.op == op();
+      allow create, update: if activo() && request.resource.data.op == op();
     }
 
     // Configuracion: la ven todos; usuarios y roles solo los toca Admin.

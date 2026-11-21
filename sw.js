@@ -6,7 +6,7 @@
 // LA VERSION es la fecha de la publicacion: año.mes.dia (26.11.17), y si hay
 // otra el mismo dia 26.11.17.1, 26.11.17.2... (pedido del usuario, 17 nov
 // 2026). Al publicar se cambia SOLO esta linea. Las de antes eran vN.
-const VERSION = '26.11.19';
+const VERSION = '26.11.20';
 const CACHE = 'nexora-qc-' + VERSION;
 // Archivos de CDN con la version en la direccion (el lector de LOT: ~6-9 MB).
 // Nunca cambian, asi que viven aparte y NO se borran en cada publicacion: si
@@ -25,7 +25,7 @@ const SHELL = [
   './assets/caputo-dark.svg',
   './js/main.js',
   './js/core/modules.js','./js/core/data.js','./js/core/icons.js','./js/core/nav.js','./js/core/ribbon.js','./js/core/sidenav.js','./js/core/utils.js',
-  './js/core/auth.js','./js/core/login-ui.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
+  './js/core/auth.js','./js/core/login-ui.js','./js/core/avisos.js','./functions/avisos-reglas.js','./js/core/theme.js','./js/core/sound.js','./js/core/pwa.js',
   './js/core/dup-guard.js','./js/core/firebase.js','./js/core/mobile.js',
   './js/modules/weight.js','./js/modules/lot-ocr.js','./js/modules/label-read.js','./js/modules/phone-reader.js','./js/core/lot.js','./js/modules/weight-photo.js','./js/modules/seal.js','./js/modules/kpi.js','./js/modules/dash-charts.js','./js/modules/dashboard.js','./js/modules/ops-dash.js',
   './js/modules/admin.js','./js/modules/holds.js',
@@ -78,10 +78,44 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k!==CACHE && k!==CACHE_CDN; })
+      return Promise.all(keys.filter(function(k){ return k!==CACHE && k!==CACHE_CDN && k!==CACHE_AVISOS; })
                              .map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
+});
+
+// ===== AVISOS EN EL TELEFONO (js/core/avisos.js, functions/index.js) =====
+// El servidor manda {k, title, body, tag, screen, mod}. Lo que ya sono (la app
+// abierta lo apunta en la misma cache) se reemplaza en silencio: el telefono
+// exige mostrar algo por cada push, pero no tiene por que volver a sonar.
+var CACHE_AVISOS = 'nx-avisos';
+function avisoUrl(k){ return './nxa/' + encodeURIComponent(k); }
+self.addEventListener('push', function(e){
+  var a = {};
+  try{ a = e.data ? e.data.json() : {}; }catch(x){ a = {title:'NEXORA', body: e.data ? e.data.text() : ''}; }
+  e.waitUntil(caches.open(CACHE_AVISOS).then(function(c){
+    return (a.k ? c.match(avisoUrl(a.k)) : Promise.resolve(null)).then(function(visto){
+      return self.registration.showNotification(a.title || 'NEXORA', {
+        body: a.body || '', tag: a.tag || 'nx', renotify: !visto, silent: !!visto,
+        icon: './assets/nexora-icon-192.png', vibrate: [200, 100, 200],
+        data: {k: a.k || '', screen: a.screen || '', mod: a.mod || ''}
+      }).then(function(){ if(a.k && !visto) return c.put(avisoUrl(a.k), new Response(String(Date.now()))); });
+    });
+  }).catch(function(){ return self.registration.showNotification(a.title || 'NEXORA', {body: a.body || ''}); }));
+});
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  var d = e.notification.data || {};
+  var url = new URL('./', self.registration.scope);
+  if(d.screen){ url.searchParams.set('go', d.screen); if(d.mod) url.searchParams.set('mod', d.mod); }
+  e.waitUntil(self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(cs){
+    var c = cs[0];
+    if(c){
+      if(d.screen) c.postMessage({type:'nx-go', screen:d.screen, mod:d.mod});
+      return c.focus ? c.focus() : null;
+    }
+    return self.clients.openWindow(url.href);
+  }));
 });
 
 self.addEventListener('fetch', function(e){

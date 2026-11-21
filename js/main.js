@@ -28,6 +28,8 @@ if('serviceWorker' in navigator){
   };
   navigator.serviceWorker.addEventListener('message', function(e){
     var d = e.data || {};
+    // tocaron una notificacion: a su pantalla (js/core/avisos.js)
+    if(d.type === 'nx-go'){ if(typeof nxaIr === 'function') nxaIr(d.screen, d.mod); return; }
     if(d.type !== 'nx-sw-progress') return;
     if(d.version) swNueva = d.version;
     // la primera instalacion no es una actualizacion: no se anuncia

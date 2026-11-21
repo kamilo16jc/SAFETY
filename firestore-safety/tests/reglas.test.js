@@ -62,6 +62,14 @@ async function caso(nombre, p, debe) {
   await caso('NO el canal de otro', getDoc(doc(oper, 'reader/200')), false);
   await caso('pase con admin falso NO lee usuarios', getDoc(doc(falsoAdmin, 'config/operators')), false);
   await caso('subcoleccion: denegada', setDoc(doc(oper, 'weights/w1/x/y'), { a: 1 }), false);
+  console.log('-- avisos en el telefono');
+  await caso('anota su telefono', setDoc(doc(oper, 'pushSubs/t100'), { op: '100', active: true, sub: { endpoint: 'x' } }), true);
+  await caso('lo cambia (turno, avisos)', setDoc(doc(oper, 'pushSubs/t100'), { op: '100', active: true, shifts: ['2'] }), true);
+  await caso('NO anota un telefono a nombre de otro', setDoc(doc(oper, 'pushSubs/t200'), { op: '200', active: true }), false);
+  await caso('NO lee el telefono de otro', getDoc(doc(adm, 'pushSubs/t100')), false);
+  await caso('NO lista los telefonos', getDocs(collection(oper, 'pushSubs')), false);
+  await caso('NO toca lo ya mandado (solo el servidor)', setDoc(doc(oper, 'pushState/2026-11-20-2'), { sent: {} }), false);
+  await caso('borra el suyo', deleteDoc(doc(oper, 'pushSubs/t100')), true);
   console.log('-- administrador');
   await caso('lee usuarios', getDoc(doc(adm, 'config/operators')), true);
   await caso('escribe usuarios', setDoc(doc(adm, 'config/operators'), { list: [{ id: 1 }] }), true);
