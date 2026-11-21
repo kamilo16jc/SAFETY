@@ -44,6 +44,7 @@
   </button>
   <div class="tb-crumb" id="tb-crumb"></div>
   <div class="tb-spacer"></div>
+  <button class="nx-ag-btn" type="button" onclick="agAbrir()" aria-label="Assistant" data-tip="Assistant"><span data-icon="spark"></span></button>
   <button class="nx-command-btn" type="button" onclick="nxOpenCommand()" aria-label="Find a module" aria-keyshortcuts="Control+k Meta+k"><span data-icon="search"></span><span>Find a module</span><kbd>⌘ / Ctrl K</kbd></button>
   <button type="button" class="tb-stamp" id="tb-stamp" onclick="lotTbAbrir()" aria-label="LOT calendar" aria-haspopup="dialog" aria-expanded="false"></button>
   <button class="tb-user" id="tb-user" onclick="toggleUserMenu()" aria-label="Account menu"><span class="tb-avatar" id="tb-init"></span><span id="tb-uname"></span></button>
@@ -52,6 +53,7 @@
     <button class="um-item" onclick="toggleDarkMode()"><span data-icon="moon"></span>Appearance</button>
     <button class="um-item" onclick="nxOpenCommand()"><span data-icon="grid"></span>Find a module</button>
     <button class="um-item" onclick="prAbrir()"><span data-icon="phone"></span>Phone reader</button>
+    <button class="um-item" onclick="agAbrir()"><span data-icon="spark"></span>Assistant</button>
     <button class="um-item" onclick="nxaAbrir()"><span data-icon="bell"></span>Notifications</button>
     <button class="um-item" id="um-install" hidden onclick="pwaInstall()"><span data-icon="download"></span>Install app</button>
     <button class="um-item" onclick="location.href='update.html'"><span data-icon="download"></span>Update app</button>
@@ -2531,6 +2533,9 @@
 <script src="js/core/pwa.js"></script>
 <script src="functions/avisos-reglas.js"></script>
 <script src="js/core/avisos.js"></script>
+<script src="js/modules/agente-fuentes.js"></script>
+<script src="js/modules/agente-entender.js"></script>
+<script src="js/modules/agente.js"></script>
 <script src="js/export/excel.js"></script>
 <script src="js/vendor/jszip.min.js"></script>
 <script src="js/vendor/zxing.min.js"></script>

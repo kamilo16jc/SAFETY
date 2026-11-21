@@ -44,6 +44,7 @@ var ICONS = {
   chevron:   _IC('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
   phone:     _IC('<rect x="6.8" y="2.8" width="10.4" height="18.4" rx="2.4"/><path d="M10.6 18h2.8"/>'),
   // La actualizacion: girando mientras baja, chispa cuando esta lista
+  send:      _IC('<path d="M12 19.5V5"/><path d="m5.8 11.2 6.2-6.2 6.2 6.2"/>'),
   bell:      _IC('<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.6 2H4.9Z"/><path d="M10 20.5a2.1 2.1 0 0 0 4 0"/>'),
   refresh:   _IC('<path d="M19.6 12a7.6 7.6 0 1 1-2.25-5.4"/><path d="M19.8 4.2v4h-4"/>'),
   spark:     _IC('<path d="M11 3.5c.7 4.6 2.4 6.3 7 7-4.6.7-6.3 2.4-7 7-.7-4.6-2.4-6.3-7-7 4.6-.7 6.3-2.4 7-7Z"/><path d="M18.5 15c.3 1.7.9 2.3 2.5 2.5-1.6.3-2.2.9-2.5 2.5-.3-1.6-.9-2.2-2.5-2.5 1.6-.2 2.2-.8 2.5-2.5Z"/>'),
