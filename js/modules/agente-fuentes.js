@@ -91,7 +91,9 @@ var AG_ESTADO = {
   pass:['pasó', 'passed'], fail:['falló', 'failed'], open:['abierto', 'open'], closed:['cerrado', 'closed'],
   overdue:['vencido', 'overdue'], hold:['en hold', 'on hold'], released:['liberado', 'released'], issue:['con issue', 'with an issue'],
   pending:['pendiente', 'pending'], done:['completo', 'done'], absent:['ausente', 'absent'], late:['tarde', 'late'],
-  present:['presente', 'present'], down:['parada ahora', 'down now'], coa:['con COA', 'with COA'], cancelled:['cancelada', 'cancelled']
+  present:['presente', 'present'], down:['parada ahora', 'down now'], coa:['con COA', 'with COA'], cancelled:['cancelada', 'cancelled'],
+  sincoa:['sin COA', 'without COA'], ready:['para leer', 'ready to read'], waiting:['esperando', 'waiting'], unplated:['sin placa', 'not plated'],
+  left:['se fue antes', 'left early'], excused:['excusado', 'excused']
 };
 function agEstadoTxt(k){ var x = AG_ESTADO[k]; return x ? agT(x[0], x[1]) : k; }
 
@@ -252,13 +254,32 @@ var AG_FUENTES = [
    titulo:function(r){ return '#' + (r.seq || '') + ' · ' + (r.product || '') + (r.cheese ? ' · ' + r.cheese : ''); },
    campos:function(r){
      var f = agFueraLab(r);
-     var v = function(k){ return r[k] ? r[k] + (f.indexOf(k) >= 0 ? agT(' ✕ fuera de rango', ' ✕ out of range') : '') : ''; };
+     var pr = typeof findProduct === 'function' ? findProduct(r.product) : null, lt = (pr && pr.labTargets) || {};
+     var rango = function(k){ var x = lt[k]; return x ? ' (' + [x.min, x.max].map(function(v){ return v == null ? '' : v; }).join(' – ') + ')' : ''; };
+     var v = function(k){ return r[k] ? r[k] + (f.indexOf(k) >= 0 ? agT(' ✕ fuera de rango', ' ✕ out of range') + rango(k) : '') : ''; };
      return [[agT('Cliente', 'Customer'), r.customer], ['LOT', this.lot(r)], ['Order / PO', [r.order, r.po].filter(Boolean).join(' / ')],
        [agT('Humedad', 'Moisture'), v('moisture')], [agT('Grasa', 'Fat'), v('fat')], ['pH', v('ph')],
        [agT('Levadura / moho', 'Yeast / mold'), [r.yeast, r.mold].filter(Boolean).join(' / ')], ['COA', r.coaNo]];
    },
    columnas:[['#', function(r){ return r.seq; }], ['Product', function(r){ return r.product; }], ['Moist.', function(r){ return r.moisture; }],
      ['Fat', function(r){ return r.fat; }], ['pH', function(r){ return r.ph; }]],
+   ver:function(r){ if(typeof viewAnalysisRecord === 'function') viewAnalysisRecord(r.id); }},
+
+  // Las placas de levadura y moho: se leen 5 dias despues del test (js/modules/yeast.js)
+  {k:'plates', es:'Placas (Yeast & Mold)', en:'Plates (Yeast & Mold)', pantalla:'screen-yeast', mod:'lab', serie:true,
+   lista:function(){
+     var l = typeof getAnalyses === 'function' ? getAnalyses() : agCol('analysis');
+     return l.filter(function(a){ return typeof ymPlateDay === 'function' && ymPlateDay(a) && (typeof ymPlate !== 'function' || ymPlate(a.product) !== false); });
+   },
+   fecha:function(r){ return typeof ymDueDate === 'function' ? ymDueDate(r) : ''; },
+   producto:function(r){ return r.product; }, lot:function(r){ return typeof analysisLot === 'function' ? analysisLot(r) : r.lot; },
+   cliente:function(r){ return r.customerKey || ''; },
+   estado:function(r){ return typeof ymState === 'function' ? ymState(r) : ''; },
+   numero:function(r, c){ return agNum(r[c === 'mold' ? 'mold' : 'yeast']); }, campoDef:'yeast',
+   titulo:function(r){ return '#' + (r.seq || '') + ' · ' + (r.product || '') + (r.cheese ? ' · ' + r.cheese : ''); },
+   campos:function(r){ return [[agT('Se lee', 'Read on'), agFecha(this.fecha(r))], [agT('Placa del', 'Plated'), agFecha(typeof ymPlateDay === 'function' ? ymPlateDay(r) : '')],
+     ['LOT', this.lot(r)], [agT('Cliente', 'Customer'), r.customer], [agT('Levadura', 'Yeast'), r.yeast], [agT('Moho', 'Mold'), r.mold]]; },
+   columnas:[['#', function(r){ return r.seq; }], ['Product', function(r){ return r.product; }], ['Y / M', function(r){ return [r.yeast, r.mold].filter(Boolean).join(' / ') || '—'; }]],
    ver:function(r){ if(typeof viewAnalysisRecord === 'function') viewAnalysisRecord(r.id); }},
 
   {k:'raw', es:'Raw analysis', en:'Raw analysis', pantalla:'screen-raw', mod:'lab', serie:true,
@@ -397,6 +418,7 @@ function agFiltrar(f, q){
 // recoger, linea parada, producto en hold); "cerrado", lo hecho o liberado
 function agEstadoCoincide(e, quiero){
   if(e === quiero) return true;
+  if(quiero === 'sincoa') return e !== 'coa';
   if(quiero === 'open') return ['pending', 'down', 'hold'].indexOf(e) >= 0;
   if(quiero === 'closed') return ['done', 'released'].indexOf(e) >= 0;
   return false;
@@ -419,6 +441,9 @@ function agEjecutar(q){
   if(!l.length) return Object.assign(base, {tipo:'nada'});
   var a = q.accion || 'lista';
   if(a === 'ultimo') return Object.assign(base, {tipo:'tarjeta', r:l[0]});
+  // "por linea / por causa / cada dia": antes que el resto (tambien el total o el % por grupo)
+  if(q.agrupar && a !== 'maximo' && a !== 'minimo') a = (a === 'sumar' || a === 'promedio') ? a : 'agrupar';
+  if(a === 'agrupar' || (q.agrupar && (a === 'sumar' || a === 'promedio'))) return agAgrupar(f, l, q, a, base);
   if(a === 'contar'){
     var porEstado = {};
     if(f.estado) l.forEach(function(r){ var e = f.estado(r) || '—'; porEstado[e] = (porEstado[e] || 0) + 1; });
@@ -442,6 +467,17 @@ function agEjecutar(q){
     return Object.assign(base, {tipo:'numero', campo:c, valor: a === 'sumar' ? suma : suma / vals.length, n:vals.length,
       min:Math.min.apply(null, vals), max:Math.max.apply(null, vals), porLinea: a === 'sumar' ? porLinea : null, suma: a === 'sumar'});
   }
+  if(a === 'maximo' || a === 'minimo'){
+    var cm = q.campo || f.campoDef, sel = null, sv = null, cuantos = 0;
+    if(f.numero) l.forEach(function(r){
+      var v = f.numero(r, cm);
+      if(v == null || isNaN(v)) return;
+      cuantos++;
+      if(sv == null || (a === 'maximo' ? v > sv : v < sv)){ sv = v; sel = r; }
+    });
+    if(!sel) return Object.assign(base, {tipo:'nada', sinNumeros:true});
+    return Object.assign(base, {tipo:'tarjeta', r:sel, extremo:{campo:cm, valor:sv, de:cuantos, max: a === 'maximo'}});
+  }
   if(a === 'peor' || a === 'mejor'){
     // por linea: el cumplimiento (o el promedio) de cada una
     if(!f.linea) return Object.assign(base, {tipo:'tabla', filas:l.slice(0, q.limite || 10)});
@@ -457,7 +493,68 @@ function agEjecutar(q){
   return Object.assign(base, {tipo:'tabla', filas:l.slice(0, q.limite || 10)});
 }
 
+// Agrupar: cuantos por grupo, y su % que pasa (o su total / promedio si se pidio)
+function agAgrupar(f, l, q, a, base){
+  var key = q.agrupar || 'linea', grupos = {};
+  l.forEach(function(r){ var k = agClave(f, key, r); if(k === '' || k == null) k = '—'; (grupos[k] = grupos[k] || []).push(r); });
+  var cg = q.campo || f.campoDef;
+  var filasG = Object.keys(grupos).map(function(k){
+    var gl = grupos[k], fila = {clave:k, n:gl.length, valor:null};
+    if((a === 'sumar' || a === 'promedio') && f.numero){
+      var vs = gl.map(function(r){ return f.numero(r, cg); }).filter(function(v){ return v != null && !isNaN(v); });
+      if(vs.length){ var s = vs.reduce(function(p, v){ return p + v; }, 0); fila.valor = a === 'sumar' ? s : s / vs.length; }
+    } else if(f.pct || f.estado){
+      var pg = f.pct ? f.pct(gl) : null;
+      if(!pg){ var ok = 0, n = 0; gl.forEach(function(r){ var e = f.estado(r); if(e === 'pass' || e === 'fail'){ n++; if(e === 'pass') ok++; } }); pg = {ok:ok, n:n}; }
+      if(pg.n) fila.pct = pg.ok / pg.n * 100;
+    }
+    return fila;
+  });
+  var porClave = key === 'linea' || key === 'dia' || key === 'turno';
+  filasG.sort(function(x, y){
+    if(porClave) return key === 'dia' ? String(y.clave).localeCompare(String(x.clave)) : String(x.clave).localeCompare(String(y.clave), undefined, {numeric:true});
+    return ((y.valor != null ? y.valor : y.n) - (x.valor != null ? x.valor : x.n));
+  });
+  return Object.assign(base, {tipo:'grupos', clave:key, filas:filasG, campo:(a === 'sumar' || a === 'promedio') ? cg : null, suma: a === 'sumar'});
+}
+// La llave para agrupar ("por linea", "por causa"...)
+function agClave(f, key, r){
+  if(key === 'linea') return f.linea ? f.linea(r) : '';
+  if(key === 'dia') return f.fecha ? f.fecha(r) : '';
+  if(key === 'turno') return f.turno ? String(f.turno(r) == null ? '' : f.turno(r)) : '';
+  if(key === 'producto') return f.producto ? String(f.producto(r) || '') : '';
+  if(key === 'estado') return f.estado ? f.estado(r) : '';
+  if(key === 'causa') return r.cause || r.reason || r.category || r.problem || '';
+  if(key === 'cliente'){
+    if(r.customer) return r.customer;
+    if(f.k === 'products'){ var c = typeof productCustomer === 'function' ? productCustomer(r) : null; return c ? c.company : ''; }
+    return '';
+  }
+  if(key === 'area') return r.area || '';
+  return '';
+}
+function agClaveTxt(key, v){
+  if(v === '—' || v === '' || v == null) return '—';
+  if(key === 'linea') return agLineaTxt(v);
+  if(key === 'dia') return agFecha(v);
+  if(key === 'turno') return agTurnoTxt(v);
+  if(key === 'estado') return agEstadoTxt(v);
+  return String(v);
+}
+
 // ---- Lo que no es de una sola fuente ----
+// Todo lo de un producto: su ficha y lo ultimo de cada modulo donde aparece
+function agProductoTodo(num){
+  var p = typeof findProduct === 'function' ? findProduct(num) : null;
+  var ultimos = [];
+  ['analysis', 'plates', 'weights', 'seals', 'runs', 'output', 'orders', 'holds', 'capa', 'downtime', 'shifts'].forEach(function(k){
+    var f = agFuente(k);
+    if(!f || !f.producto || !agPuedeVer(f)) return;
+    var l = agFiltrar(f, {filtros:{producto: p ? p.number : num}});
+    if(l.length) ultimos.push({f:f, r:l[0], total:l.length});
+  });
+  return {p:p, ultimos:ultimos};
+}
 // Todo lo de un LOT, en todas partes (como Search, pero en una respuesta)
 function agTraza(lot){
   var out = [];

@@ -18,19 +18,104 @@ var AG_SIN = {
   capa:      ['capa', 'capas', 'accion correctiva', 'acciones correctivas', 'corrective action', 'corrective actions'],
   holds:     ['hold', 'holds', 'retenido', 'retenidos', 'retencion', 'retenciones', 'hold case', 'hold cases', 'producto retenido'],
   shifts:    ['shift report', 'shift reports', 'reporte de turno', 'reportes de turno', 'reporte del turno', 'reportes del turno', 'novedad', 'novedades', 'incidente', 'incidentes'],
-  runs:      ['schedule', 'production schedule', 'programacion', 'programa de produccion', 'corrida', 'corridas', 'programado', 'programados', 'programada', 'programo', 'se programo', 'scheduled', 'run', 'runs', 'lab samples', 'muestras de lab', 'muestras para el lab'],
+  runs:      ['schedule', 'production schedule', 'programacion', 'programa de produccion', 'corrida', 'corridas', 'programado', 'programados', 'programada', 'programo', 'se programo', 'scheduled', 'run', 'runs', 'lab samples', 'muestras de lab', 'muestras para el lab',
+              'corrio', 'se corrio', 'corrieron', 'se corrieron', 'corriendo', 'se corre', 'ran', 'running', 'was run', 'recoger', 'recogidas', 'recogida', 'collected', 'collect'],
+  plates:    ['placa', 'placas', 'plate', 'plates', 'yeast and mold', 'levaduras y mohos', 'lectura de placas', 'leer placas', 'leer las placas', 'incubadora', 'incubando', 'incubating'],
   analysis:  ['analisis', 'sample analysis', 'analisis de muestra', 'analisis de muestras', 'muestra', 'muestras', 'sample', 'samples', 'humedad', 'grasa', 'ph', 'moisture', 'fat', 'yeast', 'mold', 'levadura', 'levaduras', 'moho', 'mohos', 'coa', 'coas', 'certificado', 'certificados', 'lab result', 'lab results', 'resultado de laboratorio', 'resultados de laboratorio'],
   raw:       ['raw', 'raw analysis', 'analisis raw', 'analisis de raw', 'materia prima', 'materias primas', 'raw material', 'raw materials'],
   orders:    ['coa order', 'coa orders', 'orden de coa', 'ordenes de coa', 'ordenes', 'orders', 'pedido', 'pedidos'],
   attendance:['asistencia', 'attendance', 'falto', 'faltaron', 'faltas', 'ausente', 'ausentes', 'absent', 'absences', 'tardanza', 'tardanzas', 'llego tarde', 'llegaron tarde', 'quien vino', 'who came'],
-  output:    ['output', 'produccion', 'producido', 'producida', 'produjo', 'produjeron', 'cajas', 'cases', 'libras producidas', 'produced', 'how much was made', 'cuanto se hizo'],
+  output:    ['output', 'produccion', 'producido', 'producida', 'produjo', 'produjeron', 'cajas', 'cases', 'libras producidas', 'produced', 'how much was made', 'cuanto se hizo',
+              'se hizo', 'se hicieron', 'hicieron', 'se produjo', 'made', 'was made', 'were made'],
   downtime:  ['downtime', 'paro', 'paros', 'parada', 'paradas', 'parado', 'linea parada', 'lineas paradas', 'stop', 'stops', 'line stop', 'line down', 'tiempo muerto'],
   employees: ['empleado', 'empleados', 'employee', 'employees', 'trabajador', 'trabajadores', 'personal', 'roster'],
   products:  ['catalogo', 'catalog', 'especificacion', 'especificaciones', 'spec', 'specs', 'bolsas por caja', 'bags per case',
               'rango de peso', 'weight range', 'target', 'tamano', 'tamano de bolsa', 'bag size', 'formato de lot', 'lot format']
 };
 // Si empatan, gana la que va primero
-var AG_ORDEN = ['metal', 'preop', 'gmps', 'seals', 'temps', 'weights', 'capa', 'holds', 'shifts', 'attendance', 'downtime', 'output', 'orders', 'raw', 'analysis', 'runs', 'employees', 'products'];
+var AG_ORDEN = ['metal', 'preop', 'gmps', 'seals', 'temps', 'weights', 'capa', 'holds', 'shifts', 'attendance', 'downtime', 'output', 'orders', 'raw', 'plates', 'analysis', 'runs', 'employees', 'products'];
+
+// ---- Palabras mal escritas ----
+// "analisyis" -> "analisis", "verificasion" -> "verificacion", "temperatras"
+// -> "temperaturas". Se compara cada palabra con el vocabulario del asistente
+// (misma primera letra; 1 letra de diferencia, 2 en palabras largas). Las que
+// ya son palabras comunes no se tocan.
+var AG_COMUNES = ('cual cuales cuando donde dame datos dato fueron todos todas tiene tienen hubo esta este estos estas para sobre desde hasta entre ' +
+  'resultado resultados result results which what when where show give have with from that this there were about check checks ' +
+  'verificacion verificaciones verifico chequeo chequeos hecho hizo hicimos registro registros informacion info sabes quiero necesito ' +
+  'please porfavor favor puedes podrias dime decir saber como estan estuvo estuvieron cuantos cuantas cuanto mucho mucha muchos ' +
+  'algun alguna algunos ninguno nada todo cada otro otra otros mismo misma tiempo minutos horas semana semanas mes meses ' +
+  'analisis analisys ultimo ultima ultimos ultimas linea lineas turno turnos producto productos cliente clientes orden ordenes ' +
+  'quien quienes porque tambien solo sola only also just more less than then them they their your mine your ' +
+  'prueba pruebas test tests laboratorio lab testeo testeado testeada vencimiento especificacion especificaciones ' +
+  // palabras de todos los dias que se parecen a otras del asistente: NUNCA se corrigen
+  'falta faltan faltaba faltaria toca tocan queda quedan hace hacer tiene pasa paso pasaron pasado dime sabes fueron sera seria ' +
+  'last least list past next many much does done made make tell need needs want were what with would could should each every ' +
+  'first second third some none other others again still since until after before during over under into those these ' +
+  'line lines shift shifts today week weeks month months year years ready open closed missing pending plate plates sample samples ' +
+  'customer customers order orders highest lowest average worst best percent compliance latest recent where there their ' +
+  'mismo puede pueden debe deben hacia hecha hechos menos mayor menor alta alto bajo baja altas bajos ' +
+  'nuevo nueva nuevos viejo vieja manana tarde noche ayer antes despues luego ahora siempre nunca ' +
+  // verbos para pedir algo
+  'muestrame muestreme mostrame mostrar ensename ensenar busca buscame buscar encuentra encontrar consulta consultar revisa revisar ' +
+  'checa checar verifica verificar quisiera ayudame ayuda dinos cuentame explica explicame lista listame trae traeme ' +
+  'show find search give tell check look lookup display bring want please').split(' ');
+var _agVocab = null;
+function agVocab(){
+  if(_agVocab) return _agVocab;
+  var v = {};
+  var add = function(s){ String(s).split(' ').forEach(function(w){ if(w.length >= 4 && /^[a-z]+$/.test(w)) v[w] = 1; }); };
+  Object.keys(AG_SIN).forEach(function(k){ AG_SIN[k].forEach(add); });
+  Object.keys(AG_PANTALLAS_SIN).forEach(function(k){ AG_PANTALLAS_SIN[k].forEach(add); });
+  Object.keys(AG_MESES).forEach(add); Object.keys(AG_DIAS).forEach(add);
+  AG_COMUNES.forEach(add);
+  ('promedio average porcentaje cumplimiento compliance percent peor peores worst mejor mejores best maximo maxima minimo minima highest lowest ' +
+   'cuantos cuantas latest recent reciente fallo fallaron fallas fuera rango failed failures abierto abiertos abierta abiertas pendiente pendientes ' +
+   'cerrado cerrados vencido vencidos atrasado overdue liberado released ausente ausentes absent faltaron tarde humedad moisture grasa ' +
+   'levadura levaduras moho mohos libras cajas temperatura hoy ayer anoche manana today yesterday tonight morning noche dias').split(' ').forEach(add);
+  _agVocab = Object.keys(v);
+  return _agVocab;
+}
+// Distancia de edicion con intercambio de letras vecinas (Damerau, corta)
+function agDistancia(a, b, tope){
+  if(Math.abs(a.length - b.length) > tope) return tope + 1;
+  var d = [], i, j;
+  for(i = 0; i <= a.length; i++){ d[i] = [i]; }
+  for(j = 0; j <= b.length; j++){ d[0][j] = j; }
+  for(i = 1; i <= a.length; i++){
+    var min = 99;
+    for(j = 1; j <= b.length; j++){
+      var c = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+      if(i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      if(d[i][j] < min) min = d[i][j];
+    }
+    if(min > tope) return tope + 1;
+  }
+  return d[a.length][b.length];
+}
+function agCorregir(t){
+  var voc = agVocab(), set = {}, cambios = [];
+  voc.forEach(function(w){ set[w] = 1; });
+  // los nombres de los clientes (de los datos) y de los productos no se tocan
+  (typeof getCustomers === 'function' ? getCustomers() : []).forEach(function(c){ agN(c.company).split(' ').forEach(function(w){ set[w] = 1; }); });
+  (typeof getProducts === 'function' ? getProducts() : []).forEach(function(p){ agN(p.name).split(' ').forEach(function(w){ set[w] = 1; }); });
+  // solo palabras de 5 letras o mas, y solo hacia palabras de 5 o mas: las
+  // cortas se parecen a demasiadas (last/list, falta/falla)
+  var out = t.replace(/[a-z]{5,}/g, function(w){
+    if(set[w]) return w;
+    var tope = w.length >= 8 ? 2 : 1, mejor = null, md = tope + 1;
+    for(var i = 0; i < voc.length; i++){
+      var v = voc[i];
+      if(v.length < 5 || v[0] !== w[0] || Math.abs(v.length - w.length) > tope) continue;
+      var dd = agDistancia(w, v, tope);
+      if(dd < md){ md = dd; mejor = v; }
+    }
+    if(mejor){ cambios.push([w, mejor]); return mejor; }
+    return w;
+  });
+  return {t:out, cambios:cambios};
+}
 
 // ---- Pantallas para "abre..." / "donde registro..." ----
 var AG_PANTALLAS_SIN = {
@@ -39,7 +124,7 @@ var AG_PANTALLAS_SIN = {
   'screen-metal':['metal', 'detector', 'metal detector', 'detector de metales'], 'screen-preop':['pre op', 'preop', 'pre-op'],
   'screen-capa':['capa', 'capas'], 'screen-hold':['hold', 'holds'], 'screen-shift':['shift report', 'reporte de turno', 'shift reports'],
   'screen-samplelist':['list samples', 'lista de muestras', 'lista de samples'], 'screen-analysis':['sample analysis', 'analisis'],
-  'screen-yeast':['yeast', 'levaduras', 'yeast and mold', 'levaduras y mohos'], 'screen-lab':['lab samples', 'muestras de lab'],
+  'screen-yeast':['yeast', 'levaduras', 'yeast and mold', 'levaduras y mohos', 'placas', 'plates'], 'screen-lab':['lab samples', 'muestras de lab'],
   'screen-grilling':['grilling', 'grilling cheese'], 'screen-raw':['raw', 'raw analysis', 'materia prima'],
   'screen-production':['schedule', 'production schedule', 'programacion'], 'screen-orders':['coa orders', 'ordenes de coa', 'orders', 'ordenes'],
   'screen-attendance':['attendance', 'asistencia'], 'screen-output':['output', 'produccion'], 'screen-downtime':['downtime', 'paros'],
@@ -80,6 +165,9 @@ function agEntender(texto){
   var q = {entendido:false, tipo:'consulta', fuente:null, accion:'lista', filtros:{}, campo:null, limite:null,
            lang: agEsEspanol(t) ? 'es' : 'en', texto:String(texto || '')};
   var x = q.filtros, m;
+  // primero se arreglan las palabras mal escritas ("analisyis" -> "analisis")
+  var cor = agCorregir(t);
+  t = cor.t; q.corregido = cor.cambios;
 
   // ---- Ayuda ----
   if(/^ ?(ayuda|help|\?|que puedes hacer|que sabes hacer|que sabes|what can you do|how does this work|como funciona|como te uso) ?$/.test(t)){
@@ -101,6 +189,9 @@ function agEntender(texto){
   });
   if(fechas.length){ fechas.sort(); poner(fechas[0], fechas[fechas.length - 1]); }
   var rel = [
+    // "anoche" es el 2o turno de ayer (despues de medianoche sigue siendo de ayer)
+    [/\b(anoche|last night|ayer en la noche|ayer por la noche)\b/, function(){ poner(agMasDias(hoy, -1)); if(!x.turno) x.turno = '2'; }],
+    [/\b(esta manana|this morning|hoy en la manana)\b/, function(){ poner(hoy); if(!x.turno) x.turno = '1'; }],
     [/\b(hoy|today|de hoy|del dia de hoy)\b/, function(){ poner(hoy); }],
     [/\b(anteayer|antier|antes de ayer|day before yesterday)\b/, function(){ poner(agMasDias(hoy, -2)); }],
     [/\b(ayer|yesterday)\b/, function(){ poner(agMasDias(hoy, -1)); }],
@@ -199,10 +290,30 @@ function agEntender(texto){
     q.entendido = true; q.tipo = 'lot'; q.fecha = x.desde || hoy; return q;
   }
 
-  // ---- Que se pide ----
   var A = function(re){ return re.test(t); };
+
+  // ---- Campo (antes que la accion: "la temperatura mas alta" es un maximo) ----
+  if(A(/\b(humedad relativa|humidity)\b/)) q.campo = 'humidity';
+  else if(A(/\b(humedad|moisture)\b/)) q.campo = 'moisture';
+  else if(A(/\b(grasa|fat)\b/)) q.campo = 'fat';
+  else if(A(/\bph\b/)) q.campo = 'ph';
+  else if(A(/\b(levadura|levaduras|yeast)\b/) && q.fuente !== 'plates') q.campo = 'yeast';
+  else if(A(/\b(moho|mohos|mold|molds)\b/) && q.fuente !== 'plates') q.campo = 'mold';
+  else if(A(/\b(libras|lbs|pounds)\b/)) q.campo = 'lbs';
+  else if(A(/\b(cajas|cases)\b/)) q.campo = 'cases';
+  else if(A(/\b(temperatura|temperaturas|temperature|temp)\b/) && (!q.fuente || q.fuente === 'temps')) q.campo = 'temp';
+  else if(A(/\b(peso promedio|average weight|promedio de peso|peso)\b/) && q.fuente === 'weights' && A(/\b(promedio|average|mas alto|mas bajo|maximo|minimo|highest|lowest|mayor|menor)\b/)) q.campo = 'avg';
+  else if(A(/\b(minutos|minutes|tiempo|time)\b/) && q.fuente === 'downtime') q.campo = 'minutes';
+  else if(A(/\b(cumplimiento|compliance)\b/) && q.fuente === 'weights') q.campo = 'compliance';
+  if(q.campo === 'humidity' && !q.fuente) q.fuente = 'temps';
+  if(q.campo === 'temp' && !q.fuente) q.fuente = 'temps';
+  var numerico = q.campo && q.campo !== 'compliance';
+
+  // ---- Que se pide ----
+  if(numerico && A(/\b(mas alta|mas alto|maxima|maximo|max|mayor|highest|maximum|top)\b/)) q.accion = 'maximo';
+  else if(numerico && A(/\b(mas baja|mas bajo|minima|minimo|min|menor|lowest|minimum)\b/)) q.accion = 'minimo';
   // "la peor linea en cumplimiento" es un ranking, no un porcentaje
-  if(A(/\b(peor|peores|worst|mas bajo|lowest|mas fallas|most failures)\b/)) q.accion = 'peor';
+  else if(A(/\b(peor|peores|worst|mas bajo|lowest|mas fallas|most failures)\b/)) q.accion = 'peor';
   else if(A(/\b(mejor|mejores|best|highest|mas alto)\b/)) q.accion = 'mejor';
   else if(A(/\b(promedio|average|avg|media|mean)\b/)) q.accion = 'promedio';
   else if(A(/\b(porcentaje|cumplimiento|compliance|percent|percentage|%|que tan bien|how well|tasa)\b/)) q.accion = 'porcentaje';
@@ -210,17 +321,15 @@ function agEntender(texto){
   else if(A(/\b(cuantos|cuantas|how many|numero de|cantidad de|count)\b/)) q.accion = 'contar';
   else if(!q._limiteDicho && A(/\b(ultimo|ultima|last|latest|most recent|mas reciente|reciente|cuando fue|cuando se|cuando hicimos|when was|when were|when did)\b/)) q.accion = 'ultimo';
 
-  // ---- Campo ----
-  if(A(/\b(humedad relativa|humidity)\b/)) q.campo = 'humidity';
-  else if(A(/\b(humedad|moisture)\b/)) q.campo = 'moisture';
-  else if(A(/\b(grasa|fat)\b/)) q.campo = 'fat';
-  else if(A(/\bph\b/)) q.campo = 'ph';
-  else if(A(/\b(levadura|levaduras|yeast)\b/)) q.campo = 'yeast';
-  else if(A(/\b(moho|mohos|mold|molds)\b/)) q.campo = 'mold';
-  else if(A(/\b(libras|lbs|pounds)\b/)) q.campo = 'lbs';
-  else if(A(/\b(cajas|cases)\b/)) q.campo = 'cases';
-  else if(A(/\b(cumplimiento|compliance)\b/) && q.fuente === 'weights') q.campo = 'compliance';
-  if(q.campo === 'humidity' && !q.fuente) q.fuente = 'temps';
+  // ---- Agrupar: "por linea", "by cause", "cada dia"... ----
+  var G = {linea:'linea', line:'linea', lineas:'linea', lines:'linea', dia:'dia', dias:'dia', day:'dia', days:'dia', fecha:'dia', date:'dia',
+           producto:'producto', productos:'producto', product:'producto', products:'producto', causa:'causa', causas:'causa', cause:'causa', causes:'causa',
+           motivo:'causa', reason:'causa', cliente:'cliente', clientes:'cliente', customer:'cliente', customers:'cliente', area:'area', areas:'area',
+           turno:'turno', turnos:'turno', shift:'turno', shifts:'turno', estado:'estado', status:'estado', resultado:'estado', result:'estado'};
+  if((m = /\b(?:por|by|per|cada|each|segun|agrupado por|grouped by)\s+(linea|lineas|line|lines|dia|dias|day|days|fecha|date|producto|productos|product|products|causa|causas|cause|causes|motivo|reason|cliente|clientes|customer|customers|area|areas|turno|turnos|shift|shifts|estado|status|resultado|result)\b/.exec(t))){
+    q.agrupar = G[m[1]];
+    if(['sumar', 'promedio', 'porcentaje'].indexOf(q.accion) < 0) q.accion = 'agrupar';
+  }
 
   // ---- Estado ----
   var E = [
@@ -230,7 +339,11 @@ function agEntender(texto){
     ['overdue', /\b(vencido|vencidos|vencida|vencidas|atrasado|atrasados|overdue)\b/],
     ['hold', /\b(en hold|on hold|retenido|retenidos|still on hold)\b/],
     ['released', /\b(liberado|liberados|released)\b/],
+    ['sincoa', /\b(sin coa|without coa|falta coa|faltan coa|falta el coa|no coa|missing coa|pending coa|coa pendiente|coas pendientes)\b/],
     ['coa', /\b(con coa|coa emitido|coa hecho|with coa|coa issued)\b/],
+    ['ready', /\b(toca leer|tocan leer|para leer|listas para leer|lista para leer|por leer|ready|to read|due|vencen hoy)\b/],
+    ['waiting', /\b(esperando|en espera|incubando|waiting|incubating|not ready)\b/],
+    ['pending', /\b(sin resultado|sin resultados|sin testear|no testeada|no testeadas|no testeado|not tested|without results|por testear|sin recoger|no recogida|no recogidas|por recoger|not collected|missing results)\b/],
     ['fail', /\b(fallo|fallaron|fallado|fallados|fallida|fallidas|fallidos|falla|fallas|fuera de rango|fuera de spec|fuera de especificacion|mal|malos|malas|rechazado|rechazados|no paso|no pasaron|fail|failed|fails|failing|failure|failures|out of range|out of spec|bad|rejected|no conforme|no conformes)\b/],
     ['pass', /\b(pasaron|paso bien|bien|buenos|buenas|pass|passed|in range|dentro de rango|conforme|conformes)\b/],
     ['closed', /\b(cerrado|cerrados|cerrada|cerradas|closed|resuelto|resueltos|resolved|completada|completadas|completed)\b/],
@@ -241,13 +354,19 @@ function agEntender(texto){
   if(x.estado === 'down' && !q.fuente) q.fuente = 'downtime';
   if(x.estado === 'hold' && !q.fuente) q.fuente = 'holds';
 
+  if((x.estado === 'ready' || x.estado === 'waiting') && !q.fuente) q.fuente = 'plates';
+  if(x.estado === 'sincoa' && !q.fuente) q.fuente = 'analysis';
+  // "el resultado / la prueba / el laboratorio" de un producto, LOT u orden: su analisis
+  if(!q.fuente && (x.producto || x.lot || x.orden || x.po) &&
+     A(/\b(resultado|resultados|result|results|test|tests|testeo|prueba|pruebas|laboratorio|lab|analizado|analisis|analysis|especifica|spec)\b/) &&
+     !A(/\b(especificacion|especificaciones|specs|rango|target)\b/)) q.fuente = 'analysis';
   // "cumplimiento" / "la peor linea" sin decir de que: el de los pesos (el principal)
   if(!q.fuente && (q.accion === 'peor' || q.accion === 'mejor' || q.accion === 'porcentaje')) q.fuente = 'weights';
-  // Sin fuente: un LOT solo es su traza; un producto solo, su ficha
+  // Sin fuente: un LOT solo es su traza; un producto solo, todo lo suyo
   if(!q.fuente){
     if(x.lot){ q.entendido = true; q.tipo = 'traza'; return q; }
-    if(x.producto){ q.fuente = 'products'; q.accion = 'ultimo'; }
-    else if(x.orden){ q.fuente = 'orders'; }
+    if(x.producto){ q.entendido = true; q.tipo = 'producto'; return q; }
+    if(x.orden){ q.fuente = 'orders'; }
   }
   if(!q.fuente) return q;
 
@@ -257,9 +376,18 @@ function agEntender(texto){
   // "lo ultimo" de algo que se suma es la lista reciente
   if(q.accion === 'sumar' && f && !f.suma) q.accion = 'contar';
   if(q.accion === 'promedio' && f && !f.numero) q.accion = 'lista';
+  // "cajas por producto": de lo que se suma, el total de cada grupo
+  if(q.accion === 'agrupar' && f && f.suma) q.accion = 'sumar';
+  // la ficha de UN producto ("rango de peso del 01824")
+  if(q.fuente === 'products' && x.producto && q.accion === 'lista') q.accion = 'ultimo';
+  // las placas para leer: tambien las de dias anteriores que nadie leyo
+  if(q.fuente === 'plates' && x.estado === 'ready'){ delete x.desde; delete x.hasta; }
+  // Lo pendiente no es solo de hoy: una muestra sin resultados de ayer sigue pendiente
+  var esPendiente = ['pending', 'sincoa', 'open', 'overdue', 'hold', 'ready', 'waiting', 'down'].indexOf(x.estado) >= 0;
   // Sin fechas: lo que se cuenta o se lista de algo diario es de HOY (salvo que
   // se busque por LOT, producto u orden, que ya dicen cual)
-  if(f && f.serie && !x.desde && q.accion !== 'ultimo' && !x.lot && !x.producto && !x.orden && !x.po && !q._limiteDicho){
+  if(f && f.serie && !x.desde && q.accion !== 'ultimo' && q.accion !== 'maximo' && q.accion !== 'minimo' && !esPendiente &&
+     !x.lot && !x.producto && !x.orden && !x.po && !q._limiteDicho){
     x.desde = hoy; x.hasta = hoy; q._hoyPorDefecto = true;
   }
   if(q.accion === 'ultimo' && q.limite == null) q.limite = 1;

@@ -125,12 +125,16 @@ function agBienvenida(){
 // ------------------------------------------------------------------
 var AG_ACCION = {ultimo:['el último', 'the last one'], lista:['lista', 'list'], contar:['cuántos', 'how many'],
   porcentaje:['% que pasa', '% passing'], promedio:['promedio', 'average'], sumar:['total', 'total'],
-  peor:['la peor línea', 'worst line'], mejor:['la mejor línea', 'best line']};
+  peor:['la peor línea', 'worst line'], mejor:['la mejor línea', 'best line'], maximo:['el más alto', 'the highest'],
+  minimo:['el más bajo', 'the lowest'], agrupar:['agrupado', 'grouped']};
+var AG_CLAVE = {linea:['por línea', 'by line'], dia:['por día', 'by day'], producto:['por producto', 'by product'], causa:['por causa', 'by cause'],
+  cliente:['por cliente', 'by customer'], area:['por área', 'by area'], turno:['por turno', 'by shift'], estado:['por estado', 'by status']};
 function agEntendi(q){
   var f = agFuente(q.fuente), x = q.filtros || {}, c = [];
   if(f) c.push(agT(f.es, f.en));
   var ac = AG_ACCION[q.accion];
-  if(ac && !(q.accion === 'lista' && !q.limite)) c.push(q.accion === 'lista' && q.limite ? agT('los últimos ' + q.limite, 'last ' + q.limite) : agT(ac[0], ac[1]));
+  if(ac && !(q.accion === 'lista' && !q.limite) && q.accion !== 'agrupar') c.push(q.accion === 'lista' && q.limite ? agT('los últimos ' + q.limite, 'last ' + q.limite) : agT(ac[0], ac[1]));
+  if(q.agrupar && AG_CLAVE[q.agrupar]) c.push(agT(AG_CLAVE[q.agrupar][0], AG_CLAVE[q.agrupar][1]));
   if(q.campo) c.push(agCampoTxt(q.campo));
   if(x.linea) c.push(agLineaTxt(x.linea));
   if(x.turno) c.push(agTurnoTxt(x.turno));
@@ -144,7 +148,12 @@ function agEntendi(q){
   if(x.po) c.push('PO ' + x.po);
   if(q.clienteTxt) c.push(q.clienteTxt);
   if(x.estado) c.push(agEstadoTxt(x.estado));
-  return '<div class="ag-ent">'+agT('Entendí: ', 'Understood: ')+c.map(function(s){ return '<span>'+agEsc(s)+'</span>'; }).join('')+'</div>';
+  return '<div class="ag-ent">'+agT('Entendí: ', 'Understood: ')+c.map(function(s){ return '<span>'+agEsc(s)+'</span>'; }).join('')+agCorregidoTxt(q)+'</div>';
+}
+// "analisyis -> analisis": se dice que se corrigio, por si se corrigio mal
+function agCorregidoTxt(q){
+  if(!q.corregido || !q.corregido.length) return '';
+  return '<em class="ag-cor">('+q.corregido.map(function(c){ return agEsc(c[0])+' → '+agEsc(c[1]); }).join(', ')+')</em>';
 }
 function agBadge(e){
   if(!e) return '';
@@ -244,17 +253,59 @@ function agRespuesta(q){
   if(q.tipo === 'pendientes') return agPendientesHTML();
   if(q.tipo === 'lot') return agLotHTML(q);
   if(q.tipo === 'traza') return agTrazaHTML(q);
+  if(q.tipo === 'producto') return agProductoHTML(q);
   if(q.tipo === 'abrir') return '<p class="ag-p">'+agT('Abriendo…', 'Opening…')+'</p>';
   var res = agEjecutar(q);
   var cab = agEntendi(q);
   if(res.tipo === 'sinPermiso') return cab + '<p class="ag-p">'+agEsc(agT('Tu rol no puede ver ' + res.f.es + '.', 'Your role cannot see ' + res.f.en + '.'))+'</p>';
   if(res.tipo === 'nada') return cab + agNada(res, q);
-  if(res.tipo === 'tarjeta') return cab + agTarjeta(res.f, res.r) + (res.total > 1 ? '<div class="ag-pie">'+agEsc(agT(res.total + ' en total', res.total + ' in all'))+' · '+agPantallaBtn(res.f)+'</div>' : '');
+  if(res.tipo === 'tarjeta'){
+    var ext = res.extremo ? '<div class="ag-num"><b>'+agFmt(res.extremo.valor)+'<small>'+agEsc(agCampoTxt(res.extremo.campo).toLowerCase())+'</small></b>'+
+      '<div>'+agEsc(agT((res.extremo.max ? 'el más alto de ' : 'el más bajo de ') + res.extremo.de, (res.extremo.max ? 'highest of ' : 'lowest of ') + res.extremo.de))+'</div></div>' : '';
+    return cab + ext + agTarjeta(res.f, res.r) + (res.total > 1 && !res.extremo ? '<div class="ag-pie">'+agEsc(agT(res.total + ' en total', res.total + ' in all'))+' · '+agPantallaBtn(res.f)+'</div>' : '');
+  }
+  if(res.tipo === 'grupos') return cab + agGruposHTML(res, q);
   if(res.tipo === 'numero') return cab + agNumero(res, q);
   if(res.tipo === 'ranking') return cab + agRanking(res, q);
   return cab + agTabla(res.f, res.filas, res.total);
 }
 
+// Una tabla por grupo: cuantos y su % (o su total / promedio)
+function agGruposHTML(res, q){
+  var conPct = res.filas.some(function(x){ return x.pct != null; });
+  var conVal = res.filas.some(function(x){ return x.valor != null; });
+  var max = 0;
+  res.filas.forEach(function(x){ max = Math.max(max, conVal ? (x.valor || 0) : x.n); });
+  return '<div class="ag-tab"><table><thead><tr><th>'+agEsc(AG_CLAVE[res.clave] ? agT(AG_CLAVE[res.clave][0], AG_CLAVE[res.clave][1]).replace(/^(por|by) /, '') : '')+'</th>'+
+    '<th>'+agT('Cuántos', 'Count')+'</th>'+(conVal ? '<th>'+agEsc(agT(res.suma ? 'Total ' : 'Promedio ', res.suma ? 'Total ' : 'Average ')+agCampoTxt(res.campo).toLowerCase())+'</th>' : '')+
+    (conPct ? '<th>'+agT('% pasa', '% pass')+'</th>' : '')+'<th></th></tr></thead><tbody>'+
+    res.filas.slice(0, 25).map(function(x){
+      var w = max ? ((conVal ? (x.valor || 0) : x.n) / max * 100) : 0;
+      return '<tr class="ag-sin-click"><td>'+agEsc(agClaveTxt(res.clave, x.clave))+'</td><td>'+x.n+'</td>'+
+        (conVal ? '<td>'+agFmt(x.valor, res.campo === 'cases' || res.campo === 'minutes' ? 0 : 2)+'</td>' : '')+
+        (conPct ? '<td>'+(x.pct == null ? '—' : agFmt(x.pct, 1) + '%')+'</td>' : '')+
+        '<td class="ag-bar"><i style="width:'+Math.max(3, w).toFixed(0)+'%"></i></td></tr>';
+    }).join('')+'</tbody></table></div><div class="ag-pie">'+agEsc(agT(res.total + ' registros', res.total + ' records'))+' · '+agPantallaBtn(res.f)+'</div>';
+}
+// Todo de un producto: su ficha y lo ultimo de cada modulo
+function agProductoHTML(q){
+  var num = q.filtros.producto, t = agProductoTodo(num);
+  var cab = '<div class="ag-ent">'+agT('Entendí: ', 'Understood: ')+'<span>'+agT('todo del producto ', 'everything for product ')+agEsc(num)+'</span>'+agCorregidoTxt(q)+'</div>';
+  var fp = agFuente('products');
+  var ficha = (t.p && fp && agPuedeVer(fp)) ? agTarjeta(fp, t.p) : (t.p ? '<p class="ag-p"><b>'+agEsc(t.p.number+' · '+(t.p.name || ''))+'</b></p>' : '');
+  if(!t.p && !t.ultimos.length) return cab + '<p class="ag-p">'+agEsc(agT('No encontré el producto ' + num + '.', 'I could not find product ' + num + '.'))+'</p>';
+  return cab + ficha + (t.ultimos.length ? '<div class="ag-grp"><div class="ag-grp-h"><b>'+agT('Lo último', 'Latest')+'</b></div><div class="ag-list">'+
+    t.ultimos.map(function(x){
+      var i = agRef(x.f, x.r);
+      return '<button type="button" class="ag-li" onclick="agVer('+i+')"><b>'+agEsc(agT(x.f.es, x.f.en))+' · '+agEsc(agCuando(x.f, x.r))+' '+agBadge(x.f.estado ? x.f.estado(x.r) : '')+'</b>'+
+        '<span>'+agEsc(agResumen(x.f, x.r))+(x.total > 1 ? ' · '+agEsc(agT(x.total + ' en total', x.total + ' in all')) : '')+'</span></button>';
+    }).join('')+'</div></div>' : '');
+}
+// Una linea con lo importante de un registro (para listas cortas)
+function agResumen(f, r){
+  var cs = (f.campos ? f.campos.call(f, r) : []).filter(function(c){ return c[1] != null && String(c[1]).trim() !== '' && String(c[1]) !== '—'; });
+  return cs.slice(0, 4).map(function(c){ return c[0] + ': ' + c[1]; }).join(' · ');
+}
 // Lo que falta en el turno (el mismo motor de las notificaciones)
 function agPendientesHTML(){
   var p = agPendientes();
@@ -291,12 +342,18 @@ function agAyudaHTML(){
     ['Último / cuándo', 'última verificación del metal detector de la línea 3'], ['Listas con filtros', 'pesos fuera de rango de la línea 4 ayer'],
     ['Cuántos', '¿cuántos CAPAs abiertos hay?'], ['Porcentaje', 'cumplimiento de pesos esta semana'], ['Promedio', 'promedio de humedad del producto 01824 este mes'],
     ['Peor línea', '¿qué línea tiene el peor cumplimiento hoy?'], ['Total', '¿cuánto produjo cada línea hoy?'], ['Un LOT', 'LOT 26321'],
-    ['Un producto', 'producto 01824'], ['Lo pendiente', '¿qué me falta en el turno?'], ['LOT del día', '¿cuál es el LOT de hoy?'], ['Abrir', 'abre temperaturas']]
+    ['Un producto (todo)', 'producto 01824'], ['Resultado del lab', 'resultado del último análisis del 01824'],
+    ['Por grupo', 'downtime por causa esta semana'], ['Más alto / más bajo', 'temperatura más alta esta semana'],
+    ['Placas', '¿qué placas toca leer hoy?'], ['Pendientes del lab', 'muestras sin resultados'], ['Anoche', 'pesos fuera de rango anoche'],
+    ['Lo pendiente', '¿qué me falta en el turno?'], ['LOT del día', '¿cuál es el LOT de hoy?'], ['Abrir', 'abre temperaturas']]
   : [
     ['Last / when', 'last metal detector check on line 3'], ['Lists with filters', 'weights out of range on line 4 yesterday'],
     ['How many', 'how many open CAPAs?'], ['Percent', 'weight compliance this week'], ['Average', 'average moisture of product 01824 this month'],
     ['Worst line', 'which line has the worst compliance today?'], ['Total', 'how much did each line make today?'], ['A LOT', 'LOT 26321'],
-    ['A product', 'product 01824'], ['What is pending', 'what is pending this shift?'], ['LOT of the day', 'today’s LOT'], ['Open', 'open temperatures']];
+    ['A product (everything)', 'product 01824'], ['Lab result', 'result of the last analysis of 01824'],
+    ['Grouped', 'downtime by cause this week'], ['Highest / lowest', 'highest temperature this week'],
+    ['Plates', 'which plates are ready to read today?'], ['Lab pending', 'samples without results'], ['Last night', 'weights out of range last night'],
+    ['What is pending', 'what is pending this shift?'], ['LOT of the day', 'today’s LOT'], ['Open', 'open temperatures']];
   return '<div class="ag-help"><p class="ag-p">'+(es ? 'Sé de pesos, sellado, temperaturas, GMP, metal detector, Pre-Op, CAPA, holds, shift reports, schedule, sample analysis, raw, COA orders, asistencia, output, downtime, empleados y productos. Solo leo: no cambio nada.'
       : 'I know weights, seals, temperatures, GMP, metal detector, Pre-Op, CAPA, holds, shift reports, schedule, sample analysis, raw, COA orders, attendance, output, downtime, employees and products. I only read: I never change anything.')+'</p>'+
     ej.map(function(x){ return '<button type="button" class="ag-li" onclick="agPreguntar(this.querySelector(\'span\').textContent)"><b>'+agEsc(x[0])+'</b><span>'+agEsc(x[1])+'</span></button>'; }).join('')+'</div>';

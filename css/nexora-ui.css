@@ -718,3 +718,8 @@ body.ui-fluent .nx-q-btn{border-radius:9px}
 .ag-dudas small {color:var(--dim);white-space:nowrap}
 @media (max-width:640px){ .ag {width:100vw} .nx-ag-btn {width:34px;height:34px;margin-right:4px} }
 @media print{ .ag,.nx-ag-btn {display:none!important} }
+.ag-cor {font-style:normal;font-size:10px;color:var(--dim);margin-left:2px}
+.ag-bar {width:30%;min-width:50px}
+.ag-bar i {display:block;height:6px;border-radius:4px;background:#79b4a4}
+.ag-tab tr.ag-sin-click {cursor:default}
+.ag-li b .ag-b {margin-left:4px;vertical-align:middle}
