@@ -30,6 +30,7 @@ function initOrders(){
   buildOrdersSheet();
   if(typeof renderProductOptions === 'function') renderProductOptions('or-product-list');
   orLimpiarFila();
+  orLlenarPendientes();
   renderOrders();
 }
 
@@ -129,6 +130,75 @@ function orderByNumber(n, num){
   return l[0] || null;
 }
 function orderById(id){ return getOrders().filter(function(o){ return String(o.id) === String(id); })[0] || null; }
+
+// ---- Las muestras que se testearon ANTES de subir la orden ----
+// Pedido del usuario (20 nov 2026): se testeo el producto sin poner el Order
+// (la orden todavia no estaba) y al subirla aqui no pasaba nada: Sample
+// Analysis solo toma la orden al CAPTURAR la muestra. Ahora, al guardar la
+// orden (o ponerle el LOT, o abrir estas pantallas) se buscan en Sample
+// Analysis las muestras de sus productos de sus dias de produccion (o de su
+// LOT) que no tienen Order, y se les pone el Order, el PO y se ligan.
+// Lo que ya tiene OTRO Order, un COA emitido o clientes de stock no se toca.
+// Si la orden se corrige (otro numero), las muestras ligadas a ella la siguen.
+function orMuestrasSueltas(o){
+  if(!o || o.closed || typeof getAnalyses !== 'function') return [];
+  var nums = (o.products || []).map(normNumber), lots = orLots(o), conDia = !!orDesde(o);
+  if(!nums.length || (!conDia && !lots.length)) return [];
+  return getAnalyses().filter(function(a){
+    if(!a || a.coaNo || a.stockOf != null) return false;
+    if(nums.indexOf(normNumber(a.product)) < 0) return false;
+    if(typeof stockHijos === 'function' && stockHijos(a).length) return false;
+    if(o.customerKey && a.customerKey && o.customerKey !== a.customerKey) return false;
+    var ligada = a.orderId != null && a.orderId !== '' && String(a.orderId) === String(o.id);
+    var suya = String(a.order || '').trim();
+    if(a.orderId != null && a.orderId !== '' && !ligada) return false;       // es de otra orden
+    if(suya && !ligada && orNum(suya) !== orNum(o.order)) return false;      // tiene otro Order escrito
+    var falta = !ligada || orNum(suya) !== orNum(o.order) || (o.po && !String(a.po || '').trim());
+    if(!falta) return false;
+    if(ligada) return true;
+    var dia = String(a.prodDate || a.date || '').slice(0, 10);
+    var lot = String((typeof analysisLot === 'function' ? analysisLot(a) : a.lot) || '').trim();
+    return (conDia && orCubreDia(o, dia)) || (lots.length > 0 && !!lot && orLotCoincide(o, lot));
+  });
+}
+// Les pone el Order y el PO (el PO solo si no tienen) y las liga; devuelve cuantas
+function orLlenarMuestras(o, callado){
+  var lista = orMuestrasSueltas(o);
+  if(!lista.length) return 0;
+  var db = getDB(), quien = currentUser ? currentUser.name : '—';
+  lista.forEach(function(a){
+    if(orNum(a.order) !== orNum(o.order)){
+      if(typeof logAnalysisChange === 'function') logAnalysisChange(a, 'order', a.order, o.order);
+      a.order = o.order;
+    }
+    if(o.po && !String(a.po || '').trim()){
+      if(typeof logAnalysisChange === 'function') logAnalysisChange(a, 'po', a.po, o.po);
+      a.po = o.po;
+    }
+    a.orderId = o.id;
+    a.editedAt = localISOStr(); a.editedBy = quien;
+    if(window.saveToFirebase) window.saveToFirebase('analysis', a);
+  });
+  saveDB(db, 'analysis');
+  var prods = lista.map(function(a){ return normNumber(a.product); }).filter(function(x, i, l){ return l.indexOf(x) === i; });
+  if(typeof logActivity === 'function')
+    logActivity('analysis', 'COA order set on tested samples',
+      'Order '+o.order+(o.po ? ' · PO '+o.po : '')+' · '+lista.length+' sample'+(lista.length === 1 ? '' : 's')+' · '+prods.join(', '), quien);
+  if(!callado) toast('Order '+o.order+(o.po ? ' and PO '+o.po : '')+' added to '+lista.length+' sample'+
+    (lista.length === 1 ? '' : 's')+' already in Sample Analysis ('+prods.join(', ')+')');
+  return lista.length;
+}
+// Todas las ordenes abiertas: al abrir COA Orders o Sample Analysis, por si la
+// orden se subio antes de este arreglo o desde otro equipo
+function orLlenarPendientes(){
+  var n = 0, ords = [];
+  getOrders().forEach(function(o){
+    var k = orLlenarMuestras(o, true);
+    if(k){ n += k; ords.push(o.order); }
+  });
+  if(n) toast('Order '+ords.join(', ')+' added to '+n+' sample'+(n === 1 ? '' : 's')+' that were tested before the order was entered');
+  return n;
+}
 
 // ===== LA HOJA =====
 function buildOrdersSheet(){
@@ -266,6 +336,8 @@ function orSave(){
     logActivity('analysis', orEditId != null ? 'COA order edited' : 'COA order added',
       'Order '+order+(po ? ' · PO '+po : '')+' · '+rec.products.length+' products', quien);
   toast((orEditId != null ? 'Order '+order+' updated' : 'Order '+order+' added')+' · '+rec.products.length+' products');
+  // las muestras que ya se testearon sin el Order lo toman ahora
+  orLlenarMuestras(rec);
   orLimpiarFila();
   renderOrders();
   var e = document.getElementById('or-order'); if(e) e.focus();
@@ -313,6 +385,8 @@ function orLotEdit(id, el){
     logActivity('analysis', 'COA order LOT', 'Order '+(o.order || '')+': '+(antes || '—')+' → '+(v || '—'),
       currentUser ? currentUser.name : '—');
   toast(v ? 'Order '+o.order+' · LOT '+v+' saved' : 'Order '+o.order+' · LOT cleared');
+  // con el LOT puede aparecer una muestra que ya se habia testeado
+  if(orLlenarMuestras(o)) renderOrders();
 }
 // Cerrar a mano una orden que no se va a completar (ya no se propone)
 function orToggleClosed(id){

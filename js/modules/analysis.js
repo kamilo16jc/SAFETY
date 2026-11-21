@@ -23,6 +23,8 @@ function initAnalysis(){
   anDirty = false; renderAnDirty();
   buildAnalysisSheet();
   renderProductOptions('an-product-list');
+  // una orden subida en COA Orders despues de testear: sus muestras la toman
+  if(typeof orLlenarPendientes === 'function') orLlenarPendientes();
   renderAnalysisRows();
 }
 
